@@ -4,12 +4,17 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { AnimatePresence } from 'framer-motion';
-import { X, Mail, Phone, ArrowRight, Loader2, AlertCircle, CheckCircle2, Plus } from 'lucide-react';
-import { cn } from '../lib/utils';
+import {
+  X, Mail, Phone, ArrowRight, Loader2, AlertCircle,
+  CheckCircle2, Plus, UserPlus, LogIn, Eye, EyeOff
+} from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import * as api from '../lib/api';
+
+type Step = 'intro' | 'register' | 'login' | 'otp' | 'verify';
 
 export function Welcome() {
-  const { members, currentUser, setCurrentUser } = useFamily();
+  const { currentUser, setCurrentUser, members, setGuestMode, loadGuestData } = useFamily();
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -20,25 +25,77 @@ export function Welcome() {
     }
   }, [currentUser, navigate]);
 
-  const handleSkip = () => {
-    const guest = members[0];
-    if (guest) setCurrentUser(guest);
-  };
-
-  // ==================== OTP 登录状态 ====================
-  const [step, setStep] = useState<'intro' | 'otp' | 'verify'>('intro');
+  // ==================== 状态 ====================
+  const [step, setStep] = useState<Step>('intro');
   const [phoneOrEmail, setPhoneOrEmail] = useState('');
   const [otpToken, setOtpToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
 
-  const handleSendOtp = async () => {
+  // 注册状态
+  const [regNickname, setRegNickname] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [regConfirmPassword, setRegConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // 登录状态
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+
+  // ==================== 跳过登录（访客模式） ====================
+  const handleSkip = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      // 如果已有成员，直接选第一个（说明已登录过，有 session）
+      if (members.length > 0) {
+        setCurrentUser(members[0]);
+        return;
+      }
+      // 访客模式：纯前端本地数据，不写数据库（避免 members.id 外键约束）
+      setGuestMode(true);
+      setCurrentUser({
+        id: 'guest',
+        name: t('welcome.guest_name', '访客'),
+        avatar: '👤',
+        stars: 0,
+        role: 'parent',
+      });
+    } catch (err: any) {
+      setError(err.message || t('welcome.skip_error', '跳过失败，请重试'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ==================== 注册：邮箱 OTP ====================
+  const handleRegisterSendOtp = async () => {
     const input = phoneOrEmail.trim();
+    const nickname = regNickname.trim();
+    if (!nickname) {
+      setError(t('welcome.register.error_nickname', '请输入昵称'));
+      return;
+    }
     if (!input) {
       setError(t('welcome.otp.error_empty', '请输入手机号或邮箱'));
       return;
     }
+    if (!regPassword) {
+      setError(t('welcome.register.error_password', '请输入密码'));
+      return;
+    }
+    if (regPassword !== regConfirmPassword) {
+      setError(t('welcome.register.error_mismatch', '两次输入的密码不一致哦 🍃'));
+      return;
+    }
+    if (regPassword.length < 6) {
+      setError(t('welcome.register.error_password_length', '密码至少6位'));
+      return;
+    }
+
     setLoading(true);
     setError('');
     setInfo('');
@@ -47,11 +104,11 @@ export function Welcome() {
       const { error: otpError } = isEmail
         ? await supabase.auth.signInWithOtp({
             email: input,
-            options: { shouldCreateUser: true },
+            options: { shouldCreateUser: true, data: { nickname, password: regPassword } },
           })
         : await supabase.auth.signInWithOtp({
             phone: input,
-            options: { shouldCreateUser: true },
+            options: { shouldCreateUser: true, data: { nickname, password: regPassword } },
           });
       if (otpError) throw otpError;
       setInfo(t('welcome.otp.code_sent', `验证码已发送至 ${input}`));
@@ -63,6 +120,61 @@ export function Welcome() {
     }
   };
 
+  // ==================== 登录：邮箱+密码 ====================
+  const handleLogin = async () => {
+    const username = loginUsername.trim();
+    if (!username) {
+      setError(t('welcome.login.error_empty', '请输入账号'));
+      return;
+    }
+    if (!loginPassword) {
+      setError(t('welcome.login.error_password', '请输入密码'));
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    try {
+      // 判断是否是邮箱
+      const isEmail = username.includes('@');
+      if (isEmail) {
+        // 邮箱+密码登录
+        const { error: loginErr } = await supabase.auth.signInWithPassword({
+          email: username,
+          password: loginPassword,
+        });
+        if (loginErr) throw loginErr;
+        // onAuthStateChange 会自动加载用户数据
+      } else {
+        // 手机号+密码登录（Supabase 不直接支持，需通过查询 members 表验证）
+        const { data: memberData, error: memberErr } = await supabase
+          .from('members')
+          .select('*')
+          .eq('name', username)
+          .eq('password', loginPassword)
+          .eq('is_active', true)
+          .single();
+
+        if (memberErr || !memberData) {
+          throw new Error(t('welcome.login.error_invalid', '用户名或密码错误，请检查 🍃'));
+        }
+
+        setCurrentUser({
+          id: memberData.id,
+          name: memberData.name,
+          avatar: memberData.avatar || '👤',
+          stars: memberData.stars || 0,
+          role: memberData.role,
+        });
+      }
+    } catch (err: any) {
+      setError(err.message || t('welcome.login.error_invalid', '登录失败'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ==================== 验证 OTP ====================
   const handleVerifyOtp = async () => {
     const input = phoneOrEmail.trim();
     const token = otpToken.trim();
@@ -74,25 +186,93 @@ export function Welcome() {
     setError('');
     try {
       const isEmail = input.includes('@');
+      // 邮箱 OTP 类型：signInWithOtp 新用户用 'signup'，已有用户用 'email'
       const { error: vErr } = isEmail
-        ? await supabase.auth.verifyOtp({
-            email: input,
-            token,
-            type: 'email',
-          })
-        : await supabase.auth.verifyOtp({
-            phone: input,
-            token,
-            type: 'sms',
+        ? await supabase.auth.verifyOtp({ email: input, token, type: 'signup' })
+        : await supabase.auth.verifyOtp({ phone: input, token, type: 'sms' });
+
+      if (vErr) {
+        // 如果 signup 类型失败，尝试 email 类型（用户可能已存在）
+        if (isEmail && vErr.message?.includes('already')) {
+          const { error: vErr2 } = await supabase.auth.verifyOtp({ email: input, token, type: 'email' });
+          if (vErr2) throw vErr2;
+        } else {
+          throw vErr;
+        }
+      }
+
+      // 验证成功后，为新用户创建家庭和成员记录
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        // 检查是否已有成员记录
+        const { data: existingMember } = await supabase
+          .from('members')
+          .select('id')
+          .eq('id', session.user.id)
+          .single();
+
+        if (!existingMember) {
+          // 新用户：创建家庭和成员
+          const nickname = session.user.user_metadata?.nickname || regNickname || '家长';
+          const password = session.user.user_metadata?.password || regPassword || '';
+
+          // 设置密码（以便后续邮箱+密码登录）
+          if (password) {
+            await supabase.auth.updateUser({ password });
+          }
+
+          const family = await api.createFamily(t('welcome.my_family', '{0}的家庭').replace('{0}', nickname));
+          await supabase.from('members').insert({
+            id: session.user.id,
+            family_id: family.id,
+            name: nickname,
+            role: 'parent',
+            avatar: '👨‍👩‍👧',
+            password: password || null,
           });
-      if (vErr) throw vErr;
-      // Supabase session 已设置，FamilyContext.onAuthStateChange 会自动加载用户数据
+
+          // 重新加载数据
+          const { data: newMember } = await supabase
+            .from('members')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (newMember) {
+            setCurrentUser({
+              id: newMember.id,
+              name: newMember.name,
+              avatar: newMember.avatar || '👤',
+              stars: newMember.stars || 0,
+              role: newMember.role,
+            });
+          }
+        } else {
+          // 已有成员记录，直接设置 currentUser
+          const { data: memberData } = await supabase
+            .from('members')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          if (memberData) {
+            setCurrentUser({
+              id: memberData.id,
+              name: memberData.name,
+              avatar: memberData.avatar || '👤',
+              stars: memberData.stars || 0,
+              role: memberData.role,
+            });
+          }
+        }
+      }
     } catch (err: any) {
       setError(err.message || t('welcome.otp.error_verify', '验证失败'));
     } finally {
       setLoading(false);
     }
   };
+
+  const clearError = () => { setError(''); setInfo(''); };
 
   // ==================== UI ====================
   return (
@@ -109,18 +289,21 @@ export function Welcome() {
         className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-secondary/5 rounded-full blur-[120px]"
       />
 
-      {/* 右上角 Skip 按钮 */}
+      {/* 右上角关闭/跳过按钮 */}
       <motion.button
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1 }}
+        transition={{ delay: 0.5 }}
         onClick={handleSkip}
-        className="absolute top-6 right-6 z-50 w-12 h-12 bg-white/50 backdrop-blur-md rounded-2xl flex items-center justify-center text-on-surface-variant hover:bg-white hover:text-primary transition-all active:scale-95 shadow-sm border border-outline-variant/20"
+        disabled={loading}
+        className="absolute top-6 right-6 z-50 flex items-center gap-1 px-3 h-10 bg-white/50 backdrop-blur-md rounded-2xl text-on-surface-variant hover:bg-white hover:text-primary transition-all active:scale-95 shadow-sm border border-outline-variant/20 text-sm font-bold"
       >
-        <X size={24} />
+        <X size={18} />
+        <span>{t('welcome.skip', '跳过')}</span>
       </motion.button>
 
       <AnimatePresence mode="wait">
+        {/* ==================== Intro ==================== */}
         {step === 'intro' && (
           <motion.div
             key="intro"
@@ -146,41 +329,62 @@ export function Welcome() {
             <p className="text-on-surface-variant font-bold text-base mb-2">{t('welcome.subtitle', '用努力开启小确幸 🌱')}</p>
             <p className="text-[#2e7d32] font-black text-sm mb-12 tracking-tight">{t('welcome.tagline', '记录成长每一步')}</p>
 
-            <button
-              onClick={() => setStep('otp')}
-              className="w-full h-18 bg-[#006e1c] text-white rounded-[2rem] font-black text-xl flex items-center justify-center gap-3 shadow-xl shadow-green-900/20 hover:bg-[#005a16] transition-all active:scale-95 mb-8"
-            >
-              {t('welcome.start_button', '登录 / 注册')}
-              <ArrowRight size={24} />
-            </button>
-
-            <div className="h-12" />
+            <div className="space-y-3">
+              <button
+                onClick={() => { clearError(); setStep('register'); }}
+                className="w-full h-16 bg-[#006e1c] text-white rounded-[2rem] font-black text-lg flex items-center justify-center gap-3 shadow-xl shadow-green-900/20 hover:bg-[#005a16] transition-all active:scale-95"
+              >
+                <UserPlus size={22} />
+                {t('welcome.register.submit', '注册账号')}
+              </button>
+              <button
+                onClick={() => { clearError(); setStep('login'); }}
+                className="w-full h-16 bg-white text-[#006e1c] rounded-[2rem] font-black text-lg flex items-center justify-center gap-3 shadow-lg border-2 border-[#006e1c]/10 hover:border-[#006e1c]/30 transition-all active:scale-95"
+              >
+                <LogIn size={22} />
+                {t('welcome.login.submit', '登录账号')}
+              </button>
+            </div>
           </motion.div>
         )}
 
-        {step === 'otp' && (
+        {/* ==================== Register ==================== */}
+        {step === 'register' && (
           <motion.div
-            key="otp"
+            key="register"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             className="w-full max-w-md z-10"
           >
-            <div className="text-center mb-8">
-              <h2 className="text-4xl font-handwritten text-on-surface mb-2">{t('welcome.otp.title', '登录 / 注册')}</h2>
-              <p className="text-on-surface-variant font-bold text-sm tracking-tight">{t('welcome.otp.subtitle', '输入手机号或邮箱')}</p>
+            <div className="text-center mb-6">
+              <h2 className="text-4xl font-handwritten text-on-surface mb-2">{t('welcome.register.title', '欢迎注册')}</h2>
+              <p className="text-on-surface-variant font-bold text-sm tracking-tight">{t('welcome.register.subtitle', '只有家长才可以注册管理员哦 🌱')}</p>
             </div>
 
             <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-outline-variant/10 relative">
               <button
-                onClick={() => setStep('intro')}
+                onClick={() => { clearError(); setStep('intro'); }}
                 className="absolute -top-4 -right-4 w-10 h-10 bg-white border border-outline-variant/20 rounded-full shadow-lg flex items-center justify-center text-on-surface-variant hover:text-[#006e1c] transition-colors z-20"
               >
                 <Plus className="rotate-45" size={24} />
               </button>
 
-              <div className="space-y-6">
-                <div className="space-y-2">
+              <div className="space-y-4">
+                {/* 昵称 */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-on-surface-variant ml-2">{t('welcome.register.nickname', '管理员昵称')}</label>
+                  <input
+                    type="text"
+                    value={regNickname}
+                    onChange={(e) => setRegNickname(e.target.value)}
+                    placeholder={t('welcome.register.nickname_placeholder', '如：妈妈')}
+                    className="w-full h-12 bg-[#f5f5f5] rounded-2xl px-5 font-bold text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all text-sm"
+                  />
+                </div>
+
+                {/* 邮箱或手机号 */}
+                <div className="space-y-1.5">
                   <label className="text-xs font-bold text-on-surface-variant ml-2 flex items-center gap-2">
                     {phoneOrEmail.includes('@') ? <Mail size={14} /> : <Phone size={14} />}
                     {t('welcome.otp.phone_email', '手机号或邮箱')}
@@ -190,9 +394,50 @@ export function Welcome() {
                     value={phoneOrEmail}
                     onChange={(e) => setPhoneOrEmail(e.target.value)}
                     placeholder={t('welcome.otp.placeholder', '手机号或邮箱')}
-                    className="w-full h-14 bg-[#f5f5f5] rounded-2xl px-6 font-bold text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all"
-                    required
+                    className="w-full h-12 bg-[#f5f5f5] rounded-2xl px-5 font-bold text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all text-sm"
                   />
+                </div>
+
+                {/* 密码 */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-on-surface-variant ml-2">{t('welcome.register.password', '登录密码')}</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
+                      placeholder={t('welcome.register.password_placeholder', '请输入管理密码')}
+                      className="w-full h-12 bg-[#f5f5f5] rounded-2xl px-5 pr-12 font-bold text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* 确认密码 */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-on-surface-variant ml-2">{t('welcome.register.confirm_password', '确认密码')}</label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={regConfirmPassword}
+                      onChange={(e) => setRegConfirmPassword(e.target.value)}
+                      placeholder={t('welcome.register.confirm_password_placeholder', '请再次输入密码')}
+                      className="w-full h-12 bg-[#f5f5f5] rounded-2xl px-5 pr-12 font-bold text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant"
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
 
                 {error && (
@@ -208,17 +453,109 @@ export function Welcome() {
 
                 <button
                   type="button"
-                  onClick={handleSendOtp}
+                  onClick={handleRegisterSendOtp}
                   disabled={loading}
-                  className="w-full h-16 bg-[#006e1c] text-white rounded-2xl font-black text-lg shadow-lg hover:shadow-green-900/20 active:scale-95 transition-all disabled:opacity-50"
+                  className="w-full h-14 bg-[#006e1c] text-white rounded-2xl font-black text-base shadow-lg hover:shadow-green-900/20 active:scale-95 transition-all disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : t('welcome.otp.send', '发送验证码')}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { clearError(); setStep('login'); }}
+                  className="w-full h-10 text-on-surface-variant font-bold text-xs"
+                >
+                  {t('welcome.has_account', '已有账号？去登录 →')}
                 </button>
               </div>
             </div>
           </motion.div>
         )}
 
+        {/* ==================== Login ==================== */}
+        {step === 'login' && (
+          <motion.div
+            key="login"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="w-full max-w-md z-10"
+          >
+            <div className="text-center mb-6">
+              <h2 className="text-4xl font-handwritten text-on-surface mb-2">{t('welcome.login.title', '欢迎登录')}</h2>
+              <p className="text-on-surface-variant font-bold text-sm tracking-tight">{t('welcome.login.subtitle', '输入账号密码开启今日愿望 🌱')}</p>
+            </div>
+
+            <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-outline-variant/10 relative">
+              <button
+                onClick={() => { clearError(); setStep('intro'); }}
+                className="absolute -top-4 -right-4 w-10 h-10 bg-white border border-outline-variant/20 rounded-full shadow-lg flex items-center justify-center text-on-surface-variant hover:text-[#006e1c] transition-colors z-20"
+              >
+                <Plus className="rotate-45" size={24} />
+              </button>
+
+              <div className="space-y-4">
+                {/* 账号 */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-on-surface-variant ml-2">{t('welcome.login.username', '账号')}</label>
+                  <input
+                    type="text"
+                    value={loginUsername}
+                    onChange={(e) => setLoginUsername(e.target.value)}
+                    placeholder={t('welcome.login.username_placeholder', '邮箱 或 昵称')}
+                    className="w-full h-12 bg-[#f5f5f5] rounded-2xl px-5 font-bold text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all text-sm"
+                  />
+                </div>
+
+                {/* 密码 */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-on-surface-variant ml-2">{t('welcome.login.password', '密码')}</label>
+                  <div className="relative">
+                    <input
+                      type={showLoginPassword ? 'text' : 'password'}
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      placeholder={t('welcome.login.password_placeholder', '管理密码')}
+                      className="w-full h-12 bg-[#f5f5f5] rounded-2xl px-5 pr-12 font-bold text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowLoginPassword(!showLoginPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant"
+                    >
+                      {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="text-red-500 bg-red-50 p-3 rounded-xl text-[10px] font-bold border border-red-100 flex items-center gap-2">
+                    <AlertCircle size={14} /> {error}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleLogin}
+                  disabled={loading}
+                  className="w-full h-14 bg-[#006e1c] text-white rounded-2xl font-black text-base shadow-lg hover:shadow-green-900/20 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : t('welcome.login.submit', '进入系统')}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { clearError(); setStep('register'); }}
+                  className="w-full h-10 text-on-surface-variant font-bold text-xs"
+                >
+                  {t('welcome.no_account', '没有账号？去注册 →')}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ==================== Verify OTP ==================== */}
         {step === 'verify' && (
           <motion.div
             key="verify"
@@ -227,7 +564,7 @@ export function Welcome() {
             exit={{ opacity: 0, x: -20 }}
             className="w-full max-w-md z-10"
           >
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
               <h2 className="text-4xl font-handwritten text-on-surface mb-2">{t('welcome.otp.verify_title', '输入验证码')}</h2>
               <p className="text-on-surface-variant font-bold text-sm tracking-tight">
                 {t('welcome.otp.verify_subtitle', `验证码已发送至 ${phoneOrEmail}`)}
@@ -236,13 +573,13 @@ export function Welcome() {
 
             <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-outline-variant/10 relative">
               <button
-                onClick={() => { setStep('otp'); setOtpToken(''); setError(''); }}
+                onClick={() => { setStep('register'); setOtpToken(''); clearError(); }}
                 className="absolute -top-4 -right-4 w-10 h-10 bg-white border border-outline-variant/20 rounded-full shadow-lg flex items-center justify-center text-on-surface-variant hover:text-[#006e1c] transition-colors z-20"
               >
                 <Plus className="rotate-45" size={24} />
               </button>
 
-              <div className="space-y-6">
+              <div className="space-y-5">
                 <input
                   type="text"
                   value={otpToken}
@@ -256,20 +593,25 @@ export function Welcome() {
                     <AlertCircle size={14} /> {error}
                   </div>
                 )}
+                {info && (
+                  <div className="text-green-500 bg-green-50 p-3 rounded-xl text-[10px] font-bold border border-green-100 flex items-center gap-2">
+                    <CheckCircle2 size={14} /> {info}
+                  </div>
+                )}
 
                 <button
                   type="button"
                   onClick={handleVerifyOtp}
                   disabled={loading}
-                  className="w-full h-16 bg-[#006e1c] text-white rounded-2xl font-black text-lg shadow-lg hover:shadow-green-900/20 active:scale-95 transition-all disabled:opacity-50"
+                  className="w-full h-14 bg-[#006e1c] text-white rounded-2xl font-black text-base shadow-lg hover:shadow-green-900/20 active:scale-95 transition-all disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : t('welcome.otp.verify', '验证')}
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => { setStep('otp'); setOtpToken(''); setError(''); }}
-                  className="w-full h-12 text-on-surface-variant font-bold text-sm"
+                  onClick={() => { setStep('register'); setOtpToken(''); clearError(); }}
+                  className="w-full h-10 text-on-surface-variant font-bold text-xs"
                 >
                   ← {t('welcome.otp.resend', '重新发送')}
                 </button>

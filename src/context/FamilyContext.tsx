@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Task, Member, Reward, HistoryRecord } from '../types';
 import * as api from '../lib/api';
 import { supabase, type Database } from '../lib/supabase';
@@ -38,6 +38,9 @@ interface FamilyContextType {
   setIsInitialized: (val: boolean) => void;
   loading: boolean;
   familyId: string | null;
+  guestMode: boolean;
+  setGuestMode: (val: boolean) => void;
+  loadGuestData: (memberId: string, famId: string) => Promise<void>;
 }
 
 const FamilyContext = createContext<FamilyContextType | undefined>(undefined);
@@ -108,6 +111,11 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   const [isUserSelectorOpen, setIsUserSelectorOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [familyId, setFamilyId] = useState<string | null>(null);
+  const [guestMode, setGuestMode] = useState(false);
+  const guestModeRef = useRef(false);
+
+  // 保持 ref 同步
+  useEffect(() => { guestModeRef.current = guestMode; }, [guestMode]);
 
   // isInitialized 现在由 Supabase session 驱动，不再使用 localStorage
 
@@ -135,6 +143,8 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     init();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // 访客模式下不清空数据
+      if (guestModeRef.current) return;
       if (session?.user) {
         await loadUserData(session.user.id);
       } else {
@@ -185,6 +195,27 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       setHistory(historyRes.map(toHistory));
     } catch (err) {
       console.error('加载用户数据失败:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // 访客模式加载家庭数据（不需要 Supabase Auth session）
+  async function loadGuestData(memberId: string, famId: string) {
+    try {
+      setFamilyId(famId);
+      const [membersRes, tasksRes, rewardsRes, historyRes] = await Promise.all([
+        api.getMembersByFamilyId(famId),
+        api.getTasksByFamilyId(famId, true),
+        api.getRewardsByFamilyId(famId),
+        api.getStarTransactionsByMemberId(memberId),
+      ]);
+      setMembers(membersRes.map(toMember));
+      setTasks(tasksRes.map(toTask));
+      setRewards(rewardsRes.map(toReward));
+      setHistory(historyRes.map(toHistory));
+    } catch (err) {
+      console.error('加载访客数据失败:', err);
     } finally {
       setLoading(false);
     }
@@ -344,6 +375,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     setRewards([]);
     setHistory([]);
     setFamilyId(null);
+    setGuestMode(false);
   }, []);
 
   const toggleDarkMode = useCallback(() => setIsDarkMode(prev => !prev), []);
@@ -368,6 +400,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
         isInitialized, setIsInitialized,
         loading,
         familyId,
+        guestMode, setGuestMode, loadGuestData,
       }}
     >
       {children}
