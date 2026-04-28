@@ -133,7 +133,7 @@ function Habits() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-primary focus:border-transparent outline-none"
                   >
                     <option value="">所有成员</option>
-                    {members.filter(m => m.is_active).map(member => (
+                    {members.map(member => (
                       <option key={member.id} value={member.id}>
                         {member.avatar} {member.name}
                       </option>

@@ -3,22 +3,22 @@ import { useFamily } from '../context/FamilyContext';
 import { CheckSquare, Repeat, Gift, Users, LogOut, Star } from 'lucide-react';
 
 function Dashboard() {
-  const { currentFamily, currentUser, members, tasks, habits, rewards, switchUser, logout } = useFamily();
+  const { currentUser, setCurrentUser, members, tasks, rewards, logout } = useFamily();
 
-  if (!currentFamily || !currentUser) {
+  if (!currentUser) {
     return null;
   }
 
-  const userTasks = tasks.filter(t => t.assignee_id === currentUser.id && !t.completed);
-  const userHabits = habits.filter(h => h.assignee_id === currentUser.id);
-  const availableRewards = rewards.filter(r => r.status === 'available');
+  const userTasks = tasks.filter(t => t.assigneeIds.includes(currentUser.id) && t.status !== 'completed');
+  const userHabits = tasks.filter(t => t.isHabit && t.assigneeIds.includes(currentUser.id));
+  const availableRewards = rewards.filter(r => r.category !== 'redeemed');
 
   const totalStars = currentUser.stars;
   
   // 计算今日完成的任务数
   const today = new Date().toISOString().split('T')[0];
   const todayCompletedTasks = tasks.filter(t => 
-    t.completed && t.completed_at && t.completed_at.startsWith(today)
+    t.status === 'completed' && t.startTime && t.startTime.startsWith(today)
   ).length;
 
   return (
@@ -30,7 +30,7 @@ function Dashboard() {
             {currentUser.avatar && <span className="text-2xl flex items-center justify-center h-full">{currentUser.avatar}</span>}
           </div>
           <div>
-            <h1 className="text-xl font-bold text-on-surface">{currentFamily.name}</h1>
+            <h1 className="text-xl font-bold text-on-surface">我的家庭</h1>
             <p className="text-sm text-on-surface-variant">
               {currentUser.name} · {currentUser.role === 'parent' ? '家长' : '孩子'}
             </p>
@@ -147,7 +147,7 @@ function Dashboard() {
           <StatCard 
             icon={Users} 
             label="家庭成员" 
-            value={members.filter(m => m.is_active).length}
+            value={members.length}
             color="text-orange-500"
           />
         </div>
@@ -182,7 +182,7 @@ function Dashboard() {
                   </div>
                   <div className="flex items-center gap-1 bg-[#FFF9C4] px-3 py-1 rounded-full">
                     <Star size={14} className="text-[#FBC02D] fill-current" />
-                    <span className="font-bold text-[#FBC02D]">{task.star_amount}</span>
+                    <span className="font-bold text-[#FBC02D]">{task.rewardStars}</span>
                   </div>
                 </div>
               ))}
@@ -199,7 +199,6 @@ function Dashboard() {
           
           <div className="flex justify-center items-end gap-4 h-44 relative">
             {[...members]
-              .filter(m => m.is_active)
               .sort((a, b) => b.stars - a.stars)
               .slice(0, 3)
               .map((member, idx) => {
@@ -221,14 +220,14 @@ function Dashboard() {
         </div>
 
         {/* 切换用户（多孩家庭） */}
-        {members.filter(m => m.is_active).length > 1 && (
+        {members.length > 1 && (
           <div className="bg-surface-container-low/50 rounded-[2rem] p-6 shadow-sm">
             <h2 className="font-black text-lg mb-4 text-on-surface">切换身份</h2>
             <div className="flex flex-wrap gap-3">
-              {members.filter(m => m.is_active).map(member => (
+              {members.map(member => (
                 <button
                   key={member.id}
-                  onClick={() => switchUser(member)}
+                  onClick={() => setCurrentUser(member)}
                   className={`px-5 py-3 rounded-xl transition-all ${
                     currentUser.id === member.id
                       ? 'bg-primary text-white shadow-md scale-105'

@@ -37,6 +37,7 @@ interface FamilyContextType {
   isInitialized: boolean;
   setIsInitialized: (val: boolean) => void;
   loading: boolean;
+  familyId: string | null;
 }
 
 const FamilyContext = createContext<FamilyContextType | undefined>(undefined);
@@ -366,6 +367,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
         isUserSelectorOpen, setIsUserSelectorOpen,
         isInitialized, setIsInitialized,
         loading,
+        familyId,
       }}
     >
       {children}

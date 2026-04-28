@@ -80,7 +80,7 @@ export function Home() {
             onClick={() => navigate('/settings/family')}
             className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-primary hover:bg-surface-container transition-colors"
           >
-            <Settings size={20} sm:size={22} strokeWidth={2.5} />
+            <Settings size={20} className="sm:w-[22px] sm:h-[22px]" strokeWidth={2.5} />
           </button>
         </div>
       </header>
@@ -236,7 +236,7 @@ export function Home() {
       <section className="bg-surface-container-low/50 rounded-[2rem] sm:rounded-[2.5rem] p-4 sm:p-6 pb-8 sm:pb-12 relative overflow-hidden">
         <h3 className="font-black text-lg sm:text-xl mb-4 sm:mb-6 flex items-center gap-2 sm:gap-2.5 text-on-surface">
           {t('home.leaderboard')}
-          <Sparkles size={16} sm:size={18} className="text-[#FBC02D]" />
+          <Sparkles size={16} className="sm:w-[18px] sm:h-[18px] text-[#FBC02D]" />
         </h3>
         
         <div className="flex justify-center items-end gap-2 sm:gap-3 h-40 sm:h-52 relative">

@@ -70,9 +70,27 @@ export function EditReward() {
     if (!formData.name) return;
 
     if (isEdit && id) {
-      updateReward({ ...formData, id } as Reward);
+      updateReward({
+        id,
+        name: formData.name,
+        description: formData.description,
+        cost: formData.cost,
+        icon: formData.icon,
+        image: formData.image,
+        category: formData.category,
+        stock: formData.stock,
+      });
     } else {
-      addReward(formData as any);
+      addReward({
+        id: crypto.randomUUID(),
+        name: formData.name,
+        description: formData.description,
+        cost: formData.cost,
+        icon: formData.icon,
+        image: formData.image,
+        category: formData.category,
+        stock: formData.stock,
+      });
     }
     navigate('/rewards');
   };

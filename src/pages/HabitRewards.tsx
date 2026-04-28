@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
+import { Task } from '../types';
 import { TaskCard } from '../components/TaskCard';
 import { AISmartTaskDialog } from '../components/AISmartTaskDialog';
 import { TextAvatar } from '../components/TextAvatar';
@@ -14,7 +15,7 @@ export function HabitRewards() {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<'reward' | 'penalty'>('reward');
-  const [selectedHabit, setSelectedHabit] = useState<any>(null);
+  const [selectedHabit, setSelectedHabit] = useState<Task | null>(null);
   const [isAddingHabit, setIsAddingHabit] = useState(false);
   const [newHabitTitle, setNewHabitTitle] = useState('');
   const [newHabitStars, setNewHabitStars] = useState(10);
@@ -48,7 +49,7 @@ export function HabitRewards() {
 
   const [isCheckInSuccess, setIsCheckInSuccess] = useState(false);
 
-  const handleIncrement = (habit: any) => {
+  const handleIncrement = (habit: Task) => {
     if (currentUser?.role !== 'parent') return;
     
     const newCount = (habit.currentCount || 0) + 1;
@@ -69,7 +70,7 @@ export function HabitRewards() {
   const handleAddHabit = () => {
     if (!newHabitTitle.trim()) return;
 
-    const newHabit: any = {
+    const newHabit: Task = {
       id: `h-${Date.now()}`,
       title: newHabitTitle,
       description: '保持良好的生活习惯，让每一天都充满活力和正能量。',
@@ -123,7 +124,7 @@ export function HabitRewards() {
             onClick={() => navigate('/settings/family')}
             className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-primary hover:bg-surface-container transition-colors"
           >
-            <Settings size={20} sm:size={22} strokeWidth={2.5} />
+            <Settings size={20} className="sm:w-[22px] sm:h-[22px]" strokeWidth={2.5} />
           </button>
         </div>
       </header>

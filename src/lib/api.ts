@@ -149,7 +149,7 @@ export async function createTask(
 export async function getTasksByFamilyId(familyId: string, includeCompleted = false): Promise<Task[]> {
   let query = supabase
     .from('tasks')
-    .select('*, assignee:members!tasks_assignee_id_fkey(*)')
+    .select('*')
     .eq('family_id', familyId);
 
   if (!includeCompleted) {
@@ -177,17 +177,19 @@ export async function completeTask(taskId: string, memberId: string): Promise<Ta
 
   // 获取任务详情以发放星星
   const task = data;
-  if (task.assignee_id) {
-    await addStarTransaction(
-      task.family_id!,
-      task.assignee_id,
-      task.star_amount,
-      'earn',
-      `完成任务: ${task.title}`,
-      taskId,
-      null,
-      null
-    );
+  if (task.assignee_ids && task.assignee_ids.length > 0) {
+    for (const assigneeId of task.assignee_ids) {
+      await addStarTransaction(
+        task.family_id!,
+        assigneeId,
+        task.star_amount,
+        'earn',
+        `完成任务: ${task.title}`,
+        taskId,
+        null,
+        null
+      );
+    }
   }
 
   await logEvent(task.family_id!, memberId, 'task_completed', { 
@@ -309,7 +311,7 @@ export async function createHabit(
 export async function getHabitsByFamilyId(familyId: string): Promise<Habit[]> {
   const { data, error } = await supabase
     .from('habits')
-    .select('*, assignee:members!habits_assignee_id_fkey(*)')
+    .select('*')
     .eq('family_id', familyId)
     .eq('is_active', true)
     .order('created_at', { ascending: true });
@@ -398,7 +400,7 @@ export async function deleteHabit(habitId: string): Promise<void> {
 
 export async function createReward(
   familyId: string,
-  title: string,
+  name: string,
   description: string | null,
   starCost: number,
   createdBy: string,
@@ -408,7 +410,7 @@ export async function createReward(
     .from('rewards')
     .insert({
       family_id: familyId,
-      title,
+      name,
       description,
       star_cost: starCost,
       image_url: imageUrl,
@@ -419,7 +421,7 @@ export async function createReward(
 
   if (error) throw new Error(`创建奖励失败: ${error.message}`);
   
-  await logEvent(familyId, createdBy, 'reward_created', { title, starCost });
+  await logEvent(familyId, createdBy, 'reward_created', { title: name, starCost });
   
   return data;
 }
@@ -474,7 +476,7 @@ export async function redeemReward(rewardId: string, memberId: string): Promise<
 
   await logEvent(reward.family_id!, memberId, 'reward_redeemed', {
     rewardId: reward.id,
-    title: reward.title,
+    title: reward.name,
     starCost: reward.star_cost,
     requiresParentApproval: true,
   });
@@ -498,7 +500,7 @@ export async function approveReward(redeemedRewardId: string): Promise<void> {
       reward.redeemed_by,
       reward.star_cost,
       'spend',
-      `兑换奖励: ${reward.title}`,
+      `兑换奖励: ${reward.name}`,
       null,
       null,
       reward.id

@@ -398,7 +398,7 @@ export function Profile() {
 
       <div className="mt-auto pt-12 flex justify-center pb-8 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent">
         <button 
-          onClick={handleLogout}
+          onClick={() => handleLogout()}
           className="bg-red-50 dark:bg-red-500/10 px-10 py-3.5 rounded-full flex items-center gap-2 shadow-sm border border-red-100 dark:border-red-500/20 active:scale-95 transition-all"
         >
           <LogOut size={18} className="text-red-500" />

@@ -79,7 +79,7 @@ function FamilyManagement() {
         <div className="bg-white rounded-xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-medium text-gray-800">
-              家庭成员 ({members.filter(m => m.is_active).length})
+              家庭成员 ({members.length})
             </h2>
             {isParent && (
               <button
@@ -184,7 +184,6 @@ function FamilyManagement() {
           {/* 成员列表 */}
           <div className="space-y-3">
             {members
-              .filter(m => m.is_active)
               .map(member => (
                 <div
                   key={member.id}
@@ -204,7 +203,7 @@ function FamilyManagement() {
                       <span>🌟 {member.stars}</span>
                     </div>
                   </div>
-                  {isParent && members.filter(m => m.is_active).length > 1 && (
+                  {isParent && members.length > 1 && (
                     <button
                       onClick={() => {
                         if (confirm(`确定要移除 ${member.name} 吗？`)) {
@@ -229,12 +228,12 @@ function FamilyManagement() {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">总成员数</span>
-                <span className="font-medium">{members.filter(m => m.is_active).length}</span>
+                <span className="font-medium">{members.length}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">总星星数</span>
                 <span className="font-medium">
-                  {members.filter(m => m.is_active).reduce((sum, m) => sum + m.stars, 0)} 🌟
+                  {members.reduce((sum, m) => sum + m.stars, 0)} 🌟
                 </span>
               </div>
             </div>

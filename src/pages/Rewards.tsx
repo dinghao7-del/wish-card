@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Reward } from '../types';
 import { Star, Settings, Plus, LayoutGrid, X, ChevronRight, Edit3, Mic } from 'lucide-react';
 import { useFamily } from '../context/FamilyContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,7 +14,7 @@ export function Rewards() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
-  const [selectedReward, setSelectedReward] = useState<any>(null);
+  const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
 
   const categories = [
@@ -30,7 +31,7 @@ export function Rewards() {
     ? (rewards || []) 
     : (rewards || []).filter(r => r.category === activeTab);
 
-  const handleRedeem = (reward: any) => {
+  const handleRedeem = (reward: Reward) => {
     if (stars >= reward.cost) {
       redeemReward(reward.id);
       setSelectedReward(null);
@@ -68,7 +69,7 @@ export function Rewards() {
             onClick={() => navigate('/settings/family')}
             className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-primary hover:bg-surface-container transition-colors"
           >
-            <Settings size={20} sm:size={22} strokeWidth={2.5} />
+            <Settings size={20} className="sm:w-[22px] sm:h-[22px]" strokeWidth={2.5} />
           </button>
         </div>
       </header>
