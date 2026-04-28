@@ -85,6 +85,7 @@ function toReward(db: DbReward): Reward {
     icon: db.icon || 'Gift',
     image: db.image_url || '',
     category: db.category || '',
+    stock: db.stock ?? undefined,
   };
 }
 
@@ -225,7 +226,18 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   const addTask = useCallback(async (task: Task) => {
     if (!currentUser || !familyId) return;
     try {
-      const dbTask = await api.createTask(familyId, task.title, task.description, task.rewardStars, task.assigneeIds, currentUser.id);
+      const dbTask = await api.createTask(
+        familyId, task.title, task.description, task.rewardStars,
+        task.assigneeIds, currentUser.id,
+        {
+          is_habit: task.isHabit || false,
+          icon: task.icon || null,
+          target_count: task.targetCount || 1,
+          current_count: task.currentCount || 0,
+          category: task.type,
+          status: task.status,
+        }
+      );
       setTasks(prev => [...prev, toTask(dbTask)]);
     } catch (err: any) {
       alert(`创建任务失败: ${err.message}`);
@@ -286,7 +298,15 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   const addReward = useCallback(async (reward: Reward) => {
     if (!currentUser || !familyId) return;
     try {
-      const dbReward = await api.createReward(familyId, reward.name, reward.description, reward.cost, currentUser.id, reward.image);
+      const dbReward = await api.createReward(
+        familyId, reward.name, reward.description, reward.cost, currentUser.id,
+        {
+          imageUrl: reward.image,
+          icon: reward.icon,
+          category: reward.category,
+          stock: reward.stock,
+        }
+      );
       setRewards(prev => [...prev, toReward(dbReward)]);
     } catch (err: any) {
       alert(`创建奖励失败: ${err.message}`);

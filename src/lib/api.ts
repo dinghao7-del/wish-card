@@ -124,7 +124,8 @@ export async function createTask(
   description: string | null,
   starAmount: number,
   assigneeIds: string[],
-  createdBy: string
+  createdBy: string,
+  extra?: { is_habit?: boolean; icon?: string; target_count?: number; current_count?: number; category?: string; frequency?: string; status?: string }
 ): Promise<Task> {
   const { data, error } = await supabase
     .from('tasks')
@@ -135,13 +136,18 @@ export async function createTask(
       star_amount: starAmount,
       assignee_ids: assigneeIds,
       creator_id: createdBy,
+      is_habit: extra?.is_habit ?? false,
+      icon: extra?.icon || null,
+      target_count: extra?.target_count ?? 1,
+      current_count: extra?.current_count ?? 0,
+      status: (extra?.status as Task['status']) || 'pending',
     })
     .select()
     .single();
 
   if (error) throw new Error(`创建任务失败: ${error.message}`);
 
-  await logEvent(familyId, createdBy, 'task_created', { title, starAmount });
+  await logEvent(familyId, createdBy, 'task_created', { title, starAmount, isHabit: extra?.is_habit });
   
   return data;
 }
@@ -404,7 +410,7 @@ export async function createReward(
   description: string | null,
   starCost: number,
   createdBy: string,
-  imageUrl?: string
+  extra?: { imageUrl?: string; icon?: string; category?: string; stock?: number }
 ): Promise<Reward> {
   const { data, error } = await supabase
     .from('rewards')
@@ -413,7 +419,10 @@ export async function createReward(
       name,
       description,
       star_cost: starCost,
-      image_url: imageUrl,
+      image_url: extra?.imageUrl || null,
+      icon: extra?.icon || null,
+      category: extra?.category || null,
+      stock: extra?.stock ?? null,
       creator_id: createdBy,
     })
     .select()
