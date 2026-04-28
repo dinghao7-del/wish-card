@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { Task, Member, Reward, HistoryRecord } from '../types';
 import * as api from '../lib/api';
 import { supabase, type Database } from '../lib/supabase';
+import { getGuestData } from '../lib/guestData';
 
 type DbMember = Database['public']['Tables']['members']['Row'];
 type DbTask = Database['public']['Tables']['tasks']['Row'];
@@ -41,6 +42,7 @@ interface FamilyContextType {
   guestMode: boolean;
   setGuestMode: (val: boolean) => void;
   loadGuestData: (memberId: string, famId: string) => Promise<void>;
+  loadGuestDemoData: () => void;
 }
 
 const FamilyContext = createContext<FamilyContextType | undefined>(undefined);
@@ -117,8 +119,6 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
 
   // 保持 ref 同步
   useEffect(() => { guestModeRef.current = guestMode; }, [guestMode]);
-
-  // isInitialized 现在由 Supabase session 驱动，不再使用 localStorage
 
   useEffect(() => {
     if (isDarkMode) document.documentElement.classList.add('dark');
@@ -201,7 +201,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // 访客模式加载家庭数据（不需要 Supabase Auth session）
+  // 访客模式：从数据库加载家庭数据（不需要 Supabase Auth session）
   async function loadGuestData(memberId: string, famId: string) {
     try {
       setFamilyId(famId);
@@ -222,9 +222,26 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // 访客模式：加载本地展示数据（不需要数据库）
+  function loadGuestDemoData() {
+    const data = getGuestData();
+    setMembers(data.members);
+    setTasks(data.tasks);
+    setRewards(data.rewards);
+    setHistory(data.history);
+    setFamilyId('guest-family');
+    setLoading(false);
+  }
+
   // ==================== 任务 Mutations ====================
   const addTask = useCallback(async (task: Task) => {
-    if (!currentUser || !familyId) return;
+    if (!currentUser) return;
+    // 访客模式：纯前端本地添加
+    if (guestModeRef.current) {
+      setTasks(prev => [...prev, { ...task, id: task.id || `guest-t-${Date.now()}` }]);
+      return;
+    }
+    if (!familyId) return;
     try {
       const dbTask = await api.createTask(
         familyId, task.title, task.description, task.rewardStars,
@@ -245,6 +262,11 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   }, [currentUser, familyId]);
 
   const updateTask = useCallback(async (task: Task) => {
+    // 访客模式：纯前端本地更新
+    if (guestModeRef.current) {
+      setTasks(prev => prev.map(t => t.id === task.id ? task : t));
+      return;
+    }
     try {
       const dbTask = await api.updateTask(task.id, {
         title: task.title,
@@ -264,6 +286,11 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deleteTask = useCallback(async (taskId: string) => {
+    // 访客模式：纯前端本地删除
+    if (guestModeRef.current) {
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+      return;
+    }
     try {
       await api.deleteTask(taskId);
       setTasks(prev => prev.filter(t => t.id !== taskId));
@@ -274,6 +301,11 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
 
   const completeTask = useCallback(async (taskId: string) => {
     if (!currentUser) return;
+    // 访客模式：纯前端本地完成
+    if (guestModeRef.current) {
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'reviewing' as const } : t));
+      return;
+    }
     try {
       const dbTask = await api.completeTask(taskId, currentUser.id);
       setTasks(prev => prev.map(t => t.id === taskId ? toTask(dbTask) : t));
@@ -284,6 +316,30 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
 
   const approveTask = useCallback(async (taskId: string) => {
     if (!currentUser) return;
+    // 访客模式：纯前端本地审批 + 加星星
+    if (guestModeRef.current) {
+      const task = tasks.find(t => t.id === taskId);
+      if (task) {
+        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'completed' as const } : t));
+        // 给当前用户加星星
+        if (task.assigneeIds.includes(currentUser.id)) {
+          const newStars = currentUser.stars + task.rewardStars;
+          setCurrentUser({ ...currentUser, stars: newStars });
+          setMembers(prev => prev.map(m => m.id === currentUser.id ? { ...m, stars: newStars } : m));
+        }
+        // 添加历史记录
+        setHistory(prev => [{
+          id: `guest-hist-${Date.now()}`,
+          userId: currentUser.id,
+          title: `完成任务: ${task.title}`,
+          type: 'task',
+          stars: task.rewardStars,
+          timestamp: new Date().toISOString(),
+          icon: 'CheckCircle',
+        }, ...prev]);
+      }
+      return;
+    }
     try {
       const dbTask = await api.approveTask(taskId, currentUser.id);
       setTasks(prev => prev.map(t => t.id === taskId ? toTask(dbTask) : t));
@@ -292,11 +348,17 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     } catch (err: any) {
       alert(`审批任务失败: ${err.message}`);
     }
-  }, [currentUser]);
+  }, [currentUser, tasks]);
 
   // ==================== 奖励 Mutations ====================
   const addReward = useCallback(async (reward: Reward) => {
-    if (!currentUser || !familyId) return;
+    if (!currentUser) return;
+    // 访客模式：纯前端本地添加
+    if (guestModeRef.current) {
+      setRewards(prev => [...prev, { ...reward, id: reward.id || `guest-r-${Date.now()}` }]);
+      return;
+    }
+    if (!familyId) return;
     try {
       const dbReward = await api.createReward(
         familyId, reward.name, reward.description, reward.cost, currentUser.id,
@@ -314,6 +376,11 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   }, [currentUser, familyId]);
 
   const updateReward = useCallback(async (reward: Reward) => {
+    // 访客模式：纯前端本地更新
+    if (guestModeRef.current) {
+      setRewards(prev => prev.map(r => r.id === reward.id ? reward : r));
+      return;
+    }
     try {
       const dbReward = await api.updateReward(reward.id, {
         name: reward.name,
@@ -331,6 +398,11 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deleteReward = useCallback(async (rewardId: string) => {
+    // 访客模式：纯前端本地删除
+    if (guestModeRef.current) {
+      setRewards(prev => prev.filter(r => r.id !== rewardId));
+      return;
+    }
     try {
       await api.deleteReward(rewardId);
       setRewards(prev => prev.filter(r => r.id !== rewardId));
@@ -341,16 +413,41 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
 
   const redeemReward = useCallback(async (rewardId: string) => {
     if (!currentUser) return;
+    // 访客模式：纯前端本地兑换
+    if (guestModeRef.current) {
+      const reward = rewards.find(r => r.id === rewardId);
+      if (reward && currentUser.stars >= reward.cost) {
+        const newStars = currentUser.stars - reward.cost;
+        setCurrentUser({ ...currentUser, stars: newStars });
+        setMembers(prev => prev.map(m => m.id === currentUser.id ? { ...m, stars: newStars } : m));
+        // 添加历史记录
+        setHistory(prev => [{
+          id: `guest-hist-${Date.now()}`,
+          userId: currentUser.id,
+          title: `兑换心愿: ${reward.name}`,
+          type: 'redeem',
+          stars: -reward.cost,
+          timestamp: new Date().toISOString(),
+          icon: 'Gift',
+        }, ...prev]);
+      }
+      return;
+    }
     try {
       const dbReward = await api.redeemReward(rewardId, currentUser.id);
       setRewards(prev => prev.map(r => r.id === rewardId ? toReward(dbReward) : r));
     } catch (err: any) {
       alert(`兑换奖励失败: ${err.message}`);
     }
-  }, [currentUser]);
+  }, [currentUser, rewards]);
 
   // ==================== 成员 Mutations ====================
   const addMember = useCallback(async (member: Member) => {
+    // 访客模式：纯前端本地添加
+    if (guestModeRef.current) {
+      setMembers(prev => [...prev, { ...member, id: member.id || `guest-m-${Date.now()}` }]);
+      return;
+    }
     if (!familyId) return;
     try {
       const dbMember = await api.addMember(familyId, member.name, member.role, member.avatar);
@@ -361,6 +458,11 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   }, [familyId]);
 
   const deleteMember = useCallback(async (memberId: string) => {
+    // 访客模式：纯前端本地删除
+    if (guestModeRef.current) {
+      setMembers(prev => prev.filter(m => m.id !== memberId));
+      return;
+    }
     try {
       await api.deleteMember(memberId);
       setMembers(prev => prev.filter(m => m.id !== memberId));
@@ -370,6 +472,12 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const updateMember = useCallback(async (member: Member) => {
+    // 访客模式：纯前端本地更新
+    if (guestModeRef.current) {
+      setMembers(prev => prev.map(m => m.id === member.id ? member : m));
+      if (currentUser?.id === member.id) setCurrentUser(member);
+      return;
+    }
     try {
       const dbMember = await api.updateMember(member.id, {
         name: member.name,
@@ -388,7 +496,9 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   }, [currentUser]);
 
   const logout = useCallback(async () => {
-    await supabase.auth.signOut();
+    if (!guestModeRef.current) {
+      await supabase.auth.signOut();
+    }
     setCurrentUser(null);
     setMembers([]);
     setTasks([]);
@@ -420,7 +530,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
         isInitialized, setIsInitialized,
         loading,
         familyId,
-        guestMode, setGuestMode, loadGuestData,
+        guestMode, setGuestMode, loadGuestData, loadGuestDemoData,
       }}
     >
       {children}

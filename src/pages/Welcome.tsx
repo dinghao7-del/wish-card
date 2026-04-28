@@ -14,7 +14,7 @@ import * as api from '../lib/api';
 type Step = 'intro' | 'register' | 'login' | 'otp' | 'verify';
 
 export function Welcome() {
-  const { currentUser, setCurrentUser, members, setGuestMode, loadGuestData } = useFamily();
+  const { currentUser, setCurrentUser, members, setGuestMode, loadGuestData, loadGuestDemoData } = useFamily();
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -57,11 +57,12 @@ export function Welcome() {
       }
       // 访客模式：纯前端本地数据，不写数据库（避免 members.id 外键约束）
       setGuestMode(true);
+      loadGuestDemoData();
       setCurrentUser({
-        id: 'guest',
-        name: t('welcome.guest_name', '访客'),
-        avatar: '👤',
-        stars: 0,
+        id: 'guest-mom',
+        name: '妈妈',
+        avatar: '/avatars/parent/Cute_cartoon_avatar_of_a_young_2026-04-27T18-33-05.png',
+        stars: 320,
         role: 'parent',
       });
     } catch (err: any) {
