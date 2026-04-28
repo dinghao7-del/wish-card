@@ -196,6 +196,7 @@ export function PomodoroTimer() {
         onClose={() => setIsTaskSelectorOpen(false)} 
         onSelect={(taskName) => setSelectedTask(taskName)}
         tasks={tasks}
+        onNewTask={() => { setIsTaskSelectorOpen(false); navigate('/tasks/new'); }}
       />
       <DurationSelectorModal 
         isOpen={isDurationSelectorOpen} 
@@ -260,7 +261,7 @@ function HelpModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }
   );
 }
 
-function TaskSelectorModal({ isOpen, onClose, onSelect, tasks }: { isOpen: boolean, onClose: () => void, onSelect: (name: string) => void, tasks: any[] }) {
+function TaskSelectorModal({ isOpen, onClose, onSelect, tasks, onNewTask }: { isOpen: boolean, onClose: () => void, onSelect: (name: string) => void, tasks: any[], onNewTask: () => void }) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -303,7 +304,7 @@ function TaskSelectorModal({ isOpen, onClose, onSelect, tasks }: { isOpen: boole
               )}
             </div>
             <div className="p-6 bg-[#FDFCF9] border-t border-outline-variant/10">
-              <button className="w-full py-4 flex items-center justify-center gap-2 text-[#76A08A] font-black active:scale-95 transition-all">
+              <button onClick={onNewTask} className="w-full py-4 flex items-center justify-center gap-2 text-[#76A08A] font-black active:scale-95 transition-all">
                 <Plus size={20} />
                 新建任务
               </button>

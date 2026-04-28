@@ -4,12 +4,18 @@ import { ArrowLeft, Shield, Bell, Settings, ChevronRight, Smartphone, Mail, Glob
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
+import { useFamily } from '../context/FamilyContext';
 
 export function SettingsSubPage() {
   const navigate = useNavigate();
   const { type } = useParams();
   const { t, i18n } = useTranslation();
+  const { currentUser, updateMember, logout } = useFamily();
   const [activeItem, setActiveItem] = React.useState<any>(null);
+  const [passwordForm, setPasswordForm] = React.useState({ old: '', new: '', confirm: '' });
+  const [phoneForm, setPhoneForm] = React.useState({ phone: '', code: '' });
+  const [codeSent, setCodeSent] = React.useState(false);
+  const [codeCountdown, setCodeCountdown] = React.useState(0);
 
   const getContent = () => {
     switch (type) {
@@ -253,7 +259,7 @@ export function SettingsSubPage() {
                                <p className="text-[10px] text-on-surface-variant font-black uppercase">{t('settings.security.active_time', { time: '2h' })}</p>
                             </div>
                          </div>
-                         <button className="text-red-500 font-bold text-xs hover:bg-red-50 px-3 py-1 rounded-lg transition-colors">{t('settings.security.logout_device')}</button>
+                         <button onClick={() => { if (confirm('确定要退出该设备吗？')) { alert('已退出该设备'); setActiveItem(null); } }} className="text-red-500 font-bold text-xs hover:bg-red-50 px-3 py-1 rounded-lg transition-colors">{t('settings.security.logout_device')}</button>
                       </div>
                    </div>
                  )}

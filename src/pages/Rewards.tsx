@@ -128,7 +128,13 @@ export function Rewards() {
                className="bg-surface-container-low/60 rounded-[2rem] p-2 flex flex-col shadow-sm border border-outline-variant/10 hover:shadow-md transition-all group cursor-pointer relative overflow-hidden active:scale-[0.98]"
             >
               <div className="aspect-[3/2] w-full rounded-[1.8rem] bg-surface-container-low mb-3 overflow-hidden relative">
-                {reward.image && <img src={reward.image} alt={reward.name} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-700" />}
+                {(reward.image || reward.icon) && (
+                  <img 
+                    src={reward.image || reward.icon} 
+                    alt={reward.name} 
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-700" 
+                  />
+                )}
                 
                 {currentUser?.role === 'parent' && (
                   <button 
@@ -219,7 +225,13 @@ export function Rewards() {
               </button>
 
               <div className="w-full aspect-[4/3] rounded-3xl overflow-hidden mb-6 shadow-md border-4 border-surface dark:border-surface">
-                {selectedReward.image && <img src={selectedReward.image} alt={selectedReward.name} className="w-full h-full object-cover" />}
+                {(selectedReward.image || selectedReward.icon) && (
+                  <img 
+                    src={selectedReward.image || selectedReward.icon} 
+                    alt={selectedReward.name} 
+                    className="w-full h-full object-cover" 
+                  />
+                )}
               </div>
 
               <div className="flex justify-between items-start mb-4">

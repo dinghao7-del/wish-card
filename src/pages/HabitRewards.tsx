@@ -38,6 +38,11 @@ export function HabitRewards() {
   const filteredHabits = habits.filter(h => activeTab === 'reward' ? h.rewardStars >= 0 : h.rewardStars < 0);
 
   const getTaskIcon = (iconName: string, size = 32) => {
+    if (!iconName) return <LucideIcons.Trophy size={size} />;
+    // 支持本地 PNG 文件路径
+    if (iconName.startsWith('/') || iconName.startsWith('http')) {
+      return <img src={iconName} alt="" className="object-contain" style={{ width: size, height: size }} />;
+    }
     const IconComponent = (LucideIcons as any)[iconName];
     if (IconComponent) return <IconComponent size={size} />;
     

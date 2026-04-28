@@ -15,7 +15,7 @@ interface FamilyContextType {
   rewards: Reward[];
   history: HistoryRecord[];
   currentUser: Member | null;
-  setCurrentUser: (user: Member) => void;
+  setCurrentUser: (user: Member | null) => void;
   stars: number;
   addStars: (amount: number) => void;
   addTask: (task: Task) => Promise<void>;
@@ -104,7 +104,13 @@ function toHistory(db: DbStarTransaction): HistoryRecord {
 }
 
 export function FamilyProvider({ children }: { children: React.ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<Member | null>(null);
+  const [currentUser, setCurrentUserState] = useState<Member | null>(null);
+  const currentUserRef = useRef<Member | null>(null);
+  // 包装 setCurrentUser，同步更新 ref 以防止竞态
+  const setCurrentUser = (user: Member | null) => {
+    currentUserRef.current = user;
+    setCurrentUserState(user);
+  };
   const [members, setMembers] = useState<Member[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [rewards, setRewards] = useState<Reward[]>([]);
@@ -117,7 +123,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   const [guestMode, setGuestMode] = useState(false);
   const guestModeRef = useRef(false);
 
-  // 保持 ref 同步
+  // 保持 guestMode ref 同步
   useEffect(() => { guestModeRef.current = guestMode; }, [guestMode]);
 
   useEffect(() => {
@@ -130,32 +136,62 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     let mounted = true;
 
     const init = async () => {
+      // 给 Supabase getSession 设置超时，防止网络不可达时无限挂起
+      const getSessionWithTimeout = Promise.race([
+        supabase.auth.getSession(),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+      ]);
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const result = await getSessionWithTimeout;
+        const session = (result as any)?.data?.session;
         if (session?.user && mounted) {
           await loadUserData(session.user.id);
         }
       } catch (err) {
-        console.error('Init failed:', err);
+        console.error('Init failed (Supabase may be unreachable):', err);
       } finally {
         if (mounted) setLoading(false);
       }
     };
     init();
 
+    // onAuthStateChange 只做两件事：
+    // 1. 有 session 时加载用户数据
+    // 2. 用户主动退出登录(SIGNED_OUT)时清空数据
+    // 绝不在 Supabase 不可达或无网络时清空数据
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // 访客模式下不清空数据
-      if (guestModeRef.current) return;
-      if (session?.user) {
-        await loadUserData(session.user.id);
-      } else {
-        setCurrentUser(null);
-        setMembers([]);
-        setTasks([]);
-        setRewards([]);
-        setHistory([]);
-        setFamilyId(null);
-        setLoading(false);
+      console.log('[Auth] onAuthStateChange:', event, 'guestMode:', guestModeRef.current, 'currentUser:', currentUserRef.current?.id);
+      try {
+        // 访客模式下完全忽略所有 auth 事件
+        if (guestModeRef.current) {
+          console.log('[Auth] Skipped: guest mode active');
+          return;
+        }
+
+        // 有 session → 加载用户数据
+        if (session?.user) {
+          await loadUserData(session.user.id);
+          return;
+        }
+
+        // 无 session 的情况：只有明确是 SIGNED_OUT 事件 且 当前没有已登录用户 才清空数据
+        // 这是终极防线：即使 SIGNED_OUT 被错误触发（如网络问题），也不清空游客数据
+        if (event === 'SIGNED_OUT' && !currentUserRef.current) {
+          console.log('[Auth] User signed out, clearing data');
+          setCurrentUser(null);
+          setMembers([]);
+          setTasks([]);
+          setRewards([]);
+          setHistory([]);
+          setFamilyId(null);
+          setLoading(false);
+        } else if (event === 'SIGNED_OUT' && currentUserRef.current) {
+          console.log('[Auth] SIGNED_OUT but currentUser exists, skipping clear');
+        } else {
+          console.log('[Auth] No session but not SIGNED_OUT, skipping (event:', event, ')');
+        }
+      } catch (err) {
+        console.error('[Auth] onAuthStateChange error:', err);
       }
     });
 
@@ -224,6 +260,9 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
 
   // 访客模式：加载本地展示数据（不需要数据库）
   function loadGuestDemoData() {
+    // 先同步设置 ref，防止 onAuthStateChange 竞态清空数据
+    guestModeRef.current = true;
+    setGuestMode(true);
     const data = getGuestData();
     setMembers(data.members);
     setTasks(data.tasks);
@@ -231,6 +270,8 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     setHistory(data.history);
     setFamilyId('guest-family');
     setLoading(false);
+    // 返回默认游客用户，让调用方同步设置 currentUser 和 ref
+    return data.members[0] || null;
   }
 
   // ==================== 任务 Mutations ====================
@@ -499,6 +540,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     if (!guestModeRef.current) {
       await supabase.auth.signOut();
     }
+    guestModeRef.current = false;
     setCurrentUser(null);
     setMembers([]);
     setTasks([]);

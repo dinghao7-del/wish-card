@@ -26,7 +26,10 @@ export function ContactUs() {
 
       <section className="mt-8 space-y-4">
         {/* Customer Service */}
-        <div className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E8E7E0]/30 flex items-center justify-between group active:scale-[0.98] transition-all cursor-pointer">
+        <div 
+          onClick={() => navigate('/feedback')}
+          className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E8E7E0]/30 flex items-center justify-between group active:scale-[0.98] transition-all cursor-pointer"
+        >
           <div className="flex items-center gap-5">
             <div className="w-14 h-14 rounded-2xl bg-[#E8F5E9] flex items-center justify-center text-[#2E8B57]">
               <Headset size={28} />
@@ -40,7 +43,10 @@ export function ContactUs() {
         </div>
 
         {/* QQ Group */}
-        <div className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E8E7E0]/30 flex items-center justify-between group active:scale-[0.98] transition-all cursor-pointer">
+        <div 
+          onClick={() => copyToClipboard('123456789')}
+          className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E8E7E0]/30 flex items-center justify-between group active:scale-[0.98] transition-all cursor-pointer"
+        >
           <div className="flex items-center gap-5">
             <div className="w-14 h-14 rounded-2xl bg-[#E3F2FD] flex items-center justify-center text-[#1976D2]">
               <Users size={28} />

@@ -1,8 +1,9 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useFamily } from '../context/FamilyContext';
 import { CheckSquare, Repeat, Gift, Users, LogOut, Star } from 'lucide-react';
 
 function Dashboard() {
+  const navigate = useNavigate();
   const { currentUser, setCurrentUser, members, tasks, rewards, logout } = useFamily();
 
   if (!currentUser) {
@@ -38,7 +39,7 @@ function Dashboard() {
         </div>
         <div className="flex items-center gap-3">
           <div 
-            onClick={() => {}}
+            onClick={() => navigate('/history')}
             className="bg-surface-container-low backdrop-blur-sm py-1.5 px-4 rounded-full flex items-center gap-2 shadow-sm border border-outline-variant/10 cursor-pointer hover:bg-surface-container transition-colors active:scale-95"
           >
             <Star size={18} className="text-star fill-current" />
@@ -101,26 +102,25 @@ function Dashboard() {
             icon="✓"
             label="创建目标" 
             color="bg-[#E3F2FD] text-[#1976D2]" 
-            onClick={() => {}}
+            onClick={() => navigate('/tasks/new')}
           />
           <QuickActionButton 
             icon="🎁"
             label="许下心愿" 
             color="bg-[#FFF3E0] text-[#E65100]" 
-            onClick={() => {}}
+            onClick={() => navigate('/rewards/new')}
           />
           <QuickActionButton 
             icon="🔄"
             label="查看日历" 
             color="bg-[#F3E5F5] text-[#7B1FA2]" 
-            onClick={() => {}}
+            onClick={() => navigate('/tasks')}
           />
           <QuickActionButton 
             icon="🍅"
             label="番茄时钟" 
             color="bg-[#FFEBEE] text-[#C62828]" 
-            onClick={() => {}}
-            disabled
+            onClick={() => navigate('/pomodoro')}
           />
         </div>
 
@@ -250,22 +250,18 @@ function Dashboard() {
 }
 
 // 快捷操作按钮组件
-function QuickActionButton({ icon, label, color, onClick, disabled }: { 
+function QuickActionButton({ icon, label, color, onClick }: { 
   icon: string, 
   label: string, 
   color: string, 
-  onClick?: () => void,
-  disabled?: boolean 
+  onClick?: () => void
 }) {
   return (
     <button 
       onClick={onClick}
-      disabled={disabled}
-      className={`rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all active:scale-95 ${
-        disabled ? 'opacity-60 cursor-not-allowed bg-gray-100' : 'bg-white'
-      }`}
+      className={`rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all active:scale-95 bg-white`}
     >
-      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${!disabled ? color : ''}`}>
+      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${color}`}>
         {icon}
       </div>
       <span className="text-[10px] font-bold text-gray-600 whitespace-nowrap">{label}</span>

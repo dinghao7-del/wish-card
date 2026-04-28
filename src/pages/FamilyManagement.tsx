@@ -4,7 +4,7 @@ import { useFamily } from '../context/FamilyContext';
 import { ArrowLeft, Copy, Plus, Trash2 } from 'lucide-react';
 
 function FamilyManagement() {
-  const { currentFamily, currentUser, members, addMember, removeMember } = useFamily();
+  const { currentUser, members, addMember, deleteMember, familyId } = useFamily();
   const [showAddForm, setShowAddForm] = useState(false);
   const [name, setName] = useState('');
   const [role, setRole] = useState<'parent' | 'child'>('child');
@@ -19,7 +19,13 @@ function FamilyManagement() {
     if (!name.trim()) return;
 
     try {
-      await addMember(name.trim(), role, avatar);
+      await addMember({
+        id: `m-${Date.now()}`,
+        name: name.trim(),
+        role,
+        avatar,
+        stars: 0,
+      });
       setName('');
       setRole('child');
       setAvatar('👶');
@@ -30,8 +36,8 @@ function FamilyManagement() {
   };
 
   const copyInviteCode = () => {
-    if (currentFamily) {
-      navigator.clipboard.writeText(currentFamily.invite_code);
+    if (familyId) {
+      navigator.clipboard.writeText(familyId);
       alert('邀请码已复制到剪贴板！');
     }
   };
@@ -50,18 +56,14 @@ function FamilyManagement() {
 
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {/* 家庭信息 */}
-        {currentFamily && (
+        {familyId && (
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <h2 className="text-lg font-medium text-gray-800 mb-4">家庭信息</h2>
             <div className="space-y-3">
-              <div>
-                <span className="text-sm text-gray-600">家庭名称：</span>
-                <span className="font-medium">{currentFamily.name}</span>
-              </div>
               <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-600">邀请码：</span>
-                <code className="bg-gray-100 px-3 py-1 rounded font-bold text-forest-primary">
-                  {currentFamily.invite_code}
+                <span className="text-sm text-gray-600">家庭ID：</span>
+                <code className="bg-gray-100 px-3 py-1 rounded font-bold text-forest-primary text-sm">
+                  {familyId}
                 </code>
                 <button
                   onClick={copyInviteCode}
@@ -207,7 +209,7 @@ function FamilyManagement() {
                     <button
                       onClick={() => {
                         if (confirm(`确定要移除 ${member.name} 吗？`)) {
-                          removeMember(member.id);
+                          deleteMember(member.id);
                         }
                       }}
                       className="p-2 text-gray-400 hover:text-red-500"

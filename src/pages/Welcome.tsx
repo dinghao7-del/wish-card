@@ -55,17 +55,23 @@ export function Welcome() {
         setCurrentUser(members[0]);
         return;
       }
-      // 访客模式：纯前端本地数据，不写数据库（避免 members.id 外键约束）
-      setGuestMode(true);
+      // 访客模式：纯前端本地数据，不写数据库
+      // loadGuestDemoData 内部已同步设置 guestModeRef 防止 onAuthStateChange 竞态
       loadGuestDemoData();
-      setCurrentUser({
+      // loadGuestDemoData 设置了 members，取第一个作为当前用户
+      const user = {
         id: 'guest-mom',
         name: '妈妈',
         avatar: '/avatars/parent/Cute_cartoon_avatar_of_a_young_2026-04-27T18-33-05.png',
         stars: 320,
-        role: 'parent',
-      });
+        role: 'parent' as const,
+      };
+      console.log('[GuestMode] Setting currentUser:', user.id, user.name);
+      setCurrentUser(user);
+      // 立即导航，不等待可能的异步副作用
+      navigate('/', { replace: true });
     } catch (err: any) {
+      console.error('[GuestMode] handleSkip error:', err);
       setError(err.message || t('welcome.skip_error', '跳过失败，请重试'));
     } finally {
       setLoading(false);
@@ -115,7 +121,12 @@ export function Welcome() {
       setInfo(t('welcome.otp.code_sent', `验证码已发送至 ${input}`));
       setStep('verify');
     } catch (err: any) {
-      setError(err.message || t('welcome.otp.error_send', '发送验证码失败'));
+      const msg = err.message || '';
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('ERR_') || msg.includes('fetch')) {
+        setError('网络连接失败，无法连接到服务器。请检查网络后重试，或先使用游客模式体验');
+      } else {
+        setError(msg || t('welcome.otp.error_send', '发送验证码失败'));
+      }
     } finally {
       setLoading(false);
     }
@@ -169,7 +180,12 @@ export function Welcome() {
         });
       }
     } catch (err: any) {
-      setError(err.message || t('welcome.login.error_invalid', '登录失败'));
+      const msg = err.message || '';
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('ERR_') || msg.includes('fetch')) {
+        setError('网络连接失败，无法连接到服务器。请检查网络后重试，或先使用游客模式体验');
+      } else {
+        setError(msg || t('welcome.login.error_invalid', '登录失败'));
+      }
     } finally {
       setLoading(false);
     }
@@ -187,19 +203,14 @@ export function Welcome() {
     setError('');
     try {
       const isEmail = input.includes('@');
-      // 邮箱 OTP 类型：signInWithOtp 新用户用 'signup'，已有用户用 'email'
+      // signInWithOtp 发送的验证码统一用 'email' 类型验证（不是 'signup'）
+      // 'signup' 类型仅用于 signUp 方法发送的验证码
       const { error: vErr } = isEmail
-        ? await supabase.auth.verifyOtp({ email: input, token, type: 'signup' })
+        ? await supabase.auth.verifyOtp({ email: input, token, type: 'email' })
         : await supabase.auth.verifyOtp({ phone: input, token, type: 'sms' });
 
       if (vErr) {
-        // 如果 signup 类型失败，尝试 email 类型（用户可能已存在）
-        if (isEmail && vErr.message?.includes('already')) {
-          const { error: vErr2 } = await supabase.auth.verifyOtp({ email: input, token, type: 'email' });
-          if (vErr2) throw vErr2;
-        } else {
-          throw vErr;
-        }
+        throw vErr;
       }
 
       // 验证成功后，为新用户创建家庭和成员记录
@@ -267,7 +278,12 @@ export function Welcome() {
         }
       }
     } catch (err: any) {
-      setError(err.message || t('welcome.otp.error_verify', '验证失败'));
+      const msg = err.message || '';
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('ERR_') || msg.includes('fetch')) {
+        setError('网络连接失败，无法连接到服务器。请检查网络后重试');
+      } else {
+        setError(msg || t('welcome.otp.error_verify', '验证失败'));
+      }
     } finally {
       setLoading(false);
     }
@@ -290,18 +306,15 @@ export function Welcome() {
         className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-secondary/5 rounded-full blur-[120px]"
       />
 
-      {/* 右上角关闭/跳过按钮 */}
-      <motion.button
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.5 }}
+      {/* 右上角关闭/跳过按钮 - 始终可见，无延迟 */}
+      <button
         onClick={handleSkip}
         disabled={loading}
-        className="absolute top-6 right-6 z-50 flex items-center gap-1 px-3 h-10 bg-white/50 backdrop-blur-md rounded-2xl text-on-surface-variant hover:bg-white hover:text-primary transition-all active:scale-95 shadow-sm border border-outline-variant/20 text-sm font-bold"
+        className="absolute top-6 right-6 z-50 flex items-center gap-1.5 px-4 h-11 bg-white/90 backdrop-blur-md rounded-full text-[#006e1c] hover:bg-white hover:shadow-lg transition-all active:scale-95 shadow-md border border-[#006e1c]/20 text-sm font-black"
       >
-        <X size={18} />
+        {loading ? <Loader2 className="animate-spin" size={16} /> : <X size={16} />}
         <span>{t('welcome.skip', '跳过')}</span>
-      </motion.button>
+      </button>
 
       <AnimatePresence mode="wait">
         {/* ==================== Intro ==================== */}
@@ -344,6 +357,14 @@ export function Welcome() {
               >
                 <LogIn size={22} />
                 {t('welcome.login.submit', '登录账号')}
+              </button>
+              <button
+                onClick={handleSkip}
+                disabled={loading}
+                className="w-full h-12 text-[#006e1c]/60 bg-[#006e1c]/5 rounded-[2rem] font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#006e1c]/10 transition-all active:scale-95 border border-[#006e1c]/10"
+              >
+                {loading ? <Loader2 className="animate-spin" size={16} /> : <ArrowRight size={16} />}
+                先逛逛（游客模式）
               </button>
             </div>
           </motion.div>

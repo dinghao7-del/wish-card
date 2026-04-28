@@ -22,6 +22,7 @@ export function Feedback() {
   const [content, setContent] = useState('');
   const [contact, setContact] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,11 +104,44 @@ export function Feedback() {
           </div>
         </section>
 
-        {/* Media Upload (Visual Placeholder) */}
+        {/* Media Upload */}
         <section className="space-y-4">
           <h3 className="text-lg font-black text-on-surface pl-1">{t('feedback.media')}</h3>
-          <div className="w-24 h-24 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface-variant/40 border-2 border-dashed border-outline-variant/30 cursor-pointer hover:bg-surface-container-highest transition-colors active:scale-95">
-            <Camera size={28} />
+          <div className="flex flex-wrap gap-3">
+            {images.map((img, idx) => (
+              <div key={idx} className="relative w-24 h-24 rounded-2xl overflow-hidden border border-[#E8E7E0]/30">
+                <img src={img} alt="" className="w-full h-full object-cover" />
+                <button 
+                  onClick={() => setImages(prev => prev.filter((_, i) => i !== idx))}
+                  className="absolute top-1 right-1 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center text-xs"
+                >✕</button>
+              </div>
+            ))}
+            {images.length < 4 && (
+              <label className="w-24 h-24 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface-variant/40 border-2 border-dashed border-outline-variant/30 cursor-pointer hover:bg-surface-container-highest transition-colors active:scale-95">
+                <Camera size={28} />
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  multiple 
+                  className="hidden" 
+                  onChange={(e) => {
+                    const files = e.target.files;
+                    if (!files) return;
+                    Array.from(files).slice(0, 4 - images.length).forEach(file => {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        if (ev.target?.result) {
+                          setImages(prev => [...prev, ev.target!.result as string]);
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    });
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+            )}
           </div>
         </section>
 
