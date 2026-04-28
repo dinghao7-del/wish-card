@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="bg-a7" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#D1C4E9"/>
+      <stop offset="100%" stop-color="#b8abd0"/>
+    </radialGradient>
+  </defs>
+  <!-- 背景圆 -->
+  <circle cx="100" cy="100" r="98" fill="url(#bg-a7)" stroke="#7E57C2" stroke-width="4"/>
+  <!-- 头发 -->
+  <ellipse cx="100" cy="72" rx="55" ry="38" fill="#37474F"/>
+  <!-- 脸 -->
+  <ellipse cx="100" cy="118" rx="52" ry="56" fill="#FFE0B2"/>
+  <!-- 耳朵 -->
+  <ellipse cx="52" cy="115" rx="10" ry="14" fill="#FFE0B2"/>
+  <ellipse cx="148" cy="115" rx="10" ry="14" fill="#FFE0B2"/>
+  <!-- 眼睛 -->
+  <ellipse cx="80" cy="108" rx="8" ry="9" fill="#FFF"/>
+  <ellipse cx="120" cy="108" rx="8" ry="9" fill="#FFF"/>
+  <circle cx="81" cy="109" r="5" fill="#333"/>
+  <circle cx="121" cy="109" r="5" fill="#333"/>
+  <circle cx="82.5" cy="107.5" r="2" fill="#FFF"/>
+  <circle cx="122.5" cy="107.5" r="2" fill="#FFF"/>
+  <!-- 眉毛 -->
+  <path d="M68 95 Q80 90 92 95" stroke="#37474F" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M108 95 Q120 90 132 95" stroke="#37474F" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- 嘴巴 -->
+  <path d="M88 140 Q100 150 112 140" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- 配件（眼镜/帽子/围巾等） -->
+  <rect x="70" y="100" width="60" height="18" rx="9" fill="none" stroke="#7E57C2" stroke-width="2.5"/>
+</svg>

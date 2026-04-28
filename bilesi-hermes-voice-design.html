@@ -1,0 +1,1592 @@
+# 比乐时 Hermes 本地化 + AI 语音方案
+
+> **无云依赖 · 隐私优先 · 语音驱动**
+>
+> 文档版本：v1.0
+> 完成时间：2026-04-20
+
+---
+
+## 一、核心架构变更：从云端到本地
+
+### 1.1 原方案 vs 新方案对比
+
+| 功能模块 | 原方案（云端） | 新方案（Hermes本地） |
+|---------|-------------|-------------------|
+| **用户认证** | 云端JWT服务 | 本地加密存储 |
+| **数据存储** | 云端PostgreSQL | 本地SQLite/Hive |
+| **文件存储** | 阿里云OSS | 本地文件系统 + iCloud可选 |
+| **实时同步** | WebSocket云端 | Hermes本地 + 点对点 |
+| **推送通知** | FCM云端推送 | 本地通知 + AirDrop家庭共享 |
+| **数据备份** | 云端自动备份 | 本地TimeMachine + 手动导出 |
+| **照片存储** | 云端加密存储 | 本地原图 + 缩略图缓存 |
+| **LLM能力** | 第三方API | 本地Ollama/LM Studio |
+
+### 1.2 新架构总览
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           比乐时 Hermes 本地化架构                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │                          用户设备层 (Device Layer)                       │  │
+│  │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐                  │  │
+│  │  │  iPhone    │    │   iPad     │    │   Mac/PC   │                  │  │
+│  │  │ Flutter App │    │ Flutter App │    │   Web App  │                  │  │
+│  │  └──────┬──────┘    └──────┬──────┘    └──────┬──────┘                  │  │
+│  └─────────┼──────────────────┼──────────────────┼────────────────────────┘  │
+│            │                  │                  │                            │
+│            └──────────────────┼──────────────────┘                            │
+│                               ▼                                               │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │                     Hermes Agent 本地大脑 (Local AI Layer)              │  │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐      │  │
+│  │  │   Ollama   │  │   Whisper  │  │   TTS      │  │   LangChain │      │  │
+│  │  │  (LLM推理) │  │  (语音识别) │  │  (语音合成) │  │  (工具调用) │      │  │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘      │  │
+│  │                                                                       │  │
+│  │  ┌─────────────────────────────────────────────────────────────┐       │  │
+│  │  │              Hermes Agent Core (任务编排 + 记忆系统)           │       │  │
+│  │  └─────────────────────────────────────────────────────────────┘       │  │
+│  └────────────────────────────────────────────────────────────────────────┘  │
+│                               │                                               │
+│                               ▼                                               │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │                      本地数据层 (Local Data Layer)                      │  │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐      │  │
+│  │  │   SQLite   │  │    Hive    │  │   Files    │  │    Keys    │      │  │
+│  │  │ (结构化数据) │  │ (键值存储) │  │ (照片/附件) │  │ (加密密钥)  │      │  │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘      │  │
+│  └────────────────────────────────────────────────────────────────────────┘  │
+│                               │                                               │
+│                               ▼                                               │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │                        可选同步层 (Optional Sync)                       │  │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                     │  │
+│  │  │  iCloud    │  │  AirDrop   │  │   局域网    │                     │  │
+│  │  │ (家庭成员)  │  │ (快速分享) │  │ (P2P同步)  │                     │  │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘                     │  │
+│  └────────────────────────────────────────────────────────────────────────┘  │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 二、本地化数据架构设计
+
+### 2.1 数据分层存储
+
+```
+~/Library/Application Support/bilesi/
+├── data/
+│   ├── database.sqlite          # 主数据库（用户、家庭、任务等）
+│   ├── knowledge.graph          # 知识图谱（家庭关系、习惯模式）
+│   └── embeddings/             # 向量索引（语义搜索）
+├── files/
+│   ├── photos/                 # 照片原图
+│   │   ├── originals/          # 原始图片
+│   │   └── thumbnails/        # 缩略图
+│   ├── recipes/               # 食谱图片
+│   └── attachments/           # 其他附件
+├── cache/
+│   ├── llm_cache/             # LLM响应缓存
+│   └── image_cache/           # 图片缓存
+├── keys/
+│   └── encryption.key         # 加密密钥（Keychain保护）
+└── config/
+    ├── settings.json           # 用户设置
+    ├── family_config.json      # 家庭配置
+    └── voice_profiles.json     # 语音配置
+```
+
+### 2.2 数据库 Schema（SQLite）
+
+```sql
+-- ============================================
+-- 比乐时本地数据库 Schema
+-- ============================================
+
+-- 用户表
+CREATE TABLE users (
+    id TEXT PRIMARY KEY,
+    email TEXT UNIQUE,
+    nickname TEXT NOT NULL,
+    avatar_path TEXT,
+    password_hash TEXT NOT NULL,
+    encryption_key TEXT NOT NULL,  -- 用于数据加密
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+-- 家庭表
+CREATE TABLE families (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    invite_code TEXT UNIQUE NOT NULL,
+    created_by TEXT NOT NULL REFERENCES users(id),
+    settings TEXT,  -- JSON配置
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+-- 家庭成员表
+CREATE TABLE family_members (
+    id TEXT PRIMARY KEY,
+    family_id TEXT NOT NULL REFERENCES families(id),
+    user_id TEXT NOT NULL REFERENCES users(id),
+    nickname TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('admin', 'editor', 'viewer')),
+    color TEXT NOT NULL DEFAULT '#4A90D9',
+    star_balance INTEGER NOT NULL DEFAULT 0,
+    voice_enabled INTEGER DEFAULT 1,
+    voice_wake_word TEXT,
+    joined_at INTEGER NOT NULL
+);
+
+-- 日历事件表
+CREATE TABLE calendar_events (
+    id TEXT PRIMARY KEY,
+    family_id TEXT NOT NULL REFERENCES families(id),
+    title TEXT NOT NULL,
+    description TEXT,
+    start_time INTEGER NOT NULL,
+    end_time INTEGER,
+    all_day INTEGER DEFAULT 0,
+    recurrence_rule TEXT,  -- RRULE格式
+    location TEXT,
+    color TEXT,
+    created_by TEXT NOT NULL REFERENCES users(id),
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    sync_status TEXT DEFAULT 'local'  -- 'local', 'synced', 'conflict'
+);
+
+-- 事件参与者
+CREATE TABLE event_participants (
+    id TEXT PRIMARY KEY,
+    event_id TEXT NOT NULL REFERENCES calendar_events(id),
+    member_id TEXT NOT NULL REFERENCES family_members(id),
+    status TEXT DEFAULT 'pending',
+    UNIQUE(event_id, member_id)
+);
+
+-- 任务表
+CREATE TABLE tasks (
+    id TEXT PRIMARY KEY,
+    family_id TEXT NOT NULL REFERENCES families(id),
+    title TEXT NOT NULL,
+    description TEXT,
+    icon_type TEXT DEFAULT 'emoji',
+    icon_value TEXT,
+    reward_stars INTEGER DEFAULT 1,
+    allow_overdue INTEGER DEFAULT 1,
+    is_competition INTEGER DEFAULT 0,
+    recurrence_rule TEXT,
+    start_date TEXT,
+    start_time TEXT,
+    end_date TEXT,
+    created_by TEXT NOT NULL REFERENCES users(id),
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    sync_status TEXT DEFAULT 'local'
+);
+
+-- 任务分配
+CREATE TABLE task_assignments (
+    id TEXT PRIMARY KEY,
+    task_id TEXT NOT NULL REFERENCES tasks(id),
+    member_id TEXT NOT NULL REFERENCES family_members(id),
+    status TEXT DEFAULT 'pending',
+    completed_at INTEGER,
+    order_rank INTEGER,
+    UNIQUE(task_id, member_id)
+);
+
+-- 星星交易记录
+CREATE TABLE star_transactions (
+    id TEXT PRIMARY KEY,
+    member_id TEXT NOT NULL REFERENCES family_members(id),
+    amount INTEGER NOT NULL,
+    type TEXT NOT NULL CHECK(type IN ('task', 'manual', 'reward', 'penalty', 'cancellation')),
+    description TEXT,
+    related_task_id TEXT REFERENCES tasks(id),
+    created_by TEXT REFERENCES users(id),
+    created_at INTEGER NOT NULL
+);
+
+-- 奖励物品
+CREATE TABLE reward_items (
+    id TEXT PRIMARY KEY,
+    family_id TEXT NOT NULL REFERENCES families(id),
+    title TEXT NOT NULL,
+    icon_type TEXT DEFAULT 'emoji',
+    icon_value TEXT,
+    custom_image_path TEXT,
+    cost_stars INTEGER NOT NULL,
+    created_by TEXT NOT NULL REFERENCES users(id),
+    created_at INTEGER NOT NULL
+);
+
+-- 兑换记录
+CREATE TABLE reward_redemptions (
+    id TEXT PRIMARY KEY,
+    member_id TEXT NOT NULL REFERENCES family_members(id),
+    reward_item_id TEXT NOT NULL REFERENCES reward_items(id),
+    stars_spent INTEGER NOT NULL,
+    status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'completed', 'cancelled')),
+    redeemed_at INTEGER NOT NULL,
+    cancelled_at INTEGER,
+    cancelled_by TEXT REFERENCES users(id)
+);
+
+-- 食谱表
+CREATE TABLE recipes (
+    id TEXT PRIMARY KEY,
+    family_id TEXT NOT NULL REFERENCES families(id),
+    title TEXT NOT NULL,
+    category TEXT DEFAULT 'dinner',
+    image_paths TEXT,  -- JSON数组
+    ingredients TEXT,  -- JSON数组
+    steps TEXT,        -- JSON数组
+    is_favorite INTEGER DEFAULT 0,
+    created_by TEXT NOT NULL REFERENCES users(id),
+    created_at INTEGER NOT NULL
+);
+
+-- 餐食计划
+CREATE TABLE meal_plans (
+    id TEXT PRIMARY KEY,
+    family_id TEXT NOT NULL REFERENCES families(id),
+    plan_date TEXT NOT NULL,
+    meal_type TEXT NOT NULL,
+    recipe_ids TEXT NOT NULL,  -- JSON数组
+    created_by TEXT NOT NULL REFERENCES users(id),
+    created_at INTEGER NOT NULL
+);
+
+-- 相册表
+CREATE TABLE albums (
+    id TEXT PRIMARY KEY,
+    family_id TEXT NOT NULL REFERENCES families(id),
+    name TEXT NOT NULL,
+    cover_photo_path TEXT,
+    created_by TEXT NOT NULL REFERENCES users(id),
+    created_at INTEGER NOT NULL
+);
+
+-- 照片表
+CREATE TABLE photos (
+    id TEXT PRIMARY KEY,
+    album_id TEXT NOT NULL REFERENCES albums(id),
+    file_path TEXT NOT NULL,
+    thumbnail_path TEXT,
+    caption TEXT,
+    is_cherished INTEGER DEFAULT 0,
+    uploaded_by TEXT NOT NULL REFERENCES users(id),
+    created_at INTEGER NOT NULL
+);
+
+-- 照片评论
+CREATE TABLE photo_comments (
+    id TEXT PRIMARY KEY,
+    photo_id TEXT NOT NULL REFERENCES photos(id),
+    member_id TEXT NOT NULL REFERENCES family_members(id),
+    content TEXT NOT NULL,
+    created_at INTEGER NOT NULL
+);
+
+-- 语音命令历史
+CREATE TABLE voice_commands (
+    id TEXT PRIMARY KEY,
+    member_id TEXT NOT NULL REFERENCES family_members(id),
+    transcript TEXT NOT NULL,
+    intent TEXT NOT NULL,
+    entities TEXT,  -- JSON解析的实体
+    action_taken TEXT,  -- 执行的动作
+    confidence REAL,
+    created_at INTEGER NOT NULL
+);
+
+-- 索引
+CREATE INDEX idx_tasks_family ON tasks(family_id);
+CREATE INDEX idx_tasks_date ON tasks(start_date);
+CREATE INDEX idx_star_transactions_member ON star_transactions(member_id);
+CREATE INDEX idx_calendar_events_family ON calendar_events(family_id);
+CREATE INDEX idx_calendar_events_time ON calendar_events(start_time);
+CREATE INDEX idx_voice_commands_member ON voice_commands(member_id);
+CREATE INDEX idx_voice_commands_time ON voice_commands(created_at);
+```
+
+### 2.3 Hermes 数据操作接口
+
+```dart
+// lib/hermes/data_service.dart
+
+import 'dart:convert';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
+class HermesDataService {
+  static Database? _db;
+  static Box? _settings;
+
+  /// 初始化数据库
+  Future<void> init() async {
+    // 初始化 Hive
+    await Hive.initFlutter();
+    _settings = await Hive.openBox('settings');
+
+    // 初始化 SQLite
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, 'bilesi.db');
+
+    _db = await openDatabase(
+      path,
+      version: 1,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
+  }
+
+  /// 创建表结构
+  Future<void> _onCreate(Database db, int version) async {
+    await db.execute('''
+      CREATE TABLE family_members (
+        id TEXT PRIMARY KEY,
+        family_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        nickname TEXT NOT NULL,
+        role TEXT NOT NULL,
+        color TEXT NOT NULL,
+        star_balance INTEGER DEFAULT 0,
+        voice_enabled INTEGER DEFAULT 1,
+        voice_wake_word TEXT,
+        joined_at INTEGER NOT NULL
+      )
+    ''');
+
+    // ... 其他表创建语句
+  }
+
+  // ============ 任务操作 ============
+
+  /// 创建任务
+  Future<String> createTask(Task task) async {
+    final id = _generateId();
+    await _db!.insert('tasks', {
+      'id': id,
+      'family_id': task.familyId,
+      'title': task.title,
+      'description': task.description,
+      'icon_type': task.iconType,
+      'icon_value': task.iconValue,
+      'reward_stars': task.rewardStars,
+      'allow_overdue': task.allowOverdue ? 1 : 0,
+      'is_competition': task.isCompetition ? 1 : 0,
+      'recurrence_rule': task.recurrenceRule,
+      'start_date': task.startDate,
+      'start_time': task.startTime,
+      'end_date': task.endDate,
+      'created_by': task.createdBy,
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+      'sync_status': 'local',
+    });
+
+    // 同步通知其他家庭成员
+    await _broadcastChange('task', 'create', id, task.familyId);
+
+    return id;
+  }
+
+  /// 获取今日任务
+  Future<List<Task>> getTodayTasks(String familyId) async {
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    final results = await _db!.query(
+      'tasks',
+      where: 'family_id = ? AND start_date = ?',
+      whereArgs: [familyId, today],
+      orderBy: 'start_time ASC',
+    );
+
+    return results.map((row) => _taskFromRow(row)).toList();
+  }
+
+  /// 完成任务（带星星奖励）
+  Future<Map<String, dynamic>> completeTask(String taskId, String memberId) async {
+    final task = await _db!.query('tasks', where: 'id = ?', whereArgs: [taskId]);
+    if (task.isEmpty) throw Exception('任务不存在');
+
+    final taskData = task.first;
+    final stars = taskData['reward_stars'] as int;
+
+    // 更新任务状态
+    await _db!.update(
+      'task_assignments',
+      {
+        'status': 'completed',
+        'completed_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'task_id = ? AND member_id = ?',
+      whereArgs: [taskId, memberId],
+    );
+
+    // 增加星星
+    await _db!.rawUpdate('''
+      UPDATE family_members
+      SET star_balance = star_balance + ?
+      WHERE id = ?
+    ''', [stars, memberId]);
+
+    // 记录交易
+    await _db!.insert('star_transactions', {
+      'id': _generateId(),
+      'member_id': memberId,
+      'amount': stars,
+      'type': 'task',
+      'description': '完成任务: ${taskData['title']}',
+      'related_task_id': taskId,
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    });
+
+    // 获取新余额
+    final member = await _db!.query(
+      'family_members',
+      where: 'id = ?',
+      whereArgs: [memberId],
+    );
+
+    return {
+      'stars_earned': stars,
+      'total_stars': member.first['star_balance'],
+    };
+  }
+
+  // ============ 星星操作 ============
+
+  /// 获取星星余额
+  Future<int> getStarBalance(String memberId) async {
+    final results = await _db!.query(
+      'family_members',
+      columns: ['star_balance'],
+      where: 'id = ?',
+      whereArgs: [memberId],
+    );
+    return results.first['star_balance'] as int;
+  }
+
+  /// 获取星星历史
+  Future<List<StarTransaction>> getStarHistory(
+    String memberId, {
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final results = await _db!.query(
+      'star_transactions',
+      where: 'member_id = ?',
+      whereArgs: [memberId],
+      orderBy: 'created_at DESC',
+      limit: limit,
+      offset: offset,
+    );
+
+    return results.map((row) => StarTransaction.fromMap(row)).toList();
+  }
+
+  /// 手动调整星星
+  Future<void> adjustStars({
+    required String memberId,
+    required int amount,
+    required String description,
+    required String adjustedBy,
+  }) async {
+    // 更新余额
+    await _db!.rawUpdate('''
+      UPDATE family_members
+      SET star_balance = star_balance + ?
+      WHERE id = ?
+    ''', [amount, memberId]);
+
+    // 记录交易
+    await _db!.insert('star_transactions', {
+      'id': _generateId(),
+      'member_id': memberId,
+      'amount': amount,
+      'type': amount > 0 ? 'manual' : 'penalty',
+      'description': description,
+      'created_by': adjustedBy,
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    });
+  }
+
+  // ============ 奖励兑换 ============
+
+  /// 兑换奖励
+  Future<RedemptionResult> redeemReward(String memberId, String rewardId) async {
+    final reward = await _db!.query(
+      'reward_items',
+      where: 'id = ?',
+      whereArgs: [rewardId],
+    );
+    if (reward.isEmpty) throw Exception('奖励不存在');
+
+    final cost = reward.first['cost_stars'] as int;
+    final balance = await getStarBalance(memberId);
+
+    if (balance < cost) {
+      throw Exception('星星余额不足');
+    }
+
+    // 扣除星星
+    await _db!.rawUpdate('''
+      UPDATE family_members
+      SET star_balance = star_balance - ?
+      WHERE id = ?
+    ''', [cost, memberId]);
+
+    // 创建兑换记录
+    final redemptionId = _generateId();
+    await _db!.insert('reward_redemptions', {
+      'id': redemptionId,
+      'member_id': memberId,
+      'reward_item_id': rewardId,
+      'stars_spent': cost,
+      'status': 'pending',
+      'redeemed_at': DateTime.now().millisecondsSinceEpoch,
+    });
+
+    // 记录交易
+    await _db!.insert('star_transactions', {
+      'id': _generateId(),
+      'member_id': memberId,
+      'amount': -cost,
+      'type': 'reward',
+      'description': '兑换: ${reward.first['title']}',
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    });
+
+    return RedemptionResult(
+      id: redemptionId,
+      title: reward.first['title'] as String,
+      starsSpent: cost,
+      deadline: DateTime.now().add(Duration(hours: 24)),
+    );
+  }
+
+  /// 撤销兑换（24小时内）
+  Future<void> cancelRedemption(String redemptionId, String cancelledBy) async {
+    final redemption = await _db!.query(
+      'reward_redemptions',
+      where: 'id = ?',
+      whereArgs: [redemptionId],
+    );
+    if (redemption.isEmpty) throw Exception('兑换记录不存在');
+
+    final data = redemption.first;
+    final redeemedAt = DateTime.fromMillisecondsSinceEpoch(data['redeemed_at'] as int);
+    final deadline = redeemedAt.add(Duration(hours: 24));
+
+    if (DateTime.now().isAfter(deadline)) {
+      throw Exception('已超过24小时撤销期限');
+    }
+
+    // 更新状态
+    await _db!.update(
+      'reward_redemptions',
+      {
+        'status': 'cancelled',
+        'cancelled_at': DateTime.now().millisecondsSinceEpoch,
+        'cancelled_by': cancelledBy,
+      },
+      where: 'id = ?',
+      whereArgs: [redemptionId],
+    );
+
+    // 返还星星
+    await _db!.rawUpdate('''
+      UPDATE family_members
+      SET star_balance = star_balance + ?
+      WHERE id = ?
+    ''', [data['stars_spent'], data['member_id']]);
+
+    // 记录返还交易
+    await _db!.insert('star_transactions', {
+      'id': _generateId(),
+      'member_id': data['member_id'],
+      'amount': data['stars_spent'],
+      'type': 'cancellation',
+      'description': '撤销兑换',
+      'created_by': cancelledBy,
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    });
+  }
+
+  // ============ 同步相关 ============
+
+  /// 广播变更到家庭成员
+  Future<void> _broadcastChange(
+    String table,
+    String operation,
+    String recordId,
+    String familyId,
+  ) async {
+    // 存储到待同步队列
+    await _settings!.put('pending_sync', {
+      'table': table,
+      'operation': operation,
+      'record_id': recordId,
+      'family_id': familyId,
+      'timestamp': DateTime.now().toIso8601String(),
+    });
+  }
+
+  String _generateId() => DateTime.now().millisecondsSinceEpoch.toString() +
+      (DateTime.now().microsecond.toString());
+
+  Task _taskFromRow(Map<String, Object?> row) {
+    return Task(
+      id: row['id'] as String,
+      familyId: row['family_id'] as String,
+      title: row['title'] as String,
+      description: row['description'] as String?,
+      iconType: row['icon_type'] as String? ?? 'emoji',
+      iconValue: row['icon_value'] as String?,
+      rewardStars: row['reward_stars'] as int? ?? 1,
+      allowOverdue: (row['allow_overdue'] as int?) == 1,
+      isCompetition: (row['is_competition'] as int?) == 1,
+      recurrenceRule: row['recurrence_rule'] as String?,
+      startDate: row['start_date'] as String?,
+      startTime: row['start_time'] as String?,
+      endDate: row['end_date'] as String?,
+      createdBy: row['created_by'] as String,
+      createdAt: DateTime.fromMillisecondsSinceEpoch(row['created_at'] as int),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(row['updated_at'] as int),
+    );
+  }
+}
+```
+
+---
+
+## 三、AI 语音操作功能设计
+
+### 3.1 语音交互架构
+
+```
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                           AI 语音交互架构                                       │
+├────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  ┌──────────────┐                                                             │
+│  │    用户语音   │                                                             │
+│  │  "帮我发布   │                                                             │
+│  │   一个任务"   │                                                             │
+│  └──────┬───────┘                                                             │
+│         │                                                                     │
+│         ▼                                                                     │
+│  ┌──────────────────────────────────────────────────────────────────────┐     │
+│  │                      语音输入层 (Voice Input)                          │     │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                   │     │
+│  │  │  唤醒词检测  │  │  实时录音   │  │  回声消除   │                   │     │
+│  │  │ (Wake Word) │  │ (Streaming) │  │ (AEC)      │                   │     │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘                   │     │
+│  └──────────────────────────────────────────────────────────────────────┘     │
+│                                      │                                          │
+│                                      ▼                                          │
+│  ┌──────────────────────────────────────────────────────────────────────┐     │
+│  │                      语音识别层 (Speech Recognition)                    │     │
+│  │  ┌──────────────────────────────────────────────────────────────┐    │     │
+│  │  │                     Whisper 本地推理                          │    │     │
+│  │  │                   (无网络依赖，隐私优先)                        │    │     │
+│  │  └──────────────────────────────────────────────────────────────┘    │     │
+│  └──────────────────────────────────────────────────────────────────────┘     │
+│                                      │                                          │
+│                                      ▼                                          │
+│  ┌──────────────────────────────────────────────────────────────────────┐     │
+│  │                      意图理解层 (Intent Understanding)                 │     │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                   │     │
+│  │  │  自然语言   │  │   实体提取  │  │   槽位填充  │                   │     │
+│  │  │  理解 NLU   │  │ (NER)       │  │ (Slot Fill) │                   │     │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘                   │     │
+│  │                                                                       │     │
+│  │  ┌──────────────────────────────────────────────────────────────┐    │     │
+│  │  │                   本地 LLM (Ollama/LM Studio)                │    │     │
+│  │  │              意图分类 + 实体识别 + 对话管理                     │    │     │
+│  │  └──────────────────────────────────────────────────────────────┘    │     │
+│  └──────────────────────────────────────────────────────────────────────┘     │
+│                                      │                                          │
+│                                      ▼                                          │
+│  ┌──────────────────────────────────────────────────────────────────────┐     │
+│  │                      工具执行层 (Tool Execution)                       │     │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐             │     │
+│  │  │  任务管理 │  │  日历管理 │  │  奖励管理 │  │  餐食管理 │             │     │
+│  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘             │     │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐             │     │
+│  │  │  相册管理 │  │  家庭管理 │  │  星星查询 │  │  设置管理 │             │     │
+│  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘             │     │
+│  └──────────────────────────────────────────────────────────────────────┘     │
+│                                      │                                          │
+│                                      ▼                                          │
+│  ┌──────────────────────────────────────────────────────────────────────┐     │
+│  │                      语音输出层 (Voice Output)                         │     │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                   │     │
+│  │  │   TTS 合成  │  │  情感合成   │  │  确认反馈   │                   │     │
+│  │  │  (Piper/    │  │  (温和儿童  │  │  (任务完成  │                   │     │
+│  │  │   XTTS)    │  │   友好音色) │  │   语音播报) │                   │     │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘                   │     │
+│  └──────────────────────────────────────────────────────────────────────┘     │
+│                                                                                 │
+└────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 3.2 语音命令完整列表
+
+| 类别 | 命令示例 | 意图 | 实体 |
+|:-----|:--------|:-----|:-----|
+| **任务** | "帮我发布一个整理房间的任务" | create_task | title, reward_stars |
+| | "查看今天的任务" | list_tasks | date=today |
+| | "小明完成了整理房间" | complete_task | member, task_title |
+| | "删除昨天的任务" | delete_task | task_title, date |
+| | "给任务加个奖励" | update_task_reward | task_title, stars |
+| **日历** | "看看明天的安排" | query_calendar | date=tomorrow |
+| | "添加一个周五晚上的电影时间" | create_event | title, date, time |
+| | "这周有什么安排" | list_week_events | date=this_week |
+| **星星** | "我有多少星星" | query_stars | member=me |
+| | "给小红加5颗星星" | adjust_stars | member, amount |
+| | "查看星星排行榜" | query_leaderboard | - |
+| **奖励** | "我想兑换游戏时间" | redeem_reward | reward_title |
+| | "查看可以兑换什么" | list_rewards | - |
+| | "撤销刚才的兑换" | cancel_redemption | - |
+| **餐食** | "今天晚饭吃什么" | query_meal | date=today, meal=dinner |
+| | "添加红烧肉到食谱库" | add_recipe | recipe_title |
+| | "这周午餐安排一下" | plan_meal_week | meal_type=lunch |
+| **相册** | "上传今天拍的照片" | upload_photos | date=today |
+| | "查看旅行相册" | view_album | album_name |
+| | "把照片标记为珍藏" | cherish_photo | - |
+| **家庭** | "邀请爸爸加入家庭" | invite_member | member, role |
+| | "查看家庭成员" | list_members | - |
+| | "调整小明的颜色为绿色" | update_member_color | member, color |
+| **对话** | "今天有什么新鲜事" | daily_summary | - |
+| | "小明这周表现怎么样" | member_report | member, period |
+| | "给我讲个笑话" | fun_response | - |
+
+### 3.3 意图分类 Prompt（本地 LLM）
+
+```markdown
+# 比乐时语音助手 - 意图分类系统
+
+## 系统角色
+你是一个家庭任务管理应用的语音助手，名为"小乐"。
+
+## 可识别的意图列表
+
+### 任务相关
+- `create_task`: 创建新任务
+- `list_tasks`: 查看任务列表
+- `complete_task`: 完成任务
+- `delete_task`: 删除任务
+- `update_task`: 更新任务
+- `create_template`: 创建任务模板
+
+### 日历相关
+- `query_calendar`: 查询日历
+- `create_event`: 创建日历事件
+- `delete_event`: 删除日历事件
+- `list_week_events`: 查看周事件
+
+### 星星相关
+- `query_stars`: 查询星星余额
+- `adjust_stars`: 调整星星
+- `query_leaderboard`: 排行榜
+
+### 奖励相关
+- `redeem_reward`: 兑换奖励
+- `list_rewards`: 查看奖励列表
+- `cancel_redemption`: 撤销兑换
+- `create_reward`: 创建奖励
+
+### 餐食相关
+- `query_meal`: 查询餐食
+- `add_recipe`: 添加食谱
+- `plan_meal`: 规划餐食
+- `plan_meal_week`: 批量规划
+
+### 相册相关
+- `upload_photos`: 上传照片
+- `view_album`: 查看相册
+- `cherish_photo`: 珍藏照片
+- `add_comment`: 添加评论
+
+### 家庭相关
+- `invite_member`: 邀请成员
+- `list_members`: 成员列表
+- `update_member`: 更新成员
+- `remove_member`: 移除成员
+
+### 对话相关
+- `daily_summary`: 今日摘要
+- `member_report`: 成员报告
+- `fun_response`: 趣味互动
+
+## 输出格式
+请以JSON格式输出：
+```json
+{
+  "intent": "create_task",
+  "entities": {
+    "title": "整理房间",
+    "reward_stars": 5,
+    "assignee": "小明",
+    "date": "今天",
+    "time": "下午"
+  },
+  "confidence": 0.95,
+  "needs_confirmation": true,
+  "confirmation_text": "好的，我帮你创建一个整理房间的任务，完成后可以获得5颗星星，是给小明安排的吗？"
+}
+```
+
+## 家庭成员识别
+当前家庭成员：
+- 小明（孩子）- 颜色：橙色
+- 爸爸 - 颜色：蓝色
+- 妈妈 - 颜色：绿色
+
+## 时间表达识别
+- "今天" = 当前日期
+- "明天" = 当前日期+1
+- "后天" = 当前日期+2
+- "这周" = 本周一到周日
+- "下周" = 下周一到周日
+- "周五" = 本周或下周的周五
+
+## 响应风格
+- 语音回复要简短自然，适合语音播报
+- 使用亲切友好的语气
+- 对孩子的回复可以更活泼
+- 确认信息时要清晰明确
+```
+
+### 3.4 语音命令执行器实现
+
+```dart
+// lib/voice/voice_command_executor.dart
+
+import 'package:hermes/voice/whisper_service.dart';
+import 'package:hermes/voice/tts_service.dart';
+import 'package:hermes/voice/intent_classifier.dart';
+import '../data_service.dart';
+
+class VoiceCommandExecutor {
+  final HermesDataService _dataService;
+  final WhisperService _whisper;
+  final TtsService _tts;
+  final IntentClassifier _classifier;
+
+  VoiceCommandExecutor({
+    required HermesDataService dataService,
+    required WhisperService whisper,
+    required TtsService tts,
+    required IntentClassifier classifier,
+  })  : _dataService = dataService,
+        _whisper = whisper,
+        _tts = tts,
+        _classifier = classifier;
+
+  /// 执行语音命令
+  Future<VoiceResult> execute(String transcript) async {
+    try {
+      // 1. 意图分类
+      final intentResult = await _classifier.classify(transcript);
+
+      // 2. 根据意图执行对应操作
+      VoiceResult result;
+
+      switch (intentResult.intent) {
+        case 'create_task':
+          result = await _handleCreateTask(intentResult);
+          break;
+        case 'complete_task':
+          result = await _handleCompleteTask(intentResult);
+          break;
+        case 'query_stars':
+          result = await _handleQueryStars(intentResult);
+          break;
+        case 'redeem_reward':
+          result = await _handleRedeemReward(intentResult);
+          break;
+        case 'query_calendar':
+          result = await _handleQueryCalendar(intentResult);
+          break;
+        case 'daily_summary':
+          result = await _handleDailySummary();
+          break;
+        // ... 其他意图处理
+        default:
+          result = VoiceResult(
+            success: false,
+            message: '抱歉，我还不会这个功能',
+          );
+      }
+
+      // 3. 语音反馈
+      await _tts.speak(result.message);
+
+      // 4. 记录命令历史
+      await _saveCommandHistory(intentResult, result);
+
+      return result;
+
+    } catch (e) {
+      final errorMessage = '出错了：${e.toString()}';
+      await _tts.speak(errorMessage);
+      return VoiceResult(success: false, message: errorMessage);
+    }
+  }
+
+  // ============ 任务处理 ============
+
+  Future<VoiceResult> _handleCreateTask(IntentResult intent) async {
+    final entities = intent.entities;
+    final title = entities['title'] as String?;
+    final stars = entities['reward_stars'] as int? ?? 5;
+    final assignee = entities['assignee'] as String?;
+    final date = _parseDate(entities['date'] as String? ?? '今天');
+    final time = entities['time'] as String?;
+
+    if (title == null) {
+      return VoiceResult(
+        success: false,
+        message: '请告诉我任务名称',
+      );
+    }
+
+    // 如果需要确认
+    if (intent.needsConfirmation) {
+      return VoiceResult(
+        success: true,
+        needsConfirmation: true,
+        confirmationText: intent.confirmationText!,
+        pendingAction: PendingAction(
+          type: 'create_task',
+          params: {
+            'title': title,
+            'stars': stars,
+            'assignee': assignee,
+            'date': date,
+            'time': time,
+          },
+        ),
+      );
+    }
+
+    // 直接执行
+    final taskId = await _dataService.createTask(
+      TaskCreateParams(
+        familyId: _currentFamilyId,
+        title: title,
+        rewardStars: stars,
+        startDate: date,
+        startTime: time,
+      ),
+    );
+
+    // 如果指定了执行人
+    if (assignee != null) {
+      final memberId = await _findMemberId(assignee);
+      if (memberId != null) {
+        await _dataService.assignTask(taskId, memberId);
+      }
+    }
+
+    return VoiceResult(
+      success: true,
+      message: '好的，已经创建了「$title」任务，完成后可以获得$stars颗星星',
+      data: {'task_id': taskId},
+    );
+  }
+
+  Future<VoiceResult> _handleCompleteTask(IntentResult intent) async {
+    final entities = intent.entities;
+    final taskTitle = entities['task_title'] as String?;
+    final memberName = entities['member'] as String?;
+
+    // 查找任务
+    final memberId = memberName != null
+        ? await _findMemberId(memberName)
+        : _currentMemberId;
+
+    final tasks = await _dataService.getTodayTasks(_currentFamilyId);
+    final task = tasks.firstWhere(
+      (t) => t.title.contains(taskTitle ?? ''),
+      orElse: () => throw Exception('找不到任务'),
+    );
+
+    // 完成并获得星星
+    final result = await _dataService.completeTask(task.id, memberId);
+
+    return VoiceResult(
+      success: true,
+      message: '太棒了！完成了「${task.title}」，获得${result['stars_earned']}颗星星，'
+          '现在共有${result['total_stars']}颗星星啦！',
+      data: result,
+    );
+  }
+
+  // ============ 星星处理 ============
+
+  Future<VoiceResult> _handleQueryStars(IntentResult intent) async {
+    final memberName = intent.entities['member'] as String?;
+    final memberId = memberName != null
+        ? await _findMemberId(memberName)
+        : _currentMemberId;
+
+    final balance = await _dataService.getStarBalance(memberId);
+    final name = memberName ?? '你';
+
+    return VoiceResult(
+      success: true,
+      message: '$name现在有$balance颗星星',
+      data: {'balance': balance},
+    );
+  }
+
+  Future<VoiceResult> _handleRedeemReward(IntentResult intent) async {
+    final rewardTitle = intent.entities['reward_title'] as String?;
+
+    // 查找奖励
+    final rewards = await _dataService.getRewards(_currentFamilyId);
+    final reward = rewards.firstWhere(
+      (r) => r.title.contains(rewardTitle ?? ''),
+      orElse: () => throw Exception('找不到这个奖励'),
+    );
+
+    // 获取当前成员余额
+    final balance = await _dataService.getStarBalance(_currentMemberId);
+
+    if (balance < reward.cost) {
+      return VoiceResult(
+        success: false,
+        message: '星星不够哦，需要${reward.cost}颗，你只有$balance颗',
+      );
+    }
+
+    // 执行兑换
+    final result = await _dataService.redeemReward(_currentMemberId, reward.id);
+
+    return VoiceResult(
+      success: true,
+      message: '兑换成功！花了${result.starsSpent}颗星星兑换${result.title}，'
+          '还剩${balance - result.starsSpent}颗，记得在24小时内使用哦',
+      data: result,
+    );
+  }
+
+  // ============ 日历处理 ============
+
+  Future<VoiceResult> _handleQueryCalendar(IntentResult intent) async {
+    final entities = intent.entities;
+    final dateStr = entities['date'] as String? ?? '今天';
+    final date = _parseDate(dateStr);
+
+    final events = await _dataService.getEventsForDate(_currentFamilyId, date);
+
+    if (events.isEmpty) {
+      return VoiceResult(
+        success: true,
+        message: '$dateStr没有什么安排，轻松一下',
+      );
+    }
+
+    final eventTexts = events.map((e) => e.title).join('、');
+    return VoiceResult(
+      success: true,
+      message: '$dateStr有这些安排：$eventTexts',
+      data: {'events': events},
+    );
+  }
+
+  // ============ 每日摘要 ============
+
+  Future<VoiceResult> _handleDailySummary() async {
+    final today = DateTime.now();
+    final tasks = await _dataService.getTodayTasks(_currentFamilyId);
+    final completed = tasks.where((t) => t.status == 'completed').length;
+    final pending = tasks.length - completed;
+
+    final events = await _dataService.getEventsForDate(_currentFamilyId, today);
+    final starBalance = await _dataService.getStarBalance(_currentMemberId);
+
+    final parts = <String>[];
+
+    if (pending > 0) {
+      parts.add('今天还有$pending个任务待完成');
+    } else if (completed > 0) {
+      parts.add('太棒了，今天的任务都完成了');
+    }
+
+    if (events.isNotEmpty) {
+      parts.add('有${events.length}个日程安排');
+    }
+
+    parts.add('你现在有$starBalance颗星星');
+
+    return VoiceResult(
+      success: true,
+      message: '早安！${parts.join('，')}。有什么需要帮忙的吗？',
+    );
+  }
+
+  // ============ 辅助方法 ============
+
+  DateTime _parseDate(String dateStr) {
+    final today = DateTime.now();
+    switch (dateStr) {
+      case '今天':
+        return today;
+      case '明天':
+        return today.add(Duration(days: 1));
+      case '后天':
+        return today.add(Duration(days: 2));
+      case '这周':
+        return today; // 周视图
+      default:
+        return today;
+    }
+  }
+
+  Future<String> _findMemberId(String name) async {
+    final members = await _dataService.getFamilyMembers(_currentFamilyId);
+    final member = members.firstWhere(
+      (m) => m.nickname.contains(name) || m.nickname == name,
+      orElse: () => throw Exception('找不到成员：$name'),
+    );
+    return member.id;
+  }
+
+  Future<void> _saveCommandHistory(
+    IntentResult intent,
+    VoiceResult result,
+  ) async {
+    await _dataService.saveVoiceCommand(
+      VoiceCommand(
+        transcript: intent.originalText,
+        intent: intent.intent,
+        entities: intent.entities,
+        actionTaken: result.message,
+        confidence: intent.confidence,
+      ),
+    );
+  }
+}
+
+// ============ 数据模型 ============
+
+class VoiceResult {
+  final bool success;
+  final String message;
+  final Map<String, dynamic>? data;
+  final bool needsConfirmation;
+  final String? confirmationText;
+  final PendingAction? pendingAction;
+
+  VoiceResult({
+    required this.success,
+    required this.message,
+    this.data,
+    this.needsConfirmation = false,
+    this.confirmationText,
+    this.pendingAction,
+  });
+}
+
+class PendingAction {
+  final String type;
+  final Map<String, dynamic> params;
+
+  PendingAction({required this.type, required this.params});
+}
+```
+
+### 3.5 语音服务配置
+
+```yaml
+# config/voice_config.yaml
+
+# Whisper 模型配置
+whisper:
+  model: tiny          # tiny/base/small/medium/large
+  language: zh          # 中文优先
+  use_gpu: true
+  quantization: int8    # 减少内存占用
+
+# TTS 模型配置
+tts:
+  model: piper         # piper/xtts/coqui
+  voice: zh-CN-女子   # 温柔女声，适合儿童友好
+  speed: 1.0
+  pitch: 0.95          # 稍高音调，更亲切
+
+# LLM 意图分类配置
+llm:
+  provider: ollama     # ollama/lm_studio
+  model: qwen2.5:7b    # 或 phi3:3.8b（轻量快速）
+  temperature: 0.3     # 低温度，更确定的分类
+
+# 唤醒词配置
+wake_word:
+  enabled: true
+  word: "小乐"         # 自定义唤醒词
+  sensitivity: 0.5
+  model: okay_speech   # 或 snowboy
+
+# 语音交互配置
+voice:
+  always_listen: false  # 是否始终监听（耗电）
+  vad_threshold: 0.5    # 语音活动检测阈值
+  silence_timeout: 3    # 静音超时（秒）
+  max_recording: 30     # 最大录音时长（秒）
+```
+
+---
+
+## 四、全功能语音命令映射表
+
+### 4.1 完整命令清单
+
+#### 📋 任务管理
+
+| 用户说 | 意图 | 执行的系统动作 |
+|:------|:-----|:--------------|
+| "帮我发布任务" | create_task | 打开任务创建页面，填充提取的字段 |
+| "添加一个整理房间的任务" | create_task | 创建任务：整理房间 |
+| "发布数学作业，5颗星" | create_task | 创建任务：数学作业，奖励5星 |
+| "看看今天有什么任务" | list_tasks | 显示今日任务列表 |
+| "查询这周的任务" | list_tasks | 显示本周所有任务 |
+| "我完成了整理房间" | complete_task | 标记任务完成，发放星星 |
+| "小明打卡了" | complete_task | 小明完成任务，发放星星 |
+| "删除那个任务" | delete_task | 删除指定任务 |
+| "取消整理房间任务" | delete_task | 删除任务 |
+| "任务改成3颗星" | update_task | 修改任务奖励 |
+| "设置循环任务，每天早起" | create_recurring_task | 创建每日循环任务 |
+
+#### ⭐ 星星管理
+
+| 用户说 | 意图 | 执行的系统动作 |
+|:------|:-----|:--------------|
+| "我有多少星星" | query_stars | 播报当前星星余额 |
+| "查看星星排行榜" | query_leaderboard | 显示家庭排行榜 |
+| "给小明加5颗星" | adjust_stars | 增加小明5颗星 |
+| "扣小红2颗星" | adjust_stars | 扣减小红2颗星 |
+| "查看星星历史" | star_history | 显示星星变动记录 |
+
+#### 🎁 奖励兑换
+
+| 用户说 | 意图 | 执行的系统动作 |
+|:------|:-----|:--------------|
+| "我想兑换奖励" | list_rewards | 显示可兑换奖励列表 |
+| "兑换游戏时间" | redeem_reward | 扣除星星，完成兑换 |
+| "有什么奖励可以换" | list_rewards | 显示奖励目录 |
+| "撤销刚才的兑换" | cancel_redemption | 撤销24小时内的兑换 |
+| "添加一个新奖励" | create_reward | 打开奖励创建页面 |
+
+#### 📅 日历管理
+
+| 用户说 | 意图 | 执行的系统动作 |
+|:------|:-----|:--------------|
+| "看看明天的安排" | query_calendar | 显示明天日历 |
+| "这周有什么安排" | list_week_events | 显示本周日历 |
+| "添加周六的电影时间" | create_event | 创建日历事件 |
+| "删除周五的会议" | delete_event | 删除指定事件 |
+| "今天几点有小提琴课" | query_event_detail | 播报具体事件详情 |
+
+#### 🍽️ 餐食规划
+
+| 用户说 | 意图 | 执行的系统动作 |
+|:------|:-----|:--------------|
+| "今天晚饭吃什么" | query_meal | 显示晚餐安排 |
+| "添加红烧肉到食谱" | add_recipe | 添加食谱 |
+| "这周午餐安排一下" | plan_meal_week | 批量设置周午餐 |
+| "明天早餐想吃煎饼" | add_meal_plan | 添加餐食计划 |
+| "查看食谱库" | list_recipes | 显示所有食谱 |
+
+#### 📷 家庭相册
+
+| 用户说 | 意图 | 执行的系统动作 |
+|:------|:-----|:--------------|
+| "上传今天拍的照片" | upload_photos | 打开相机/相册 |
+| "看看旅行相册" | view_album | 打开旅行相册 |
+| "标记为珍藏" | cherish_photo | 设置珍藏标记 |
+| "给照片加点评论" | add_comment | 添加评论 |
+| "上传刚才拍的照片" | upload_recent_photos | 上传最近照片 |
+
+#### 👨‍👩‍👧‍👦 家庭管理
+
+| 用户说 | 意图 | 执行的系统动作 |
+|:------|:-----|:--------------|
+| "邀请爷爷加入" | invite_member | 生成邀请码 |
+| "查看家庭成员" | list_members | 显示成员列表 |
+| "把小明颜色改成绿色" | update_member_color | 修改成员颜色 |
+| "设置小红的提醒" | update_member_settings | 修改提醒设置 |
+
+#### 💬 智能对话
+
+| 用户说 | 意图 | 执行的系统动作 |
+|:------|:-----|:--------------|
+| "今天有什么新鲜事" | daily_summary | 播报今日摘要 |
+| "小明这周表现怎么样" | member_report | 播报小明周报 |
+| "给我讲个笑话" | fun_response | 讲笑话 |
+| "明天天气怎么样" | weather_query | 查询天气（需联网） |
+| "打开语音模式" | enable_voice_mode | 开启语音交互 |
+| "关闭语音模式" | disable_voice_mode | 关闭语音交互 |
+
+### 4.2 确认流程
+
+对于需要确认的操作，AI 会进行二次确认：
+
+```
+用户: "发布整理房间任务"
+小乐: "好的，要创建「整理房间」任务，完成后获得5颗星星，是给小明安排的吗？"
+
+用户: "是的"
+小乐: "任务已创建！小明今天有一个整理房间的任务，别忘了完成哦～"
+
+用户: "改成3颗星"
+小乐: "好的，改成3颗星星，现在创建吗？"
+
+用户: "对"
+小乐: "搞定！整理房间任务已创建，3颗星星等着小明来拿！"
+```
+
+### 4.3 错误处理
+
+```
+用户: "我想兑换..."
+小乐: "请问您想兑换什么呢？可以告诉我奖励的名称，比如游戏时间、动画时间等。"
+
+用户: "我想查看小红的星星"
+小乐: "好的，小红现在有42颗星星，在家庭排行榜上排第二名，加油哦！"
+
+用户: "删除所有任务"
+小乐: "这个操作会影响多个任务，请到任务管理页面确认后删除，我帮您打开任务管理。"
+```
+
+---
+
+## 五、技术实现指南
+
+### 5.1 本地 LLM 部署配置
+
+```yaml
+# Ollama 配置 (docker-compose.yml)
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # Whisper 语音识别
+  whisper:
+    image: onerahmet/open-whisper-streaming:latest
+    ports:
+      - "9000:9000"
+
+  # TTS 语音合成
+  piper:
+    image: ghcr.io/rhasspy/piper-tts:latest
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./voices:/app/voices
+```
+
+### 5.2 Flutter 语音服务集成
+
+```dart
+// lib/voice/voice_service.dart
+
+import 'dart:async';
+import 'package:flutter/services.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+
+class VoiceService {
+  final SpeechToText _stt = SpeechToText();
+  final FlutterTts _tts = FlutterTts();
+  final VoiceCommandExecutor _executor;
+
+  bool _isListening = false;
+  bool _isInitialized = false;
+
+  // 回调
+  final Function(String)? onPartialResult;
+  final Function(bool)? onListeningStateChanged;
+
+  VoiceService({
+    required VoiceCommandExecutor executor,
+    this.onPartialResult,
+    this.onListeningStateChanged,
+  }) : _executor = executor;
+
+  /// 初始化语音服务
+  Future<bool> init() async {
+    // 初始化 STT
+    _isInitialized = await _stt.initialize(
+      onStatus: (status) {
+        _isListening = status == 'listening';
+        onListeningStateChanged?.call(_isListening);
+      },
+      onError: (error) {
+        print('语音识别错误: $error');
+      },
+    );
+
+    // 配置 TTS
+    await _tts.setLanguage('zh-CN');
+    await _tts.setSpeechRate(0.5);
+    await _tts.setPitch(1.1);
+
+    return _isInitialized;
+  }
+
+  /// 开始监听
+  Future<void> startListening() async {
+    if (!_isInitialized || _isListening) return;
+
+    await _stt.listen(
+      onResult: (result) async {
+        if (result.finalResult) {
+          final text = result.recognizedWords;
+          if (text.isNotEmpty) {
+            await _processCommand(text);
+          }
+        } else {
+          onPartialResult?.call(result.recognizedWords);
+        }
+      },
+      listenFor: Duration(seconds: 30),
+      pauseFor: Duration(seconds: 3),
+      partialResults: true,
+      localeId: 'zh_CN',
+    );
+  }
+
+  /// 停止监听
+  Future<void> stopListening() async {
+    await _stt.stop();
+  }
+
+  /// 处理语音命令
+  Future<void> _processCommand(String text) async {
+    // 显示处理状态
+    onPartialResult?.call('正在处理...');
+
+    // 执行命令
+    final result = await _executor.execute(text);
+
+    // TTS 播报结果
+    await _tts.speak(result.message);
+  }
+
+  /// 文字转语音播报
+  Future<void> speak(String text) async {
+    await _tts.speak(text);
+  }
+
+  /// 停止播报
+  Future<void> stopSpeaking() async {
+    await _tts.stop();
+  }
+
+  /// 释放资源
+  Future<void> dispose() async {
+    await _stt.stop();
+    await _tts.stop();
+  }
+}
+```
+
+---
+
+## 六、隐私与安全设计
+
+### 6.1 隐私保护措施
+
+| 措施 | 说明 |
+|:-----|:-----|
+| **数据本地化** | 所有用户数据存储在本地设备，不上传云端 |
+| **端侧 AI** | 语音识别、意图分类全部在本地完成 |
+| **无账号系统（可选）** | 可以不注册账号直接使用 |
+| **加密存储** | 数据库使用设备 Keychain 保护密钥 |
+| **权限最小化** | 只申请必要的相机、麦克风权限 |
+| **数据导出** | 支持随时导出/删除所有数据 |
+| **家庭隔离** | 数据按家庭隔离，跨家庭不共享 |
+
+### 6.2 家庭成员隐私
+
+| 功能 | 隐私设计 |
+|:-----|:---------|
+| **语音数据** | 语音命令仅用于本地处理，不上传 |
+| **照片** | 原图存储在本地，可选择同步到私有 iCloud |
+| **星星数据** | 家庭内部可见，不对外共享 |
+| **位置信息** | 不采集任何位置数据 |
+| **使用习惯** | 不分析/上报任何使用行为 |
+
+---
+
+## 七、实施路线图
+
+### Phase 1：基础架构（1-2周）
+- [ ] Hermes 环境配置
+- [ ] 本地数据库搭建
+- [ ] 基础 CRUD API
+
+### Phase 2：语音功能（2-3周）
+- [ ] Whisper 语音识别集成
+- [ ] 意图分类模型训练/调优
+- [ ] TTS 语音合成
+- [ ] 核心命令 20 条
+
+### Phase 3：完善功能（2-3周）
+- [ ] 全部语音命令支持
+- [ ] 多家庭成员支持
+- [ ] 同步功能（可选 iCloud）
+
+### Phase 4：体验优化（1-2周）
+- [ ] 语音交互优化
+- [ ] 性能调优
+- [ ] UI/UX 打磨
+
+---
+
+## 八、文档更新说明
+
+相比原版产品方案，本文档进行了以下核心变更：
+
+| 原功能 | 变更内容 |
+|:-------|:---------|
+| 云端数据库 | → SQLite 本地存储 |
+| 第三方 LLM API | → Ollama 本地推理 |
+| 云端推送 | → 本地通知 |
+| OSS 文件存储 | → 本地文件系统 |
+| 第三方语音识别 | → Whisper 本地识别 |
+| WebSocket 同步 | → iCloud/AirDrop 可选同步 |
+| JWT 认证 | → 设备本地认证 |
+
+---
+
+*文档版本：v1.0 | 2026-04-20*
