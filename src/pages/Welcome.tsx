@@ -562,7 +562,7 @@ export function Welcome() {
                   disabled={loading}
                   className="w-full h-14 bg-[#006e1c] text-white rounded-2xl font-black text-base shadow-lg hover:shadow-green-900/20 active:scale-95 transition-all disabled:opacity-50"
                 >
-                  {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : t('welcome.login.submit', '进入系统')}
+                  {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : t('welcome.login.submit', '登录账号')}
                 </button>
 
                 <button

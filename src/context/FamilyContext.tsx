@@ -136,6 +136,12 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     let mounted = true;
 
     const init = async () => {
+      // 访客模式下不尝试恢复 Supabase session
+      if (guestModeRef.current) {
+        console.log('[Init] Skipped: guest mode active');
+        setLoading(false);
+        return;
+      }
       // 给 Supabase getSession 设置超时，防止网络不可达时无限挂起
       const getSessionWithTimeout = Promise.race([
         supabase.auth.getSession(),
@@ -143,6 +149,11 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       ]);
       try {
         const result = await getSessionWithTimeout;
+        // getSession 期间用户可能已进入游客模式，再次检查
+        if (guestModeRef.current) {
+          console.log('[Init] Skipped after getSession: guest mode active');
+          return;
+        }
         const session = (result as any)?.data?.session;
         if (session?.user && mounted) {
           await loadUserData(session.user.id);
@@ -170,6 +181,8 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
 
         // 有 session → 加载用户数据
         if (session?.user) {
+          // 加载前再次确认不是游客模式（防止竞态）
+          if (guestModeRef.current) return;
           await loadUserData(session.user.id);
           return;
         }

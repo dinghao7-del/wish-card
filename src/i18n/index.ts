@@ -217,7 +217,7 @@ const resources = {
           'error_invalid': '用户名或密码错误，请检查 🍃',
           'error_empty': '请输入账号',
           'error_password': '请输入密码',
-          'submit': '进入系统'
+          'submit': '登录账号'
         }
       },
       'feedback': {
