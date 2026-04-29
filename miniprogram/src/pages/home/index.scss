@@ -1,0 +1,155 @@
+.home-page {
+  padding: 24rpx;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  
+  .avatar {
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: 50%;
+    margin-right: 20rpx;
+  }
+  
+  .user-name {
+    font-size: 32rpx;
+    font-weight: 600;
+    color: #1B1B18;
+  }
+}
+
+.notification-icon {
+  font-size: 40rpx;
+}
+
+.overview-card {
+  background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%);
+  border-radius: 24rpx;
+  padding: 40rpx 30rpx;
+  margin-bottom: 30rpx;
+  color: white;
+}
+
+.star-balance {
+  font-size: 72rpx;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.star-label {
+  font-size: 28rpx;
+  opacity: 0.9;
+  display: block;
+  margin-bottom: 30rpx;
+}
+
+.quick-actions {
+  display: flex;
+  justify-content: space-around;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 16rpx;
+  padding: 20rpx 0;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+  .action-icon {
+    font-size: 40rpx;
+    margin-bottom: 10rpx;
+  }
+  
+  .action-text {
+    font-size: 24rpx;
+  }
+}
+
+.section {
+  margin-bottom: 30rpx;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1B1B18;
+  margin-right: 15rpx;
+}
+
+.task-count-badge {
+  background-color: #2E7D32;
+  color: white;
+  border-radius: 20rpx;
+  padding: 4rpx 16rpx;
+  font-size: 24rpx;
+}
+
+.task-card {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+  overflow: hidden;
+}
+
+.task-color-bar {
+  width: 8rpx;
+  height: 100%;
+  min-height: 100rpx;
+}
+
+.task-content {
+  flex: 1;
+  padding: 20rpx;
+  
+  .task-title {
+    font-size: 28rpx;
+    font-weight: 500;
+    color: #1B1B18;
+    display: block;
+    margin-bottom: 8rpx;
+  }
+  
+  .task-time {
+    font-size: 24rpx;
+    color: #78746E;
+  }
+}
+
+.task-stars {
+  padding: 20rpx;
+  font-size: 28rpx;
+  color: #FFD54F;
+  font-weight: 600;
+}
+
+.empty-state {
+  padding: 60rpx 0;
+  text-align: center;
+  color: #78746E;
+  font-size: 28rpx;
+}
+
+.ranking-list {
+  background-color: white;
+  border-radius: 16rpx;
+  padding: 20rpx;
+}

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#C8E6C9"/>
+      <stop offset="100%" stop-color="#b4d2b5"/>
+    </radialGradient>
+  </defs>
+  <!-- 背景圆 -->
+  <circle cx="100" cy="100" r="98" fill="url(#bg)" stroke="#2E7D32" stroke-width="4"/>
+  <!-- 动物耳朵 -->
+  <path d="M65 70 Q70 30 80 60" fill="#2E7D32" stroke="#2E7D32" stroke-width="2"/><path d="M120 70 Q130 30 135 60" fill="#2E7D32" stroke="#2E7D32" stroke-width="2"/>
+  <!-- 脸 -->
+  <circle cx="100" cy="110" r="60" fill="#66BB6A"/>
+  <!-- 内耳 -->
+  <ellipse cx="70" cy="60" rx="8" ry="12" fill="#FFCCBC" opacity="0.6"/><ellipse cx="130" cy="60" rx="8" ry="12" fill="#FFCCBC" opacity="0.6"/>
+  <!-- 眼睛 -->
+  <circle cx="78" cy="100" r="8" fill="#333"/>
+  <circle cx="122" cy="100" r="8" fill="#333"/>
+  <circle cx="80" cy="98" r="3" fill="#FFF"/>
+  <circle cx="124" cy="98" r="3" fill="#FFF"/>
+  <!-- 嘴巴 -->
+  <path d="M88 125 Q100 140 112 125" stroke="#333" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- 腮红 -->
+  <ellipse cx="68" cy="115" rx="10" ry="6" fill="#2E7D32" opacity="0.3"/>
+  <ellipse cx="132" cy="115" rx="10" ry="6" fill="#2E7D32" opacity="0.3"/>
+  <!-- 动物特征 -->
+  
+</svg>

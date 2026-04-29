@@ -6,11 +6,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { Reward } from '../types';
 import { REWARD_CATEGORIES, type RewardTemplate } from '../lib/templates';
+import { useTranslation } from 'react-i18next';
 
 export function EditReward() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { rewards, addReward, updateReward } = useFamily();
+  const { t } = useTranslation();
   
   const isEdit = Boolean(id);
   const rewardToEdit = rewards.find(r => r.id === id);
@@ -109,7 +111,7 @@ export function EditReward() {
         <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container/50 transition-colors">
           <ChevronLeft size={24} />
         </button>
-        <h1 className="font-black text-xl text-on-surface">{isEdit ? '编辑心愿' : '添加心愿'}</h1>
+        <h1 className="font-black text-xl text-on-surface">{isEdit ? t('edit_reward.edit_title', '编辑心愿') : t('edit_reward.add_title', '添加心愿')}</h1>
         <div className="w-10" />
       </header>
 
@@ -133,7 +135,7 @@ export function EditReward() {
             onClick={() => setIsLibraryOpen(true)}
             className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#D4E157]/10 text-[#2E7D32] font-black text-sm active:scale-95 transition-all"
           >
-            模板导入 <ChevronRight size={16} strokeWidth={3} className="text-[#2E7D32]/40" />
+            {t('edit_reward.template_import', '模板导入')} <ChevronRight size={16} strokeWidth={3} className="text-[#2E7D32]/40" />
           </button>
         </div>
 
@@ -145,7 +147,7 @@ export function EditReward() {
                 type="text" 
                 value={formData.name}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
-                placeholder="心愿名称..."
+                placeholder={t('edit_reward.name_placeholder', '心愿名称...')}
                 className="w-full bg-transparent border-none p-0 text-lg font-black placeholder:text-on-surface-variant/20 focus:ring-0"
                 required
               />
@@ -163,12 +165,12 @@ export function EditReward() {
           <div className="bg-white/50 rounded-2xl overflow-hidden focus-within:bg-white transition-colors">
             <div className="px-4 py-3 border-b border-white/40 flex items-center gap-1.5 text-on-surface-variant/40 text-[13px] font-black">
               <Plus size={16} className="opacity-60" />
-              <span>添加心愿描述</span>
+              <span>{t('edit_reward.add_description', '添加心愿描述')}</span>
             </div>
             <textarea 
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
-              placeholder="再详细描述一下心愿吧..."
+              placeholder={t('edit_reward.description_placeholder', '再详细描述一下心愿吧...')}
               className="w-full bg-transparent border-none p-4 text-sm font-bold text-on-surface placeholder:text-on-surface-variant/20 focus:ring-0 min-h-[80px] resize-none"
             />
           </div>
@@ -182,7 +184,7 @@ export function EditReward() {
               <div className="w-10 h-10 bg-[#FFF9C4] rounded-xl flex items-center justify-center shadow-sm border border-outline-variant/10">
                 <Star size={20} className="text-[#FBC02D] fill-current" />
               </div>
-              <span>单价</span>
+              <span>{t('edit_reward.unit_price', '单价')}</span>
             </div>
             <div className="flex items-center gap-4 bg-surface-container-low rounded-2xl p-1 shadow-inner-sm">
               <button 
@@ -209,7 +211,7 @@ export function EditReward() {
               <div className="w-10 h-10 bg-[#E8F5E9] rounded-xl flex items-center justify-center shadow-sm border border-outline-variant/10">
                 <LayoutGrid size={20} className="text-[#2E7D32]" />
               </div>
-              <span>总数</span>
+              <span>{t('edit_reward.quantity', '总数')}</span>
             </div>
             <div className="flex items-center gap-4 bg-surface-container-low rounded-2xl p-1 shadow-inner-sm">
               <button 
@@ -238,7 +240,7 @@ export function EditReward() {
               <div className="w-10 h-10 bg-[#E3F2FD] rounded-xl flex items-center justify-center shadow-sm border border-outline-variant/10">
                 <Ban size={20} className="text-[#1976D2]" />
               </div>
-              <span>兑换限制</span>
+              <span>{t('edit_reward.redeem_limit', '兑换限制')}</span>
             </div>
             <button 
               type="button"
@@ -271,7 +273,7 @@ export function EditReward() {
                     onClick={() => setIsPeriodSelectorOpen(true)}
                     className="flex-1 bg-white rounded-2xl px-5 py-4 flex items-center justify-between font-black text-on-surface shadow-sm active:scale-95 transition-transform"
                   >
-                    <span className="text-sm">每{periods.find(p => p.id === formData.limitPeriod)?.label}</span>
+                    <span className="text-sm">{t('edit_reward.per_period', '每{{period}}', { period: periods.find(p => p.id === formData.limitPeriod)?.label })}</span>
                     <ChevronRight size={16} className="rotate-90 opacity-30" />
                   </button>
                   
@@ -299,7 +301,7 @@ export function EditReward() {
 
           <div className="mt-4 pt-4 border-t border-dashed border-outline-variant/40 text-center">
             <p className="text-on-surface-variant/40 text-[11px] font-black">
-              {formData.name || '心愿'} · {formData.cost}星 / {formData.unit} · {formData.hasLimit ? `每${periods.find(p => p.id === formData.limitPeriod)?.label}限兑${formData.limitCount}次` : '不限次'}
+              {formData.name || t('edit_reward.add_title', '心愿')} · {formData.cost}星 / {formData.unit} · {formData.hasLimit ? t('edit_reward.limit_per_period', '每{{period}}限兑{{count}}次', { period: periods.find(p => p.id === formData.limitPeriod)?.label, count: formData.limitCount }) : t('edit_reward.unlimited', '不限次')}
             </p>
           </div>
         </div>
@@ -310,10 +312,10 @@ export function EditReward() {
             type="submit"
             className="w-full py-5 rounded-[2rem] bg-[#D4E157] text-[#2E7D32] font-black text-xl shadow-xl shadow-[#D4E157]/20 border-b-4 border-[#C5D34C] active:border-b-0 active:translate-y-1 transition-all"
           >
-            完成并提交心愿 🌿
+            {t('edit_reward.submit', '完成并提交心愿 🌿')}
           </button>
           <p className="text-center text-on-surface-variant/20 text-[10px] font-bold mt-4">
-            保存后您的家庭成员就可以看到这个心愿啦
+            {t('edit_reward.submit_hint', '保存后您的家庭成员就可以看到这个心愿啦')}
           </p>
         </div>
       </form>
@@ -330,7 +332,7 @@ export function EditReward() {
               className="w-full max-w-lg bg-white rounded-t-[2.5rem] p-6 pb-12 shadow-2xl"
             >
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-black text-on-surface">选择单位</h3>
+                <h3 className="text-xl font-black text-on-surface">{t('edit_reward.select_unit', '选择单位')}</h3>
                 <button onClick={() => setIsUnitSelectorOpen(false)} className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
                   <Plus className="rotate-45" size={24} />
                 </button>
@@ -363,7 +365,7 @@ export function EditReward() {
               className="w-full max-w-lg bg-white rounded-t-[2.5rem] p-6 pb-12 shadow-2xl"
             >
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-black text-on-surface">选择周期</h3>
+                <h3 className="text-xl font-black text-on-surface">{t('edit_reward.select_period', '选择周期')}</h3>
                 <button onClick={() => setIsPeriodSelectorOpen(false)} className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
                   <Plus className="rotate-45" size={24} />
                 </button>
@@ -378,7 +380,7 @@ export function EditReward() {
                       formData.limitPeriod === p.id ? "bg-[#D4E157] border-[#C5D34C] text-[#2E7D32]" : "bg-surface-container-low border-transparent text-on-surface-variant/40"
                     )}
                   >
-                    每{p.label}
+                    {t('edit_reward.per_period', '每{{period}}', { period: p.label })}
                   </button>
                 ))}
               </div>
@@ -399,7 +401,7 @@ export function EditReward() {
               className="w-full max-w-lg bg-[#FDFCF9] rounded-t-[2.5rem] p-6 shadow-2xl relative max-h-[85vh] flex flex-col"
             >
               <div className="flex justify-between items-center mb-4 px-2">
-                <h3 className="text-2xl font-black text-on-surface">心愿库</h3>
+                <h3 className="text-2xl font-black text-on-surface">{t('edit_reward.library_title', '心愿库')}</h3>
                 <button 
                   onClick={() => setIsLibraryOpen(false)}
                   className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant"

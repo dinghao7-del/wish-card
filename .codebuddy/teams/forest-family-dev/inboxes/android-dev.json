@@ -1,0 +1,11 @@
+[
+  {
+    "id": "shutdown-1777437665212",
+    "from": "android-dev",
+    "to": "android-dev",
+    "type": "shutdown_request",
+    "content": "{\"type\":\"shutdown_request\",\"request_id\":\"shutdown-1777437665212\",\"reason\":\"任务已完成，请关闭。\",\"from\":\"android-dev\",\"timestamp\":\"2026-04-29T04:41:05.212Z\"}",
+    "timestamp": "2026-04-29T04:41:05.212Z",
+    "read": true
+  }
+]

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useFamily } from '../context/FamilyContext';
+import { useTranslation } from 'react-i18next';
 import { 
   ArrowLeft, 
   Star, 
@@ -48,6 +49,7 @@ export function PublishTask() {
   const { id } = useParams();
   const location = useLocation();
   const { addTask, updateTask, members, currentUser, tasks } = useFamily();
+  const { t } = useTranslation();
 
   // Basic consistency checks to prevent crashes
   const safeMembers = Array.isArray(members) ? members : [];
@@ -85,7 +87,7 @@ export function PublishTask() {
   const [isRepeatEnabled, setIsRepeatEnabled] = useState(true);
   const [isTimeEnabled, setIsTimeEnabled] = useState(true);
 
-  const durations = ['30分钟', '1小时', '2小时', '3小时', '4小时', '5小时', '6小时'];
+  const durations: string[] = t('publish_task.durations', ['30分钟', '1小时', '2小时', '3小时', '4小时', '5小时', '6小时']);
   const durationValues = [30, 60, 120, 180, 240, 300, 360];
 
   const [formData, setFormData] = useState<Partial<Task>>({
@@ -301,34 +303,34 @@ export function PublishTask() {
     return <ListTodo size={size} className={className} />;
   };
 
-  const dayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+  const dayNames: string[] = t('publish_task.weekday_labels', ['周一', '周二', '周三', '周四', '周五', '周六', '周日']);
   const dayValues = [1, 2, 3, 4, 5, 6, 0];
 
   const getRepeatLabel = () => {
     try {
       if (repeatTab === 'weekly') {
         const safeDays = Array.isArray(selectedDays) ? selectedDays : [];
-        if (safeDays.length === 7) return '每天';
-        if (safeDays.length === 0) return '未设置';
-        if (safeDays.length === 5 && !safeDays.includes(6) && !safeDays.includes(0)) return '工作日';
-        if (safeDays.length === 2 && safeDays.includes(6) && safeDays.includes(0)) return '周末';
+        if (safeDays.length === 7) return t('publish_task.everyday', '每天');
+        if (safeDays.length === 0) return t('publish_task.not_set', '未设置');
+        if (safeDays.length === 5 && !safeDays.includes(6) && !safeDays.includes(0)) return t('publish_task.workday', '工作日');
+        if (safeDays.length === 2 && safeDays.includes(6) && safeDays.includes(0)) return t('publish_task.weekend', '周末');
         return safeDays
           .map(d => {
             const idx = dayValues.indexOf(d);
             return idx !== -1 ? dayNames[idx] : null;
           })
           .filter(Boolean)
-          .join('、') || '未设置';
+          .join('、') || t('publish_task.not_set', '未设置');
       } else if (repeatTab === 'monthly') {
         const safeMonthDays = Array.isArray(selectedMonthDays) ? selectedMonthDays : [];
-        return safeMonthDays.length > 0 ? `每月 ${[...safeMonthDays].sort((a,b) => a-b).join('、')} 日` : '未设置';
+        return safeMonthDays.length > 0 ? t('publish_task.monthly_days', `每月 ${[...safeMonthDays].sort((a,b) => a-b).join('、')} 日`, { days: [...safeMonthDays].sort((a,b) => a-b).join('、') }) : t('publish_task.not_set', '未设置');
       } else {
         const safeDates = Array.isArray(selectedCalendarDates) ? selectedCalendarDates : [];
-        return safeDates.length > 0 ? `已选择 ${safeDates.length} 个日期` : '未设置';
+        return safeDates.length > 0 ? t('publish_task.selected_dates', `已选择 ${safeDates.length} 个日期`, { count: safeDates.length }) : t('publish_task.not_set', '未设置');
       }
     } catch (e) {
       console.error("getRepeatLabel error", e);
-      return '未设置';
+      return t('publish_task.not_set', '未设置');
     }
   };
 
@@ -342,7 +344,7 @@ export function PublishTask() {
       const end = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
       return `${start} ~ ${end}`;
     } catch (e) {
-      return '任意时间';
+      return t('publish_task.any_time', '任意时间');
     }
   };
 
@@ -370,7 +372,7 @@ export function PublishTask() {
                 viewMode === 'target' ? "bg-white text-on-surface shadow-sm" : "text-on-surface-variant/40"
               )}
             >
-              创建目标
+              {t('publish_task.create_target', '创建目标')}
             </button>
             <div className="w-[1px] h-3 bg-outline-variant/20 mx-0.5" />
             <button 
@@ -381,14 +383,14 @@ export function PublishTask() {
                 viewMode === 'habit' ? "bg-white text-on-surface shadow-sm" : "text-on-surface-variant/40"
               )}
             >
-              好习惯
+              {t('publish_task.create_habit', '好习惯')}
             </button>
           </div>
         ) : (
           <h1 className="text-lg font-black text-on-surface">
             {isEdit 
-              ? (viewMode === 'target' ? '编辑目标' : '编辑好习惯') 
-              : (viewMode === 'target' ? '创建目标' : '好习惯')
+              ? (viewMode === 'target' ? t('publish_task.edit_target', '编辑目标') : t('publish_task.edit_habit', '编辑好习惯')) 
+              : (viewMode === 'target' ? t('publish_task.create_target', '创建目标') : t('publish_task.create_habit', '好习惯'))
             }
           </h1>
         )}
@@ -400,16 +402,16 @@ export function PublishTask() {
               onClick={() => navigate('/tasks/templates', { state: { fromMode: viewMode } })}
               className="flex items-center gap-1 px-3 sm:px-4 py-2 bg-[#98EE99]/20 rounded-full text-[#2E7D32] text-xs sm:text-sm font-black transition-all active:scale-95 shrink-0"
             >
-              导入 <ChevronRight size={14} strokeWidth={3} />
+              {t('publish_task.import', '导入')} <ChevronRight size={14} strokeWidth={3} />
             </button>
           )}
           {viewMode === 'habit' && (
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={handleSave}
               className="text-[#2E7D32] text-sm font-black px-4 py-2"
             >
-              保存
+              {t('publish_task.save', '保存')}
             </button>
           )}
         </div>
@@ -422,15 +424,15 @@ export function PublishTask() {
             <div className="bg-white rounded-[2rem] p-4 sm:p-5 shadow-sm border border-outline-variant/5">
               <div className="flex flex-col gap-0.5 mb-2">
                 <label className="text-[10px] font-black text-on-surface-variant/30 pl-1 uppercase tracking-widest">
-                  请输入 {viewMode === 'target' ? '目标' : '习惯'} 名称
+                  {t('publish_task.title_label', '请输入 {{mode}} 名称', { mode: viewMode === 'target' ? '目标' : '习惯' })}
                 </label>
                 <div className="flex items-center">
-                  <input 
+                  <input
                     required
-                    type="text" 
+                    type="text"
                     value={formData.title}
                     onChange={e => setFormData({ ...formData, title: e.target.value })}
-                    placeholder={viewMode === 'target' ? "加：完成数学作业" : "加：坚持早起"}
+                    placeholder={viewMode === 'target' ? t('publish_task.title_placeholder_target', '加：完成数学作业') : t('publish_task.title_placeholder_habit', '加：坚持早起')}
                     className="flex-1 border-none bg-transparent p-0 text-xl font-black placeholder:text-on-surface-variant/10 focus:ring-0 min-w-0"
                   />
                 </div>
@@ -446,10 +448,10 @@ export function PublishTask() {
                     className="text-sm font-black text-primary/60 flex items-center gap-1.5 py-1 px-2 hover:bg-primary/5 rounded-full transition-all"
                   >
                     <Plus size={18} strokeWidth={3} />
-                    添加描述
+                    {t('publish_task.add_description', '添加描述')}
                   </button>
                 ) : (
-                  <span className="text-xs font-black text-on-surface-variant/20 pl-2">描述内容</span>
+                  <span className="text-xs font-black text-on-surface-variant/20 pl-2">{t('publish_task.description_hint', '描述内容')}</span>
                 )}
 
                 <button 
@@ -470,7 +472,7 @@ export function PublishTask() {
                   rows={2}
                   value={formData.description}
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="添加详细说明..."
+                  placeholder={t('publish_task.description_placeholder', '添加详细说明...')}
                   className="w-full border-none bg-surface-container-low/30 rounded-2xl p-4 mt-3 text-sm font-bold focus:ring-0 text-on-surface-variant placeholder:text-on-surface-variant/10 resize-none"
                 />
               )}
@@ -488,7 +490,7 @@ export function PublishTask() {
                       <Plus size={20} className={cn("transition-transform duration-300", isRepeatEnabled ? "rotate-45" : "rotate-0")} />
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="font-black text-base sm:text-lg text-on-surface">重复</span>
+                      <span className="font-black text-base sm:text-lg text-on-surface">{t('publish_task.repeat', '重复')}</span>
                       <button 
                         type="button"
                         onClick={() => setIsRepeatEnabled(!isRepeatEnabled)}
@@ -512,7 +514,7 @@ export function PublishTask() {
                   className={cn("flex items-center gap-1 transition-all max-w-[50%]", !isRepeatEnabled && "opacity-20")}
                 >
                   <span className="text-sm font-black text-on-surface-variant/40 truncate text-right">
-                    {isRepeatEnabled ? getRepeatLabel() : '单次任务'}
+                    {isRepeatEnabled ? getRepeatLabel() : t('publish_task.single_task', '单次任务')}
                   </span>
                   <ChevronRight size={16} className="text-on-surface-variant/20 shrink-0" />
                 </button>
@@ -528,7 +530,7 @@ export function PublishTask() {
                       <Clock size={20} />
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="font-black text-base sm:text-lg text-on-surface">时段</span>
+                    <span className="font-black text-base sm:text-lg text-on-surface">{t('publish_task.time_slot', '时段')}</span>
                     <button 
                         type="button"
                         onClick={() => setIsTimeEnabled(!isTimeEnabled)}
@@ -552,7 +554,7 @@ export function PublishTask() {
                   className={cn("flex items-center gap-1 transition-all max-w-[50%]", !isTimeEnabled && "opacity-20")}
                 >
                   <span className="text-sm font-black text-on-surface-variant/40 truncate text-right">
-                    {isTimeEnabled ? getTimeLabel() : '任意时间'}
+                    {isTimeEnabled ? getTimeLabel() : t('publish_task.any_time', '任意时间')}
                   </span>
                   <ChevronRight size={16} className="text-on-surface-variant/20 shrink-0" />
                 </button>
@@ -565,13 +567,13 @@ export function PublishTask() {
                       <Calendar size={20} />
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-black text-base sm:text-lg text-on-surface">计划</span>
+                    <span className="font-black text-base sm:text-lg text-on-surface">{t('publish_task.plan', '计划')}</span>
                     <HelpCircle size={14} className="text-on-surface-variant/20" />
                   </div>
                 </div>
                 <div className="flex items-center gap-2 bg-surface-container-low/80 py-1.5 px-3 rounded-xl border border-outline-variant/5 shadow-sm active:scale-95 transition-all">
-                    <span className="bg-[#FF9800] text-white px-1 py-0.5 rounded text-[8px] font-black">假</span>
-                    <span className="text-sm font-bold text-on-surface">假期计划</span>
+                    <span className="bg-[#FF9800] text-white px-1 py-0.5 rounded text-[8px] font-black">{t('publish_task.vacation_badge', '假')}</span>
+                    <span className="text-sm font-bold text-on-surface">{t('publish_task.vacation_plan', '假期计划')}</span>
                     <ChevronRight size={14} className="text-on-surface-variant/20 ml-1" />
                 </div>
               </div>
@@ -584,7 +586,7 @@ export function PublishTask() {
              <div className="bg-white rounded-2xl p-4 shadow-sm border border-outline-variant/5">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1">
-                   <span className="text-sm font-black text-on-surface-variant/40">标题</span>
+                   <span className="text-sm font-black text-on-surface-variant/40">{t('publish_task.habit_title', '标题')}</span>
                 </div>
                 {!isEdit && (
                   <button 
@@ -592,16 +594,16 @@ export function PublishTask() {
                     onClick={() => navigate('/tasks/templates', { state: { fromMode: viewMode } })}
                     className="flex items-center gap-1 px-3 py-1 bg-[#98EE99]/10 rounded-full text-[#2E7D32] text-xs font-black transition-all active:scale-95"
                   >
-                    导入 <ChevronRight size={12} strokeWidth={3} />
+                    {t('publish_task.import', '导入')} <ChevronRight size={12} strokeWidth={3} />
                   </button>
                 )}
               </div>
-              <input 
+              <input
                 required
-                type="text" 
+                type="text"
                 value={formData.title}
                 onChange={e => setFormData({ ...formData, title: e.target.value })}
-                placeholder="请输入标题"
+                placeholder={t('publish_task.habit_title_placeholder', '请输入标题')}
                 className="w-full border-none bg-transparent p-0 text-base font-black placeholder:text-on-surface-variant/10 focus:ring-0 min-w-0"
               />
             </div>
@@ -613,7 +615,7 @@ export function PublishTask() {
             >
               <div className="flex items-center gap-3">
                 <ImageIcon size={20} className="text-on-surface-variant/30" />
-                <span className="text-sm font-bold text-on-surface-variant/40">选择图片 (可选)</span>
+                <span className="text-sm font-bold text-on-surface-variant/40">{t('publish_task.select_image', '选择图片 (可选)')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center text-primary">
@@ -627,7 +629,7 @@ export function PublishTask() {
             <div className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-outline-variant/5">
               <div className="flex items-center gap-3">
                 <RefreshCw size={20} className="text-on-surface-variant/30" />
-                <span className="text-sm font-bold text-on-surface">日内可以多次打卡</span>
+                <span className="text-sm font-bold text-on-surface">{t('publish_task.multi_checkin', '日内可以多次打卡')}</span>
               </div>
               <button 
                 type="button"
@@ -651,7 +653,7 @@ export function PublishTask() {
               <div className="flex-1">
                 <div className="flex items-center gap-1">
                    <span className="text-red-500 text-sm">*</span>
-                   <span className="text-sm font-bold text-on-surface-variant/40">星星</span>
+                   <span className="text-sm font-bold text-on-surface-variant/40">{t('publish_task.stars', '星星')}</span>
                 </div>
                 <input 
                   required
@@ -670,7 +672,7 @@ export function PublishTask() {
               <div className="flex-1">
                 <div className="flex items-center gap-1">
                    <span className="text-red-500 text-sm">*</span>
-                   <span className="text-sm font-bold text-on-surface-variant/40">次数限制</span>
+                   <span className="text-sm font-bold text-on-surface-variant/40">{t('publish_task.count_limit', '次数限制')}</span>
                 </div>
                 <input 
                   required
@@ -689,7 +691,7 @@ export function PublishTask() {
                 <UserIcon size={20} className="text-on-surface-variant/30" />
                 <div className="flex items-center gap-1">
                    <span className="text-red-500 text-sm">*</span>
-                   <span className="text-sm font-bold text-on-surface-variant/40">选择成员</span>
+                   <span className="text-sm font-bold text-on-surface-variant/40">{t('publish_task.select_members', '选择成员')}</span>
                 </div>
               </div>
               <div className="flex flex-wrap gap-4 px-1">
@@ -735,7 +737,7 @@ export function PublishTask() {
                   <Settings2 size={20} className="text-on-surface-variant/30" />
                   <div className="flex items-center gap-1">
                     <span className="text-red-500 text-sm">*</span>
-                    <span className="text-sm font-bold text-on-surface-variant/40">类型</span>
+                    <span className="text-sm font-bold text-on-surface-variant/40">{t('publish_task.type', '类型')}</span>
                   </div>
                 </div>
                 <HelpCircle size={18} className="text-on-surface-variant/20" />
@@ -749,17 +751,17 @@ export function PublishTask() {
                     habitType === 'reward' ? "bg-blue-500 text-white shadow-md" : "text-on-surface-variant/40"
                   )}
                  >
-                   奖励
+                   {t('publish_task.reward', '奖励')}
                  </button>
-                 <button 
-                  type="button" 
+                 <button
+                  type="button"
                   onClick={() => setHabitType('penalty')}
                   className={cn(
                     "flex-1 py-2.5 rounded-lg text-sm font-black transition-all",
                     habitType === 'penalty' ? "bg-red-500 text-white shadow-md text-white" : "text-on-surface-variant/40"
                   )}
                  >
-                   惩罚
+                   {t('publish_task.penalty', '惩罚')}
                  </button>
               </div>
             </div>
@@ -768,11 +770,11 @@ export function PublishTask() {
             <div className="bg-white rounded-2xl p-4 flex items-start gap-3 shadow-sm border border-outline-variant/5">
               <TextIcon size={20} className="text-on-surface-variant/30 mt-1" />
               <div className="flex-1">
-                <span className="text-sm font-bold text-on-surface-variant/40">描述</span>
+                <span className="text-sm font-bold text-on-surface-variant/40">{t('publish_task.description', '描述')}</span>
                 <textarea 
                   value={formData.description}
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="请输入描述内容"
+                  placeholder={t('publish_task.description_placeholder', '请输入描述内容')}
                   className="w-full border-none bg-transparent p-0 text-sm font-bold focus:ring-0 text-on-surface-variant placeholder:text-on-surface-variant/10 resize-none min-h-[60px]"
                 />
               </div>
@@ -784,7 +786,7 @@ export function PublishTask() {
         {viewMode === 'target' && (
           <div className="bg-white rounded-[2rem] p-4 sm:p-5 shadow-sm space-y-4 border border-outline-variant/5 mb-24">
              <div className="flex items-center justify-between">
-                <label className="text-sm sm:text-base font-black text-on-surface">星星积分奖励</label>
+                <label className="text-sm sm:text-base font-black text-on-surface">{t('publish_task.star_reward', '星星积分奖励')}</label>
                 <div className="flex items-center bg-surface-container-low/50 p-1 px-3 rounded-full border border-outline-variant/5">
                    <button 
                      type="button"
@@ -815,7 +817,7 @@ export function PublishTask() {
              <div className="h-[1px] bg-outline-variant/5 mx-[-24px]" />
 
              <div>
-                <label className="text-[10px] font-black text-on-surface-variant/30 pl-1 uppercase tracking-widest block mb-2">发布家长 (家长选项)</label>
+                <label className="text-[10px] font-black text-on-surface-variant/30 pl-1 uppercase tracking-widest block mb-2">{t('publish_task.parent_publisher', '发布家长 (家长选项)')}</label>
                 <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
                   {safeMembers.filter(m => m.role === 'parent').map(parent => (
                     <button 
@@ -839,7 +841,7 @@ export function PublishTask() {
                 
                 <div className="h-[1px] bg-outline-variant/5 mx-[-24px] mb-4" />
 
-                <label className="text-[10px] font-black text-on-surface-variant/30 pl-1 uppercase tracking-widest block mb-2">执行的小朋友</label>
+                <label className="text-[10px] font-black text-on-surface-variant/30 pl-1 uppercase tracking-widest block mb-2">{t('publish_task.child_executor', '执行的小朋友')}</label>
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   {children.map(kid => (
                     <button 
@@ -881,7 +883,7 @@ export function PublishTask() {
               className="w-full py-4 sm:py-5 bg-[#98EE99] text-[#2E7D32] font-black text-lg sm:text-xl rounded-full shadow-[0_12px_40px_-5px_rgba(152,238,153,0.4)] border-4 border-white active:scale-[0.98] transition-all relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full animate-[shimmer_3s_infinite]" />
-              {isEdit ? '保存修改' : '确认添加'}
+              {isEdit ? t('common.save', '保存修改') : t('publish_task.submit_add', '确认添加')}
             </button>
           </div>
         </div>
@@ -905,7 +907,7 @@ export function PublishTask() {
               >
                 <Plus size={28} className="rotate-45" />
               </button>
-              <h3 className="text-xl font-black">请选择</h3>
+              <h3 className="text-xl font-black">{t('publish_task.select_category', '请选择')}</h3>
               <button 
                 type="button"
                 onClick={() => {
@@ -943,7 +945,7 @@ export function PublishTask() {
                 }}
                 className="text-xl font-black text-on-surface hover:opacity-70 transition-opacity"
               >
-                标签管理
+                {t('publish_task.tag_management', '标签管理')}
               </button>
             </div>
           </div>
@@ -975,7 +977,7 @@ export function PublishTask() {
                 >
                   <Plus size={28} className="rotate-45" />
                 </button>
-                <h3 className="text-xl font-black">时段</h3>
+                <h3 className="text-xl font-black">{t('publish_task.time_period', '时段')}</h3>
                 <button 
                   type="button"
                   onClick={() => setShowTimeModal(false)}
@@ -1040,7 +1042,7 @@ export function PublishTask() {
 
               <div className="mb-8 pl-4 border-l-2 border-[#98EE99]/30">
                 <p className="text-sm font-black text-on-surface-variant/40">
-                   该目标执行时段：{getTimeLabel()}
+                   {t('publish_task.time_execution', '该目标执行时段：{{time}}', { time: getTimeLabel() })}
                 </p>
               </div>
 
@@ -1050,7 +1052,7 @@ export function PublishTask() {
                     <div className="w-12 h-12 rounded-2xl bg-surface-container-low flex items-center justify-center text-on-surface-variant/40 group-hover:text-primary transition-colors">
                       <Clock size={24} className={cn(isTimeEnabled && "text-primary")} />
                     </div>
-                    <span className="text-lg font-bold">提醒</span>
+                    <span className="text-lg font-bold">{t('publish_task.reminder', '提醒')}</span>
                   </div>
                   <button 
                     type="button"
@@ -1068,7 +1070,7 @@ export function PublishTask() {
                   </button>
                 </div>
                 <p className="text-xs font-bold text-on-surface-variant/40 leading-relaxed italic">
-                  开启后在任务开始前5分钟响铃（App需后台运行）
+                  {t('publish_task.reminder_hint', '开启后在任务开始前5分钟响铃（App需后台运行）')}
                 </p>
               </div>
             </motion.div>
@@ -1093,7 +1095,7 @@ export function PublishTask() {
               >
                 <ArrowLeft size={20} />
               </button>
-              <h2 className="text-xl font-black tracking-tight">标签管理</h2>
+              <h2 className="text-xl font-black text-on-surface">{t('publish_task.tag_management', '标签管理')}</h2>
               <button 
                 onClick={() => setIsAddingTag(true)}
                 className="w-10 h-10 flex items-center justify-center text-on-surface"
@@ -1115,7 +1117,7 @@ export function PublishTask() {
                       type="text"
                       value={newTagName}
                       onChange={e => setNewTagName(e.target.value)}
-                      placeholder="输入标签名称"
+                      placeholder={t('publish_task.tag_name_placeholder', '输入标签名称')}
                       className="flex-1 bg-white border-none rounded-xl px-4 py-3 font-bold focus:ring-2 focus:ring-primary/20 shadow-sm"
                       onKeyDown={e => e.key === 'Enter' && handleAddTag()}
                     />
@@ -1123,13 +1125,13 @@ export function PublishTask() {
                       onClick={handleAddTag}
                       className="px-6 py-3 bg-[#98EE99] text-primary rounded-xl font-black text-sm shadow-sm"
                     >
-                      添加
+                      {t('publish_task.add_tag', '添加')}
                     </button>
-                    <button 
+                    <button
                       onClick={() => setIsAddingTag(false)}
                       className="px-4 py-3 text-on-surface-variant/60 font-bold text-sm"
                     >
-                      取消
+                      {t('publish_task.cancel_tag', '取消')}
                     </button>
                   </div>
                 </motion.div>
@@ -1157,7 +1159,7 @@ export function PublishTask() {
             
             <div className="p-8 pb-12 bg-surface-container-lowest border-t border-outline-variant/5 text-center">
                <p className="text-xs font-bold text-on-surface-variant/40 leading-relaxed italic">
-                 提示：你可以随心所欲增删属于你的探险标签 🍃
+                 {t('publish_task.tag_hint', '提示：你可以随心所欲增删属于你的探险标签 🍃')}
                </p>
             </div>
           </motion.div>
@@ -1194,7 +1196,7 @@ export function PublishTask() {
                            "text-xl font-black transition-colors",
                            repeatTab === tab ? "text-on-surface" : "text-on-surface-variant/30"
                          )}>
-                            {tab === 'weekly' ? '每周' : tab === 'monthly' ? '每月' : '日历'}
+                            {tab === 'weekly' ? t('publish_task.weekly', '每周') : tab === 'monthly' ? t('publish_task.monthly', '每月') : t('publish_task.calendar', '日历')}
                          </span>
                          {repeatTab === tab && (
                            <motion.div 
@@ -1280,8 +1282,8 @@ export function PublishTask() {
                    </div>
 
                    <div className="grid grid-cols-7 text-center mb-2">
-                      {['一', '二', '三', '四', '五', '六', '日'].map(d => (
-                        <span key={d} className="text-sm font-bold text-on-surface-variant/40">周{d}</span>
+                      {['一', '二', '三', '四', '五', '六', '日'].map((d, i) => (
+                        <span key={d} className="text-sm font-bold text-on-surface-variant/40">{t('publish_task.week_prefix', '周')}{(t('publish_task.week_headers', ['一', '二', '三', '四', '五', '六', '日']) as string[])[i]}</span>
                       ))}
                    </div>
 
@@ -1322,11 +1324,11 @@ export function PublishTask() {
               {/* Shared Quick-Select Buttons */}
               <div className="mt-12 grid grid-cols-4 gap-3">
                 {[
-                  { label: '工作日', action: () => { setRepeatTab('weekly'); setSelectedDays([1, 2, 3, 4, 5]); } },
-                  { label: '周末', action: () => { setRepeatTab('weekly'); setSelectedDays([6, 0]); } },
-                  { label: '每月单日', action: () => { setRepeatTab('monthly'); setSelectedMonthDays([...Array(31)].map((_,i)=>i+1).filter(d => d % 2 !== 0)); } },
-                  { label: '每月双日', action: () => { setRepeatTab('monthly'); setSelectedMonthDays([...Array(31)].map((_,i)=>i+1).filter(d => d % 2 === 0)); } },
-                  { label: '艾宾浩斯', action: () => { 
+                  { label: t('publish_task.quick_workday', '工作日'), action: () => { setRepeatTab('weekly'); setSelectedDays([1, 2, 3, 4, 5]); } },
+                  { label: t('publish_task.quick_weekend', '周末'), action: () => { setRepeatTab('weekly'); setSelectedDays([6, 0]); } },
+                  { label: t('publish_task.quick_odd_days', '每月单日'), action: () => { setRepeatTab('monthly'); setSelectedMonthDays([...Array(31)].map((_,i)=>i+1).filter(d => d % 2 !== 0)); } },
+                  { label: t('publish_task.quick_even_days', '每月双日'), action: () => { setRepeatTab('monthly'); setSelectedMonthDays([...Array(31)].map((_,i)=>i+1).filter(d => d % 2 === 0)); } },
+                  { label: t('publish_task.quick_ebbinghaus', '艾宾浩斯'), action: () => { 
                     // Ebbinghaus pattern: Day 1, 2, 4, 7, 15, 30 from today
                     const today = new Date();
                     const dates = [1, 2, 4, 7, 15, 30].map(offset => {
@@ -1337,7 +1339,7 @@ export function PublishTask() {
                     setRepeatTab('calendar');
                     setSelectedCalendarDates(dates);
                   }},
-                  { label: '21天习惯', action: () => {
+                  { label: t('publish_task.quick_21day', '21天习惯'), action: () => {
                     const today = new Date();
                     const dates = [...Array(21)].map((_, i) => {
                       const d = new Date(today);
@@ -1360,7 +1362,7 @@ export function PublishTask() {
 
               <div className="mt-8 pt-6 border-t border-dashed border-outline-variant/10">
                 <p className="text-sm font-black text-on-surface-variant/40 leading-relaxed italic">
-                   {repeatTab === 'weekly' ? '每周可评分' : repeatTab === 'monthly' ? '每月固定日期可评分' : '指定日期可评分'}
+                   {repeatTab === 'weekly' ? t('publish_task.weekly_score', '每周可评分') : repeatTab === 'monthly' ? t('publish_task.monthly_score', '每月固定日期可评分') : t('publish_task.calendar_score', '指定日期可评分')}
                 </p>
               </div>
             </motion.div>

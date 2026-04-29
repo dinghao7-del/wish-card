@@ -5,6 +5,7 @@ import { BottomNav } from './BottomNav';
 import { motion } from 'framer-motion';
 import { useFamily } from '../context/FamilyContext';
 import { UserSelector } from './UserSelector';
+import { NotificationBell } from './NotificationCenter';
 import { Sparkles, X } from 'lucide-react';
 
 export function Layout() {
@@ -65,6 +66,13 @@ export function Layout() {
         <Outlet />
       </main>
       {!isFullPage && <BottomNav />}
+      
+      {/* 通知铃铛 - 固定在右上角 */}
+      {!isFullPage && currentUser && (
+        <div className="fixed top-3 right-3 z-50">
+          <NotificationBell />
+        </div>
+      )}
       
       {!isFullPage && (
         <UserSelector 

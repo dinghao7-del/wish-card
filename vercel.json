@@ -1,6 +1,9 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/((?!assets|reward-icons|task-icons|avatars|sounds|pwa-icons|favicon\\.ico|robots\\.txt|manifest\\.json|sw\\.js|.*\\.png|.*\\.svg|.*\\.jpg|.*\\.webp|api/).*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
@@ -10,10 +13,28 @@
       ]
     },
     {
-      "source": "/(reward-icons|task-icons|avatars|sounds)/(.*)",
+      "source": "/(reward-icons|task-icons|avatars|sounds|pwa-icons)/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=86400" }
       ]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/manifest.json",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/sync-community-templates",
+      "schedule": "0 3 * * *"
     }
   ]
 }

@@ -31,7 +31,7 @@ import { zhCN } from 'date-fns/locale';
 import { Task as TaskType } from '../types';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { TaskCard } from '../components/TaskCard';
-import { AISmartTaskDialog } from '../components/AISmartTaskDialog';
+import { VoiceAssistant } from '../components/VoiceAssistant';
 
 const getTaskIcon = (iconName: string, size = 24) => {
   switch (iconName) {
@@ -151,9 +151,10 @@ export function Tasks() {
         </div>
       </header>
 
-      <AISmartTaskDialog 
+      <VoiceAssistant 
         isOpen={isAiDialogOpen} 
-        onClose={() => setIsAiDialogOpen(false)} 
+        onClose={() => setIsAiDialogOpen(false)}
+        onOpenCalendarSync={() => navigate('/calendar-sync')}
       />
 
       {viewMode === 'calendar' ? (
@@ -216,7 +217,7 @@ export function Tasks() {
                   ) : (
                 <div className="flex flex-col items-center justify-center py-12 text-on-surface-variant/40">
                   <ClipboardList size={40} className="mb-2 opacity-20" />
-                  <p className="text-sm italic">{t('tasks.calendar.empty')}</p>
+                  <p className="text-sm italic">{t('tasks.calendar.empty', { defaultValue: '暂无数据' })}</p>
                 </div>
               )}
             </div>
@@ -232,7 +233,7 @@ export function Tasks() {
                   filter === 'all' ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-surface text-on-surface-variant shadow-sm"
                 )}
               >
-                {t('tasks.filter.all')}
+                {t('tasks.filter.all', { defaultValue: '全部' })}
               </button>
               <button 
                 onClick={() => setFilter('pending')}
@@ -241,7 +242,7 @@ export function Tasks() {
                   filter === 'pending' ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-surface text-on-surface-variant shadow-sm"
                 )}
               >
-                {t('tasks.filter.pending')}
+                {t('tasks.filter.pending', { defaultValue: '待完成' })}
               </button>
               <button 
                 onClick={() => setFilter('completed')}
@@ -250,7 +251,7 @@ export function Tasks() {
                   filter === 'completed' ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-surface text-on-surface-variant shadow-sm"
                 )}
               >
-                {t('tasks.filter.completed')}
+                {t('tasks.filter.completed', { defaultValue: '已完成' })}
               </button>
             </div>
 
@@ -259,7 +260,7 @@ export function Tasks() {
                   <div>
                     <h2 className="text-xl font-black mb-4 flex items-center gap-2">
                         <Clock size={20} className="text-orange-500" />
-                        {t('tasks.status.reviewing')}
+                        {t('tasks.status.reviewing', { defaultValue: '待审核' })}
                     </h2>
                     <div className="space-y-3">
                         {filteredTasks.filter(t => t.status === 'reviewing').map((t, i) => (
@@ -281,7 +282,7 @@ export function Tasks() {
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-xl font-black flex items-center gap-2">
                           <Clock size={20} className="text-primary" />
-                          {t('tasks.status.pending')}
+                          {t('tasks.status.pending', { defaultValue: '待完成' })}
                       </h2>
                       <motion.button
                         whileHover={{ scale: 1.1 }}
@@ -306,7 +307,7 @@ export function Tasks() {
                         {(filter === 'pending' && filteredTasks.filter(t => t.status === 'pending' || t.status === 'reviewing').length === 0) && (
                            <div className="flex flex-col items-center justify-center py-12 text-on-surface-variant/40">
                               <ClipboardList size={40} className="mb-2 opacity-20" />
-                              <p className="text-sm italic">{t('tasks.list.empty_pending')}</p>
+                              <p className="text-sm italic">{t('tasks.list.empty_pending', { defaultValue: 'empty pending' })}</p>
                            </div>
                         )}
                     </div>
@@ -317,7 +318,7 @@ export function Tasks() {
                   <div>
                     <h2 className="text-xl font-black mb-4 flex items-center gap-2">
                         <CheckCircle2 size={20} className="text-secondary" />
-                        {t('tasks.status.completed')}
+                        {t('tasks.status.completed', { defaultValue: '已完成' })}
                     </h2>
                     <div className="space-y-3">
                         {filteredTasks.filter(t => t.status === 'completed').map((t, i) => (
@@ -333,7 +334,7 @@ export function Tasks() {
                         {filteredTasks.filter(t => t.status === 'completed').length === 0 && (filter === 'completed' || filter === 'all') && (
                            <div className="flex flex-col items-center justify-center py-12 text-on-surface-variant/40">
                               <ClipboardList size={40} className="mb-2 opacity-20" />
-                              <p className="text-sm italic">{t('tasks.list.empty_completed')}</p>
+                              <p className="text-sm italic">{t('tasks.list.empty_completed', { defaultValue: 'empty completed' })}</p>
                            </div>
                         )}
                     </div>
@@ -360,7 +361,7 @@ export function Tasks() {
                 >
                   <ArrowLeft size={24} />
                 </button>
-                <h1 className="flex-1 text-center font-bold text-lg text-on-surface">{t('tasks.detail.title')}</h1>
+                <h1 className="flex-1 text-center font-bold text-lg text-on-surface">{t('tasks.detail.title', { defaultValue: '标题' })}</h1>
                 {isAdmin ? (
                   <div className="relative">
                     <button 
@@ -393,7 +394,7 @@ export function Tasks() {
                               <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
                                 <Edit size={16} />
                               </div>
-                              {t('tasks.detail.edit')}
+                              {t('tasks.detail.edit', { defaultValue: '编辑' })}
                             </button>
                             <button
                               onClick={() => {
@@ -405,7 +406,7 @@ export function Tasks() {
                               <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">
                                 <Trash2 size={16} />
                               </div>
-                              {t('tasks.detail.delete')}
+                              {t('tasks.detail.delete', { defaultValue: '删除' })}
                             </button>
                           </motion.div>
                         </>
@@ -432,21 +433,21 @@ export function Tasks() {
                             <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
                               <Trash2 size={32} />
                             </div>
-                            <h3 className="text-xl font-black text-on-surface mb-2">{t('tasks.delete.confirm_title')}</h3>
-                            <p className="text-on-surface-variant/60 text-sm font-bold mb-8">{t('tasks.delete.confirm_desc')}</p>
+                            <h3 className="text-xl font-black text-on-surface mb-2">{t('tasks.delete.confirm_title', { defaultValue: 'confirm title' })}</h3>
+                            <p className="text-on-surface-variant/60 text-sm font-bold mb-8">{t('tasks.delete.confirm_desc', { defaultValue: 'confirm desc' })}</p>
                             
                             <div className="flex flex-col gap-3">
                               <button 
                                 onClick={handleDeleteTask}
                                 className="w-full py-4 bg-red-500 text-white font-black rounded-2xl shadow-lg shadow-red-200 active:scale-95 transition-all"
                               >
-                                {t('common.confirm_delete')}
+                                {t('common.confirm_delete', { defaultValue: '确认删除' })}
                               </button>
                               <button 
                                 onClick={() => setIsDeleteConfirmOpen(false)}
                                 className="w-full py-4 bg-surface-container-low text-on-surface-variant/60 font-black rounded-2xl active:scale-95 transition-all"
                               >
-                                {t('common.rethink')}
+                                {t('common.rethink', { defaultValue: 'rethink' })}
                               </button>
                             </div>
                           </motion.div>
@@ -488,19 +489,19 @@ export function Tasks() {
                      />
                    </div>
                    <div className="flex-1">
-                     <p className="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest leading-none mb-1">{t('tasks.detail.creator')}</p>
+                     <p className="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest leading-none mb-1">{t('tasks.detail.creator', { defaultValue: 'creator' })}</p>
                      <p className="font-black text-xl text-on-surface leading-none items-center">
                         {members.find(m => m.id === selectedTask.creatorId)?.name || '妈妈'}
                      </p>
                    </div>
                    <div className="bg-[#FFF9C4] dark:bg-yellow-500/20 text-[#F9A825] dark:text-yellow-400 px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm border border-yellow-200 dark:border-yellow-500/20 uppercase tracking-wider">
-                     {t('tasks.detail.tag')}
+                     {t('tasks.detail.tag', { defaultValue: '标签' })}
                    </div>
                 </div>
 
                 {/* Description Section */}
                 <div className="w-full space-y-4 mb-10">
-                  <h3 className="text-xl font-black text-on-surface pl-1">{t('tasks.detail.description')}</h3>
+                  <h3 className="text-xl font-black text-on-surface pl-1">{t('tasks.detail.description', { defaultValue: '描述' })}</h3>
                   <div className="bg-surface-container-lowest rounded-[2.5rem] p-8 shadow-inner border border-outline-variant/10 relative overflow-hidden">
                     <p className="text-on-surface/80 font-medium leading-relaxed whitespace-pre-line text-sm relative z-10">
                       {selectedTask.description}
@@ -515,7 +516,7 @@ export function Tasks() {
                       <Star size={40} className="text-[#FBC02D] fill-current" />
                    </div>
                    <div className="relative z-10">
-                      <p className="text-[10px] font-black text-[#827717]/60 uppercase tracking-widest mb-1">{t('tasks.detail.reward')}</p>
+                      <p className="text-[10px] font-black text-[#827717]/60 uppercase tracking-widest mb-1">{t('tasks.detail.reward', { defaultValue: '奖励' })}</p>
                       <div className="flex items-baseline gap-1">
                         <span className="text-5xl font-black text-[#33691E] tracking-tighter">{selectedTask.rewardStars}</span>
                         <div className="flex flex-col gap-0.5">
@@ -529,7 +530,7 @@ export function Tasks() {
 
                 {/* Participants Section */}
                 <div className="w-full space-y-4 mb-10">
-                  <h3 className="text-xl font-black text-on-surface pl-1">{t('tasks.detail.participants')}</h3>
+                  <h3 className="text-xl font-black text-on-surface pl-1">{t('tasks.detail.participants', { defaultValue: 'participants' })}</h3>
                   <div className="space-y-4">
                      {selectedTask.assigneeIds.map((mid) => {
                        const member = members.find(m => m.id === mid);
@@ -561,9 +562,9 @@ export function Tasks() {
                                : "bg-surface-container-low text-on-surface-variant/50 border border-transparent"
                            )}>
                              {status === 'completed' ? (
-                               <><CheckCircle2 size={14} className="text-primary" /> {t('tasks.status.completed')}</>
+                               <><CheckCircle2 size={14} className="text-primary" /> {t('tasks.status.completed', { defaultValue: '已完成' })}</>
                              ) : (
-                               <><CircleDashed size={14} className="animate-spin opacity-50" /> {t('tasks.filter.pending')}</>
+                               <><CircleDashed size={14} className="animate-spin opacity-50" /> {t('tasks.filter.pending', { defaultValue: '待完成' })}</>
                              )}
                            </div>
                          </div>
@@ -585,7 +586,7 @@ export function Tasks() {
                    className="w-full py-5 rounded-[2.5rem] bg-primary text-white font-black text-lg shadow-[0_15px_30px_rgba(0,110,28,0.2)] flex items-center justify-center gap-3 active:scale-[0.97] transition-all hover:bg-primary-container hover:shadow-lg"
                  >
                    <CheckCircle2 size={24} />
-                   {t('tasks.detail.check_in')}
+                   {t('tasks.detail.check_in', { defaultValue: 'check in' })}
                  </button>
                )}
                {selectedTask.status === 'reviewing' && isAdmin && (
@@ -597,19 +598,19 @@ export function Tasks() {
                    className="w-full py-5 rounded-[2.5rem] bg-[#0070D3] text-white font-black text-lg shadow-[0_15px_30px_rgba(0,112,211,0.3)] flex items-center justify-center gap-3 active:scale-[0.97] transition-all hover:bg-[#005bb2]"
                  >
                    <CheckCircle2 size={24} />
-                   {t('tasks.detail.approve')}
+                   {t('tasks.detail.approve', { defaultValue: 'approve' })}
                  </button>
                )}
                {selectedTask.status === 'reviewing' && !isAdmin && (
                  <div className="w-full py-5 rounded-[2.5rem] bg-orange-500/10 text-orange-600 dark:text-orange-400 font-black text-lg flex items-center justify-center gap-3 border border-orange-500/10 italic">
                     <Clock size={24} className="animate-pulse" />
-                    {t('tasks.detail.waiting_approval')}
+                    {t('tasks.detail.waiting_approval', { defaultValue: 'waiting approval' })}
                  </div>
                )}
                {selectedTask.status === 'completed' && (
                  <div className="w-full py-5 rounded-[2.5rem] bg-surface-container-low text-on-surface-variant font-black text-lg flex items-center justify-center gap-3 shadow-inner">
                     <CheckCircle2 size={24} className="text-primary opacity-60" />
-                    {t('tasks.detail.reward_distributed')}
+                    {t('tasks.detail.reward_distributed', { defaultValue: 'reward distributed' })}
                  </div>
                )}
             </div>

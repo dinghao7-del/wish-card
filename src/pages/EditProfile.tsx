@@ -5,6 +5,7 @@ import { ArrowLeft, Save, Camera, Lock, Eye, EyeOff, X, Check } from 'lucide-rea
 import { motion, AnimatePresence } from 'framer-motion';
 import { Member } from '../types';
 import { cn } from '../lib/utils';
+import { useTranslation } from 'react-i18next';
 
 // 使用本地 PNG 亚洲风卡通头像
 import { BOY_AVATARS, GIRL_AVATARS, PARENT_AVATARS, GRANDPARENT_AVATARS } from '../lib/templates';
@@ -13,6 +14,7 @@ export function EditProfile() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { currentUser, members, updateMember } = useFamily();
+  const { t } = useTranslation();
   
   const memberToEdit = id ? members.find(m => m.id === id) : currentUser;
 
@@ -52,7 +54,7 @@ export function EditProfile() {
     setError('');
 
     if (memberToEdit?.role === 'parent' && !formData.password?.trim()) {
-      setError('管理员账号必须保留登录密码 🔐');
+      setError(t('edit_profile.error_password_required', '管理员账号必须保留登录密码 🔐'));
       return;
     }
 
@@ -70,7 +72,7 @@ export function EditProfile() {
         <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
           <ArrowLeft size={24} />
         </button>
-        <h1 className="font-black text-xl tracking-tight">{id ? `编辑 ${memberToEdit.name}` : '编辑个人信息'}</h1>
+        <h1 className="font-black text-xl tracking-tight">{id ? t('edit_profile.edit_name', `编辑 ${memberToEdit.name}`, { name: memberToEdit.name }) : t('edit_profile.title', '编辑个人信息')}</h1>
         <div className="w-10" />
       </header>
 
@@ -100,13 +102,13 @@ export function EditProfile() {
             onClick={() => setIsAvatarSelectorOpen(true)}
             className="text-primary font-black text-sm tracking-tight hover:opacity-80 transition-opacity mt-4"
           >
-            选择头像
+            {t('edit_profile.select_avatar', '选择头像')}
           </button>
         </div>
 
         <div className="space-y-6 bg-surface-container-low p-8 rounded-[2.5rem] shadow-sm border border-outline-variant/10">
           <div className="space-y-2">
-            <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">昵称</label>
+            <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">{t('edit_profile.nickname', '昵称')}</label>
             <input 
               required
               type="text" 
@@ -117,44 +119,44 @@ export function EditProfile() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">角色 (不可修改)</label>
+            <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">{t('edit_profile.role_readonly', '角色 (不可修改)')}</label>
             <div className="w-full bg-surface-container/50 text-on-surface-variant/40 rounded-[1.5rem] px-6 py-4.5 font-bold text-sm tracking-tight">
-              {formData.role === 'parent' ? '管理员' : '家庭成员'}
+              {formData.role === 'parent' ? t('edit_profile.role_parent', '管理员') : t('edit_profile.role_child', '家庭成员')}
             </div>
           </div>
 
           {canEditPin && (
             <div className="space-y-2">
-              <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">修改密码 (4位数字)</label>
-              <input 
+              <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">{t('edit_profile.pin_label', '修改密码 (4位数字)')}</label>
+              <input
                 required
-                type="password" 
+                type="password"
                 maxLength={4}
                 pattern="[0-9]*"
                 inputMode="numeric"
                 value={formData.pin}
-                placeholder="设置4位数字密码"
+                placeholder={t('edit_profile.pin_placeholder', '设置4位数字密码')}
                 onChange={e => {
                   const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
                   setFormData({ ...formData, pin: val });
                 }}
                 className="w-full bg-surface-container-high border-2 border-transparent rounded-[1.5rem] px-6 py-4.5 font-black focus:border-primary/20 transition-all tracking-[0.5em] text-center"
               />
-              <p className="text-[10px] text-on-surface-variant/60 font-bold px-2">管理员可重置所有人的密码，用户也可以修改自己的密码。</p>
+              <p className="text-[10px] text-on-surface-variant/60 font-bold px-2">{t('edit_profile.pin_hint', '管理员可重置所有人的密码，用户也可以修改自己的密码。')}</p>
             </div>
           )}
 
           {canEditPin && (
             <div className="space-y-2">
               <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2 flex items-center justify-between">
-                <span>登录密码 {memberToEdit.role === 'parent' && <span className="text-red-500 text-[10px]">(必填)</span>}</span>
+                <span>{t('edit_profile.password_label', '登录密码')} {memberToEdit.role === 'parent' && <span className="text-red-500 text-[10px]">{t('edit_profile.password_required', '(必填)')}</span>}</span>
               </label>
               <div className="relative">
-                <input 
-                  type={showPassword ? "text" : "password"} 
+                <input
+                  type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={e => setFormData({ ...formData, password: e.target.value })}
-                  placeholder={memberToEdit.role === 'parent' ? "设置管理员密码" : "选填：登录密码"}
+                  placeholder={memberToEdit.role === 'parent' ? t('edit_profile.password_placeholder_parent', '设置管理员密码') : t('edit_profile.password_placeholder_child', '选填：登录密码')}
                   className="w-full bg-surface-container-high border-2 border-transparent rounded-[1.5rem] px-6 py-4.5 font-bold transition-all pr-12"
                 />
                 <button 
@@ -184,7 +186,7 @@ export function EditProfile() {
           className="w-full bg-primary text-white font-black py-5 rounded-[2rem] flex items-center justify-center gap-3 shadow-xl shadow-primary/20 active:scale-95 transition-transform"
         >
           <Save size={24} />
-          <span>保存修改</span>
+          <span>{t('edit_profile.save', '保存修改')}</span>
         </button>
       </form>
 
@@ -209,8 +211,8 @@ export function EditProfile() {
               <div className="p-8 flex flex-col h-[70vh]">
                 <header className="flex items-center justify-between mb-8">
                   <div className="space-y-1">
-                    <h2 className="text-2xl font-black tracking-tight">选择头像</h2>
-                    <p className="text-xs text-on-surface-variant font-bold tracking-widest uppercase">共 {BOY_AVATARS.length + GIRL_AVATARS.length + PARENT_AVATARS.length + GRANDPARENT_AVATARS.length} 款精选头像</p>
+                    <h2 className="text-2xl font-black tracking-tight">{t('edit_profile.avatar_title', '选择头像')}</h2>
+                    <p className="text-xs text-on-surface-variant font-bold tracking-widest uppercase">{t('edit_profile.avatar_subtitle', '共 {{count}} 款精选头像', { count: BOY_AVATARS.length + GIRL_AVATARS.length + PARENT_AVATARS.length + GRANDPARENT_AVATARS.length })}</p>
                   </div>
                   <button 
                     onClick={() => setIsAvatarSelectorOpen(false)}
@@ -226,7 +228,7 @@ export function EditProfile() {
                     <div>
                       <h3 className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                         <div className="w-1 h-3 bg-blue-500 rounded-full" />
-                        男孩 ({BOY_AVATARS.length})
+                        {t('edit_profile.section_boys', '男孩')} ({BOY_AVATARS.length})
                       </h3>
                       <div className="grid grid-cols-5 gap-2">
                         {BOY_AVATARS.map((avatar) => (
@@ -264,7 +266,7 @@ export function EditProfile() {
                     <div>
                       <h3 className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                         <div className="w-1 h-3 bg-pink-500 rounded-full" />
-                        女孩 ({GIRL_AVATARS.length})
+                        {t('edit_profile.section_girls', '女孩')} ({GIRL_AVATARS.length})
                       </h3>
                       <div className="grid grid-cols-5 gap-2">
                         {GIRL_AVATARS.map((avatar) => (
@@ -302,7 +304,7 @@ export function EditProfile() {
                     <div>
                       <h3 className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                         <div className="w-1 h-3 bg-green-500 rounded-full" />
-                        父母 ({PARENT_AVATARS.length})
+                        {t('edit_profile.section_parents', '父母')} ({PARENT_AVATARS.length})
                       </h3>
                       <div className="grid grid-cols-5 gap-2">
                         {PARENT_AVATARS.map((avatar) => (
@@ -340,7 +342,7 @@ export function EditProfile() {
                     <div>
                       <h3 className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                         <div className="w-1 h-3 bg-orange-500 rounded-full" />
-                        爷爷奶奶 ({GRANDPARENT_AVATARS.length})
+                        {t('edit_profile.section_grandparents', '爷爷奶奶')} ({GRANDPARENT_AVATARS.length})
                       </h3>
                       <div className="grid grid-cols-5 gap-2">
                         {GRANDPARENT_AVATARS.map((avatar) => (

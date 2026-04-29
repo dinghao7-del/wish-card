@@ -1,0 +1,190 @@
+/* iPad 响应式适配样式 */
+
+/* iPad 竖屏 (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .app-container {
+    max-width: 100%;
+    padding: 0 24px;
+  }
+
+  /* 底部导航栏适配 */
+  .bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .bottom-nav-item {
+    padding: 12px 24px;
+  }
+
+  /* 卡片布局优化 */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  /* 表单元素 */
+  .form-input {
+    font-size: 17px;
+    padding: 14px 16px;
+  }
+
+  /* 按钮 */
+  .btn-primary {
+    padding: 16px 32px;
+    font-size: 17px;
+  }
+}
+
+/* iPad 横屏 / 大屏 (1024px+) */
+@media (min-width: 1024px) {
+  .app-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  /* 侧边栏布局 */
+  .sidebar-layout {
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+  }
+
+  .sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border-color);
+  }
+
+  .main-content {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  /* 底部导航改为侧边 */
+  .bottom-nav {
+    position: static;
+    width: 280px;
+    height: 100vh;
+    flex-direction: column;
+    padding: 24px 0;
+    border-right: 1px solid var(--border-color);
+    border-top: none;
+  }
+
+  .bottom-nav-item {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 16px 24px;
+    gap: 16px;
+  }
+
+  .bottom-nav-item span {
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  /* 卡片网格 */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  /* 任务列表双列 */
+  .task-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  /* 模态框 */
+  .modal-container {
+    max-width: 600px;
+  }
+
+  /* 表单 */
+  .form-section {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+}
+
+/* iPad Pro 12.9" 横屏 (1366px+) */
+@media (min-width: 1366px) {
+  .app-container {
+    max-width: 1400px;
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* 分屏模式适配 */
+@media (max-width: 674px) {
+  /* iPad 分屏时的紧凑模式 */
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .task-list {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    border-top: 1px solid var(--border-color);
+    border-right: none;
+  }
+}
+
+/* 安全区域适配 */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .app-header {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .app-content {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+
+  .bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* 深色模式 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #000000;
+    --bg-secondary: #1c1c1e;
+    --text-primary: #ffffff;
+    --text-secondary: #8e8e93;
+    --border-color: #38383a;
+  }
+}
+
+/* 减少动画 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

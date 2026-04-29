@@ -2,13 +2,14 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Headset, Users, Mail, Copy, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { showToastGlobal } from '../components/Toast';
 
 export function ContactUs() {
   const navigate = useNavigate();
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    alert('已复制到剪贴板 🌿');
+    showToastGlobal('已复制到剪贴板 🌿', 'success');
   };
 
   return (

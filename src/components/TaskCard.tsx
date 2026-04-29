@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Clock, ListTodo, Star, User } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Task as TaskType } from '../types';
 import { useFamily } from '../context/FamilyContext';
+import { useTranslation } from 'react-i18next';
 import * as LucideIcons from 'lucide-react';
 
 interface TaskCardProps {
@@ -19,14 +20,34 @@ const getTaskIcon = (iconName: string, size = 24) => {
   if (!iconName) return <ListTodo size={size} />;
   // 支持本地 PNG 文件路径（如 /task-icons/study/xxx.png）
   if (iconName.startsWith('/') || iconName.startsWith('http')) {
-    return <img src={iconName} alt="" className="object-contain" style={{ width: size, height: size }} />;
+    return <TaskIconWithFallback src={iconName} size={size} />;
   }
   const IconComponent = (LucideIcons as any)[iconName];
   if (IconComponent) return <IconComponent size={size} />;
   return <ListTodo size={size} />;
 };
 
+// 带错误处理的图标组件
+const TaskIconWithFallback: React.FC<{ src: string; size?: number }> = ({ src, size = 24 }) => {
+  const [imgError, setImgError] = useState(false);
+  
+  if (imgError) {
+    return <ListTodo size={size} />;
+  }
+  
+  return (
+    <img 
+      src={src} 
+      alt="" 
+      className="object-contain" 
+      style={{ width: size, height: size }}
+      onError={() => setImgError(true)}
+    />
+  );
+};
+
 export const TaskCard: React.FC<TaskCardProps> = ({ task, idx, onClick, onCheckIn, isAdmin, isHabit }) => {
+  const { t } = useTranslation();
   const { members } = useFamily();
   const assigneeNames = task.assigneeIds.map(id => members.find(m => m.id === id)?.name).filter(Boolean).join(', ');
 
@@ -70,12 +91,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, idx, onClick, onCheckI
           <div className="flex items-center gap-2 mt-1 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider truncate">
             <span className="flex items-center gap-1 flex-shrink-0">
               <Clock size={10} /> 
-              {isHabit ? (isPenalty ? '行为纠正' : '积极奖励') : (task.reminderTime || '08:00 AM')}
+              {isHabit ? (isPenalty ? t('habits.type.penalty', '行为纠正') : t('habits.type.reward', '积极奖励')) : (task.reminderTime || '08:00 AM')}
             </span>
             <span className="flex-shrink-0">•</span>
             <span className="flex items-center gap-1 truncate">
               <User size={10} className="flex-shrink-0" /> 
-              <span className="truncate">{assigneeNames || '所有人'}</span>
+              <span className="truncate">{assigneeNames || t('tasks.assignee.all', '所有人')}</span>
             </span>
           </div>
         </div>
@@ -101,12 +122,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, idx, onClick, onCheckI
              {(isAdmin && onCheckIn) ? (
                <>
                  <CheckCircle2 size={12} />
-                 核实
+                 {t('tasks.status.verify', '核实')}
                </>
              ) : (
                <>
                  <Clock size={12} />
-                 待确认
+                 {t('tasks.status.pending_confirm', '待确认')}
                </>
              )}
            </button>
@@ -119,7 +140,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, idx, onClick, onCheckI
             className="px-5 py-2.5 rounded-full bg-[#2E7D32] text-white text-[11px] font-black shadow-lg shadow-[#2E7D32]/20 hover:scale-105 hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"
           >
             <CheckCircle2 size={13} strokeWidth={3} />
-            打卡
+            {t('tasks.action.check_in', '打卡')}
           </button>
         ) : (
           <div className={cn(

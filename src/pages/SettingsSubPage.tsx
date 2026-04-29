@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
 import { useFamily } from '../context/FamilyContext';
+import { showToastGlobal } from '../components/Toast';
+import { showConfirm } from '../components/ConfirmDialog';
 
 export function SettingsSubPage() {
   const navigate = useNavigate();
@@ -21,42 +23,42 @@ export function SettingsSubPage() {
     switch (type) {
       case 'security':
         return {
-          title: t('profile.menu.security'),
+          title: t('profile.menu.security', { defaultValue: '安全' }),
           icon: Shield,
           iconBg: 'bg-[#F1F9F1]',
           iconColor: 'text-[#22C55E]',
-          subHeadline: t('settings.security.subtitle'),
+          subHeadline: t('settings.security.subtitle', { defaultValue: '副标题' }),
           items: [
-            { id: 'password', label: t('settings.security.password'), desc: t('settings.security.password_desc') },
-            { id: 'phone', label: t('settings.security.phone'), desc: t('settings.security.phone_desc') },
-            { id: 'devices', label: t('settings.security.devices'), desc: t('settings.security.devices_desc') }
+            { id: 'password', label: t('settings.security.password', { defaultValue: '密码' }), desc: t('settings.security.password_desc', { defaultValue: 'password desc' }) },
+            { id: 'phone', label: t('settings.security.phone', { defaultValue: '手机号' }), desc: t('settings.security.phone_desc', { defaultValue: 'phone desc' }) },
+            { id: 'devices', label: t('settings.security.devices', { defaultValue: 'devices' }), desc: t('settings.security.devices_desc', { defaultValue: 'devices desc' }) }
           ]
         };
       case 'notifications':
         return {
-          title: t('profile.menu.notifications'),
+          title: t('profile.menu.notifications', { defaultValue: '通知' }),
           icon: Bell,
           iconBg: 'bg-[#F0F7FF]',
           iconColor: 'text-blue-500',
-          subHeadline: t('settings.notifications.subtitle'),
+          subHeadline: t('settings.notifications.subtitle', { defaultValue: '副标题' }),
           items: [
-            { id: 'reminders', label: t('settings.notifications.task_reminder'), desc: t('settings.notifications.task_reminder_desc'), isToggle: true },
-            { id: 'points', label: t('settings.notifications.points_change'), desc: t('settings.notifications.points_change_desc'), isToggle: true },
-            { id: 'announcements', label: t('settings.notifications.system_announcement'), desc: t('settings.notifications.system_announcement_desc'), isToggle: true }
+            { id: 'reminders', label: t('settings.notifications.task_reminder', { defaultValue: 'task reminder' }), desc: t('settings.notifications.task_reminder_desc', { defaultValue: 'task reminder desc' }), isToggle: true },
+            { id: 'points', label: t('settings.notifications.points_change', { defaultValue: 'points change' }), desc: t('settings.notifications.points_change_desc', { defaultValue: 'points change desc' }), isToggle: true },
+            { id: 'announcements', label: t('settings.notifications.system_announcement', { defaultValue: 'system announcement' }), desc: t('settings.notifications.system_announcement_desc', { defaultValue: 'system announcement desc' }), isToggle: true }
           ]
         };
       case 'basic':
       default:
         return {
-          title: t('settings.title'),
+          title: t('settings.title', { defaultValue: '标题' }),
           icon: Settings,
           iconBg: 'bg-surface-container-low',
           iconColor: 'text-on-surface-variant',
-          subHeadline: t('settings.basic.subtitle'),
+          subHeadline: t('settings.basic.subtitle', { defaultValue: '副标题' }),
           items: [
-            { id: 'language', label: t('settings.language'), desc: getLanguageName(i18n.language) },
-            { id: 'cache', label: t('settings.cache'), desc: '24.5 MB' },
-            { id: 'about', label: t('settings.about'), desc: t('settings.basic.version', { version: '1.2.0' }) }
+            { id: 'language', label: t('settings.language', { defaultValue: '语言' }), desc: getLanguageName(i18n.language) },
+            { id: 'cache', label: t('settings.cache', { defaultValue: '清除缓存' }), desc: '24.5 MB' },
+            { id: 'about', label: t('settings.about', { defaultValue: '关于' }), desc: t('settings.basic.version', { version: '1.2.0' }) }
           ]
         };
     }
@@ -132,7 +134,7 @@ export function SettingsSubPage() {
       </div>
       
       <p className="text-center text-[10px] text-on-surface-variant/30 mt-16 uppercase tracking-[0.2em] font-black">
-        {t('welcome.title')} {t('profile.menu.security')}
+        {t('welcome.title', { defaultValue: '标题' })} {t('profile.menu.security', { defaultValue: '安全' })}
       </p>
 
       {/* Mock Detail Modal */}
@@ -164,16 +166,16 @@ export function SettingsSubPage() {
                  {activeItem.id === 'password' && (
                    <div className="space-y-4">
                      <div className="space-y-1.5">
-                       <label className="text-[10px] font-black text-on-surface-variant ml-2 uppercase tracking-widest">{t('settings.security.old_password')}</label>
-                       <input type="password" placeholder={t('settings.security.password_placeholder')} className="w-full h-14 bg-surface-container-low rounded-2xl px-6 font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
+                       <label className="text-[10px] font-black text-on-surface-variant ml-2 uppercase tracking-widest">{t('settings.security.old_password', { defaultValue: 'old password' })}</label>
+                       <input type="password" placeholder={t('settings.security.password_placeholder', { defaultValue: 'password placeholder' })} className="w-full h-14 bg-surface-container-low rounded-2xl px-6 font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
                      </div>
                      <div className="space-y-1.5">
-                       <label className="text-[10px] font-black text-on-surface-variant ml-2 uppercase tracking-widest">{t('settings.security.new_password')}</label>
-                       <input type="password" placeholder={t('settings.security.new_password_placeholder')} className="w-full h-14 bg-surface-container-low rounded-2xl px-6 font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
+                       <label className="text-[10px] font-black text-on-surface-variant ml-2 uppercase tracking-widest">{t('settings.security.new_password', { defaultValue: 'new password' })}</label>
+                       <input type="password" placeholder={t('settings.security.new_password_placeholder', { defaultValue: 'new password placeholder' })} className="w-full h-14 bg-surface-container-low rounded-2xl px-6 font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
                      </div>
                      <div className="space-y-1.5">
-                       <label className="text-[10px] font-black text-on-surface-variant ml-2 uppercase tracking-widest">{t('settings.security.confirm_password')}</label>
-                       <input type="password" placeholder={t('settings.security.confirm_password_placeholder')} className="w-full h-14 bg-surface-container-low rounded-2xl px-6 font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
+                       <label className="text-[10px] font-black text-on-surface-variant ml-2 uppercase tracking-widest">{t('settings.security.confirm_password', { defaultValue: 'confirm password' })}</label>
+                       <input type="password" placeholder={t('settings.security.confirm_password_placeholder', { defaultValue: 'confirm password placeholder' })} className="w-full h-14 bg-surface-container-low rounded-2xl px-6 font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
                      </div>
                    </div>
                  )}
@@ -181,14 +183,14 @@ export function SettingsSubPage() {
                   {activeItem.id === 'phone' && (
                     <div className="space-y-4">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-on-surface-variant ml-2 uppercase tracking-widest">{t('settings.security.new_phone')}</label>
-                        <input type="tel" placeholder={t('settings.security.phone_placeholder')} className="w-full h-14 bg-surface-container-low rounded-2xl px-6 font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
+                        <label className="text-[10px] font-black text-on-surface-variant ml-2 uppercase tracking-widest">{t('settings.security.new_phone', { defaultValue: 'new phone' })}</label>
+                        <input type="tel" placeholder={t('settings.security.phone_placeholder', { defaultValue: 'phone placeholder' })} className="w-full h-14 bg-surface-container-low rounded-2xl px-6 font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-on-surface-variant ml-2 uppercase tracking-widest">{t('settings.security.code')}</label>
+                        <label className="text-[10px] font-black text-on-surface-variant ml-2 uppercase tracking-widest">{t('settings.security.code', { defaultValue: 'code' })}</label>
                         <div className="relative">
-                          <input type="text" placeholder={t('settings.security.code_placeholder')} className="w-full h-14 bg-surface-container-low rounded-2xl px-6 font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
-                           <button type="button" className="absolute right-2 top-2 bottom-2 px-4 bg-primary/10 text-primary rounded-xl font-bold text-xs hover:bg-primary/20 transition-colors">{t('settings.security.get_code')}</button>
+                          <input type="text" placeholder={t('settings.security.code_placeholder', { defaultValue: 'code placeholder' })} className="w-full h-14 bg-surface-container-low rounded-2xl px-6 font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
+                           <button type="button" className="absolute right-2 top-2 bottom-2 px-4 bg-primary/10 text-primary rounded-xl font-bold text-xs hover:bg-primary/20 transition-colors">{t('settings.security.get_code', { defaultValue: 'get code' })}</button>
                         </div>
                       </div>
                     </div>
@@ -247,7 +249,7 @@ export function SettingsSubPage() {
                             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-on-surface-variant"><Smartphone size={20} /></div>
                             <div>
                                <p className="font-bold text-sm">iPhone 15 Pro</p>
-                               <p className="text-[10px] text-[#22C55E] font-black uppercase">{t('settings.security.current_device')}</p>
+                               <p className="text-[10px] text-[#22C55E] font-black uppercase">{t('settings.security.current_device', { defaultValue: 'current device' })}</p>
                             </div>
                          </div>
                       </div>
@@ -259,7 +261,7 @@ export function SettingsSubPage() {
                                <p className="text-[10px] text-on-surface-variant font-black uppercase">{t('settings.security.active_time', { time: '2h' })}</p>
                             </div>
                          </div>
-                         <button onClick={() => { if (confirm('确定要退出该设备吗？')) { alert('已退出该设备'); setActiveItem(null); } }} className="text-red-500 font-bold text-xs hover:bg-red-50 px-3 py-1 rounded-lg transition-colors">{t('settings.security.logout_device')}</button>
+                         <button onClick={async () => { if (await showConfirm({ message: '确定要退出该设备吗？' })) { showToastGlobal('已退出该设备', 'success'); setActiveItem(null); } }} className="text-red-500 font-bold text-xs hover:bg-red-50 px-3 py-1 rounded-lg transition-colors">{t('settings.security.logout_device', { defaultValue: 'logout device' })}</button>
                       </div>
                    </div>
                  )}
@@ -269,13 +271,13 @@ export function SettingsSubPage() {
                     onClick={() => setActiveItem(null)}
                     className="flex-1 py-4 bg-surface-container-highest text-on-surface rounded-2xl font-black active:scale-95 transition-transform"
                   >
-                     {t('common.cancel')}
+                     {t('common.cancel', { defaultValue: '取消' })}
                   </button>
                   <button 
                     onClick={() => setActiveItem(null)}
                     className="flex-[2] py-4 bg-on-surface text-white rounded-2xl font-black shadow-lg shadow-on-surface/20 active:scale-95 transition-transform"
                   >
-                     {t('common.save')}
+                     {t('common.save', { defaultValue: '保存' })}
                   </button>
                 </div>
               </div>

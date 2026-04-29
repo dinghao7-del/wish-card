@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Forest Family</string>
+    <!-- Supabase 配置请在 secrets.xml 中设置 -->
+</resources>

@@ -1,0 +1,23 @@
+{
+  "name": "forest-family-dev",
+  "leadAgentId": "33412672b26047249bbf16fa3dcb9334",
+  "workspacePath": "/Users/zerone/WorkBuddy/20260420104543",
+  "createdAt": "2026-04-29T04:09:16.013Z",
+  "options": {
+    "workspacePath": "/Users/zerone/WorkBuddy/20260420104543",
+    "isAutoTeam": false
+  },
+  "members": [
+    {
+      "memberId": "team-lead@forest-family-dev",
+      "name": "team-lead",
+      "role": "Team Lead - coordinates the team and interacts with the user"
+    },
+    {
+      "memberId": "android-dev@forest-family-dev",
+      "name": "android-dev",
+      "role": "Android App 开发"
+    }
+  ],
+  "isAutoTeam": false
+}

@@ -9,14 +9,14 @@ export function BottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pt-2 bg-background/95 dark:bg-surface/95 backdrop-blur-lg border-t border-outline-variant/5">
       <div className="flex justify-around items-center max-w-lg mx-auto h-20">
-        <NavItem to="/" icon={Home} label={t('nav.home')} />
-        <NavItem to="/tasks" icon={ClipboardList} label={t('nav.tasks')} />
+        <NavItem to="/" icon={Home} label={t('nav.home', { defaultValue: '首页' })} />
+        <NavItem to="/tasks" icon={ClipboardList} label={t('nav.tasks', { defaultValue: '任务' })} />
         
         {/* Center Prominent Button - Now consistent size */}
-        <NavItem to="/habits" icon={Sparkles} label={t('nav.rewards')} variant="highlight" />
+        <NavItem to="/habits" icon={Sparkles} label={t('nav.rewards', { defaultValue: '奖励' })} variant="highlight" />
 
-        <NavItem to="/rewards" icon={Trophy} label={t('nav.wishlist')} />
-        <NavItem to="/profile" icon={User} label={t('nav.profile')} />
+        <NavItem to="/rewards" icon={Trophy} label={t('nav.wishlist', { defaultValue: '心愿单' })} />
+        <NavItem to="/profile" icon={User} label={t('nav.profile', { defaultValue: '我的' })} />
       </div>
     </nav>
   );

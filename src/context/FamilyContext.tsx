@@ -3,6 +3,7 @@ import { Task, Member, Reward, HistoryRecord } from '../types';
 import * as api from '../lib/api';
 import { supabase, type Database } from '../lib/supabase';
 import { getGuestData } from '../lib/guestData';
+import { showToastGlobal } from '../components/Toast';
 
 type DbMember = Database['public']['Tables']['members']['Row'];
 type DbTask = Database['public']['Tables']['tasks']['Row'];
@@ -218,7 +219,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data: member, error } = await supabase
         .from('members')
-        .select('*')
+        .select('*', { defaultValue: '*' })
         .eq('id', userId)
         .single();
 
@@ -311,7 +312,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       );
       setTasks(prev => [...prev, toTask(dbTask)]);
     } catch (err: any) {
-      alert(`创建任务失败: ${err.message}`);
+      showToastGlobal(`创建任务失败: ${err.message}`, 'error');
     }
   }, [currentUser, familyId]);
 
@@ -335,7 +336,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       });
       setTasks(prev => prev.map(t => t.id === task.id ? toTask(dbTask) : t));
     } catch (err: any) {
-      alert(`更新任务失败: ${err.message}`);
+      showToastGlobal(`更新任务失败: ${err.message}`, 'error');
     }
   }, []);
 
@@ -349,7 +350,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       await api.deleteTask(taskId);
       setTasks(prev => prev.filter(t => t.id !== taskId));
     } catch (err: any) {
-      alert(`删除任务失败: ${err.message}`);
+      showToastGlobal(`删除任务失败: ${err.message}`, 'error');
     }
   }, []);
 
@@ -364,7 +365,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       const dbTask = await api.completeTask(taskId, currentUser.id);
       setTasks(prev => prev.map(t => t.id === taskId ? toTask(dbTask) : t));
     } catch (err: any) {
-      alert(`完成任务失败: ${err.message}`);
+      showToastGlobal(`完成任务失败: ${err.message}`, 'error');
     }
   }, [currentUser]);
 
@@ -400,7 +401,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       // 重新加载用户数据以刷新星星余额
       await loadUserData(currentUser.id);
     } catch (err: any) {
-      alert(`审批任务失败: ${err.message}`);
+      showToastGlobal(`审批任务失败: ${err.message}`, 'error');
     }
   }, [currentUser, tasks]);
 
@@ -425,7 +426,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       );
       setRewards(prev => [...prev, toReward(dbReward)]);
     } catch (err: any) {
-      alert(`创建奖励失败: ${err.message}`);
+      showToastGlobal(`创建奖励失败: ${err.message}`, 'error');
     }
   }, [currentUser, familyId]);
 
@@ -447,7 +448,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       });
       setRewards(prev => prev.map(r => r.id === reward.id ? toReward(dbReward) : r));
     } catch (err: any) {
-      alert(`更新奖励失败: ${err.message}`);
+      showToastGlobal(`更新奖励失败: ${err.message}`, 'error');
     }
   }, []);
 
@@ -461,7 +462,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       await api.deleteReward(rewardId);
       setRewards(prev => prev.filter(r => r.id !== rewardId));
     } catch (err: any) {
-      alert(`删除奖励失败: ${err.message}`);
+      showToastGlobal(`删除奖励失败: ${err.message}`, 'error');
     }
   }, []);
 
@@ -491,7 +492,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       const dbReward = await api.redeemReward(rewardId, currentUser.id);
       setRewards(prev => prev.map(r => r.id === rewardId ? toReward(dbReward) : r));
     } catch (err: any) {
-      alert(`兑换奖励失败: ${err.message}`);
+      showToastGlobal(`兑换奖励失败: ${err.message}`, 'error');
     }
   }, [currentUser, rewards]);
 
@@ -507,7 +508,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       const dbMember = await api.addMember(familyId, member.name, member.role, member.avatar);
       setMembers(prev => [...prev, toMember(dbMember)]);
     } catch (err: any) {
-      alert(`添加成员失败: ${err.message}`);
+      showToastGlobal(`添加成员失败: ${err.message}`, 'error');
     }
   }, [familyId]);
 
@@ -521,7 +522,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       await api.deleteMember(memberId);
       setMembers(prev => prev.filter(m => m.id !== memberId));
     } catch (err: any) {
-      alert(`删除成员失败: ${err.message}`);
+      showToastGlobal(`删除成员失败: ${err.message}`, 'error');
     }
   }, []);
 
@@ -545,7 +546,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       setMembers(prev => prev.map(m => m.id === member.id ? updated : m));
       if (currentUser?.id === member.id) setCurrentUser(updated);
     } catch (err: any) {
-      alert(`更新成员失败: ${err.message}`);
+      showToastGlobal(`更新成员失败: ${err.message}`, 'error');
     }
   }, [currentUser]);
 

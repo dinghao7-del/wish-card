@@ -219,7 +219,7 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
                       <Eraser size={18} />
                     </button>
                     <button 
-                       onClick={() => handlePinInput('0')}
+                       onClick={() => handlePinInput('0', { defaultValue: '0' })}
                        className="aspect-square rounded-2xl bg-surface-container-low text-lg font-black flex items-center justify-center hover:bg-primary/10 hover:text-primary active:scale-90 transition-all border border-outline-variant/5"
                     >
                       0

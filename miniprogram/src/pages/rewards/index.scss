@@ -1,0 +1,112 @@
+.rewards-page {
+  padding: 24rpx;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.page-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1B1B18;
+}
+
+.star-balance {
+  background-color: #FFF9C4;
+  padding: 8rpx 24rpx;
+  border-radius: 48rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #F9A825;
+}
+
+.category-tabs {
+  display: flex;
+  margin-bottom: 30rpx;
+  background-color: #FFFFFF;
+  border-radius: 48rpx;
+  padding: 8rpx;
+}
+
+.category-tab {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  color: #78746E;
+  
+  &.active {
+    background-color: #2E7D32;
+    color: white;
+    font-weight: 600;
+  }
+}
+
+.rewards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24rpx;
+}
+
+.reward-card {
+  width: calc(50% - 12rpx);
+  background-color: white;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+.reward-image {
+  width: 100%;
+  height: 300rpx;
+}
+
+.reward-cost-badge {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  background-color: #FFD54F;
+  color: #1B1B18;
+  padding: 8rpx 16rpx;
+  border-radius: 24rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.reward-name {
+  padding: 16rpx 20rpx 8rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1B1B18;
+}
+
+.reward-desc {
+  padding: 0 20rpx 20rpx;
+  font-size: 24rpx;
+  color: #78746E;
+}
+
+.exchange-button {
+  margin: 0 20rpx 20rpx;
+  background-color: #2E7D32;
+  color: white;
+  border-radius: 48rpx;
+  padding: 16rpx 0;
+  text-align: center;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.empty-state {
+  padding: 60rpx 0;
+  text-align: center;
+  color: #78746E;
+  font-size: 28rpx;
+  width: 100%;
+}

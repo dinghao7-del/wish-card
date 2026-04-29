@@ -1,0 +1,1345 @@
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
+
+const resources = {
+  'zh-CN': {
+    translation: {
+      'common': {
+        'back': '返回',
+        'save': '保存修改',
+        'cancel': '取消',
+        'confirm': '确认',
+        'confirm_delete': '确定删除',
+        'rethink': '我再想想',
+        'view_all': '查看全部',
+        'stars_suffix': '积分',
+        'days': {
+          'sun': '日',
+          'mon': '一',
+          'tue': '二',
+          'wed': '三',
+          'thu': '四',
+          'fri': '五',
+          'sat': '六'
+        }
+      },
+      'nav': {
+        'home': '首页',
+        'tasks': '任务',
+        'habits': '习惯',
+        'rewards': '奖惩',
+        'wishlist': '心愿',
+        'profile': '我的'
+      },
+      'home': {
+        'title': '用努力\n开启小确幸 🌱',
+        'energy_title': '今日成长能量',
+        'energy_subtitle': '加油！离下一个愿望更近了 🌱',
+        'actions': {
+          'create_task': '创建目标',
+          'make_wish': '许个愿望',
+          'view_calendar': '日历视图',
+          'calendar': '日历',
+          'pomodoro': '专注时钟',
+          'quadrant': '日程四象限'
+        },
+        'today_tasks': '今日任务',
+        'leaderboard': '排行榜'
+      },
+      'home_tabs': {
+        'leaderboard': '排行榜',
+        'quadrant': '四象限',
+        'quadrant_analysis': '四象限分析',
+        'click_for_full': '点击查看完整分析'
+      },
+      'profile': {
+        'title': '个人中心',
+        'menu': {
+          'security': '账号与安全',
+          'share_backup': '分享与备份',
+          'share_backup_desc': '数据保存与恢复',
+          'notifications': '消息通知',
+          'feedback': '意见反馈',
+          'dark_mode': '深色模式',
+          'basic_settings': '基础设置'
+        },
+        'action': {
+          'logout': '退出登录'
+        }
+      },
+      'settings': {
+        'title': '基础设置',
+        'language': '多语言',
+        'cache': '清除缓存',
+        'about': '关于愿望卡'
+      },
+      'tasks': {
+        'filter': {
+          'all': '全部',
+          'pending': '进行中',
+          'completed': '已完成'
+        },
+        'status': {
+          'reviewing': '待审核',
+          'pending': '进行中',
+          'completed': '已完成',
+          'verify': '核实',
+          'pending_confirm': '待确认'
+        },
+        'action': {
+          'check_in': '打卡'
+        },
+        'assignee': {
+          'all': '所有人'
+        },
+        'calendar': {
+          'empty': '这一天没有任务'
+        },
+        'detail': {
+          'title': '任务详情',
+          'creator': '发布者',
+          'tag': '任务',
+          'description': '任务描述',
+          'reward': '奖励星星',
+          'participants': '执行成员',
+          'edit': '编辑任务',
+          'delete': '删除任务',
+          'check_in': '去打卡',
+          'approve': '去核实',
+          'waiting_approval': '等待家长核实...',
+          'reward_distributed': '奖励已发放'
+        },
+        'delete': {
+          'confirm_title': '确认删除',
+          'confirm_desc': '删除后无法恢复，确定要删除吗？'
+        },
+        'list': {
+          'empty_pending': '暂无进行中的任务',
+          'empty_completed': '暂无已完成的任务'
+        }
+      },
+      'habits': {
+        'type': {
+          'penalty': '行为纠正',
+          'reward': '积极奖励'
+        }
+      },
+      'checkin': {
+        'keep_going': '坚持就是胜利，加油！🌲',
+        'approve_complete': '审核完成！',
+        'checkin_success': '打卡成功！',
+        'verify': '核实',
+        'pending_confirm': '待确认'
+      },
+      'rewards': {
+        'category': {
+          'all': '全部',
+          'common': '常用',
+          'study': '学习',
+          'life': '生活',
+          'special': '特别'
+        },
+        'action': {
+          'redeem': '兑换'
+        },
+        'redeem_success': '兑换成功！',
+        'redeem_detail': '已兑换：{name}'
+      },
+      'pomodoro': {
+        'focus_work': '专注工作',
+        'stay_focused': '保持专注！你可以的！',
+        'short_break': '短暂休息',
+        'relax': '放松一下，马上回来',
+        'long_break': '长时间休息',
+        'take_long_break': '辛苦了，好好休息吧'
+      },
+      'welcome': {
+        'title': '愿望卡',
+        'subtitle': '用努力开启小确幸 🌱',
+        'tagline': '记录成长每一步',
+        'skip': '跳过',
+        'skip_error': '跳过失败，请重试',
+        'guest_name': '妈妈',
+        'guest_mode': '先逛逛（游客模式）',
+        'network_error': '网络连接失败，无法连接到服务器。请检查网络后重试，或先使用游客模式体验',
+        'network_error_verify': '网络连接失败，无法连接到服务器。请检查网络后重试',
+        'register': {
+          'title': '欢迎注册',
+          'subtitle': '只有家长才可以注册管理员哦 🌱',
+          'error_nickname': '请输入昵称',
+          'error_password': '请输入密码',
+          'error_mismatch': '两次输入的密码不一致哦 🍃',
+          'error_password_length': '密码至少6位',
+          'nickname': '管理员昵称',
+          'nickname_placeholder': '如：妈妈',
+          'password': '登录密码',
+          'password_placeholder': '请输入管理密码',
+          'confirm_password': '确认密码',
+          'confirm_password_placeholder': '请再次输入密码',
+          'submit': '注册账号'
+        },
+        'login': {
+          'title': '欢迎登录',
+          'subtitle': '输入账号密码开启今日愿望 🌱',
+          'error_empty': '请输入账号',
+          'error_password': '请输入密码',
+          'error_invalid': '用户名或密码错误，请检查 🍃',
+          'username': '账号',
+          'username_placeholder': '邮箱 或 昵称',
+          'password': '密码',
+          'password_placeholder': '管理密码',
+          'submit': '登录账号',
+          'has_account': '已有账号？去登录 →'
+        },
+        'otp': {
+          'phone_email': '手机号或邮箱',
+          'placeholder': '手机号或邮箱',
+          'error_empty': '请输入手机号或邮箱',
+          'error_send': '发送验证码失败',
+          'code_sent': '验证码已发送至 {0}',
+          'verify_title': '输入验证码',
+          'verify_subtitle': '验证码已发送至 {0}',
+          'code_placeholder': '请输入验证码',
+          'error_no_code': '请输入验证码',
+          'error_verify': '验证失败',
+          'verify': '验证',
+          'send': '发送验证码',
+          'resend': '重新发送'
+        },
+        'my_family': '{0}的家庭',
+        'no_account': '没有账号？去注册 →'
+      },
+      'auth_callback': {
+        'no_valid_info': '未找到有效的验证信息',
+        'verify_failed': '验证失败',
+        'default_parent': '家长',
+        'family_name': '{0}的家庭',
+        'create_user_failed': '创建用户数据失败',
+        'verifying': '正在验证...',
+        'please_wait': '请稍候，正在完成邮箱验证',
+        'verify_success': '验证成功！',
+        'redirecting': '正在跳转到首页...',
+        'verify_failed_title': '验证失败',
+        'back_to_login': '返回登录'
+      },
+      'guest': {
+        'title': '体验模式',
+        'subtitle': '体验完整功能'
+      },
+      'task_templates': {
+        'all': '全部'
+      }
+    }
+  },
+  'en-US': {
+    translation: {
+      'common': {
+        'back': 'Back',
+        'save': 'Save Changes',
+        'cancel': 'Cancel',
+        'confirm': 'Confirm',
+        'confirm_delete': 'Confirm Delete',
+        'rethink': 'Let me think',
+        'view_all': 'View All',
+        'stars_suffix': 'Stars',
+        'days': {
+          'sun': 'Sun',
+          'mon': 'Mon',
+          'tue': 'Tue',
+          'wed': 'Wed',
+          'thu': 'Thu',
+          'fri': 'Fri',
+          'sat': 'Sat'
+        }
+      },
+      'nav': {
+        'home': 'Home',
+        'tasks': 'Tasks',
+        'habits': 'Habits',
+        'rewards': 'Rewards',
+        'wishlist': 'Wishlist',
+        'profile': 'Profile'
+      },
+      'home': {
+        'title': 'Unlock Happiness\nwith Effort 🌱',
+        'energy_title': "Today's Growth Energy",
+        'energy_subtitle': 'Keep going! One step closer to your next wish 🌱',
+        'actions': {
+          'create_task': 'Create Goal',
+          'make_wish': 'Make a Wish',
+          'view_calendar': 'Calendar View',
+          'calendar': 'Calendar',
+          'pomodoro': 'Focus Timer',
+          'quadrant': 'Schedule Quadrant'
+        },
+        'today_tasks': "Today's Tasks",
+        'leaderboard': 'Leaderboard'
+      },
+      'home_tabs': {
+        'leaderboard': 'Leaderboard',
+        'quadrant': 'Quadrant',
+        'quadrant_analysis': 'Quadrant Analysis',
+        'click_for_full': 'Click for full analysis'
+      },
+      'profile': {
+        'title': 'Profile',
+        'menu': {
+          'security': 'Security',
+          'share_backup': 'Share & Backup',
+          'share_backup_desc': 'Data save and restore',
+          'notifications': 'Notifications',
+          'feedback': 'Feedback',
+          'dark_mode': 'Dark Mode',
+          'basic_settings': 'Settings'
+        },
+        'action': {
+          'logout': 'Logout'
+        }
+      },
+      'settings': {
+        'title': 'Settings',
+        'language': 'Language',
+        'cache': 'Clear Cache',
+        'about': 'About WishCard'
+      },
+      'tasks': {
+        'filter': {
+          'all': 'All',
+          'pending': 'In Progress',
+          'completed': 'Completed'
+        },
+        'status': {
+          'reviewing': 'Under Review',
+          'pending': 'In Progress',
+          'completed': 'Completed',
+          'verify': 'Verify',
+          'pending_confirm': 'Pending Confirmation'
+        },
+        'action': {
+          'check_in': 'Check In'
+        },
+        'assignee': {
+          'all': 'Everyone'
+        },
+        'calendar': {
+          'empty': 'No tasks for this day'
+        },
+        'detail': {
+          'title': 'Task Details',
+          'creator': 'Creator',
+          'tag': 'Task',
+          'description': 'Description',
+          'reward': 'Reward Stars',
+          'participants': 'Participants',
+          'edit': 'Edit Task',
+          'delete': 'Delete Task',
+          'check_in': 'Check In',
+          'approve': 'Approve',
+          'waiting_approval': 'Waiting for approval...',
+          'reward_distributed': 'Reward Distributed'
+        },
+        'delete': {
+          'confirm_title': 'Confirm Delete',
+          'confirm_desc': 'This action cannot be undone. Are you sure?'
+        },
+        'list': {
+          'empty_pending': 'No tasks in progress',
+          'empty_completed': 'No completed tasks'
+        }
+      },
+      'habits': {
+        'type': {
+          'penalty': 'Behavior Correction',
+          'reward': 'Positive Reward'
+        }
+      },
+      'checkin': {
+        'keep_going': 'Keep going, you can do it! 🌲',
+        'approve_complete': 'Approved!',
+        'checkin_success': 'Check-in Successful!',
+        'verify': 'Verify',
+        'pending_confirm': 'Pending Confirmation'
+      },
+      'rewards': {
+        'category': {
+          'all': 'All',
+          'common': 'Common',
+          'study': 'Study',
+          'life': 'Life',
+          'special': 'Special'
+        },
+        'action': {
+          'redeem': 'Redeem'
+        },
+        'redeem_success': 'Redeemed Successfully!',
+        'redeem_detail': 'Redeemed: {name}'
+      },
+      'pomodoro': {
+        'focus_work': 'Focus Work',
+        'stay_focused': 'Stay focused! You got this!',
+        'short_break': 'Short Break',
+        'relax': 'Relax a bit, be back soon',
+        'long_break': 'Long Break',
+        'take_long_break': 'Great work, take a good rest'
+      },
+      'welcome': {
+        'title': 'WishCard',
+        'subtitle': 'Unlock Happiness with Effort 🌱',
+        'tagline': 'Record Every Step of Growth',
+        'skip': 'Skip',
+        'skip_error': 'Skip failed, please retry',
+        'guest_name': 'Mom',
+        'guest_mode': 'Explore First (Guest Mode)',
+        'network_error': 'Network connection failed. Please check your network and retry, or use Guest Mode first',
+        'network_error_verify': 'Network connection failed. Please check your network and retry',
+        'register': {
+          'title': 'Welcome to Register',
+          'subtitle': 'Only parents can register as admin 🌱',
+          'error_nickname': 'Please enter nickname',
+          'error_password': 'Please enter password',
+          'error_mismatch': 'Passwords do not match 🍃',
+          'error_password_length': 'Password must be at least 6 characters',
+          'nickname': 'Admin Nickname',
+          'nickname_placeholder': 'e.g. Mom',
+          'password': 'Login Password',
+          'password_placeholder': 'Enter admin password',
+          'confirm_password': 'Confirm Password',
+          'confirm_password_placeholder': 'Enter password again',
+          'submit': 'Register Account'
+        },
+        'login': {
+          'title': 'Welcome to Login',
+          'subtitle': 'Enter account and password to start today\'s wishes 🌱',
+          'error_empty': 'Please enter account',
+          'error_password': 'Please enter password',
+          'error_invalid': 'Username or password is incorrect, please check 🍃',
+          'username': 'Account',
+          'username_placeholder': 'Email or Nickname',
+          'password': 'Password',
+          'password_placeholder': 'Admin password',
+          'submit': 'Login Account',
+          'has_account': 'Already have an account? Login →'
+        },
+        'otp': {
+          'phone_email': 'Phone or Email',
+          'placeholder': 'Phone or Email',
+          'error_empty': 'Please enter phone or email',
+          'error_send': 'Failed to send verification code',
+          'code_sent': 'Verification code sent to {0}',
+          'verify_title': 'Enter Verification Code',
+          'verify_subtitle': 'Verification code sent to {0}',
+          'code_placeholder': 'Please enter verification code',
+          'error_no_code': 'Please enter verification code',
+          'error_verify': 'Verification failed',
+          'verify': 'Verify',
+          'send': 'Send Code',
+          'resend': 'Resend'
+        },
+        'my_family': '{0}\'s Family',
+        'no_account': 'No account? Register →'
+      },
+      'auth_callback': {
+        'no_valid_info': 'No valid verification information found',
+        'verify_failed': 'Verification failed',
+        'default_parent': 'Parent',
+        'family_name': '{0}\'s Family',
+        'create_user_failed': 'Failed to create user data',
+        'verifying': 'Verifying...',
+        'please_wait': 'Please wait, completing email verification',
+        'verify_success': 'Verification Successful!',
+        'redirecting': 'Redirecting to home page...',
+        'verify_failed_title': 'Verification Failed',
+        'back_to_login': 'Back to Login'
+      },
+      'guest': {
+        'title': 'Guest Mode',
+        'subtitle': 'Experience full features'
+      },
+      'task_templates': {
+        'all': 'All'
+      }
+    }
+  },
+  'ja-JP': {
+    translation: {
+      'common': {
+        'back': '戻る',
+        'save': '変更を保存',
+        'cancel': 'キャンセル',
+        'confirm': '確認',
+        'confirm_delete': '削除を確認',
+        'rethink': '考えます',
+        'view_all': 'すべて表示',
+        'stars_suffix': 'スター',
+        'days': {
+          'sun': '日',
+          'mon': '月',
+          'tue': '火',
+          'wed': '水',
+          'thu': '木',
+          'fri': '金',
+          'sat': '土'
+        }
+      },
+      'nav': {
+        'home': 'ホーム',
+        'tasks': 'タスク',
+        'habits': '習慣',
+        'rewards': 'ご褒美',
+        'wishlist': 'ウィッシュリスト',
+        'profile': 'プロフィール'
+      },
+      'home': {
+        'title': '努力で\n幸せを開こう 🌱',
+        'energy_title': '今日の成長エネルギー',
+        'energy_subtitle': '頑張って！次の願いまであと一歩 🌱',
+        'actions': {
+          'create_task': '目標を作成',
+          'make_wish': '願いをかなえよう',
+          'view_calendar': 'カレンダー表示',
+          'calendar': 'カレンダー',
+          'pomodoro': '集中タイマー',
+          'quadrant': 'スケジュール四分法'
+        },
+        'today_tasks': '今日のタスク',
+        'leaderboard': 'ランキング'
+      },
+      'home_tabs': {
+        'leaderboard': 'ランキング',
+        'quadrant': '四分法',
+        'quadrant_analysis': '四分法分析',
+        'click_for_full': 'クリックして詳細を見る'
+      },
+      'profile': {
+        'title': 'プロフィール',
+        'menu': {
+          'security': 'アカウントとセキュリティ',
+          'share_backup': '共有とバックアップ',
+          'share_backup_desc': 'データの保存と復元',
+          'notifications': '通知',
+          'feedback': 'フィードバック',
+          'dark_mode': 'ダークモード',
+          'basic_settings': '基本設定'
+        },
+        'action': {
+          'logout': 'ログアウト'
+        }
+      },
+      'settings': {
+        'title': '基本設定',
+        'language': '言語',
+        'cache': 'キャッシュをクリア',
+        'about': 'WishCardについて'
+      },
+      'tasks': {
+        'filter': {
+          'all': 'すべて',
+          'pending': '進行中',
+          'completed': '完了'
+        },
+        'status': {
+          'reviewing': 'レビュー中',
+          'pending': '進行中',
+          'completed': '完了',
+          'verify': '確認',
+          'pending_confirm': '確認待ち'
+        },
+        'action': {
+          'check_in': 'チェックイン'
+        },
+        'assignee': {
+          'all': 'みんな'
+        },
+        'calendar': {
+          'empty': 'この日にはタスクがありません'
+        },
+        'detail': {
+          'title': 'タスク詳細',
+          'creator': '作成者',
+          'tag': 'タスク',
+          'description': '説明',
+          'reward': 'ご褒美スター',
+          'participants': '参加メンバー',
+          'edit': 'タスクを編集',
+          'delete': 'タスクを削除',
+          'check_in': 'チェックイン',
+          'approve': '承認',
+          'waiting_approval': '承認を待っています...',
+          'reward_distributed': 'ご褒美を配布済み'
+        },
+        'delete': {
+          'confirm_title': '削除の確認',
+          'confirm_desc': '削除すると復元できません。よろしいですか？'
+        },
+        'list': {
+          'empty_pending': '進行中のタスクはありません',
+          'empty_completed': '完了したタスクはありません'
+        }
+      },
+      'habits': {
+        'type': {
+          'penalty': '行動修正',
+          'reward': '積極的ご褒美'
+        }
+      },
+      'checkin': {
+        'keep_going': '続けることが大切！頑張って！🌲',
+        'approve_complete': '承認完了！',
+        'checkin_success': 'チェックイン成功！',
+        'verify': '確認',
+        'pending_confirm': '確認待ち'
+      },
+      'rewards': {
+        'category': {
+          'all': 'すべて',
+          'common': '一般的',
+          'study': '学習',
+          'life': '生活',
+          'special': '特別'
+        },
+        'action': {
+          'redeem': '交換'
+        },
+        'redeem_success': '交換成功！',
+        'redeem_detail': '交換済み：{name}'
+      },
+      'pomodoro': {
+        'focus_work': '集中作業',
+        'stay_focused': '集中を維持！できます！',
+        'short_break': '短い休憩',
+        'relax': '少し休んで、すぐ戻ります',
+        'long_break': '長い休憩',
+        'take_long_break': 'お疲れ様！しっかり休んで'
+      },
+      'welcome': {
+        'title': 'WishCard',
+        'subtitle': '努力で幸せを開こう 🌱',
+        'tagline': '成長の一歩一歩を記録',
+        'skip': 'スキップ',
+        'skip_error': 'スキップ失敗、再試行をお願いします',
+        'guest_name': 'お母さん',
+        'guest_mode': '先に見学（ゲストモード）',
+        'network_error': 'ネットワーク接続失敗、サーバーに接続できません。ネットワークを確認してから再試行するか、先にゲストモードを使用してください',
+        'network_error_verify': 'ネットワーク接続失敗、サーバーに接続できません。ネットワークを確認してから再試行してください',
+        'register': {
+          'title': '登録へようこそ',
+          'subtitle': '保護者のみ管理者として登録できます 🌱',
+          'error_nickname': 'ニックネームを入力してください',
+          'error_password': 'パスワードを入力してください',
+          'error_mismatch': '入力したパスワードが一致しません 🍃',
+          'error_password_length': 'パスワードは少なくとも6文字が必要です',
+          'nickname': '管理者ニックネーム',
+          'nickname_placeholder': '例：お母さん',
+          'password': 'ログインパスワード',
+          'password_placeholder': '管理者パスワードを入力',
+          'confirm_password': 'パスワード確認',
+          'confirm_password_placeholder': 'もう一度パスワードを入力',
+          'submit': 'アカウント登録'
+        },
+        'login': {
+          'title': 'ログインへようこそ',
+          'subtitle': 'アカウントとパスワードを入力して今日の願いを開いて 🌱',
+          'error_empty': 'アカウントを入力してください',
+          'error_password': 'パスワードを入力してください',
+          'error_invalid': 'ユーザー名またはパスワードが正しくありません、確認してください 🍃',
+          'username': 'アカウント',
+          'username_placeholder': 'メールまたはニックネーム',
+          'password': 'パスワード',
+          'password_placeholder': '管理者パスワード',
+          'submit': 'ログイン',
+          'has_account': 'アカウントをお持ちですか？ログイン →'
+        },
+        'otp': {
+          'phone_email': '電話番号またはメール',
+          'placeholder': '電話番号またはメール',
+          'error_empty': '電話番号またはメールを入力してください',
+          'error_send': '認証コードの送信に失敗しました',
+          'code_sent': '認証コードを{0}に送信しました',
+          'verify_title': '認証コードを入力',
+          'verify_subtitle': '認証コードを{0}に送信しました',
+          'code_placeholder': '認証コードを入力してください',
+          'error_no_code': '認証コードを入力してください',
+          'error_verify': '認証失敗',
+          'verify': '認証',
+          'send': 'コード送信',
+          'resend': '再送信'
+        },
+        'my_family': '{0}の家庭',
+        'no_account': 'アカウントがない？登録 →'
+      },
+      'auth_callback': {
+        'no_valid_info': '有効な認証情報が見つかりません',
+        'verify_failed': '認証失敗',
+        'default_parent': '保護者',
+        'family_name': '{0}の家庭',
+        'create_user_failed': 'ユーザーデータの作成に失敗しました',
+        'verifying': '認証中...',
+        'please_wait': '少々お待ちください、メール認証を完了しています',
+        'verify_success': '認証成功！',
+        'redirecting': 'ホームページにジャンプ中...',
+        'verify_failed_title': '認証失敗',
+        'back_to_login': 'ログインに戻る'
+      },
+      'guest': {
+        'title': 'ゲストモード',
+        'subtitle': '全機能を体験'
+      },
+      'task_templates': {
+        'all': 'すべて'
+      }
+    }
+  },
+  'ko-KR': {
+        'title': '努力で\n幸せを開こう 🌱',
+        'energy_title': '今日の成長エネルギー',
+        'energy_subtitle': '頑張って！次の願いまであと一歩 🌱',
+        'actions': {
+          'create_task': '目標を作成',
+          'make_wish': '願いをかなえよう',
+          'view_calendar': 'カレンダー表示',
+          'calendar': 'カレンダー',
+          'pomodoro': '集中タイマー',
+          'quadrant': 'スケジュール四分法'
+        },
+        'today_tasks': '今日のタスク',
+        'leaderboard': 'ランキング'
+      },
+      'home_tabs': {
+        'leaderboard': 'ランキング',
+        'quadrant': '四分法',
+        'quadrant_analysis': '四分法分析',
+        'click_for_full': 'クリックして詳細を見る'
+      },
+      'profile': {
+        'title': 'プロフィール',
+        'menu': {
+          'security': 'アカウントとセキュリティ',
+          'share_backup': '共有とバックアップ',
+          'share_backup_desc': 'データの保存と復元',
+          'notifications': '通知',
+          'feedback': 'フィードバック',
+          'dark_mode': 'ダークモード',
+          'basic_settings': '基本設定'
+        },
+        'action': {
+          'logout': 'ログアウト'
+        }
+      },
+      'settings': {
+        'title': '基本設定',
+        'language': '言語',
+        'cache': 'キャッシュをクリア',
+        'about': 'WishCardについて'
+      },
+      'tasks': {
+        'filter': {
+          'all': 'すべて',
+          'pending': '進行中',
+          'completed': '完了'
+        },
+        'status': {
+          'reviewing': 'レビュー中',
+          'pending': '進行中',
+          'completed': '完了',
+          'verify': '確認',
+          'pending_confirm': '確認待ち'
+        },
+        'action': {
+          'check_in': 'チェックイン'
+        },
+        'assignee': {
+          'all': 'みんな'
+        },
+        'calendar': {
+          'empty': 'この日にはタスクがありません'
+        },
+        'detail': {
+          'title': 'タスク詳細',
+          'creator': '作成者',
+          'tag': 'タスク',
+          'description': '説明',
+          'reward': 'ご褒美スター',
+          'participants': '参加メンバー',
+          'edit': 'タスクを編集',
+          'delete': 'タスクを削除',
+          'check_in': 'チェックイン',
+          'approve': '承認',
+          'waiting_approval': '承認を待っています...',
+          'reward_distributed': 'ご褒美を配布済み'
+        },
+        'delete': {
+          'confirm_title': '削除の確認',
+          'confirm_desc': '削除すると復元できません。よろしいですか？'
+        },
+        'list': {
+          'empty_pending': '進行中のタスクはありません',
+          'empty_completed': '完了したタスクはありません'
+        }
+      },
+      'habits': {
+        'type': {
+          'penalty': '行動修正',
+          'reward': '積極的ご褒美'
+        }
+      },
+      'checkin': {
+        'keep_going': '続けることが大切！頑張って！🌲',
+        'approve_complete': '承認完了！',
+        'checkin_success': 'チェックイン成功！',
+        'verify': '確認',
+        'pending_confirm': '確認待ち'
+      },
+      'rewards': {
+        'category': {
+          'all': 'すべて',
+          'common': '一般的',
+          'study': '学習',
+          'life': '生活',
+          'special': '特別'
+        },
+        'action': {
+          'redeem': '交換'
+        },
+        'redeem_success': '交換成功！',
+        'redeem_detail': '交換済み：{name}'
+      },
+      'pomodoro': {
+        'focus_work': '集中作業',
+        'stay_focused': '集中を維持！できます！',
+        'short_break': '短い休憩',
+        'relax': '少し休んで、すぐ戻ります',
+        'long_break': '長い休憩',
+        'take_long_break': 'お疲れ様！しっかり休んで'
+      },
+      'welcome': {
+        'register': {
+          'title': '登録へようこそ',
+          'subtitle': '保護者のみ管理者として登録できます 🌱'
+        },
+        'no_account': 'アカウントがない？登録 →'
+      },
+      'guest': {
+        'title': 'ゲストモード',
+        'subtitle': '全機能を体験'
+      },
+      'task_templates': {
+        'all': 'すべて'
+      }
+    }
+  },
+  'ko-KR': {
+    translation: {
+      'common': {
+        'back': '뒤로',
+        'save': '변경사항 저장',
+        'cancel': '취소',
+        'confirm': '확인',
+        'confirm_delete': '삭제 확인',
+        'rethink': '다시 생각해볼게요',
+        'view_all': '모두 보기',
+        'stars_suffix': '별',
+        'days': {
+          'sun': '일',
+          'mon': '월',
+          'tue': '화',
+          'wed': '수',
+          'thu': '목',
+          'fri': '금',
+          'sat': '토'
+        }
+      },
+      'nav': {
+        'home': '홈',
+        'tasks': '할 일',
+        'habits': '습관',
+        'rewards': '보상',
+        'wishlist': '위시리스트',
+        'profile': '프로필'
+      },
+      'home': {
+        'title': '노력으로\n행복을 열어보세요 🌱',
+        'energy_title': '오늘의 성장 에너지',
+        'energy_subtitle': '화이팅! 다음 소원에 한 걸음 더 가까이 🌱',
+        'actions': {
+          'create_task': '목표 만들기',
+          'make_wish': '소원 빌기',
+          'view_calendar': '달력 보기',
+          'calendar': '달력',
+          'pomodoro': '집중 타이머',
+          'quadrant': '일정 사분법'
+        },
+        'today_tasks': "오늘의 할 일",
+        'leaderboard': '리더보드'
+      },
+      'home_tabs': {
+        'leaderboard': '리더보드',
+        'quadrant': '사분법',
+        'quadrant_analysis': '사분법 분석',
+        'click_for_full': '클릭하여 전체 보기'
+      },
+      'profile': {
+        'title': '프로필',
+        'menu': {
+          'security': '계정 및 보안',
+          'share_backup': '공유 및 백업',
+          'share_backup_desc': '데이터 저장 및 복원',
+          'notifications': '알림',
+          'feedback': '피드백',
+          'dark_mode': '다크 모드',
+          'basic_settings': '기본 설정'
+        },
+        'action': {
+          'logout': '로그아웃'
+        }
+      },
+      'settings': {
+        'title': '기본 설정',
+        'language': '언어',
+        'cache': '캐시 지우기',
+        'about': 'WishCard 정보'
+      },
+      'tasks': {
+        'filter': {
+          'all': '전체',
+          'pending': '진행 중',
+          'completed': '완료'
+        },
+        'status': {
+          'reviewing': '검토 중',
+          'pending': '진행 중',
+          'completed': '완료',
+          'verify': '확인',
+          'pending_confirm': '확인 대기'
+        },
+        'action': {
+          'check_in': '체크인'
+        },
+        'assignee': {
+          'all': '모두'
+        },
+        'calendar': {
+          'empty': '이 날에는 할 일이 없습니다'
+        },
+        'detail': {
+          'title': '할 일 상세',
+          'creator': '작성자',
+          'tag': '할 일',
+          'description': '설명',
+          'reward': '보상 별',
+          'participants': '참여 멤버',
+          'edit': '할 일 편집',
+          'delete': '할 일 삭제',
+          'check_in': '체크인',
+          'approve': '승인',
+          'waiting_approval': '승인을 기다리는 중...',
+          'reward_distributed': '보상 지급 완료'
+        },
+        'delete': {
+          'confirm_title': '삭제 확인',
+          'confirm_desc': '삭제 후 복구할 수 없습니다. 정말 삭제하시겠습니까?'
+        },
+        'list': {
+          'empty_pending': '진행 중인 할 일이 없습니다',
+          'empty_completed': '완료된 할 일이 없습니다'
+        }
+      },
+      'habits': {
+        'type': {
+          'penalty': '행동 교정',
+          'reward': '적극적 보상'
+        }
+      },
+      'checkin': {
+        'keep_going': '꾸준함이 가장 중요! 화이팅! 🌲',
+        'approve_complete': '승인 완료!',
+        'checkin_success': '체크인 성공!',
+        'verify': '확인',
+        'pending_confirm': '확인 대기'
+      },
+      'rewards': {
+        'category': {
+          'all': '전체',
+          'common': '일반',
+          'study': '학습',
+          'life': '생활',
+          'special': '특별'
+        },
+        'action': {
+          'redeem': '교환'
+        },
+        'redeem_success': '교환 성공!',
+        'redeem_detail': '교환됨: {name}'
+      },
+      'pomodoro': {
+        'focus_work': '집중 작업',
+        'stay_focused': '집중하세요! 할 수 있어요!',
+        'short_break': '짧은 휴식',
+        'relax': '잠시 쉬고, 곧 돌아올게요',
+        'long_break': '긴 휴식',
+        'take_long_break': '수고하셨어요! 푹 쉬세요'
+      },
+      'welcome': {
+        'register': {
+          'title': '회원가입 환영',
+          'subtitle': '부모님만 관리자로 등록할 수 있어요 🌱'
+        },
+        'no_account': '계정이 없나요? 등록 →'
+      },
+      'guest': {
+        'title': '게스트 모드',
+        'subtitle': '전체 기능 체험'
+      },
+      'task_templates': {
+        'all': '전체'
+      }
+    }
+  },
+  'es-ES': {
+    translation: {
+      'common': {
+        'back': 'Volver',
+        'save': 'Guardar Cambios',
+        'cancel': 'Cancelar',
+        'confirm': 'Confirmar',
+        'confirm_delete': 'Confirmar Eliminación',
+        'rethink': 'Déjame pensar',
+        'view_all': 'Ver Todo',
+        'stars_suffix': 'Estrellas',
+        'days': {
+          'sun': 'Dom',
+          'mon': 'Lun',
+          'tue': 'Mar',
+          'wed': 'Mié',
+          'thu': 'Jue',
+          'fri': 'Vie',
+          'sat': 'Sáb'
+        }
+      },
+      'nav': {
+        'home': 'Inicio',
+        'tasks': 'Tareas',
+        'habits': 'Hábitos',
+        'rewards': 'Recompensas',
+        'wishlist': 'Lista de Deseos',
+        'profile': 'Perfil'
+      },
+      'home': {
+        'title': 'Desbloquea la Felicidad\ncon Esfuerzo 🌱',
+        'energy_title': "Energía de Crecimiento de Hoy",
+        'energy_subtitle': '¡Sigue así! Un paso más cerca de tu próximo deseo 🌱',
+        'actions': {
+          'create_task': 'Crear Meta',
+          'make_wish': 'Hacer un Deseo',
+          'view_calendar': 'Vista de Calendario',
+          'calendar': 'Calendario',
+          'pomodoro': 'Temporizador Focus',
+          'quadrant': 'Cuadrante de Horario'
+        },
+        'today_tasks': 'Tareas de Hoy',
+        'leaderboard': 'Tabla de Clasificación'
+      },
+      'home_tabs': {
+        'leaderboard': 'Clasificación',
+        'quadrant': 'Cuadrante',
+        'quadrant_analysis': 'Análisis de Cuadrante',
+        'click_for_full': 'Haz clic para ver el análisis completo'
+      },
+      'profile': {
+        'title': 'Perfil',
+        'menu': {
+          'security': 'Cuenta y Seguridad',
+          'share_backup': 'Compartir y Respaldo',
+          'share_backup_desc': 'Guardar y restaurar datos',
+          'notifications': 'Notificaciones',
+          'feedback': 'Comentarios',
+          'dark_mode': 'Modo Oscuro',
+          'basic_settings': 'Configuración'
+        },
+        'action': {
+          'logout': 'Cerrar Sesión'
+        }
+      },
+      'settings': {
+        'title': 'Configuración',
+        'language': 'Idioma',
+        'cache': 'Limpiar Caché',
+        'about': 'Acerca de WishCard'
+      },
+      'tasks': {
+        'filter': {
+          'all': 'Todas',
+          'pending': 'En Progreso',
+          'completed': 'Completadas'
+        },
+        'status': {
+          'reviewing': 'En Revisión',
+          'pending': 'En Progreso',
+          'completed': 'Completada',
+          'verify': 'Verificar',
+          'pending_confirm': 'Pendiente de Confirmación'
+        },
+        'action': {
+          'check_in': 'Registrarse'
+        },
+        'assignee': {
+          'all': 'Todos'
+        },
+        'calendar': {
+          'empty': 'No hay tareas para este día'
+        },
+        'detail': {
+          'title': 'Detalles de la Tarea',
+          'creator': 'Creador',
+          'tag': 'Tarea',
+          'description': 'Descripción',
+          'reward': 'Estrellas de Recompensa',
+          'participants': 'Participantes',
+          'edit': 'Editar Tarea',
+          'delete': 'Eliminar Tarea',
+          'check_in': 'Registrarse',
+          'approve': 'Aprobar',
+          'waiting_approval': 'Esperando aprobación...',
+          'reward_distributed': 'Recompensa Distribuida'
+        },
+        'delete': {
+          'confirm_title': 'Confirmar Eliminación',
+          'confirm_desc': 'Esta acción no se puede deshacer. ¿Estás seguro?'
+        },
+        'list': {
+          'empty_pending': 'No hay tareas en progreso',
+          'empty_completed': 'No hay tareas completadas'
+        }
+      },
+      'habits': {
+        'type': {
+          'penalty': 'Corrección de Conducta',
+          'reward': 'Recompensa Positiva'
+        }
+      },
+      'checkin': {
+        'keep_going': '¡La persistencia es la clave! ¡Ánimo! 🌲',
+        'approve_complete': '¡Aprobado!',
+        'checkin_success': '¡Registro Exitoso!',
+        'verify': 'Verificar',
+        'pending_confirm': 'Pendiente de Confirmación'
+      },
+      'rewards': {
+        'category': {
+          'all': 'Todas',
+          'common': 'Común',
+          'study': 'Estudio',
+          'life': 'Vida',
+          'special': 'Especial'
+        },
+        'action': {
+          'redeem': 'Canjear'
+        },
+        'redeem_success': '¡Canje Exitoso!',
+        'redeem_detail': 'Canjeado: {name}'
+      },
+      'pomodoro': {
+        'focus_work': 'Trabajo Enfocado',
+        'stay_focused': '¡Mantente enfocado! ¡Tú puedes!',
+        'short_break': 'Descanso Corto',
+        'relax': 'Relájate un poco, vuelvo pronto',
+        'long_break': 'Descanso Largo',
+        'take_long_break': 'Buen trabajo, descansa bien'
+      },
+      'welcome': {
+        'register': {
+          'title': 'Bienvenido al Registro',
+          'subtitle': 'Solo los padres pueden registrarse como admin 🌱'
+        },
+        'no_account': '¿No tienes cuenta? Regístrate →'
+      },
+      'guest': {
+        'title': 'Modo Invitado',
+        'subtitle': 'Experimenta todas las funciones'
+      },
+      'task_templates': {
+        'all': 'Todas'
+      }
+    }
+  },
+  'fr-FR': {
+    translation: {
+      'common': {
+        'back': 'Retour',
+        'save': 'Enregistrer les Modifications',
+        'cancel': 'Annuler',
+        'confirm': 'Confirmer',
+        'confirm_delete': 'Confirmer la Suppression',
+        'rethink': 'Je vais réfléchir',
+        'view_all': 'Voir Tout',
+        'stars_suffix': 'Étoiles',
+        'days': {
+          'sun': 'Dim',
+          'mon': 'Lun',
+          'tue': 'Mar',
+          'wed': 'Mer',
+          'thu': 'Jeu',
+          'fri': 'Ven',
+          'sat': 'Sam'
+        }
+      },
+      'nav': {
+        'home': 'Accueil',
+        'tasks': 'Tâches',
+        'habits': 'Habitudes',
+        'rewards': 'Récompenses',
+        'wishlist': 'Liste de Souhaits',
+        'profile': 'Profil'
+      },
+      'home': {
+        'title': 'Débloquez le Bonheur\navec Effort 🌱',
+        'energy_title': "Énergie de Croissance d'Aujourd'hui",
+        'energy_subtitle': 'Continuez ! Un pas de plus près de votre prochain souhait 🌱',
+        'actions': {
+          'create_task': 'Créer un Objectif',
+          'make_wish': 'Faire un Vœu',
+          'view_calendar': 'Vue Calendrier',
+          'calendar': 'Calendrier',
+          'pomodoro': 'Minuterie Focus',
+          'quadrant': 'Quadrant d\'Emploi du Temps'
+        },
+        'today_tasks': "Tâches d'Aujourd'hui",
+        'leaderboard': 'Classement'
+      },
+      'home_tabs': {
+        'leaderboard': 'Classement',
+        'quadrant': 'Quadrant',
+        'quadrant_analysis': 'Analyse de Quadrant',
+        'click_for_full': 'Cliquez pour voir l\'analyse complète'
+      },
+      'profile': {
+        'title': 'Profil',
+        'menu': {
+          'security': 'Compte et Sécurité',
+          'share_backup': 'Partager et Sauvegarder',
+          'share_backup_desc': 'Sauvegarder et restaurer les données',
+          'notifications': 'Notifications',
+          'feedback': 'Commentaires',
+          'dark_mode': 'Mode Sombre',
+          'basic_settings': 'Paramètres'
+        },
+        'action': {
+          'logout': 'Se Déconnecter'
+        }
+      },
+      'settings': {
+        'title': 'Paramètres',
+        'language': 'Langue',
+        'cache': 'Vider le Cache',
+        'about': 'À propos de WishCard'
+      },
+      'tasks': {
+        'filter': {
+          'all': 'Toutes',
+          'pending': 'En Cours',
+          'completed': 'Terminées'
+        },
+        'status': {
+          'reviewing': 'En Revue',
+          'pending': 'En Cours',
+          'completed': 'Terminée',
+          'verify': 'Vérifier',
+          'pending_confirm': 'En Attente de Confirmation'
+        },
+        'action': {
+          'check_in': 'Pointer'
+        },
+        'assignee': {
+          'all': 'Tout le monde'
+        },
+        'calendar': {
+          'empty': 'Aucune tâche pour ce jour'
+        },
+        'detail': {
+          'title': 'Détails de la Tâche',
+          'creator': 'Créateur',
+          'tag': 'Tâche',
+          'description': 'Description',
+          'reward': 'Étoiles de Récompense',
+          'participants': 'Participants',
+          'edit': 'Modifier la Tâche',
+          'delete': 'Supprimer la Tâche',
+          'check_in': 'Pointer',
+          'approve': 'Approuver',
+          'waiting_approval': 'En attente d\'approbation...',
+          'reward_distributed': 'Récompense Distribuée'
+        },
+        'delete': {
+          'confirm_title': 'Confirmer la Suppression',
+          'confirm_desc': 'Cette action est irréversible. Êtes-vous sûr ?'
+        },
+        'list': {
+          'empty_pending': 'Aucune tâche en cours',
+          'empty_completed': 'Aucune tâche terminée'
+        }
+      },
+      'habits': {
+        'type': {
+          'penalty': 'Correction de Comportement',
+          'reward': 'Récompense Positive'
+        }
+      },
+      'checkin': {
+        'keep_going': 'La persévérance est la clé ! Allez ! 🌲',
+        'approve_complete': 'Approuvé !',
+        'checkin_success': 'Pointage Réussi !',
+        'verify': 'Vérifier',
+        'pending_confirm': 'En Attente de Confirmation'
+      },
+      'rewards': {
+        'category': {
+          'all': 'Toutes',
+          'common': 'Commun',
+          'study': 'Étude',
+          'life': 'Vie',
+          'special': 'Spécial'
+        },
+        'action': {
+          'redeem': 'Échanger'
+        },
+        'redeem_success': 'Échange Réussi !',
+        'redeem_detail': 'Échangé : {name}'
+      },
+      'pomodoro': {
+        'focus_work': 'Travail Focus',
+        'stay_focused': 'Restez concentré ! Vous pouvez le faire !',
+        'short_break': 'Pause Courte',
+        'relax': 'Détendez-vous un peu, je reviens bientôt',
+        'long_break': 'Longue Pause',
+        'take_long_break': 'Bon travail, reposez-vous bien'
+      },
+      'welcome': {
+        'register': {
+          'title': 'Bienvenue à l\'Inscription',
+          'subtitle': 'Seuls les parents peuvent s\'inscrire comme admin 🌱'
+        },
+        'no_account': 'Pas de compte ? S\'inscrire →'
+      },
+      'guest': {
+        'title': 'Mode Invité',
+        'subtitle': 'Découvrez toutes les fonctionnalités'
+      },
+      'task_templates': {
+        'all': 'Toutes'
+      }
+    }
+  }
+};
+
+i18n
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    resources,
+    fallbackLng: 'zh-CN',
+    interpolation: {
+      escapeValue: false,
+    },
+  });
+
+export default i18n;

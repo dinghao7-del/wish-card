@@ -4,18 +4,19 @@ import { ArrowLeft, Camera, Phone, Send, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
+import { showToastGlobal } from '../components/Toast';
 
 export function Feedback() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   
   const CATEGORIES = [
-    t('feedback.categories.member'),
-    t('feedback.categories.feedback'),
-    t('feedback.categories.suggestion'),
-    t('feedback.categories.service'),
-    t('feedback.categories.bug'),
-    t('feedback.categories.other')
+    t('feedback.categories.member', { defaultValue: 'member' }),
+    t('feedback.categories.feedback', { defaultValue: '反馈' }),
+    t('feedback.categories.suggestion', { defaultValue: 'suggestion' }),
+    t('feedback.categories.service', { defaultValue: 'service' }),
+    t('feedback.categories.bug', { defaultValue: 'bug' }),
+    t('feedback.categories.other', { defaultValue: 'other' })
   ];
 
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
@@ -27,7 +28,7 @@ export function Feedback() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (content.length < 10) {
-      alert(t('feedback.error_min_length'));
+      showToastGlobal(t('feedback.error_min_length', { defaultValue: 'error min length' }), 'warning');
       return;
     }
     // Simulate submission
@@ -42,15 +43,15 @@ export function Feedback() {
         <div className="w-24 h-24 bg-[#E8F5E9] rounded-[2.5rem] flex items-center justify-center text-[#2E8B57] mb-8 shadow-lg shadow-green-100">
           <CheckCircle2 size={48} />
         </div>
-        <h2 className="text-3xl font-black text-on-surface mb-2 tracking-tight">{t('feedback.success_title')}</h2>
+        <h2 className="text-3xl font-black text-on-surface mb-2 tracking-tight">{t('feedback.success_title', { defaultValue: 'success title' })}</h2>
         <p className="text-on-surface-variant font-medium max-w-[240px] mx-auto text-sm">
-          {t('feedback.success_desc')}
+          {t('feedback.success_desc', { defaultValue: 'success desc' })}
         </p>
         <button 
           onClick={() => navigate('/profile')}
           className="mt-12 px-12 py-4 bg-[#2E8B57] text-white rounded-full font-black text-lg shadow-xl shadow-green-200 active:scale-95 transition-transform"
         >
-          {t('feedback.back_home')}
+          {t('feedback.back_home', { defaultValue: 'back home' })}
         </button>
       </div>
     );
@@ -65,14 +66,14 @@ export function Feedback() {
         >
           <ArrowLeft size={24} />
         </button>
-        <h1 className="font-black text-xl tracking-tight text-on-surface">{t('feedback.title')}</h1>
-        <button className="text-on-surface-variant text-sm font-bold opacity-60">{t('feedback.my_feedback')}</button>
+        <h1 className="font-black text-xl tracking-tight text-on-surface">{t('feedback.title', { defaultValue: '标题' })}</h1>
+        <button className="text-on-surface-variant text-sm font-bold opacity-60">{t('feedback.my_feedback', { defaultValue: 'my feedback' })}</button>
       </header>
 
       <div className="mt-8 space-y-10">
         {/* Category Selection */}
         <section className="space-y-4">
-          <h3 className="text-lg font-black text-on-surface pl-1">{t('feedback.category')}</h3>
+          <h3 className="text-lg font-black text-on-surface pl-1">{t('feedback.category', { defaultValue: '分类' })}</h3>
           <div className="grid grid-cols-3 gap-3">
             {CATEGORIES.map(cat => (
               <button
@@ -93,12 +94,12 @@ export function Feedback() {
 
         {/* Feedback Content */}
         <section className="space-y-4">
-          <h3 className="text-lg font-black text-on-surface pl-1">{t('feedback.content')}</h3>
+          <h3 className="text-lg font-black text-on-surface pl-1">{t('feedback.content', { defaultValue: '内容' })}</h3>
           <div className="relative bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E8E7E0]/30">
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder={t('feedback.placeholder')}
+              placeholder={t('feedback.placeholder', { defaultValue: 'placeholder' })}
               className="w-full min-h-[160px] bg-transparent border-none p-0 focus:ring-0 text-sm font-medium text-on-surface placeholder:text-on-surface-variant/30 leading-relaxed resize-none"
             />
           </div>
@@ -106,7 +107,7 @@ export function Feedback() {
 
         {/* Media Upload */}
         <section className="space-y-4">
-          <h3 className="text-lg font-black text-on-surface pl-1">{t('feedback.media')}</h3>
+          <h3 className="text-lg font-black text-on-surface pl-1">{t('feedback.media', { defaultValue: 'media' })}</h3>
           <div className="flex flex-wrap gap-3">
             {images.map((img, idx) => (
               <div key={idx} className="relative w-24 h-24 rounded-2xl overflow-hidden border border-[#E8E7E0]/30">
@@ -147,14 +148,14 @@ export function Feedback() {
 
         {/* Contact info */}
         <section className="space-y-4">
-          <h3 className="text-lg font-black text-on-surface pl-1">{t('feedback.contact')}</h3>
+          <h3 className="text-lg font-black text-on-surface pl-1">{t('feedback.contact', { defaultValue: '联系方式' })}</h3>
           <div className="relative bg-white rounded-[2rem] px-6 py-5 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E8E7E0]/30 flex items-center gap-4 group focus-within:border-primary/30 transition-all">
             <Phone size={20} className="text-on-surface-variant/40 group-focus-within:text-primary transition-colors" />
             <input
               type="text"
               value={contact}
               onChange={(e) => setContact(e.target.value)}
-              placeholder={t('feedback.contact_placeholder')}
+              placeholder={t('feedback.contact_placeholder', { defaultValue: 'contact placeholder' })}
               className="flex-1 bg-transparent border-none p-0 focus:ring-0 text-sm font-bold text-on-surface placeholder:text-on-surface-variant/30"
             />
           </div>
@@ -168,7 +169,7 @@ export function Feedback() {
             onClick={handleSubmit}
             className="w-full py-5 bg-[#7FFF7F] hover:bg-[#66FF66] text-[#1B5E20] font-black text-lg rounded-[2rem] shadow-[0_15px_35px_rgba(127,255,127,0.3)] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
-            {t('feedback.submit')}
+            {t('feedback.submit', { defaultValue: '提交' })}
           </button>
         </div>
       </div>

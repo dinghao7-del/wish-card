@@ -57,6 +57,31 @@ export type Database = {
         Insert: { id?: string; family_id?: string | null; member_id?: string | null; event_name: string; event_data?: Record<string, unknown>; created_at?: string };
         Update: { id?: string; family_id?: string | null; member_id?: string | null; event_name?: string; event_data?: Record<string, unknown>; created_at?: string };
       };
+      invite_codes: {
+        Row: { id: string; code: string; description: string | null; max_uses: number; current_uses: number; is_active: boolean; created_by: string | null; expires_at: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; code: string; description?: string | null; max_uses?: number; current_uses?: number; is_active?: boolean; created_by?: string | null; expires_at?: string | null; created_at?: string; updated_at?: string };
+        Update: { id?: string; code?: string; description?: string | null; max_uses?: number; current_uses?: number; is_active?: boolean; created_by?: string | null; expires_at?: string | null; created_at?: string; updated_at?: string };
+      };
+      templates: {
+        Row: { id: string; type: 'task' | 'habit' | 'reward'; title: string; description: string | null; category: string; stars: number; icon: string | null; source: 'system' | 'community'; usage_count: number; is_active: boolean; i18n_key: string | null; extra_data: Record<string, unknown>; created_at: string; updated_at: string };
+        Insert: { id?: string; type: 'task' | 'habit' | 'reward'; title: string; description?: string | null; category?: string; stars?: number; icon?: string | null; source?: 'system' | 'community'; usage_count?: number; is_active?: boolean; i18n_key?: string | null; extra_data?: Record<string, unknown>; created_at?: string; updated_at?: string };
+        Update: { id?: string; type?: 'task' | 'habit' | 'reward'; title?: string; description?: string | null; category?: string; stars?: number; icon?: string | null; source?: 'system' | 'community'; usage_count?: number; is_active?: boolean; i18n_key?: string | null; extra_data?: Record<string, unknown>; created_at?: string; updated_at?: string };
+      };
+      notifications: {
+        Row: { id: string; family_id: string; member_id: string | null; type: string; title: string; message: string; read: boolean; action_url: string | null; action_label: string | null; data: Record<string, unknown>; created_at: string };
+        Insert: { id?: string; family_id: string; member_id?: string | null; type: string; title: string; message: string; read?: boolean; action_url?: string | null; action_label?: string | null; data?: Record<string, unknown>; created_at?: string };
+        Update: { id?: string; family_id?: string; member_id?: string | null; type?: string; title?: string; message?: string; read?: boolean; action_url?: string | null; action_label?: string | null; data?: Record<string, unknown>; created_at?: string };
+      };
+      calendar_subscriptions: {
+        Row: { id: string; family_id: string; member_id: string | null; token: string; name: string | null; last_accessed_at: string | null; is_active: boolean; created_at: string };
+        Insert: { id?: string; family_id: string; member_id?: string | null; token?: string; name?: string | null; last_accessed_at?: string | null; is_active?: boolean; created_at?: string };
+        Update: { id?: string; family_id?: string; member_id?: string | null; token?: string; name?: string | null; last_accessed_at?: string | null; is_active?: boolean; created_at?: string };
+      };
+      app_config: {
+        Row: { id: string; key: string; value: string; description: string | null; category: string | null; updated_at: string };
+        Insert: { id?: string; key: string; value: string; description?: string | null; category?: string | null; updated_at?: string };
+        Update: { id?: string; key?: string; value?: string; description?: string | null; category?: string | null; updated_at?: string };
+      };
     };
   };
 };

@@ -61,7 +61,7 @@ export function Welcome() {
       // loadGuestDemoData 设置了 members，取第一个作为当前用户
       const user = {
         id: 'guest-mom',
-        name: '妈妈',
+        name: t('welcome.guest_name', '妈妈'),
         avatar: '/avatars/parent/Cute_cartoon_avatar_of_a_young_2026-04-27T18-33-05.png',
         stars: 320,
         role: 'parent' as const,
@@ -123,7 +123,7 @@ export function Welcome() {
     } catch (err: any) {
       const msg = err.message || '';
       if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('ERR_') || msg.includes('fetch')) {
-        setError('网络连接失败，无法连接到服务器。请检查网络后重试，或先使用游客模式体验');
+        setError(t('welcome.network_error', '网络连接失败，无法连接到服务器。请检查网络后重试，或先使用游客模式体验'));
       } else {
         setError(msg || t('welcome.otp.error_send', '发送验证码失败'));
       }
@@ -161,7 +161,7 @@ export function Welcome() {
         // 手机号+密码登录（Supabase 不直接支持，需通过查询 members 表验证）
         const { data: memberData, error: memberErr } = await supabase
           .from('members')
-          .select('*')
+          .select('*', { defaultValue: '*' })
           .eq('name', username)
           .eq('password', loginPassword)
           .eq('is_active', true)
@@ -182,7 +182,7 @@ export function Welcome() {
     } catch (err: any) {
       const msg = err.message || '';
       if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('ERR_') || msg.includes('fetch')) {
-        setError('网络连接失败，无法连接到服务器。请检查网络后重试，或先使用游客模式体验');
+        setError(t('welcome.network_error', '网络连接失败，无法连接到服务器。请检查网络后重试，或先使用游客模式体验'));
       } else {
         setError(msg || t('welcome.login.error_invalid', '登录失败'));
       }
@@ -219,7 +219,7 @@ export function Welcome() {
         // 检查是否已有成员记录
         const { data: existingMember } = await supabase
           .from('members')
-          .select('id')
+          .select('id', { defaultValue: 'id' })
           .eq('id', session.user.id)
           .single();
 
@@ -246,7 +246,7 @@ export function Welcome() {
           // 重新加载数据
           const { data: newMember } = await supabase
             .from('members')
-            .select('*')
+            .select('*', { defaultValue: '*' })
             .eq('id', session.user.id)
             .single();
 
@@ -263,7 +263,7 @@ export function Welcome() {
           // 已有成员记录，直接设置 currentUser
           const { data: memberData } = await supabase
             .from('members')
-            .select('*')
+            .select('*', { defaultValue: '*' })
             .eq('id', session.user.id)
             .single();
           if (memberData) {
@@ -280,7 +280,7 @@ export function Welcome() {
     } catch (err: any) {
       const msg = err.message || '';
       if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('ERR_') || msg.includes('fetch')) {
-        setError('网络连接失败，无法连接到服务器。请检查网络后重试');
+        setError(t('welcome.network_error_verify', '网络连接失败，无法连接到服务器。请检查网络后重试'));
       } else {
         setError(msg || t('welcome.otp.error_verify', '验证失败'));
       }
@@ -364,7 +364,7 @@ export function Welcome() {
                 className="w-full h-12 text-[#006e1c]/60 bg-[#006e1c]/5 rounded-[2rem] font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#006e1c]/10 transition-all active:scale-95 border border-[#006e1c]/10"
               >
                 {loading ? <Loader2 className="animate-spin" size={16} /> : <ArrowRight size={16} />}
-                先逛逛（游客模式）
+                {t('welcome.guest_mode', '先逛逛（游客模式）')}
               </button>
             </div>
           </motion.div>

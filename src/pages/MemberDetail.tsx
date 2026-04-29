@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { AvatarSelector } from '../components/AvatarSelector';
 import { TextAvatar } from '../components/TextAvatar';
+import { showConfirm } from '../components/ConfirmDialog';
 
 export function MemberDetail() {
   const navigate = useNavigate();
@@ -69,7 +70,7 @@ export function MemberDetail() {
         <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
           <ArrowLeft size={24} />
         </button>
-        <h1 className="font-bold text-lg">{t('member_detail.title')}</h1>
+        <h1 className="font-bold text-lg">{t('member_detail.title', { defaultValue: '标题' })}</h1>
         <div className="w-10" />
       </header>
 
@@ -92,7 +93,7 @@ export function MemberDetail() {
         <div className="bg-secondary-container px-3 py-1 rounded-full flex items-center gap-1.5 mt-2 shadow-sm">
           <Shield size={12} className="text-secondary" />
           <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">
-            {member.role === 'parent' ? t('member_detail.role_parent') : t('member_detail.role_child')}
+            {member.role === 'parent' ? t('member_detail.role_parent', { defaultValue: 'role parent' }) : t('member_detail.role_child', { defaultValue: 'role child' })}
           </span>
         </div>
       </section>
@@ -113,7 +114,7 @@ export function MemberDetail() {
           </div>
           <span className="text-2xl font-black">{member.stars}</span>
           <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest flex items-center gap-1">
-            {t('member_detail.current_stars')}
+            {t('member_detail.current_stars', { defaultValue: '当前星星' })}
           </span>
         </motion.div>
         
@@ -125,7 +126,7 @@ export function MemberDetail() {
           <Trophy size={24} className="text-primary mb-2" />
           <span className="text-2xl font-black">{memberTasks.filter(t => t.status === 'completed').length}</span>
           <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest flex items-center gap-1">
-            {t('member_detail.completed_tasks')} <ClipboardList size={10} />
+            {t('member_detail.completed_tasks', { defaultValue: '已完成任务' })} <ClipboardList size={10} />
           </span>
         </motion.div>
       </section>
@@ -142,7 +143,7 @@ export function MemberDetail() {
             className="flex-1 bg-[#2E7D32] text-white py-4 rounded-2xl font-black shadow-lg shadow-green-900/10 active:scale-95 transition-transform flex items-center justify-center gap-2"
           >
             <Plus size={18} strokeWidth={3} />
-            {t('member_detail.add_stars')}
+            {t('member_detail.add_stars', { defaultValue: 'add stars' })}
           </button>
           <button 
             onClick={() => {
@@ -153,7 +154,7 @@ export function MemberDetail() {
             className="flex-1 bg-white text-on-surface py-4 rounded-2xl font-black shadow-sm border border-outline-variant/10 active:scale-95 transition-transform flex items-center justify-center gap-2"
           >
             <Minus size={18} strokeWidth={3} />
-            {t('member_detail.deduct_stars')}
+            {t('member_detail.deduct_stars', { defaultValue: 'deduct stars' })}
           </button>
         </section>
       )}
@@ -163,14 +164,14 @@ export function MemberDetail() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <ClipboardList size={18} className="text-primary" />
-            <h3 className="font-bold text-base">{t('member_detail.recent_tasks')}</h3>
+            <h3 className="font-bold text-base">{t('member_detail.recent_tasks', { defaultValue: '近期任务' })}</h3>
           </div>
           {memberTasks.length > 3 && (
             <button 
               onClick={() => setIsViewingTasks(true)}
               className="text-primary text-xs font-bold hover:underline"
             >
-              {t('member_detail.view_all')}
+              {t('member_detail.view_all', { defaultValue: 'view all' })}
             </button>
           )}
         </div>
@@ -183,12 +184,12 @@ export function MemberDetail() {
                     "text-[10px] font-black px-2 py-0.5 rounded-full uppercase",
                     task.status === 'completed' ? "bg-primary/10 text-primary" : "bg-surface-container text-on-surface-variant"
                   )}>
-                    {task.status === 'completed' ? t('member_detail.task_completed') : t('member_detail.task_ongoing')}
+                    {task.status === 'completed' ? t('member_detail.task_completed', { defaultValue: '任务已完成' }) : t('member_detail.task_ongoing', { defaultValue: 'task ongoing' })}
                   </span>
                 </div>
              ))
           ) : (
-            <p className="text-xs text-on-surface-variant italic py-4 text-center">{t('member_detail.no_tasks')}</p>
+            <p className="text-xs text-on-surface-variant italic py-4 text-center">{t('member_detail.no_tasks', { defaultValue: '暂无任务' })}</p>
           )}
         </div>
       </section>
@@ -200,21 +201,21 @@ export function MemberDetail() {
           className="w-full py-4 rounded-2xl bg-red-50 text-red-600 font-bold flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
         >
           <Trash2 size={18} />
-          {t('member_detail.delete_member')}
+          {t('member_detail.delete_member', { defaultValue: '删除成员' })}
         </button>
       )}
 
       {/* Admin Entrance for non-admins */}
       {!isAdmin && member.role === 'parent' && (
         <button 
-          onClick={() => {
-            if (window.confirm(t('member_detail.admin_switch_confirm'))) {
+          onClick={async () => {
+            if (await showConfirm({ message: t('member_detail.admin_switch_confirm', { defaultValue: 'admin switch confirm' }) })) {
               navigate('/switch-profile');
             }
           }}
           className="w-full py-4 px-8 rounded-2xl bg-primary/10 text-primary font-bold text-center hover:bg-primary/20 transition-colors flex items-center justify-center gap-2 mt-8"
         >
-          <Shield size={18} /> {t('member_detail.admin_mode')}
+          <Shield size={18} /> {t('member_detail.admin_mode', { defaultValue: 'admin mode' })}
         </button>
       )}
 
@@ -231,7 +232,7 @@ export function MemberDetail() {
               <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Trash2 size={32} />
               </div>
-              <h3 className="text-xl font-bold mb-2">{t('member_detail.delete_confirm_title')}</h3>
+              <h3 className="text-xl font-bold mb-2">{t('member_detail.delete_confirm_title', { defaultValue: 'delete confirm title' })}</h3>
               <p className="text-on-surface-variant text-sm font-medium mb-8">
                 {t('member_detail.delete_confirm_desc', { name: member.name })}
               </p>
@@ -241,7 +242,7 @@ export function MemberDetail() {
                   onClick={() => setShowDeleteConfirm(false)}
                   className="flex-1 py-4 rounded-2xl bg-surface-container font-bold text-on-surface-variant active:scale-95 transition-transform"
                 >
-                  {t('common.cancel')}
+                  {t('common.cancel', { defaultValue: '取消' })}
                 </button>
                 <button 
                   onClick={() => {
@@ -250,7 +251,7 @@ export function MemberDetail() {
                   }}
                   className="flex-1 py-4 rounded-2xl bg-red-600 text-white font-bold shadow-lg shadow-red-200 active:scale-95 transition-transform"
                 >
-                  {t('common.confirm')}
+                  {t('common.confirm', { defaultValue: '确认' })}
                 </button>
               </div>
             </motion.div>
@@ -272,7 +273,7 @@ export function MemberDetail() {
                 <Trash2 size={24} className="text-primary animate-pulse" />
               </div>
             </div>
-            <p className="mt-6 text-on-surface font-black tracking-widest uppercase animate-pulse">{t('member_detail.deleting')}</p>
+            <p className="mt-6 text-on-surface font-black tracking-widest uppercase animate-pulse">{t('member_detail.deleting', { defaultValue: 'deleting' })}</p>
           </div>
         )}
       </AnimatePresence>
@@ -293,7 +294,7 @@ export function MemberDetail() {
                 <div className="bg-surface-container/30 rounded-2xl p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Star size={20} className="text-on-surface-variant fill-transparent" />
-                    <span className="font-black text-on-surface-variant text-sm">{t('member_detail.stars_label')}</span>
+                    <span className="font-black text-on-surface-variant text-sm">{t('member_detail.stars_label', { defaultValue: 'stars label' })}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <button 
@@ -320,9 +321,9 @@ export function MemberDetail() {
                 {/* Summary Table */}
                 <div className="bg-surface-container/30 rounded-2xl overflow-hidden">
                   <div className="grid grid-cols-3 px-4 py-3 border-b border-white/40">
-                    <span className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest">{t('member_detail.summary_member')}</span>
-                    <span className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest text-center">{t('member_detail.summary_before')}</span>
-                    <span className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest text-right">{t('member_detail.summary_after')}</span>
+                    <span className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest">{t('member_detail.summary_member', { defaultValue: 'summary member' })}</span>
+                    <span className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest text-center">{t('member_detail.summary_before', { defaultValue: 'summary before' })}</span>
+                    <span className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest text-right">{t('member_detail.summary_after', { defaultValue: 'summary after' })}</span>
                   </div>
                   <div className="grid grid-cols-3 px-4 py-4 items-center">
                     <span className="font-black text-sm">{member.name}</span>
@@ -340,11 +341,11 @@ export function MemberDetail() {
                 <div className="bg-surface-container/30 rounded-2xl p-4 flex flex-col gap-2">
                   <div className="flex items-center gap-3 mb-1">
                     <ClipboardList size={18} className="text-on-surface-variant/40" />
-                    <span className="text-xs font-black text-on-surface-variant/40">{t('member_detail.description_label')}</span>
+                    <span className="text-xs font-black text-on-surface-variant/40">{t('member_detail.description_label', { defaultValue: 'description label' })}</span>
                   </div>
                   <input 
                     type="text"
-                    placeholder={t('member_detail.description_placeholder')}
+                    placeholder={t('member_detail.description_placeholder', { defaultValue: 'description placeholder' })}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className="bg-transparent border-none p-0 text-sm font-bold text-on-surface focus:ring-0 placeholder:text-on-surface-variant/20"
@@ -357,13 +358,13 @@ export function MemberDetail() {
                   onClick={handleUpdateStars}
                   className="w-full py-4 rounded-full bg-[#D1E0FF] text-[#4285F4] font-black shadow-sm active:scale-95 transition-transform"
                 >
-                  {t('common.confirm')}
+                  {t('common.confirm', { defaultValue: '确认' })}
                 </button>
                 <button 
                   onClick={() => setIsEditingStars(false)}
                   className="w-full py-2 rounded-full text-on-surface-variant/40 font-black text-xs active:scale-95 transition-transform"
                 >
-                  {t('common.cancel')}
+                  {t('common.cancel', { defaultValue: '取消' })}
                 </button>
               </div>
             </motion.div>
@@ -384,7 +385,7 @@ export function MemberDetail() {
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-bold flex items-center gap-2">
                   <Trophy size={20} className="text-primary" />
-                  {t('member_detail.completed_tasks_title')}
+                  {t('member_detail.completed_tasks_title', { defaultValue: 'completed tasks title' })}
                 </h3>
                 <button 
                   onClick={() => setIsViewingTasks(false)}
@@ -411,7 +412,7 @@ export function MemberDetail() {
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12 text-on-surface-variant">
                     <ClipboardList size={40} className="opacity-20 mb-2" />
-                    <p className="text-xs italic">{t('member_detail.no_completed_tasks')}</p>
+                    <p className="text-xs italic">{t('member_detail.no_completed_tasks', { defaultValue: 'no completed tasks' })}</p>
                   </div>
                 )}
               </div>
@@ -420,7 +421,7 @@ export function MemberDetail() {
                 onClick={() => setIsViewingTasks(false)}
                 className="w-full mt-6 py-4 rounded-2xl bg-primary text-white font-bold shadow-lg shadow-primary/20 active:scale-95 transition-transform"
               >
-                {t('member_detail.got_it')}
+                {t('member_detail.got_it', { defaultValue: 'got it' })}
               </button>
             </motion.div>
           </div>

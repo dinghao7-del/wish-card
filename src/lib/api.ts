@@ -155,7 +155,7 @@ export async function createTask(
 export async function getTasksByFamilyId(familyId: string, includeCompleted = false): Promise<Task[]> {
   let query = supabase
     .from('tasks')
-    .select('*')
+    .select('*', { defaultValue: '*' })
     .eq('family_id', familyId);
 
   if (!includeCompleted) {
@@ -317,7 +317,7 @@ export async function createHabit(
 export async function getHabitsByFamilyId(familyId: string): Promise<Habit[]> {
   const { data, error } = await supabase
     .from('habits')
-    .select('*')
+    .select('*', { defaultValue: '*' })
     .eq('family_id', familyId)
     .eq('is_active', true)
     .order('created_at', { ascending: true });
@@ -450,7 +450,7 @@ export async function redeemReward(rewardId: string, memberId: string): Promise<
   // 先获取奖励和成员信息
   const { data: reward, error: rewardError } = await supabase
     .from('rewards')
-    .select('*, family_id')
+    .select('*, family_id', { defaultValue: '*, family id' })
     .eq('id', rewardId)
     .single();
 
@@ -462,7 +462,7 @@ export async function redeemReward(rewardId: string, memberId: string): Promise<
 
   const { data: member } = await supabase
     .from('members')
-    .select('stars')
+    .select('stars', { defaultValue: '星星' })
     .eq('id', memberId)
     .single();
 
@@ -624,7 +624,7 @@ export async function getAnalyticsEvents(
 ): Promise<any[]> {
   let query = supabase
     .from('analytics_events')
-    .select('*, member:members(name, avatar)')
+    .select('*, member:members(name, avatar)', { defaultValue: '*, member:members(name, avatar)' })
     .eq('family_id', familyId);
 
   if (startDate) {
@@ -673,6 +673,108 @@ export interface ImportData {
   tasks?: Array<{ title: string; description?: string; star_amount?: number; assignee_ids?: string[]; icon?: string; is_habit?: boolean }>;
   rewards?: Array<{ name: string; description?: string; star_cost?: number; icon?: string; image_url?: string; category?: string }>;
   history?: Array<{ member_id: string; amount: number; type: 'earn' | 'spend'; reason: string }>;
+}
+
+// ==================== 邀请码 API ====================
+
+type InviteCode = Database['public']['Tables']['invite_codes']['Row'];
+
+/** 验证邀请码（仅检查是否有效，不消耗次数） */
+export async function validateInviteCode(code: string): Promise<{ valid: boolean; message: string }> {
+  const { data, error } = await supabase
+    .from('invite_codes')
+    .select('*', { defaultValue: '*' })
+    .eq('code', code.toUpperCase().trim())
+    .eq('is_active', true)
+    .single();
+
+  if (error || !data) {
+    return { valid: false, message: '邀请码不存在或已停用' };
+  }
+
+  if (data.expires_at && new Date(data.expires_at) < new Date()) {
+    return { valid: false, message: '邀请码已过期' };
+  }
+
+  if (data.max_uses !== -1 && data.current_uses >= data.max_uses) {
+    return { valid: false, message: '邀请码已用完' };
+  }
+
+  return { valid: true, message: '' };
+}
+
+/** 使用邀请码（消耗一次使用次数，原子操作） */
+export async function useInviteCode(code: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('use_invite_code', { p_code: code.toUpperCase().trim() });
+  if (error) {
+    console.error('useInviteCode error:', error.message);
+    throw new Error(error.message);
+  }
+  return data as boolean;
+}
+
+/** 获取所有邀请码列表（管理员） */
+export async function getInviteCodes(): Promise<InviteCode[]> {
+  const { data, error } = await supabase
+    .from('invite_codes')
+    .select('*', { defaultValue: '*' })
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(`获取邀请码列表失败: ${error.message}`);
+  return data || [];
+}
+
+/** 创建邀请码 */
+export async function createInviteCode(params: {
+  code?: string;
+  description?: string;
+  max_uses?: number;
+  expires_at?: string;
+}, createdBy: string): Promise<InviteCode> {
+  const code = params.code || generateInviteCode();
+  const { data, error } = await supabase
+    .from('invite_codes')
+    .insert({
+      code: code.toUpperCase().trim(),
+      description: params.description || null,
+      max_uses: params.max_uses ?? 1,
+      created_by: createdBy,
+      expires_at: params.expires_at || null,
+    })
+    .select()
+    .single();
+  if (error) throw new Error(`创建邀请码失败: ${error.message}`);
+  return data;
+}
+
+/** 更新邀请码状态 */
+export async function updateInviteCode(id: string, updates: Partial<Pick<InviteCode, 'is_active' | 'description' | 'max_uses' | 'expires_at'>>): Promise<InviteCode> {
+  const { data, error } = await supabase
+    .from('invite_codes')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw new Error(`更新邀请码失败: ${error.message}`);
+  return data;
+}
+
+/** 删除邀请码 */
+export async function deleteInviteCode(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('invite_codes')
+    .delete()
+    .eq('id', id);
+  if (error) throw new Error(`删除邀请码失败: ${error.message}`);
+}
+
+/** 生成随机邀请码 */
+export function generateInviteCode(length = 8): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < length; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
 }
 
 export async function bulkImport(familyId: string, data: ImportData, creatorId: string): Promise<void> {
@@ -748,4 +850,97 @@ export async function bulkImport(familyId: string, data: ImportData, creatorId: 
     rewardCount: data.rewards?.length || 0,
     historyCount: data.history?.length || 0,
   });
+}
+
+// ==================== 日历订阅相关 API ====================
+
+export interface CalendarSubscription {
+  id: string;
+  family_id: string;
+  token: string;
+  name: string;
+  is_active: boolean;
+  last_accessed_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getCalendarSubscriptions(familyId: string): Promise<CalendarSubscription[]> {
+  const { data, error } = await supabase
+    .from('calendar_subscriptions')
+    .select('*', { defaultValue: '*' })
+    .eq('family_id', familyId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(`获取日历订阅失败: ${error.message}`);
+  return data || [];
+}
+
+export async function createCalendarSubscription(
+  familyId: string, 
+  params?: { name?: string }
+): Promise<CalendarSubscription> {
+  const { data, error } = await supabase
+    .from('calendar_subscriptions')
+    .insert({
+      family_id: familyId,
+      name: params?.name || '默认订阅',
+      is_active: true,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(`创建日历订阅失败: ${error.message}`);
+  
+  // 记录日志
+  const { data: memberData } = await supabase.auth.getUser();
+  if (memberData.user) {
+    await logEvent(familyId, memberData.user.id, 'calendar_subscription_created', {
+      subscription_id: data.id,
+      name: data.name,
+    });
+  }
+  
+  return data;
+}
+
+export async function deleteCalendarSubscription(subscriptionId: string): Promise<void> {
+  // 先获取订阅信息用于日志
+  const { data: sub } = await supabase
+    .from('calendar_subscriptions')
+    .select('family_id', { defaultValue: 'family id' })
+    .eq('id', subscriptionId)
+    .single();
+
+  const { error } = await supabase
+    .from('calendar_subscriptions')
+    .delete()
+    .eq('id', subscriptionId);
+
+  if (error) throw new Error(`删除日历订阅失败: ${error.message}`);
+  
+  // 记录日志
+  if (sub) {
+    const { data: memberData } = await supabase.auth.getUser();
+    if (memberData.user) {
+      await logEvent(sub.family_id, memberData.user.id, 'calendar_subscription_deleted', {
+        subscription_id: subscriptionId,
+      });
+    }
+  }
+}
+
+export async function updateCalendarSubscription(
+  subscriptionId: string,
+  updates: { name?: string; is_active?: boolean }
+): Promise<CalendarSubscription> {
+  const { data, error } = await supabase
+    .from('calendar_subscriptions')
+    .update(updates)
+    .eq('id', subscriptionId)
+    .select()
+    .single();
+
+  if (error) throw new Error(`更新日历订阅失败: ${error.message}`);
+  return data;
 }

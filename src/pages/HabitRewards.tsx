@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { Star, ChevronLeft, MoreHorizontal, Plus, ChevronRight, Trophy, Ban, Globe, Edit, Trash2, CheckCircle2, Clock, AlertCircle, XCircle, Mic, Settings } from 'lucide-react';
 import { useFamily } from '../context/FamilyContext';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
 import { Task } from '../types';
 import { TaskCard } from '../components/TaskCard';
-import { AISmartTaskDialog } from '../components/AISmartTaskDialog';
+import { VoiceAssistant } from '../components/VoiceAssistant';
 import { TextAvatar } from '../components/TextAvatar';
+import { CelebrationAnimation } from '../components/CelebrationAnimation';
 
 export function HabitRewards() {
+  const { t } = useTranslation();
   const { tasks, currentUser, members, updateTask, addTask, deleteTask, stars, setIsUserSelectorOpen } = useFamily();
   const navigate = useNavigate();
 
@@ -52,24 +55,68 @@ export function HabitRewards() {
     return <LucideIcons.Trophy size={size} />;
   };
 
+  // 将任务图标映射到 Popsy Illustrations 名称
+  const getPopsyIllustration = (iconName: string): string => {
+    const iconMap: Record<string, string> = {
+      // 学习相关
+      'BookOpen': 'book',
+      'Book': 'book',
+      'PenTool': 'writing',
+      'Pencil': 'writing',
+      'GraduationCap': 'graduation',
+      
+      // 运动相关
+      'Dumbbell': 'exercise',
+      'Run': 'run',
+      'Bike': 'bike',
+      'Swim': 'swim',
+      'Yoga': 'yoga',
+      'Football': 'football',
+      'Basketball': 'basketball',
+      'Tennis': 'tennis',
+      
+      // 音乐艺术
+      'Music': 'music',
+      'Guitar': 'guitar',
+      'Piano': 'piano',
+      'Brush': 'painting',
+      
+      // 生活技能
+      'ChefHat': 'cooking',
+      'Utensils': 'cooking',
+      'Dance': 'dance',
+      
+      // 其他
+      'Star': 'trophy',
+      'Trophy': 'trophy',
+      'Heart': 'meditation',
+      'Medal': 'medal',
+    };
+    
+    return iconMap[iconName] || 'trophy'; // 默认返回奖杯
+  };
+
   const [isCheckInSuccess, setIsCheckInSuccess] = useState(false);
 
   const handleIncrement = (habit: Task) => {
     if (currentUser?.role !== 'parent') return;
     
-    const newCount = (habit.currentCount || 0) + 1;
+    // 先显示动画
+    setIsCheckInSuccess(true);
+  };
+
+  const handleCelebrationComplete = () => {
+    if (!selectedHabit) return;
+    
+    const newCount = (selectedHabit.currentCount || 0) + 1;
     updateTask({
-      ...habit,
+      ...selectedHabit,
       currentCount: newCount,
-      status: newCount >= (habit.targetCount || 1) ? 'completed' : habit.status
+      status: newCount >= (selectedHabit.targetCount || 1) ? 'completed' : selectedHabit.status
     });
 
-    // Success animation sequence
-    setIsCheckInSuccess(true);
-    setTimeout(() => {
-      setIsCheckInSuccess(false);
-      setSelectedHabit(null);
-    }, 1500);
+    setIsCheckInSuccess(false);
+    setSelectedHabit(null);
   };
 
   const handleAddHabit = () => {
@@ -134,9 +181,10 @@ export function HabitRewards() {
         </div>
       </header>
 
-      <AISmartTaskDialog 
+      <VoiceAssistant 
         isOpen={isAiDialogOpen} 
-        onClose={() => setIsAiDialogOpen(false)} 
+        onClose={() => setIsAiDialogOpen(false)}
+        onOpenCalendarSync={() => navigate('/calendar-sync')}
       />
 
       {/* Tab Switcher and Add Button */}
@@ -172,19 +220,46 @@ export function HabitRewards() {
           </motion.button>
         </div>
 
-      {/* Habit List */}
-      <div className="px-4 space-y-3 mt-6 max-w-[340px] mx-auto pb-4">
+      {/* Habit List - 双列网格新设计 */}
+      <div className="px-2 grid grid-cols-2 gap-3 mt-4 pb-4">
         {filteredHabits.length > 0 ? (
           <>
             {filteredHabits.map((habit, idx) => (
-              <TaskCard 
+              <motion.div
                 key={habit.id}
-                task={habit}
-                idx={idx}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: idx * 0.03 }}
                 onClick={() => setSelectedHabit(habit)}
-                isAdmin={currentUser?.role === 'parent'}
-                isHabit={true}
-              />
+                className={cn(
+                  "rounded-2xl p-3 shadow-sm active:scale-[0.97] transition-all cursor-pointer relative overflow-hidden",
+                  habit.rewardStars >= 0 
+                    ? "bg-green-50 dark:bg-green-500/10 border-2 border-green-200 dark:border-green-500/20" 
+                    : "bg-red-50 dark:bg-red-500/10 border-2 border-red-200 dark:border-red-500/20"
+                )}
+              >
+                {/* 大号图标背景装饰 - 使用React组件，无需外部请求 */}
+                <div className={cn(
+                  "absolute -right-2 -top-2 opacity-[0.12] pointer-events-none scale-150",
+                  habit.rewardStars >= 0 ? "text-green-600" : "text-red-500"
+                )}>
+                  {getTaskIcon(habit.icon, 64)}
+                </div>
+
+                {/* 信息区域 */}
+                <div className="relative z-10">
+                  <h4 className="text-sm font-black text-on-surface truncate mb-1.5">{habit.title}</h4>
+                  <div className="flex items-center gap-1.5">
+                    <Star size={14} className={habit.rewardStars >= 0 ? "text-[#FBC02D] fill-current" : "text-red-400 fill-current"} />
+                    <span className={cn(
+                      "text-sm font-black",
+                      habit.rewardStars >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500"
+                    )}>
+                      {habit.rewardStars >= 0 ? '+' : ''}{habit.rewardStars}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
             ))}
 
           </>
@@ -299,119 +374,79 @@ export function HabitRewards() {
                 )}
               </AnimatePresence>
 
+              {/* Main Content with Animation */}
               <div className="flex flex-col items-center text-center mt-4">
                 <AnimatePresence mode="wait">
-                  {!isCheckInSuccess ? (
-                    <motion.div
-                      key="detail-content"
-                      initial={{ opacity: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      className="w-full flex flex-col items-center"
-                    >
-                      <div className="w-24 h-24 rounded-[2rem] bg-surface-container flex items-center justify-center text-primary mb-6 shadow-inner border-4 border-surface dark:border-surface">
-                        {getTaskIcon(selectedHabit.icon, 48)}
-                      </div>
-                      
-                      <h2 className="text-2xl font-black text-on-surface mb-2">{selectedHabit.title}</h2>
-                      <p className="text-on-surface-variant/60 font-bold mb-8 px-4 leading-relaxed text-sm">
-                        {selectedHabit.description || '保持良好的生活习惯，让每一天都充满活力和正能量。'}
-                      </p>
-
-                      <div className="grid grid-cols-2 gap-4 w-full mb-10">
-                        <div className="bg-surface-container-low rounded-3xl p-4 border border-outline-variant/10 shadow-sm">
-                          <p className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest mb-1">
-                            {selectedHabit.rewardStars >= 0 ? '完成奖励' : '惩罚扣除'}
-                          </p>
-                          <div className={cn(
-                            "flex items-center justify-center gap-2 font-black text-2xl",
-                            selectedHabit.rewardStars >= 0 ? "text-primary" : "text-red-500"
-                          )}>
-                            <Star size={20} className="fill-current" />
-                            <span>{Math.abs(selectedHabit.rewardStars)}</span>
-                          </div>
-                        </div>
-                        <div className="bg-surface-container-low rounded-3xl p-4 border border-outline-variant/10 shadow-sm">
-                          <p className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest mb-1">当前次数</p>
-                          <div className="text-on-surface font-black text-2xl">
-                            {selectedHabit.currentCount || 0}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-4 w-full">
-                        <button 
-                          onClick={() => {
-                            if (!isCheckInSuccess) setSelectedHabit(null);
-                          }}
-                          className="flex-1 py-4 px-6 rounded-[1.5rem] bg-surface-container font-black text-on-surface-variant active:scale-95 transition-transform whitespace-nowrap"
+                  {!isCheckInSuccess && selectedHabit ? (
+                    (() => {
+                      // 使用局部变量让TypeScript正确推断类型
+                      const habit = selectedHabit;
+                      return (
+                        <motion.div
+                          key="detail-content"
+                          initial={{ opacity: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          className="w-full flex flex-col items-center"
                         >
-                          返回
-                        </button>
-                        {currentUser?.role === 'parent' && (
-                          <button 
-                            onClick={() => handleIncrement(selectedHabit)}
-                            className="flex-[2] py-4 px-6 rounded-[1.5rem] bg-primary text-white font-black shadow-lg shadow-primary/20 hover:bg-primary-container active:scale-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
-                          >
-                            <Plus size={20} strokeWidth={3} />
-                            打卡
-                          </button>
-                        )}
-                      </div>
-                    </motion.div>
+                          <div className="w-24 h-24 rounded-[2rem] bg-surface-container flex items-center justify-center text-primary mb-6 shadow-inner border-4 border-surface dark:border-surface">
+                            {getTaskIcon(habit.icon, 48)}
+                          </div>
+                          
+                          <h2 className="text-2xl font-black text-on-surface mb-2">{habit.title}</h2>
+                          <p className="text-on-surface-variant/60 font-bold mb-8 px-4 leading-relaxed text-sm">
+                            {habit.description || '保持良好的生活习惯，让每一天都充满活力和正能量。'}
+                          </p>
+
+                          <div className="grid grid-cols-2 gap-4 w-full mb-10">
+                            <div className="bg-surface-container-low rounded-3xl p-4 border border-outline-variant/10 shadow-sm">
+                              <p className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest mb-1">
+                                {habit.rewardStars >= 0 ? '完成奖励' : '惩罚扣除'}
+                              </p>
+                              <div className={cn(
+                                "flex items-center justify-center gap-2 font-black text-2xl",
+                                habit.rewardStars >= 0 ? "text-primary" : "text-red-500"
+                              )}>
+                                <Star size={20} className="fill-current" />
+                                <span>{Math.abs(habit.rewardStars)}</span>
+                              </div>
+                            </div>
+                            <div className="bg-surface-container-low rounded-3xl p-4 border border-outline-variant/10 shadow-sm">
+                              <p className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest mb-1">当前次数</p>
+                              <div className="text-on-surface font-black text-2xl">
+                                {habit.currentCount || 0}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-4 w-full">
+                            <button 
+                              onClick={() => setSelectedHabit(null)}
+                              className="flex-1 py-4 px-6 rounded-[1.5rem] bg-surface-container font-black text-on-surface-variant active:scale-95 transition-transform whitespace-nowrap"
+                            >
+                              返回
+                            </button>
+                            {currentUser?.role === 'parent' && (
+                              <button 
+                                onClick={() => {
+                                  if (!isCheckInSuccess) handleIncrement(habit);
+                                }}
+                                disabled={isCheckInSuccess}
+                                className="flex-[2] py-4 px-6 rounded-[1.5rem] bg-primary text-white font-black shadow-lg shadow-primary/20 hover:bg-primary-container active:scale-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50"
+                              >
+                                <Plus size={20} strokeWidth={3} />
+                                {t('habits.check_in', '打卡')}
+                              </button>
+                            )}
+                          </div>
+                        </motion.div>
+                      );
+                    })()
                   ) : (
+                    /* 成功动画由 CelebrationAnimation 组件在页面层级显示 */
                     <motion.div
-                      key="success-content"
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="w-full flex flex-col items-center py-6"
-                    >
-                      <div className="relative">
-                        {selectedHabit.rewardStars >= 0 ? (
-                          <div className="w-32 h-32 bg-[#2E7D32] rounded-full flex items-center justify-center text-white shadow-xl">
-                             <CheckCircle2 size={64} strokeWidth={3} />
-                          </div>
-                        ) : (
-                          <div className="w-32 h-32 bg-red-500 rounded-full flex items-center justify-center text-white shadow-xl">
-                             <AlertCircle size={64} strokeWidth={3} />
-                          </div>
-                        )}
-                        
-                        {/* Confetti */}
-                        {[...Array(12)].map((_, i) => (
-                          <motion.div
-                            key={i}
-                            initial={{ scale: 0, opacity: 1, x: 0, y: 0 }}
-                            animate={{ 
-                              scale: [0, 1, 0.5, 0], 
-                              opacity: [1, 1, 0.8, 0],
-                              x: Math.cos(i * 30 * Math.PI / 180) * (selectedHabit.rewardStars >= 0 ? 100 : 80),
-                              y: selectedHabit.rewardStars >= 0 
-                                ? Math.sin(i * 30 * Math.PI / 180) * 100 
-                                : Math.abs(Math.sin(i * 30 * Math.PI / 180)) * 150, // Fall down for punishment
-                            }}
-                            transition={{ duration: 1.5, ease: "easeOut" }}
-                            className="absolute top-1/2 left-1/2 -mt-2 -ml-2"
-                          >
-                            <Star 
-                              className={cn(
-                                "fill-current",
-                                selectedHabit.rewardStars >= 0 ? "text-[#FBC02D]" : "text-red-400"
-                              )} 
-                              size={i % 2 === 0 ? 16 : 12} 
-                            />
-                          </motion.div>
-                        ))}
-                      </div>
-                      <h3 className={cn(
-                        "text-2xl font-black mt-8",
-                        selectedHabit.rewardStars >= 0 ? "text-[#2E7D32]" : "text-red-500"
-                      )}>
-                        {selectedHabit.rewardStars >= 0 ? '打卡成功！' : '扣除警告！'}
-                      </h3>
-                      <p className="text-on-surface-variant font-bold mt-2">
-                        {selectedHabit.rewardStars >= 0 ? '太棒了，继续保持 🌱' : '下次一定不要再犯了哦 ⚠️'}
-                      </p>
-                    </motion.div>
+                      key="empty"
+                      className="w-full h-32"
+                    />
                   )}
                 </AnimatePresence>
               </div>
@@ -479,6 +514,16 @@ export function HabitRewards() {
 
       {/* Bottom Nav Spacer */}
       <div className="h-12" />
+
+      {/* 打卡成功动画 */}
+      <CelebrationAnimation
+        isVisible={isCheckInSuccess}
+        onComplete={handleCelebrationComplete}
+        type={selectedHabit && selectedHabit.rewardStars >= 0 ? 'habit' : 'penalty'}
+        title={selectedHabit && selectedHabit.rewardStars >= 0 ? t('habits.check_in_success', '打卡成功！') : t('habits.deduct_warning', '扣除警告！')}
+        subtitle={selectedHabit && selectedHabit.rewardStars >= 0 ? '太棒了，继续保持 🌱' : '下次一定不要再犯了哦 ⚠️'}
+        stars={selectedHabit ? Math.abs(selectedHabit.rewardStars) : 0}
+      />
     </div>
   );
 }

@@ -1,0 +1,124 @@
+.tasks-page {
+  padding: 24rpx;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.page-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1B1B18;
+}
+
+.add-button {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background-color: #2E7D32;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 36rpx;
+}
+
+.filter-tabs {
+  display: flex;
+  margin-bottom: 30rpx;
+  background-color: #FFFFFF;
+  border-radius: 48rpx;
+  padding: 8rpx;
+}
+
+.filter-tab {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  color: #78746E;
+  
+  &.active {
+    background-color: #2E7D32;
+    color: white;
+    font-weight: 600;
+  }
+}
+
+.task-list {
+  margin-top: 20rpx;
+}
+
+.task-card {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.task-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background-color: rgba(#2E7D32, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 20rpx;
+  font-size: 40rpx;
+}
+
+.task-content {
+  flex: 1;
+  
+  .task-title {
+    font-size: 28rpx;
+    font-weight: 500;
+    color: #1B1B18;
+    display: block;
+    margin-bottom: 8rpx;
+  }
+  
+  .task-time {
+    font-size: 24rpx;
+    color: #78746E;
+  }
+}
+
+.task-stars {
+  font-size: 28rpx;
+  color: #FFD54F;
+  font-weight: 600;
+  margin-right: 20rpx;
+}
+
+.task-checkbox {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  border: 4rpx solid #E8E4DF;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  &.checked {
+    background-color: #2E7D32;
+    border-color: #2E7D32;
+    color: white;
+  }
+}
+
+.empty-state {
+  padding: 60rpx 0;
+  text-align: center;
+  color: #78746E;
+  font-size: 28rpx;
+}

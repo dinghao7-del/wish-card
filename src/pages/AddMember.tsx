@@ -45,7 +45,7 @@ export function AddMember() {
     if (!formData.name) return;
 
     if (formData.role === 'parent' && !formData.password?.trim()) {
-      setError(t('welcome.register.error_password_required') || t('add_member.error_password_required'));
+      setError(t('welcome.register.error_password_required', { defaultValue: 'error password required' }) || t('add_member.error_password_required', { defaultValue: 'error password required' }));
       return;
     }
     
@@ -66,7 +66,7 @@ export function AddMember() {
         <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
           <ArrowLeft size={24} />
         </button>
-        <h1 className="font-black text-xl tracking-tight">{t('add_member.title')}</h1>
+        <h1 className="font-black text-xl tracking-tight">{t('add_member.title', { defaultValue: '标题' })}</h1>
         <div className="w-10" />
       </header>
 
@@ -90,25 +90,25 @@ export function AddMember() {
             onClick={() => setIsAvatarSelectorOpen(true)}
             className="text-primary font-black text-sm tracking-tight hover:opacity-80 transition-opacity mt-4"
           >
-            {t('add_member.select_avatar')}
+            {t('add_member.select_avatar', { defaultValue: 'select avatar' })}
           </button>
         </div>
 
         <div className="space-y-6 bg-surface-container-low p-8 rounded-[2.5rem] shadow-sm border border-outline-variant/10">
           <div className="space-y-2">
-            <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">{t('add_member.nickname')}</label>
+            <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">{t('add_member.nickname', { defaultValue: '昵称' })}</label>
             <input 
               required
               type="text" 
               value={formData.name}
               onChange={e => setFormData({ ...formData, name: e.target.value })}
-              placeholder={t('add_member.nickname_placeholder')}
+              placeholder={t('add_member.nickname_placeholder', { defaultValue: 'nickname placeholder' })}
               className="w-full bg-surface-container-high rounded-[1.5rem] px-6 py-4.5 text-on-surface font-bold placeholder:text-on-surface-variant/30 focus:outline-none focus:ring-2 focus:ring-primary/20 border-2 border-transparent focus:border-primary/20 transition-all"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">{t('add_member.role')}</label>
+            <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">{t('add_member.role', { defaultValue: '角色' })}</label>
             <div className="grid grid-cols-2 gap-3">
               <button 
                 type="button"
@@ -121,7 +121,7 @@ export function AddMember() {
                 )}
               >
                 <User size={18} />
-                {t('add_member.role_child')}
+                {t('add_member.role_child', { defaultValue: 'role child' })}
               </button>
               <button 
                 type="button"
@@ -134,14 +134,14 @@ export function AddMember() {
                 )}
               >
                 <Shield size={18} />
-                {t('add_member.role_parent')}
+                {t('add_member.role_parent', { defaultValue: 'role parent' })}
               </button>
             </div>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between px-2">
-              <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em]">{t('add_member.initial_stars')}</label>
+              <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em]">{t('add_member.initial_stars', { defaultValue: 'initial stars' })}</label>
               <div className="flex items-center gap-1.5 text-primary">
                 <Star size={14} className="fill-current" />
                 <span className="font-black text-sm">{formData.stars}</span>
@@ -159,14 +159,14 @@ export function AddMember() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">{t('add_member.pin')}</label>
+            <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">{t('add_member.pin', { defaultValue: 'pin' })}</label>
             <input 
               type="password" 
               maxLength={4}
               pattern="[0-9]*"
               inputMode="numeric"
               value={formData.pin}
-              placeholder={t('add_member.pin_placeholder')}
+              placeholder={t('add_member.pin_placeholder', { defaultValue: 'pin placeholder' })}
               onChange={e => {
                 const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
                 setFormData({ ...formData, pin: val });
@@ -177,14 +177,14 @@ export function AddMember() {
 
           <div className="space-y-2">
             <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2 flex items-center justify-between">
-              <span>{t('add_member.password')} {formData.role === 'parent' && <span className="text-red-500 text-[10px]">{t('add_member.password_required')}</span>}</span>
+              <span>{t('add_member.password', { defaultValue: '密码' })} {formData.role === 'parent' && <span className="text-red-500 text-[10px]">{t('add_member.password_required', { defaultValue: 'password required' })}</span>}</span>
             </label>
             <div className="relative">
               <input 
                 type={showPassword ? "text" : "password"} 
                 value={formData.password}
                 onChange={e => setFormData({ ...formData, password: e.target.value })}
-                placeholder={formData.role === 'parent' ? t('add_member.password_placeholder_parent') : t('add_member.password_placeholder_child')}
+                placeholder={formData.role === 'parent' ? t('add_member.password_placeholder_parent', { defaultValue: 'password placeholder parent' }) : t('add_member.password_placeholder_child', { defaultValue: 'password placeholder child' })}
                 className={cn(
                   "w-full bg-surface-container-high border-2 border-transparent rounded-[1.5rem] px-6 py-4.5 font-bold transition-all pr-12",
                   formData.role === 'parent' && !formData.password && "ring-2 ring-red-100"
@@ -216,7 +216,7 @@ export function AddMember() {
           className="w-full bg-primary text-white font-black py-5 rounded-[2rem] flex items-center justify-center gap-3 shadow-xl shadow-primary/20 active:scale-95 transition-transform"
         >
           <UserPlus size={24} />
-          <span>{t('add_member.submit')}</span>
+          <span>{t('add_member.submit', { defaultValue: '提交' })}</span>
         </button>
       </form>
 

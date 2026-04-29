@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { TaskCard } from '../components/TaskCard';
-import { AISmartTaskDialog } from '../components/AISmartTaskDialog';
+import { VoiceAssistant } from '../components/VoiceAssistant';
+import { QuadrantAnalysisView } from '../components/QuadrantAnalysis';
 import { TextAvatar } from '../components/TextAvatar';
 
 function AnimatedNumber({ value }: { value: number }) {
@@ -33,6 +34,7 @@ export function Home() {
   }, [stars]);
 
   const isAdmin = currentUser?.role === 'parent';
+  const [bottomTab, setBottomTab] = useState<'leaderboard' | 'quadrant'>('leaderboard');
   const todayTasks = tasks.filter(t => !t.isHabit && (t.status === 'pending' || t.status === 'reviewing')).slice(0, 4);
 
   const today = new Date().toISOString().split('T')[0];
@@ -85,10 +87,11 @@ export function Home() {
         </div>
       </header>
 
-      {/* AISmartTaskDialog integration */}
-      <AISmartTaskDialog 
+      {/* Voice Assistant integration */}
+      <VoiceAssistant 
         isOpen={isAiDialogOpen} 
-        onClose={() => setIsAiDialogOpen(false)} 
+        onClose={() => setIsAiDialogOpen(false)}
+        onOpenCalendarSync={() => navigate('/calendar-sync')}
       />
 
       {/* Balance Card */}
@@ -147,7 +150,7 @@ export function Home() {
                 <Sparkles size={14} className="text-[#FBC02D]" />
               </motion.div>
               <span className="text-[11px] sm:text-[13px] font-black tracking-widest uppercase text-white drop-shadow-sm">
-                {t('home.energy_title')}
+                {t('home.energy_title', { defaultValue: '今日成长能量' })}
               </span>
             </motion.div>
             
@@ -171,7 +174,7 @@ export function Home() {
             
             <div className="mt-4 px-6 py-2 bg-black/10 rounded-2xl backdrop-blur-sm border border-white/5">
               <p className="text-white/90 text-xs sm:text-sm font-bold tracking-wide italic">
-                {t('home.energy_subtitle')}
+                {t('home.energy_subtitle', { defaultValue: '加油！离下一个愿望更近了' })}
               </p>
             </div>
           </div>
@@ -182,25 +185,25 @@ export function Home() {
       <section className="grid grid-cols-4 gap-2 sm:gap-3">
         <QuickActionButton 
           icon={PlusCircle} 
-          label={t('home.actions.create_task')} 
+          label={t('home.actions.create_task', { defaultValue: '创建任务' })} 
           color="bg-[#FFF9C4] text-[#FBC02D]" 
           onClick={() => navigate('/tasks/new')}
         />
         <QuickActionButton 
           icon={Edit2} 
-          label={t('home.actions.make_wish')} 
+          label={t('home.actions.make_wish', { defaultValue: '许下心愿' })} 
           color="bg-[#FFE0B2] text-[#F57C00]" 
           onClick={() => navigate('/rewards/new')}
         />
         <QuickActionButton 
           icon={Calendar} 
-          label={t('home.actions.view_calendar')} 
-          color="bg-[#F8BBD0] text-[#C2185B]" 
+          label={t('home.actions.calendar', { defaultValue: '日历' })}
+          color="bg-[#E1BEE7] text-[#7B1FA2]" 
           onClick={() => navigate('/tasks', { state: { mode: 'calendar' } })} 
         />
         <QuickActionButton 
           icon={Clock} 
-          label={t('home.actions.pomodoro')} 
+          label={t('home.actions.pomodoro', { defaultValue: 'pomodoro' })} 
           color="bg-[#C8E6C9] text-[#2E7D32]" 
           onClick={() => navigate('/pomodoro')}
         />
@@ -210,12 +213,12 @@ export function Home() {
       <section className="space-y-4 sm:space-y-5">
         <div className="flex items-center justify-between">
           <h3 className="font-black text-xl sm:text-2xl flex items-center gap-2 sm:gap-2.5 text-on-surface">
-            {t('home.today_tasks')}
+            {t('home.today_tasks', { defaultValue: '今日任务' })}
             <span className="bg-[#FFF9C4] text-[#FBC02D] text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-black">
               {todayTasks.length}
             </span>
           </h3>
-          <button onClick={() => navigate('/tasks')} className="text-[#2E7D32] text-xs sm:text-sm font-black">{t('common.view_all')}</button>
+          <button onClick={() => navigate('/tasks')} className="text-[#2E7D32] text-xs sm:text-sm font-black">{t('common.view_all', { defaultValue: 'view all' })}</button>
         </div>
 
         <div className="space-y-4 sm:space-y-5">
@@ -232,36 +235,77 @@ export function Home() {
         </div>
       </section>
 
-      {/* Leaderboard Podium */}
+      {/* Leaderboard / Quadrant Tabs */}
       <section className="bg-surface-container-low/50 rounded-[2rem] sm:rounded-[2.5rem] p-4 sm:p-6 pb-8 sm:pb-12 relative overflow-hidden">
-        <h3 className="font-black text-lg sm:text-xl mb-4 sm:mb-6 flex items-center gap-2 sm:gap-2.5 text-on-surface">
-          {t('home.leaderboard')}
-          <Sparkles size={16} className="sm:w-[18px] sm:h-[18px] text-[#FBC02D]" />
-        </h3>
-        
-        <div className="flex justify-center items-end gap-2 sm:gap-3 h-40 sm:h-52 relative">
-          {[...members]
-            .sort((a, b) => b.stars - a.stars)
-            .slice(0, 3)
-            .map((member, idx) => {
-              const displayOrder = [1, 0, 2]; // 2nd, 1st, 3rd
-              return { member, originalRank: idx + 1 };
-            })
-            .sort((a, b) => {
-              const posA = a.originalRank === 1 ? 1 : a.originalRank === 2 ? 0 : 2;
-              const posB = b.originalRank === 1 ? 1 : b.originalRank === 2 ? 0 : 2;
-              return posA - posB;
-            })
-            .map(({ member, originalRank }) => (
-              <PodiumItem 
-                key={member.id}
-                member={member}
-                rank={originalRank}
-                onMemberClick={() => navigate(`/profile/members/${member.id}`)}
-              />
-            ))
-          }
+        {/* Tab Switcher */}
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <div className="flex bg-surface-container rounded-full p-0.5">
+            <button
+              onClick={() => setBottomTab('leaderboard')}
+              className={cn(
+                "px-4 py-1.5 rounded-full text-xs font-black transition-all",
+                bottomTab === 'leaderboard' ? "bg-primary text-white shadow-sm" : "text-on-surface-variant/50"
+              )}
+            >
+              {t('home_tabs.leaderboard', { defaultValue: '排行榜' })}
+            </button>
+            <button
+              onClick={() => setBottomTab('quadrant')}
+              className={cn(
+                "px-4 py-1.5 rounded-full text-xs font-black transition-all",
+                bottomTab === 'quadrant' ? "bg-primary text-white shadow-sm" : "text-on-surface-variant/50"
+              )}
+            >
+              {t('home_tabs.quadrant', { defaultValue: '四象限' })}
+            </button>
+          </div>
+          {bottomTab === 'leaderboard' && (
+            <Sparkles size={16} className="text-[#FBC02D]" />
+          )}
         </div>
+
+        {/* Leaderboard View */}
+        {bottomTab === 'leaderboard' && (
+          <div className="flex justify-center items-end gap-2 sm:gap-3 h-40 sm:h-52 relative">
+            {[...members]
+              .sort((a, b) => b.stars - a.stars)
+              .slice(0, 3)
+              .map((member, idx) => {
+                const displayOrder = [1, 0, 2]; // 2nd, 1st, 3rd
+                return { member, originalRank: idx + 1 };
+              })
+              .sort((a, b) => {
+                const posA = a.originalRank === 1 ? 1 : a.originalRank === 2 ? 0 : 2;
+                const posB = b.originalRank === 1 ? 1 : b.originalRank === 2 ? 0 : 2;
+                return posA - posB;
+              })
+              .map(({ member, originalRank }) => (
+                <PodiumItem 
+                  key={member.id}
+                  member={member}
+                  rank={originalRank}
+                  onMemberClick={() => navigate(`/profile/members/${member.id}`)}
+                />
+              ))
+            }
+          </div>
+        )}
+
+        {/* Quadrant Analysis - 跳转到独立页面 */}
+        {bottomTab === 'quadrant' && (
+          <div className="min-h-[200px] flex flex-col items-center justify-center py-20 px-4">
+            <button
+              onClick={() => navigate('/quadrant')}
+              className="w-32 h-32 rounded-3xl bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/20 flex flex-col items-center justify-center gap-2 active:scale-95 transition-all shadow-lg"
+            >
+              <Sparkles size={40} className="text-primary" />
+              <span className="font-black text-on-surface text-sm">{t('home_tabs.quadrant_analysis', { defaultValue: '四象限分析' })}</span>
+            </button>
+            <p className="text-[10px] text-on-surface-variant/60 font-bold mt-4 text-center">
+              {t('home_tabs.click_for_full', { defaultValue: '点击查看完整分析' })}
+            </p>
+          </div>
+        )}
       </section>
     </div>
 

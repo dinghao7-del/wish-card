@@ -1,0 +1,237 @@
+-- ============================================
+-- 任务模板库种子数据（修正版 v2）
+-- 添加 ON CONFLICT DO NOTHING 避免重复
+-- ============================================
+
+-- 0. 先删除已存在的记录（确保干净导入）
+DELETE FROM templates WHERE source = 'system' AND type = 'task';
+
+-- 1. 家务责任 - 日常清洁
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '整理玩具', '把玩具收拾到指定位置且分类', 
+'培养孩子养成玩耍后整理玩具的好习惯。将不同类型的玩具（积木、玩偶、小汽车等）分类放回原位，让房间保持整洁有序。这不仅能锻炼孩子的分类能力，还能培养责任感。',
+'家务责任', '日常清洁', '🧸', 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400', 
+2, 'daily', '3-8岁', 'easy', ARRAY['整理', '分类', '责任感'],
+'建议家长先示范如何分类整理，可以制作玩具分类标签贴在收纳箱上，帮助孩子识别。初期可以陪孩子一起整理，逐渐形成习惯。',
+'15-20分钟', ARRAY['收纳箱', '分类标签'], ARRAY['分类能力', '责任感', '整洁习惯'],
+'system', true, 1, true)
+ON CONFLICT (type, title, source) DO NOTHING;
+
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '整理书架', '把图书放回书架上',
+'鼓励孩子读完书后将其放回书架指定位置。可以按书籍大小、类型或颜色排列，培养整理习惯和审美能力。保持书架整洁也能让孩子更容易找到想看的书。',
+'家务责任', '日常清洁', '📚', 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=400',
+2, 'daily', '4-10岁', 'easy', ARRAY['阅读', '整理', '秩序感'],
+'可以为孩子准备一个专属书架，让他们参与书架的布置。定期和孩子一起整理书架，讨论每本书的内容，增强亲子关系。',
+'10-15分钟', ARRAY['书架', '书立'], ARRAY['秩序感', '整理能力', '阅读兴趣'],
+'system', false, 2, true);
+
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '倒垃圾', '负责倒自己房间/客厅的垃圾桶',
+'教孩子识别垃圾桶满载的信号，学习正确打包垃圾并送到指定回收点。这是最简单的家务之一，适合培养初始的责任感。',
+'家务责任', '日常清洁', '🗑️', 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400',
+1, 'daily', '5-12岁', 'easy', ARRAY['环保', '责任', '基础家务'],
+'开始时家长可以陪同，教孩子如何打包垃圾袋。可以制作"垃圾桶满载提醒卡"贴在垃圾桶旁，提醒孩子及时清理。',
+'5-10分钟', ARRAY['垃圾袋'], ARRAY['环保意识', '责任感', '独立能力'],
+'system', false, 3, true);
+
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '扫地拖地', '负责扫地或拖地（适合区域）',
+'学习使用扫帚和拖把清洁地面。从自己房间开始，逐渐扩展到公共区域。这能锻炼大肌肉动作和协调能力。',
+'家务责任', '日常清洁', '🧹', 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400',
+3, 'weekly', '6-12岁', 'medium', ARRAY['清洁', '大动作', '协调'],
+'为孩子准备适合身高的扫帚和拖把。可以先示范正确的扫地/拖地姿势，划分责任区域，让孩子有"我的地盘我做主"的感觉。',
+'20-30分钟', ARRAY['扫帚', '拖把', '水桶'], ARRAY['大肌肉发展', '责任感', '家务技能'],
+'system', true, 4, true);
+
+-- 2. 家务责任 - 衣物整理
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '整理脏衣服', '把脏衣服放进洗衣篮',
+'培养及时清理脏衣服的习惯。教孩子区分干净和脏衣服，将脱下的衣物及时放入洗衣篮，不随意丢弃。',
+'家务责任', '衣物整理', '👕', 'https://images.unsplash.com/photo-1545173168-9f1947c17513?w=400',
+1, 'daily', '3-8岁', 'easy', ARRAY['衣物', '整理', '生活习惯'],
+'在孩子的房间放置一个专属洗衣篮，贴上可爱的标签。可以设定"脏衣服回家"的游戏，让收拾衣服变得有趣。',
+'5分钟', ARRAY['洗衣篮'], ARRAY['生活习惯', '整洁意识'],
+'system', false, 5, true);
+
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '叠衣服', '折叠衣物并分类收纳',
+'学习正确的叠衣服方法，将洗好的衣服折叠整齐并放回衣柜。这能培养精细动作能力和组织能力。',
+'家务责任', '衣物整理', '👔', 'https://images.unsplash.com/photo-1489274499089-2bBufferf5635?w=400',
+2, 'weekly', '5-10岁', 'medium', ARRAY['精细动作', '组织能力', '自理'],
+'家长先示范"金牌叠衣法"，可以从叠毛巾开始练习。制作叠衣步骤图贴在衣柜门内侧，方便孩子参照。',
+'15-25分钟', ARRAY['叠衣板（可选）'], ARRAY['精细动作', '组织能力', '自理能力'],
+'system', false, 6, true);
+
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '洗衣服', '学会使用洗衣机洗自己的简单衣物',
+'在家长监督下，学习操作洗衣机洗涤自己的小件衣物（如袜子、内裤、手帕）。了解洗衣程序、用量和分类知识。',
+'家务责任', '衣物整理', '🫧', 'https://images.unsplash.com/photo-1545173168-9f1947c17513?w=400',
+3, 'weekly', '8-14岁', 'medium', ARRAY['生活技能', '自理', '家务'],
+'首次操作需要家长全程陪同，讲解每个步骤的原理（为什么深浅色要分开、柔顺剂的作用等）。可以制作"洗衣指南卡"供孩子参考。',
+'30-40分钟', ARRAY['洗衣机', '洗衣液', '洗衣指南卡'], ARRAY['生活技能', '独立性', '责任感'],
+'system', true, 7, true);
+
+-- 3. 家务责任 - 餐食协助
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '餐具整理', '帮忙摆碗筷/饭后收拾餐桌',
+'餐前帮忙摆放餐具，餐后协助收拾碗筷到厨房。这是参与家庭共餐仪式的好机会，也能培养餐桌礼仪。',
+'家务责任', '餐食协助', '🍽️', 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400',
+2, 'daily', '4-10岁', 'easy', ARRAY['餐桌礼仪', '协助', '家庭参与'],
+'可以让孩子参与制定"餐具摆放规则"（如碗筷的位置、餐巾的折叠等）。餐后收拾时，注意易碎品的安全，可以先从塑料餐具开始练习。',
+'10-15分钟', ARRAY['餐具', '围裙'], ARRAY['餐桌礼仪', '家庭归属感', '协助能力'],
+'system', false, 8, true);
+
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '学会做饭', '学习做一道简单的菜/准备简单早餐',
+'从最简单的料理开始（如煮鸡蛋、做三明治、拌沙拉），逐步学习烹饪技能。培养孩子的食品安全意识和营养知识。',
+'家务责任', '餐食协助', '🍳', 'https://images.unsplash.com/photo-1504754524776-2f8f13f55cd?w=400',
+5, 'weekly', '8-14岁', 'hard', ARRAY['生活技能', '营养', '创造力'],
+'从"免火料理"开始（三明治、沙拉、水果拼盘），再过渡到简单烹饪（煎蛋、煮面）。务必强调厨房安全规则，尖锐物品和明火操作需家长在场。',
+'30-60分钟', ARRAY['食材', '烹饪工具', '围裙', '厨具'], ARRAY['生活技能', '营养知识', '创造力', '安全意识'],
+'system', true, 9, true);
+
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '参与采购', '参与家庭采购清单制作/帮忙提东西',
+'和孩子一起列购物清单，超市采购时帮忙挑选商品、提袋子。培养孩子的计划能力、金钱概念和体力。',
+'家务责任', '餐食协助', '🛒', 'https://images.unsplash.com/photo-1578916171728-46686eac446d?w=400',
+3, 'weekly', '6-12岁', 'medium', ARRAY['计划', '金钱概念', '体力'],
+'出行前让孩子参与制作购物清单，可以按类别（蔬菜、水果、零食）分类。在超市可以给孩子一个小任务：找出清单上的3样商品。回家后一起核对账单，启蒙金钱概念。',
+'45-90分钟', ARRAY['购物清单', '购物袋'], ARRAY['计划能力', '金钱概念', '责任感'],
+'system', false, 10, true);
+
+-- 4. 自我管理 - 时间管理
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '制作每日计划', '规划当天要做的事情',
+'教孩子使用可视化工具（如计划表、计时器）规划一天的活动。学习区分"必须做的"和"想要做的"，培养时间管理能力。',
+'自我管理', '时间管理', '📋', 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=400',
+3, 'daily', '7-14岁', 'medium', ARRAY['计划', '时间管理', '自律'],
+'为孩子准备一个可爱的计划本或白板，一起制定每日计划。用不同颜色标记不同类型的活动（学习=蓝色、玩耍=绿色、家务=黄色）。晚上一起回顾计划完成情况。',
+'15-20分钟', ARRAY['计划本', '彩色笔', '贴纸'], ARRAY['时间管理', '自律', '目标意识'],
+'system', true, 11, true);
+
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '准时完成任务', '在约定时间内完成任务',
+'设定计时器，要求孩子在规定时间内完成任务。这能培养时间感、紧迫感和效率意识。',
+'自我管理', '时间管理', '⏰', 'https://images.unsplash.com/photo-1523289333742-b09b23de7ca0?w=400',
+2, 'daily', '6-12岁', 'medium', ARRAY['时间感', '效率', '自律'],
+'使用可视化计时器（如Time Timer），让孩子"看见"时间的流逝。开始时可以设定较宽松的时间，逐步缩短。完成任务后给予及时肯定。',
+'按任务而定', ARRAY['计时器', '奖励贴纸'], ARRAY['时间感', '效率意识', '自律'],
+'system', false, 12, true);
+
+-- 5. 自我管理 - 情绪管理
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '情绪日记', '记录每天的情绪变化和原因',
+'通过绘画或简单文字记录每天的情绪（开心、生气、难过、兴奋等），并思考引发这些情绪的原因。这能提升情绪认知和表达能力。',
+'自我管理', '情绪管理', '📝', 'https://images.unsplash.com/photo-1517841627044-5e9634899c10?w=400',
+2, 'daily', '5-12岁', 'medium', ARRAY['情绪认知', '表达', '自我调节'],
+'为孩子准备专门的"情绪日记本"，可以用表情符号帮助识别情绪。家长可以每天花5分钟和孩子聊聊日记内容，给予理解和引导，而非评判。',
+'10-15分钟', ARRAY['日记本', '彩色笔', '情绪卡片'], ARRAY['情绪认知', '表达能力', '自我调节'],
+'system', true, 13, true);
+
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '深呼吸练习', '生气或焦虑时做深呼吸放松',
+'教孩子简单的深呼吸技巧（如"4-7-8呼吸法"），在情绪激动时使用。这能提供即时的情绪调节工具。',
+'自我管理', '情绪管理', '🧘', 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400',
+2, 'daily', '4-12岁', 'easy', ARRAY['放松', '自我调节', '心理健康'],
+'制作"呼吸练习卡"，用图形（如海浪、气球）引导孩子均匀呼吸。可以在家中设置一个"冷静角"，放置软垫、绘本和呼吸练习卡，供孩子情绪失控时自我调节。',
+'5-10分钟', ARRAY['呼吸练习卡', '冷静角道具'], ARRAY['自我调节', '情绪管理', '心理健康'],
+'system', false, 14, true);
+
+-- 6. 性格养成
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '讲礼貌', '尊敬长辈，主动和认识的人打招呼',
+'培养基本的社交礼仪，见到熟人主动问好，使用"请""谢谢""对不起"等礼貌用语。这能提升孩子的社交能力和人际关系。',
+'性格养成', NULL, '🙏', 'https://images.unsplash.com/photo-1526674237724- polarized3?w=400',
+2, 'daily', '3-10岁', 'easy', ARRAY['礼貌', '社交', '品格'],
+'家长要以身作则，主动和孩子、邻居打招呼。可以玩"礼貌小游戏"，轮流扮演不同场景（见到老师、收到礼物、不小心撞到人等）练习礼貌用语。',
+'全天渗透', ARRAY['礼貌用语卡片'], ARRAY['社交礼仪', '自信心', '人际关系'],
+'system', true, 15, true);
+
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '主动认错', '做错事主动承认错误，自我反思',
+'培养孩子的责任感和诚实品格。做错事时不推卸责任，主动承认并思考如何改正。这能建立内心的道德准则。',
+'性格养成', NULL, '💖', 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=400',
+5, 'daily', '4-12岁', 'medium', ARRAY['诚实', '责任感', '品格'],
+'家长要以开放、接纳的态度对待孩子的错误，避免严厉惩罚导致孩子隐瞒。当孩子主动认错时，先肯定勇气，再一起讨论如何改进。可以制作"错误是学习的机会"海报贴在家中。',
+'适时进行', NULL, ARRAY['诚实品格', '责任感', '成长心态'],
+'system', false, 16, true);
+
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '迎难而上', '遇到困难主要想办法解决，不半途而废',
+'培养孩子的抗挫力和成长思维。面对挑战时不轻易放弃，尝试多种方法解决问题。这能建立"我可以学会"的自信。',
+'性格养成', NULL, '💪', 'https://images.unsplash.com/photo-1529391409745-4df2a3ac36d5?w=400',
+5, 'daily', '6-14岁', 'hard', ARRAY['抗挫力', '成长思维', '坚持'],
+'当孩子遇到困难想放弃时，用"尚未"思维引导（如"你只是尚未学会"而非"你不会"）。一起头脑风暴解决方案，庆祝每一次尝试和进步，而非只看结果。',
+'按任务而定', NULL, ARRAY['抗挫力', '成长思维', '问题解决能力'],
+'system', true, 17, true);
+
+-- 7. 运动健康
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '户外散步', '去户外看看花/摸摸树叶',
+'每天至少30分钟的户外活动时间，亲近自然，观察植物和小动物。这能保护视力、增强免疫力、培养观察力。',
+'运动健康', NULL, '🌳', 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400',
+2, 'daily', '3-10岁', 'easy', ARRAY['户外', '自然', '健康'],
+'把散步变成"自然探索之旅"，带上放大镜观察树叶的纹路、寻找不同颜色的花朵。可以制作"自然收集册"，收集落叶、花瓣（记得要爱护植物哦）。',
+'30-45分钟', ARRAY['放大镜', '自然收集册'], ARRAY['观察力', '自然认知', '健康体魄'],
+'system', false, 18, true);
+
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '运动锻炼', '户外活动/运动30分钟',
+'每天至少30分钟的中等强度运动，如跑步、骑车、跳绳、球类等。这能促进骨骼肌肉发育、增强心肺功能、改善情绪。',
+'运动健康', NULL, '⚽', 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=400',
+3, 'daily', '4-14岁', 'medium', ARRAY['运动', '健康', '活力'],
+'让孩子选择自己喜欢的运动项目，家长可以一起参与（如亲子骑行、家庭羽毛球赛）。设定"运动挑战目标"（如连续7天运动），达成后给予非食物奖励。',
+'30-60分钟', ARRAY['运动装备', '计时器'], ARRAY['体能发展', '健康习惯', '亲子互动'],
+'system', true, 19, true);
+
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '保护视力', '做眼保健操、眺望远方10分钟',
+'每次用眼30分钟后，休息眼睛，做眼保健操或眺望远处。这能缓解眼疲劳，预防近视。',
+'运动健康', NULL, '👁️', 'https://images.unsplash.com/photo-1590658268037-6bf12f032f55?w=400',
+2, 'daily', '5-14岁', 'easy', ARRAY['视力保护', '健康', '习惯'],
+'设置"用眼定时器"，提醒孩子按时休息。教孩子正确的眼保健操穴位，可以一起做。在窗边设置"眺望角"，放置一个有趣的远方目标（如远处的塔、云朵形状等）。',
+'10分钟', ARRAY['定时器', '眼保健操图'], ARRAY['视力保护', '健康习惯', '自我照顾'],
+'system', false, 20, true);
+
+-- 8. 学习成长
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '阅读时间', '每天阅读至少20分钟',
+'培养每日阅读习惯，可以选择绘本、故事书、科普读物等。这能提升语言能力、想象力和专注力。',
+'学习成长', NULL, '📖', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+3, 'daily', '4-14岁', 'medium', ARRAY['阅读', '专注', '知识'],
+'为孩子打造一个舒适的"阅读角"，放置适合孩子身高的书架和软垫。允许孩子自由选择读物（即使是漫画书也可以）。家长可以和孩子一起读，讨论故事内容。',
+'20-40分钟', ARRAY['书籍', '阅读角', '书签'], ARRAY['阅读兴趣', '语言能力', '想象力'],
+'system', true, 21, true);
+
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '写日记/周记', '记录每日的想法、感受或学到的新知识',
+'通过写作表达自己的想法和感受，记录生活中的美好瞬间或学到的知识。这能提升写作能力、反思能力和情商。',
+'学习成长', NULL, '✍️', 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400',
+2, 'daily', '7-14岁', 'medium', ARRAY['写作', '反思', '表达'],
+'不要过分强调语法和拼写，重点是鼓励孩子表达。可以提供"写作prompts"（如"今天最开心的时刻是...""如果我是一只动物..."）。家长可以分享自己的日记片段，营造平等的交流氛围。',
+'15-20分钟', ARRAY['日记本', '彩色笔', '写作prompts卡片'], ARRAY['写作能力', '反思能力', '情商'],
+'system', false, 22, true);
+
+-- 9. 社交技能
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '分享玩具', '和朋友/兄弟姐妹分享自己的玩具',
+'学习分享和轮流玩的概念，体验分享带来的快乐。这能培养同理心、合作精神和社交技能。',
+'社交技能', NULL, '🤝', 'https://images.unsplash.com/photo-1503454537195-1dcabb73fc7f?w=400',
+2, 'daily', '3-8岁', 'easy', ARRAY['分享', '合作', '同理心'],
+'家长可以示范分享行为（如"我可以尝一口你的零食吗？"）。当孩子主动分享时，及时给予具体表扬（"你愿意和妹妹分享积木，真是个体贴的朋友！"）。可以玩"轮流游戏"强化轮流概念。',
+'在玩耍中实践', NULL, ARRAY['同理心', '合作精神', '社交技能'],
+'system', false, 23, true);
+
+INSERT INTO templates (type, title, description, detailed_description, category, subcategory, icon, image_url, stars, frequency, age_range, difficulty, tags, usage_suggestions, estimated_time, materials_needed, learning_outcomes, source, is_featured, sort_order, is_active) VALUES
+('task', '帮助他人', '主动帮助家人或朋友做一件事',
+'培养助人为乐的品格，观察他人的需求并主动提供帮助。这能提升同理心、责任感和自我价值感。',
+'社交技能', NULL, '💝', 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400',
+3, 'weekly', '4-12岁', 'medium', ARRAY['帮助', '同理心', '品格'],
+'家长可以故意"示弱"（如"妈妈手上有东西，可以帮我把门关上吗？"），给孩子提供帮助的机会。讨论"帮助的感觉真好"的时刻，强化助人的正向感受。',
+'适时进行', NULL, ARRAY['同理心', '助人精神', '自我价值感'],
+'system', true, 24, true);
+
+-- 完成任务提示
+SELECT '任务模板种子数据插入完成！共插入 ' || COUNT(*) || ' 条记录' as result 
+FROM templates WHERE type = 'task';

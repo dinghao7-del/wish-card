@@ -5,12 +5,14 @@ import { ArrowLeft, CheckCircle2, Star, Sparkles, Clock } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { TextAvatar } from '../components/TextAvatar';
+import { useTranslation } from 'react-i18next';
 
 export function CheckIn() {
   const navigate = useNavigate();
   const { taskId: paramTaskId } = useParams();
   const { tasks, currentUser, completeTask, approveTask } = useFamily();
   const [isSuccess, setIsSuccess] = useState(false);
+  const { t } = useTranslation();
 
   const task = useMemo(() => {
     if (paramTaskId) {
@@ -41,13 +43,13 @@ export function CheckIn() {
         <div className="w-24 h-24 bg-surface-container rounded-[2rem] flex items-center justify-center text-on-surface-variant/20 mb-8 rotate-12">
            <CheckCircle2 size={48} />
         </div>
-        <h2 className="text-3xl font-black text-on-surface mb-2 tracking-tight">休息时间！</h2>
-        <p className="text-on-surface-variant font-medium">暂时没有待办任务，快去玩耍吧 🍃</p>
+        <h2 className="text-3xl font-black text-on-surface mb-2 tracking-tight">{t('checkin.rest_time', { defaultValue: '休息时间' })}</h2>
+        <p className="text-on-surface-variant font-medium">{t('checkin.no_tasks', { defaultValue: '暂无任务' })}</p>
         <button 
            onClick={() => navigate('/')}
            className="mt-10 px-10 py-4 bg-primary text-white rounded-full font-black shadow-[0_15px_30px_rgba(0,110,28,0.2)] active:scale-95 transition-transform"
         >
-          查看首页
+          {t('checkin.view_home', { defaultValue: '查看首页' })}
         </button>
       </div>
     );
@@ -63,7 +65,7 @@ export function CheckIn() {
         <button onClick={() => navigate(-1)} className="w-12 h-12 flex items-center justify-center rounded-2xl text-on-surface-variant hover:bg-surface-container transition-all">
           <ArrowLeft size={24} />
         </button>
-        <h1 className="font-black text-xl tracking-tight">{isApproving ? '审核打卡' : '执行打卡'}</h1>
+        <h1 className="font-black text-xl tracking-tight">{isApproving ? t('checkin.approve_title', { defaultValue: '审核任务' }) : t('checkin.execute_title', { defaultValue: '执行打卡' })}</h1>
         <div className="w-12" />
       </header>
 
@@ -84,11 +86,11 @@ export function CheckIn() {
                 <Star size={32} className="fill-current" />
               </div>
               <div className="relative z-10 flex-1">
-                <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">{isApproving ? '待审核任务' : '正在进行任务'}</p>
+                <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">{isApproving ? t('checkin.task_reviewing', { defaultValue: '待审核任务' }) : t('checkin.task_in_progress', { defaultValue: '进行中任务' })}</p>
                 <h2 className="font-black text-2xl mb-1 text-on-surface leading-tight">{task?.title}</h2>
                 <div className="flex items-center gap-2 text-on-surface-variant/60">
                    <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={24} className="border border-white" />
-                   <span className="text-xs font-bold">{isApproving ? '提交人' : '打卡人'}：{currentUser?.name}</span>
+                   <span className="text-xs font-bold">{isApproving ? t('checkin.submitter', { defaultValue: '提交人' }) : t('checkin.checkin_person', { defaultValue: '打卡人' })}：{currentUser?.name}</span>
                 </div>
               </div>
             </div>
@@ -112,7 +114,7 @@ export function CheckIn() {
                     
                     <div className="relative z-10 flex flex-col items-center">
                        <CheckCircle2 size={88} className="text-white mb-3 drop-shadow-lg" strokeWidth={2.5} />
-                       <span className="text-3xl font-black text-white tracking-widest">{isApproving ? '确认完成' : '确认打卡'}</span>
+                       <span className="text-3xl font-black text-white tracking-widest">{isApproving ? t('checkin.confirm_complete', { defaultValue: '确认完成' }) : t('checkin.confirm_checkin', { defaultValue: '确认打卡' })}</span>
                     </div>
                   </motion.button>
                </div>
@@ -126,8 +128,8 @@ export function CheckIn() {
                   <div className="bg-[#FFF9C4] p-1.5 rounded-lg mr-3 shadow-sm">
                     <Star size={20} className="text-[#FBC02D] fill-current" />
                   </div>
-                  <span className="text-on-surface-variant text-sm font-black tracking-wide">
-                    {isApproving ? '确认后孩子将收到' : '完成后将获得'} <span className="text-primary text-lg">{task?.rewardStars}</span> 颗星星奖励
+                    <span className="text-on-surface-variant text-sm font-black tracking-wide">
+                    {isApproving ? t('checkin.stars_will_receive', { defaultValue: '将获得' }) : t('checkin.stars_will_get', { defaultValue: '将获得' })} <span className="text-primary text-lg">{task?.rewardStars}</span> {t('checkin.stars_reward', { defaultValue: '星星奖励' })}
                   </span>
                </motion.div>
 
@@ -136,7 +138,7 @@ export function CheckIn() {
                  transition={{ duration: 3, repeat: Infinity }}
                  className="mt-10 text-primary font-black text-sm tracking-widest uppercase opacity-60"
                >
-                  坚持就是胜利，加油！🌲
+                  {t('checkin.keep_going', { defaultValue: '继续加油' })}
                </motion.p>
             </div>
           </motion.div>
@@ -179,13 +181,13 @@ export function CheckIn() {
             </div>
 
             <div className="space-y-4">
-              <h1 className="text-5xl font-black text-on-surface tracking-tighter">{isApproving ? '审核完成！' : '打卡成功！'}</h1>
-              <p className="text-on-surface-variant font-bold text-lg">{isApproving ? '奖励已发放给孩子 🎁' : '你的努力让森林变得更绿了 🌳'}</p>
+              <h1 className="text-5xl font-black text-on-surface tracking-tighter">{isApproving ? t('checkin.approve_complete', { defaultValue: '审核完成' }) : t('checkin.checkin_success', { defaultValue: '打卡成功' })}</h1>
+              <p className="text-on-surface-variant font-bold text-lg">{isApproving ? t('checkin.reward_distributed', { defaultValue: '星星已发放' }) : t('checkin.forest_greener', { defaultValue: '森林更加茂盛了' })}</p>
             </div>
 
             <div className="bg-white rounded-[2.5rem] p-8 w-full shadow-[0_10px_30px_rgba(0,0,0,0.03)] border border-[#E8E7E0] relative overflow-hidden">
                <div className="absolute top-0 right-0 w-24 h-24 bg-secondary/5 rounded-full blur-2xl -mr-10 -mt-10" />
-               <p className="text-xs font-black text-on-surface-variant/40 uppercase tracking-widest mb-6">{isApproving ? '星星发放明细' : '星星预计收益'}</p>
+               <p className="text-xs font-black text-on-surface-variant/40 uppercase tracking-widest mb-6">{isApproving ? t('checkin.star_detail_approve', { defaultValue: '星星详情' }) : t('checkin.star_detail', { defaultValue: '打卡详情' })}</p>
                <div className="flex items-center justify-center gap-5">
                  <div className="w-16 h-16 rounded-3xl bg-secondary-container/40 flex items-center justify-center text-secondary shadow-inner">
                     <Star size={36} className="fill-current" />
@@ -193,9 +195,9 @@ export function CheckIn() {
                  <div className="text-left">
                    <div className="flex items-center gap-1">
                       <span className="text-4xl font-black text-on-surface">+{task?.rewardStars}</span>
-                      <span className="text-lg font-black text-on-surface-variant">星星</span>
+                      <span className="text-lg font-black text-on-surface-variant">{t('checkin.stars_reward', { defaultValue: '星星奖励' })}</span>
                    </div>
-                   <p className="text-xs font-bold text-tertiary/60">{isApproving ? '奖励已计入余额 🌿' : '等待家长审核后发放 🌿'}</p>
+                   <p className="text-xs font-bold text-tertiary/60">{isApproving ? t('checkin.reward_credited', { defaultValue: '奖励已到账' }) : t('checkin.waiting_approval', { defaultValue: '待审核确认' })}</p>
                  </div>
                </div>
             </div>
@@ -204,7 +206,7 @@ export function CheckIn() {
               onClick={() => navigate('/tasks')}
               className="w-full py-5 bg-[#1B5E20] text-white font-black text-xl rounded-[2rem] shadow-[0_15px_30px_rgba(27,94,32,0.3)] active:scale-95 transition-all hover:bg-[#123E15] mt-4"
             >
-              太棒了
+              {t('checkin.awesome', { defaultValue: '太棒了' })}
             </button>
           </motion.div>
         )}

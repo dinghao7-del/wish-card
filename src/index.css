@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -56,4 +55,17 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* 移动端触摸目标优化：确保最小触摸尺寸 44x44px */
+button, [role="button"], a, input[type="button"], input[type="submit"] {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* 过小文字修正：移动端最小 12px */
+@media (max-width: 768px) {
+  * {
+    font-size: max(12px, 1em) !important;
+  }
 }

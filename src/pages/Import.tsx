@@ -16,7 +16,7 @@ export function Import() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const dataParam = searchParams.get('data');
+    const dataParam = searchParams.get('data', { defaultValue: 'data' });
     if (dataParam) {
       try {
         const decoded = JSON.parse(decodeURIComponent(atob(dataParam)));
@@ -24,11 +24,11 @@ export function Import() {
         setStatus('confirm');
       } catch (err) {
         setStatus('error');
-        setError(t('import.error_parsing'));
+        setError(t('import.error_parsing', { defaultValue: 'error parsing' }));
       }
     } else {
       setStatus('error');
-      setError(t('import.error_not_found'));
+      setError(t('import.error_not_found', { defaultValue: 'error not found' }));
     }
   }, [searchParams]);
 
@@ -43,7 +43,7 @@ export function Import() {
       }, 2000);
     } catch (err: any) {
       setStatus('error');
-      setError(err.message || t('import.error_saving'));
+      setError(err.message || t('import.error_saving', { defaultValue: 'error saving' }));
     }
   };
 
@@ -57,7 +57,7 @@ export function Import() {
         {status === 'loading' && (
           <div className="p-12 text-center">
             <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-6" />
-            <h2 className="text-xl font-black text-on-surface">{t('import.parsing')}</h2>
+            <h2 className="text-xl font-black text-on-surface">{t('import.parsing', { defaultValue: '正在解析...' })}</h2>
           </div>
         )}
 
@@ -67,18 +67,18 @@ export function Import() {
               <div className="w-20 h-20 bg-primary/10 text-primary rounded-[2rem] flex items-center justify-center mx-auto mb-6">
                 <Download size={40} strokeWidth={2.5} />
               </div>
-              <h2 className="text-2xl font-black text-on-surface mb-2">{t('import.found_title')}</h2>
-              <p className="text-sm text-on-surface-variant/60 font-bold">{t('import.found_subtitle')}</p>
+              <h2 className="text-2xl font-black text-on-surface mb-2">{t('import.found_title', { defaultValue: '发现分享内容' })}</h2>
+              <p className="text-sm text-on-surface-variant/60 font-bold">{t('import.found_subtitle', { defaultValue: 'found subtitle' })}</p>
             </div>
             
             <div className="bg-slate-50 dark:bg-white/5 rounded-3xl p-6 space-y-4 border border-slate-100 dark:border-white/5">
-              <div className="text-[10px] font-black text-primary uppercase tracking-widest mb-2">{t('import.items_title')}</div>
+              <div className="text-[10px] font-black text-primary uppercase tracking-widest mb-2">{t('import.items_title', { defaultValue: 'items title' })}</div>
               <div className="grid grid-cols-1 gap-3">
                 {[
-                  { id: 'members', label: t('import.members'), exists: !!importData.members },
-                  { id: 'tasks', label: t('import.tasks'), exists: !!importData.tasks },
-                  { id: 'rewards', label: t('import.rewards'), exists: !!importData.rewards },
-                  { id: 'history', label: t('import.history'), exists: !!importData.history }
+                  { id: 'members', label: t('import.members', { defaultValue: '成员' }), exists: !!importData.members },
+                  { id: 'tasks', label: t('import.tasks', { defaultValue: '任务' }), exists: !!importData.tasks },
+                  { id: 'rewards', label: t('import.rewards', { defaultValue: '奖励' }), exists: !!importData.rewards },
+                  { id: 'history', label: t('import.history', { defaultValue: 'history' }), exists: !!importData.history }
                 ].filter(i => i.exists).map(item => (
                   <div key={item.id} className="flex items-center gap-3 text-on-surface font-black text-sm">
                     <div className="w-6 h-6 rounded-lg bg-primary text-on-primary flex items-center justify-center">
@@ -95,18 +95,18 @@ export function Import() {
                 onClick={handleConfirmImport}
                 className="w-full py-4 bg-primary text-on-primary rounded-2xl font-black text-base shadow-lg shadow-primary/20 active:scale-95 transition-all"
               >
-                {t('import.confirm_button')}
+                {t('import.confirm_button', { defaultValue: '立即导入' })}
               </button>
               <button 
                 onClick={() => navigate('/')}
                 className="w-full py-4 bg-surface-container text-on-surface-variant/60 font-black rounded-2xl active:scale-95 transition-all"
               >
-                {t('common.cancel')}
+                {t('common.cancel', { defaultValue: '取消' })}
               </button>
             </div>
             
             <p className="text-[10px] text-on-surface-variant/30 font-bold leading-relaxed text-center px-4">
-              {t('import.warning')}
+              {t('import.warning', { defaultValue: '警告' })}
             </p>
           </div>
         )}
@@ -116,8 +116,8 @@ export function Import() {
             <div className="w-20 h-20 bg-emerald-500 text-white rounded-[2rem] flex items-center justify-center mx-auto mb-6">
               <Check size={40} strokeWidth={3} />
             </div>
-            <h2 className="text-2xl font-black text-emerald-600 mb-2">{t('import.success_title')}</h2>
-            <p className="text-on-surface-variant font-bold">{t('import.success_subtitle')}</p>
+            <h2 className="text-2xl font-black text-emerald-600 mb-2">{t('import.success_title', { defaultValue: '导入成功' })}</h2>
+            <p className="text-on-surface-variant font-bold">{t('import.success_subtitle', { defaultValue: 'success subtitle' })}</p>
           </div>
         )}
 
@@ -126,13 +126,13 @@ export function Import() {
             <div className="w-20 h-20 bg-error/10 text-error rounded-[2rem] flex items-center justify-center mx-auto mb-6">
               <AlertTriangle size={40} strokeWidth={2.5} />
             </div>
-            <h2 className="text-2xl font-black text-error mb-2">{t('import.error_title')}</h2>
+            <h2 className="text-2xl font-black text-error mb-2">{t('import.error_title', { defaultValue: 'error title' })}</h2>
             <p className="text-on-surface-variant font-bold mb-6">{error}</p>
             <button 
               onClick={() => navigate('/')}
               className="w-full py-4 bg-primary text-on-primary rounded-2xl font-black shadow-lg shadow-primary/25 active:scale-95 transition-all"
             >
-              {t('import.back_home')}
+              {t('import.back_home', { defaultValue: 'back home' })}
             </button>
           </div>
         )}

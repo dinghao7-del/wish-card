@@ -1,11 +1,13 @@
 import React, { useState, useRef } from 'react';
-import { Settings, Shield, Moon, Bell, Edit3, UserPlus, LogOut, ChevronRight, MessageSquare, Headset, Download, Upload, X, Link, HardDrive, Share2, Copy, Check } from 'lucide-react';
+import { Settings, Shield, Moon, Bell, Edit3, UserPlus, LogOut, ChevronRight, MessageSquare, Headset, Download, Upload, X, Link, HardDrive, Share2, Copy, Check, Calendar } from 'lucide-react';
 import { useFamily } from '../context/FamilyContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { TextAvatar } from '../components/TextAvatar';
+import { showToastGlobal } from '../components/Toast';
+import { showConfirm } from '../components/ConfirmDialog';
 import * as api from '../lib/api';
 
 export function Profile() {
@@ -58,7 +60,7 @@ export function Profile() {
       const data = getFilteredData();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement('a', { defaultValue: 'a' });
       link.href = url;
       link.download = `family-backup-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(link);
@@ -66,7 +68,7 @@ export function Profile() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (err) {
-      alert('Export failed, please try again');
+      showToastGlobal('Export failed, please try again', 'error');
     } finally {
       setIsExporting(false);
     }
@@ -78,7 +80,7 @@ export function Profile() {
     const shareUrl = `${window.location.origin}/import?data=${base64Data}`;
     
     if (shareUrl.length > 2000) {
-      alert('分享内容过多，链接过长可能无法正常使用，建议使用文件备份。');
+      showToastGlobal('分享内容过多，链接过长可能无法正常使用，建议使用文件备份。', 'warning');
     }
 
     navigator.clipboard.writeText(shareUrl);
@@ -88,14 +90,14 @@ export function Profile() {
 
   const executeImport = async (data: api.ImportData) => {
     if (!familyId || !currentUser) {
-      alert('请先登录后再导入数据');
+      showToastGlobal('请先登录后再导入数据', 'error');
       return;
     }
     try {
       await api.bulkImport(familyId, data, currentUser.id);
       window.location.reload();
     } catch (err: any) {
-      alert(`导入失败: ${err.message}`);
+      showToastGlobal(`导入失败: ${err.message}`, 'error');
     }
   };
 
@@ -109,18 +111,18 @@ export function Profile() {
         const content = event.target?.result as string;
         const data = JSON.parse(content);
         
-        let message = t('profile.import.confirm_msg') + '\n\n';
-        if (data.members) message += t('profile.import.items.members') + '\n';
-        if (data.tasks) message += t('profile.import.items.tasks') + '\n';
-        if (data.rewards) message += t('profile.import.items.rewards') + '\n';
-        if (data.history) message += t('profile.import.items.history') + '\n';
-        message += '\n' + t('profile.import.warning');
+        let message = t('profile.import.confirm_msg', { defaultValue: 'confirm msg' }) + '\n\n';
+        if (data.members) message += t('profile.import.items.members', { defaultValue: '成员' }) + '\n';
+        if (data.tasks) message += t('profile.import.items.tasks', { defaultValue: '任务' }) + '\n';
+        if (data.rewards) message += t('profile.import.items.rewards', { defaultValue: '奖励' }) + '\n';
+        if (data.history) message += t('profile.import.items.history', { defaultValue: 'history' }) + '\n';
+        message += '\n' + t('profile.import.warning', { defaultValue: '警告' });
 
-        if (confirm(message)) {
+        if (await showConfirm({ message })) {
           await executeImport(data);
         }
       } catch (err) {
-        alert('Parse failed');
+        showToastGlobal('Parse failed', 'error');
       }
     };
     reader.readAsText(file);
@@ -135,13 +137,13 @@ export function Profile() {
       const data = await response.json();
       setUrlImportData(data);
     } catch (err) {
-      alert('无法获取链接数据，请检查链接是否有效');
+      showToastGlobal('无法获取链接数据，请检查链接是否有效', 'error');
     } finally {
       setIsImporting(false);
     }
   };
 
-  const handleLogout = (username?: string) => {
+  const handleLogout = async (username?: string) => {
     const doLogout = () => {
       logout();
       navigate('/welcome', { state: { initialUsername: username } });
@@ -150,7 +152,7 @@ export function Profile() {
     if (username) {
       // If clicking a member card, we might skip confirm or use a different message
       doLogout();
-    } else if (confirm(t('profile.logout.confirm'))) {
+    } else if (await showConfirm({ message: t('profile.logout.confirm', { defaultValue: '确认' }) })) {
       doLogout();
     }
   };
@@ -160,7 +162,7 @@ export function Profile() {
       <header className="flex justify-between items-center py-4 sticky top-0 bg-background/80 backdrop-blur-xl z-40 -mx-6 px-6">
         <div className="flex items-center gap-3">
           <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={32} />
-          <h1 className="font-bold text-lg text-on-surface">{t('profile.title')}</h1>
+          <h1 className="font-bold text-lg text-on-surface">{t('profile.title', { defaultValue: '标题' })}</h1>
         </div>
         <button 
            onClick={() => navigate('/settings/notifications')}
@@ -206,7 +208,7 @@ export function Profile() {
               {/* Header */}
               <div className="p-8 pb-4">
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-2xl font-black text-on-surface">{t('profile.menu.share_backup')}</h3>
+                  <h3 className="text-2xl font-black text-on-surface">{t('profile.menu.share_backup', { defaultValue: 'share backup' })}</h3>
                   <button 
                     onClick={() => setIsImportExportOpen(false)}
                     className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container dark:bg-surface-container-high transition-colors text-on-surface-variant hover:text-on-surface"
@@ -214,7 +216,7 @@ export function Profile() {
                     <X size={20} />
                   </button>
                 </div>
-                <p className="text-sm text-on-surface-variant/50 font-bold">{t('profile.menu.share_backup_desc')}</p>
+                <p className="text-sm text-on-surface-variant/50 font-bold">{t('profile.menu.share_backup_desc', { defaultValue: 'share backup desc' })}</p>
               </div>
 
               <div className="p-8 pt-0 space-y-6">
@@ -224,13 +226,13 @@ export function Profile() {
                     <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                       <Settings size={16} strokeWidth={2.5} />
                     </div>
-                    <span className="font-black text-sm">{t('profile.share.select_content')}</span>
+                    <span className="font-black text-sm">{t('profile.share.select_content', { defaultValue: 'select content' })}</span>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { id: 'tasks', label: t('profile.import.items.tasks').replace('• ', ''), icon: Settings },
-                      { id: 'rewards', label: t('profile.import.items.rewards').replace('• ', ''), icon: Shield },
+                      { id: 'tasks', label: t('profile.import.items.tasks', { defaultValue: '任务' }).replace('• ', ''), icon: Settings },
+                      { id: 'rewards', label: t('profile.import.items.rewards', { defaultValue: '奖励' }).replace('• ', ''), icon: Shield },
                     ].map((item) => (
                       <button
                         key={item.id}
@@ -255,7 +257,7 @@ export function Profile() {
                     <div className="w-8 h-8 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center">
                       <Share2 size={16} strokeWidth={2.5} />
                     </div>
-                    <span className="font-black text-sm">{t('profile.share.link_title')}</span>
+                    <span className="font-black text-sm">{t('profile.share.link_title', { defaultValue: 'link title' })}</span>
                   </div>
                   
                   <button 
@@ -263,7 +265,7 @@ export function Profile() {
                     className="w-full py-4 bg-[#FF6B00] text-white rounded-2xl font-black text-base shadow-lg shadow-orange-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                   >
                     {copySuccess ? <Check size={20} /> : <Share2 size={20} />}
-                    {copySuccess ? t('profile.share.link_copied') : t('profile.share.copy_link')}
+                    {copySuccess ? t('profile.share.link_copied', { defaultValue: 'link copied' }) : t('profile.share.copy_link', { defaultValue: 'copy link' })}
                   </button>
                 </div>
 
@@ -273,7 +275,7 @@ export function Profile() {
                     <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center">
                       <Download size={16} strokeWidth={2.5} />
                     </div>
-                    <span className="font-black text-sm">{t('profile.menu.share_backup')}</span>
+                    <span className="font-black text-sm">{t('profile.menu.share_backup', { defaultValue: 'share backup' })}</span>
                   </div>
                   
                   <div className="p-6 bg-surface-container-high dark:bg-white/5 rounded-[2.5rem] space-y-4 border border-outline-variant/10">
@@ -283,13 +285,13 @@ export function Profile() {
                         disabled={isExporting}
                         className="flex-1 py-3.5 bg-[#3B82F6] text-white rounded-xl font-black text-sm active:scale-[0.98] transition-all disabled:opacity-50"
                       >
-                        {t('profile.export.download')}
+                        {t('profile.export.download', { defaultValue: '下载' })}
                       </button>
                       <button 
                         onClick={() => fileInputRef.current?.click()}
                         className="flex-1 py-3.5 bg-[#10B981] text-white rounded-xl font-black text-sm active:scale-[0.98] transition-all"
                       >
-                        {t('profile.import.upload')}
+                        {t('profile.import.upload', { defaultValue: '上传' })}
                       </button>
                     </div>
 
@@ -320,18 +322,18 @@ export function Profile() {
                           animate={{ opacity: 1, y: 0 }}
                           className="bg-primary/5 rounded-2xl p-4 border border-primary/20"
                         >
-                          <div className="text-[10px] font-black text-primary mb-2 uppercase tracking-wider">{t('profile.import.confirm_title')}</div>
+                          <div className="text-[10px] font-black text-primary mb-2 uppercase tracking-wider">{t('profile.import.confirm_title', { defaultValue: 'confirm title' })}</div>
                           <div className="flex flex-wrap gap-2 mb-4">
-                            {urlImportData.members && <span className="bg-white/80 dark:bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold">{t('profile.import.items.members').replace('• ', '')}</span>}
-                            {urlImportData.tasks && <span className="bg-white/80 dark:bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold">{t('profile.import.items.tasks').replace('• ', '')}</span>}
-                            {urlImportData.rewards && <span className="bg-white/80 dark:bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold">{t('profile.import.items.rewards').replace('• ', '')}</span>}
-                            {urlImportData.history && <span className="bg-white/80 dark:bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold">{t('profile.import.items.history').replace('• ', '')}</span>}
+                            {urlImportData.members && <span className="bg-white/80 dark:bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold">{t('profile.import.items.members', { defaultValue: '成员' }).replace('• ', '')}</span>}
+                            {urlImportData.tasks && <span className="bg-white/80 dark:bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold">{t('profile.import.items.tasks', { defaultValue: '任务' }).replace('• ', '')}</span>}
+                            {urlImportData.rewards && <span className="bg-white/80 dark:bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold">{t('profile.import.items.rewards', { defaultValue: '奖励' }).replace('• ', '')}</span>}
+                            {urlImportData.history && <span className="bg-white/80 dark:bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold">{t('profile.import.items.history', { defaultValue: 'history' }).replace('• ', '')}</span>}
                           </div>
                           <button 
                             onClick={() => executeImport(urlImportData)}
                             className="w-full py-2 bg-primary text-on-primary rounded-lg text-xs font-black active:scale-95 transition-all"
                           >
-                            {t('profile.import.action')}
+                            {t('profile.import.action', { defaultValue: 'action' })}
                           </button>
                         </motion.div>
                       )}
@@ -340,7 +342,7 @@ export function Profile() {
                 </div>
 
                 <p className="text-[10px] text-on-surface-variant/40 font-bold leading-relaxed text-center px-4">
-                  {t('profile.import.warning')}
+                  {t('profile.import.warning', { defaultValue: '警告' })}
                 </p>
               </div>
             </motion.div>
@@ -351,12 +353,12 @@ export function Profile() {
       {/* Family Members */}
       <section className="mb-10">
         <div className="flex justify-between items-center mb-4 px-1">
-          <h3 className="font-black text-lg text-on-surface">{t('profile.members.title')}</h3>
+          <h3 className="font-black text-lg text-on-surface">{t('profile.members.title', { defaultValue: '标题' })}</h3>
           <button 
             onClick={() => navigate('/profile/members/add')}
             className="text-primary text-sm font-black flex items-center gap-1.5 hover:opacity-70 transition-opacity"
           >
-            <UserPlus size={18} strokeWidth={2.5} /> {t('profile.members.add')}
+            <UserPlus size={18} strokeWidth={2.5} /> {t('profile.members.add', { defaultValue: '添加' })}
           </button>
         </div>
         
@@ -374,7 +376,7 @@ export function Profile() {
               <TextAvatar src={member.avatar} name={member.name} size={48} className="mb-2" />
               <span className="font-black text-[13px] mb-1 text-on-surface truncate w-full text-center">{member.name}</span>
               <div className="bg-surface-container px-2 py-0.5 rounded-full">
-                <span className="text-[9px] font-black text-success whitespace-nowrap">{member.stars} {t('common.stars_suffix')}</span>
+                <span className="text-[9px] font-black text-success whitespace-nowrap">{member.stars} {t('common.stars_suffix', { defaultValue: 'stars suffix' })}</span>
               </div>
             </motion.div>
           ))}
@@ -384,15 +386,16 @@ export function Profile() {
       {/* Menu Groups */}
       <section className="space-y-4">
         <div className="bg-white dark:bg-surface-container-low rounded-[2.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-2">
-          <MenuLink icon={Shield} label={t('profile.menu.security')} onClick={() => navigate('/settings/security')} />
-          <MenuLink icon={Download} label={t('profile.menu.share_backup')} desc={t('profile.menu.share_backup_desc')} onClick={() => setIsImportExportOpen(true)} />
-          <MenuLink icon={Bell} label={t('profile.menu.notifications')} desc={t('settings.notifications.subtitle')} onClick={() => navigate('/settings/notifications')} />
-          <MenuLink icon={MessageSquare} label={t('profile.menu.feedback')} onClick={() => navigate('/support/feedback')} />
+          <MenuLink icon={Shield} label={t('profile.menu.security', { defaultValue: '安全' })} onClick={() => navigate('/settings/security')} />
+          <MenuLink icon={Download} label={t('profile.menu.share_backup', { defaultValue: 'share backup' })} desc={t('profile.menu.share_backup_desc', { defaultValue: 'share backup desc' })} onClick={() => setIsImportExportOpen(true)} />
+          <MenuLink icon={Calendar} label={t('profile.menu.calendar_sync', { defaultValue: '同步日历' })} desc={t('calendar_sync.subtitle', { defaultValue: '将任务同步到手机日历' })} onClick={() => navigate('/calendar-sync')} />
+          <MenuLink icon={Bell} label={t('profile.menu.notifications', { defaultValue: '通知' })} desc={t('settings.notifications.subtitle', { defaultValue: '副标题' })} onClick={() => navigate('/settings/notifications')} />
+          <MenuLink icon={MessageSquare} label={t('profile.menu.feedback', { defaultValue: '反馈' })} onClick={() => navigate('/support/feedback')} />
         </div>
         
         <div className="bg-white dark:bg-surface-container-low rounded-[2.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-2">
-          <MenuLink icon={Moon} label={t('profile.menu.dark_mode')} isToggle active={isDarkMode} onToggle={toggleDarkMode} />
-          <MenuLink icon={Settings} label={t('profile.menu.basic_settings')} onClick={() => navigate('/settings/basic')} />
+          <MenuLink icon={Moon} label={t('profile.menu.dark_mode', { defaultValue: '深色模式' })} isToggle active={isDarkMode} onToggle={toggleDarkMode} />
+          <MenuLink icon={Settings} label={t('profile.menu.basic_settings', { defaultValue: '基础设置' })} onClick={() => navigate('/settings/basic')} />
         </div>
       </section>
 
@@ -403,7 +406,7 @@ export function Profile() {
         >
           <LogOut size={18} className="text-red-500" />
           <span className="text-base font-black text-red-600 dark:text-red-400 tracking-wide">
-            {t('profile.action.logout')}
+            {t('profile.action.logout', { defaultValue: '退出' })}
           </span>
         </button>
       </div>

@@ -1,0 +1,29 @@
+{
+  "name": "愿望卡 - Forest Family",
+  "short_name": "愿望卡",
+  "description": "家庭任务管理与激励系统 — 完成任务赚星星，星星兑换心愿奖励",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAFDF7",
+  "theme_color": "#2E7D32",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/pwa-icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["family", "education", "lifestyle"],
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "screenshots": [],
+  "prefer_related_applications": false
+}
