@@ -139,7 +139,7 @@ export function AdminInviteCodes() {
           <h1 className="font-black text-lg">{t('admin.invite_codes.title', '邀请码管理')}</h1>
           <button
             onClick={() => setShowCreate(true)}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-[#006e1c] text-white shadow-lg active:scale-95 transition-all"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white shadow-lg active:scale-95 transition-all"
           >
             <Plus size={20} />
           </button>
@@ -149,7 +149,7 @@ export function AdminInviteCodes() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 px-4 py-4">
         <div className="bg-white dark:bg-surface-container-low rounded-2xl p-3 text-center shadow-sm border border-outline-variant/10">
-          <div className="text-2xl font-black text-[#006e1c]">{codes.filter(c => c.is_active && !isExpired(c)).length}</div>
+          <div className="text-2xl font-black text-primary">{codes.filter(c => c.is_active && !isExpired(c)).length}</div>
           <div className="text-[10px] font-bold text-on-surface-variant">可用</div>
         </div>
         <div className="bg-white dark:bg-surface-container-low rounded-2xl p-3 text-center shadow-sm border border-outline-variant/10">
@@ -166,7 +166,7 @@ export function AdminInviteCodes() {
       <div className="px-4 pb-24">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="animate-spin text-[#006e1c]" size={32} />
+            <Loader2 className="animate-spin text-primary" size={32} />
           </div>
         ) : codes.length === 0 ? (
           <div className="text-center py-20 text-on-surface-variant">
@@ -283,11 +283,11 @@ export function AdminInviteCodes() {
                       onChange={e => setNewCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
                       placeholder="如：BILESIA2026"
                       maxLength={20}
-                      className="flex-1 h-12 bg-[#f5f5f5] rounded-2xl px-5 font-black text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all text-sm tracking-wider"
+                      className="flex-1 h-12 bg-surface-container-low rounded-2xl px-5 font-black text-on-surface outline-none border-2 border-transparent focus:border-primary/30 transition-all text-sm tracking-wider"
                     />
                     <button
                       onClick={() => setNewCode(api.generateInviteCode())}
-                      className="w-12 h-12 flex items-center justify-center rounded-2xl bg-[#006e1c]/10 text-[#006e1c] active:scale-95 transition-all"
+                      className="w-12 h-12 flex items-center justify-center rounded-2xl bg-primary/10 text-primary active:scale-95 transition-all"
                     >
                       <RefreshCw size={18} />
                     </button>
@@ -302,7 +302,7 @@ export function AdminInviteCodes() {
                     value={newDesc}
                     onChange={e => setNewDesc(e.target.value)}
                     placeholder="如：首批内测用户"
-                    className="w-full h-12 bg-[#f5f5f5] rounded-2xl px-5 font-bold text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all text-sm"
+                    className="w-full h-12 bg-surface-container-low rounded-2xl px-5 font-bold text-on-surface outline-none border-2 border-transparent focus:border-primary/30 transition-all text-sm"
                   />
                 </div>
 

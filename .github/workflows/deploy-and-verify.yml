@@ -1,0 +1,59 @@
+name: Deploy & Verify
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: wish-card-backup
+          directory: dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Wait for Cloudflare deployment
+        run: sleep 60
+
+      - name: Verify Version Consistency
+        run: |
+          echo "=== Checking Vercel Version ==="
+          VERCEL_JS=$(curl -s "https://wish-card-self.vercel.app/" | grep -oP 'index-[a-zA-Z0-9]+\.js' | head -1)
+          echo "Vercel JS: $VERCEL_JS"
+          
+          echo "=== Checking Cloudflare Version ==="
+          CF_JS=$(curl -s "https://a764d2d4.wish-card-backup.pages.dev/" | grep -oP 'index-[a-zA-Z0-9]+\.js' | head -1)
+          echo "Cloudflare JS: $CF_JS"
+          
+          if [ "$VERCEL_JS" = "$CF_JS" ]; then
+            echo "✅ SUCCESS: Both sites are using the same version!"
+            echo "## Version Check: PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "- Vercel: \`$VERCEL_JS\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Cloudflare: \`$CF_JS\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ WARNING: Version mismatch detected!"
+            echo "## Version Check: FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "- Vercel: \`$VERCEL_JS\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Cloudflare: \`$CF_JS\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Please check Cloudflare Pages deployment status"
+            exit 1
+          fi

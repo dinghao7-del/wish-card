@@ -41,20 +41,20 @@ export function Layout() {
         >
           <div className="flex items-center gap-2">
             <Sparkles size={16} className="text-secondary" />
-            <span className="text-xs font-black text-[#5D4037]">
+            <span className="text-xs font-black text-tertiary">
               体验模式 · 数据仅存于本地，注册后可永久保存
             </span>
           </div>
           <div className="flex items-center gap-1">
             <button 
               onClick={async () => { await logout(); }}
-              className="text-[10px] font-black text-[#2E7D32] bg-white/60 px-2.5 py-1 rounded-full hover:bg-white transition-colors"
+              className="text-[10px] font-black text-primary bg-white/60 px-2.5 py-1 rounded-full hover:bg-white transition-colors"
             >
               注册
             </button>
             <button 
               onClick={() => setShowGuestBanner(false)}
-              className="w-5 h-5 flex items-center justify-center text-[#5D4037]/40 hover:text-[#5D4037] transition-colors"
+              className="w-5 h-5 flex items-center justify-center text-tertiary/40 hover:text-tertiary transition-colors"
             >
               <X size={14} />
             </button>
