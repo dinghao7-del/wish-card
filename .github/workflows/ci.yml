@@ -1,0 +1,248 @@
+name: CI - 设计系统统一测试
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # 任务 1：设计令牌验证
+  validate-design-tokens:
+    name: 设计令牌验证
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: 安装依赖
+        run: npm ci
+      
+      - name: 运行设计令牌验证
+        run: npm run test:tokens
+
+  # 任务 2：单元测试
+  unit-tests:
+    name: 单元测试
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: 安装依赖
+        run: npm ci
+      
+      - name: 运行单元测试
+        run: npm run test -- --coverage
+      
+      - name: 上传测试覆盖率
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/coverage-final.json
+          fail_ci_if_error: false
+
+  # 任务 3：E2E 测试（Chromium）
+  e2e-chromium:
+    name: E2E 测试 (Chromium)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: 安装依赖
+        run: npm ci
+      
+      - name: 安装 Playwright
+        run: npx playwright install --with-deps chromium
+      
+      - name: 构建应用
+        run: npm run build
+      
+      - name: 运行 E2E 测试（Chromium）
+        run: npx playwright test --project=chromium
+      
+      - name: 上传测试结果
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-chromium
+          path: playwright-report/
+
+  # 任务 4：E2E 测试（Firefox）
+  e2e-firefox:
+    name: E2E 测试 (Firefox)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: 安装依赖
+        run: npm ci
+      
+      - name: 安装 Playwright
+        run: npx playwright install --with-deps firefox
+      
+      - name: 构建应用
+        run: npm run build
+      
+      - name: 运行 E2E 测试（Firefox）
+        run: npx playwright test --project=firefox
+      
+      - name: 上传测试结果
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-firefox
+          path: playwright-report/
+
+  # 任务 5：视觉回归测试
+  visual-regression:
+    name: 视觉回归测试
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: 安装依赖
+        run: npm ci
+      
+      - name: 安装 Playwright
+        run: npx playwright install --with-deps chromium
+      
+      - name: 构建应用
+        run: npm run build
+      
+      - name: 运行视觉回归测试
+        run: npx playwright test --project=visual-regression
+      
+      - name: 上传视觉快照
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-snapshots
+          path: e2e/snapshots/
+      
+      - name: 更新视觉基线（main 分支）
+        if: github.ref == 'refs/heads/main' && failure()
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          npx playwright test --project=visual-regression --update-snapshots
+          git add e2e/snapshots/
+          git commit -m "chore: 更新视觉回归测试基线" || echo "No changes to commit"
+          git push || echo "No changes to push"
+
+  # 任务 6：构建验证
+  build:
+    name: 构建验证
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: 安装依赖
+        run: npm ci
+      
+      - name: 构建应用
+        run: npm run build
+      
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  # 任务 7：部署预览（PR 时）
+  deploy-preview:
+    name: 部署预览
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: [validate-design-tokens, unit-tests, build]
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      
+      - name: 下载构建产物
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      
+      # 这里可以添加部署到 Vercel Preview 或 Cloudflare Pages Preview 的步骤
+      - name: 部署预览（示例）
+        run: echo "部署预览环境"
+        # 实际部署命令示例：
+        # - uses: amondnet/vercel-action@v25
+        #   with:
+        #     vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        #     vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        #     vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        #     scope: ${{ secrets.VERCEL_ORG_ID }}
+
+  # 任务 8：自动部署（main 分支）
+  deploy-production:
+    name: 部署到生产环境
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [validate-design-tokens, unit-tests, e2e-chromium, build]
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      
+      - name: 下载构建产物
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      
+      # 这里可以添加部署到生产环境的步骤
+      - name: 部署到生产环境（示例）
+        run: echo "部署到生产环境"
+        # 实际部署命令示例：
+        # - run: npm run deploy:cf
+        #   环境变量需要 Secrets 配置
