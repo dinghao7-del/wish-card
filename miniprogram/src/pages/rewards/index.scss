@@ -1,112 +1,114 @@
+@import "../../app.scss";
+
 .rewards-page {
   padding: 24rpx;
-}
+  background-color: #fbf9f5;
+  min-height: 100vh;
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30rpx;
-}
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32rpx;
 
-.page-title {
-  font-size: 36rpx;
-  font-weight: 700;
-  color: $text-primary;
-}
+    .page-title {
+      font-size: 40rpx;
+      font-weight: 600;
+      color: #1b1c1a;
+    }
 
-.star-balance {
-  background-color: $star-bg;
-  padding: 8rpx 24rpx;
-  border-radius: 48rpx;
-  font-size: 28rpx;
-  font-weight: 600;
-  color: $star-color;
-}
-
-.category-tabs {
-  display: flex;
-  margin-bottom: 30rpx;
-  background-color: $surface-container-low;
-  border-radius: 48rpx;
-  padding: 8rpx;
-}
-
-.category-tab {
-  flex: 1;
-  text-align: center;
-  padding: 16rpx 0;
-  border-radius: 40rpx;
-  font-size: 28rpx;
-  color: $text-secondary-variant;
-  
-  &.active {
-    background-color: $primary-color;
-    color: white;
-    font-weight: 600;
+    .star-balance {
+      background-color: #fff9c4;
+      padding: 12rpx 24rpx;
+      border-radius: 24rpx;
+      font-size: 28rpx;
+      color: #f9a825;
+      font-weight: 600;
+    }
   }
-}
 
-.rewards-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24rpx;
-}
+  .category-tabs {
+    display: flex;
+    gap: 16rpx;
+    margin-bottom: 32rpx;
+    overflow-x: auto;
 
-.reward-card {
-  width: calc(50% - 12rpx);
-  background-color: $card-bg;
-  border-radius: 16rpx;
-  overflow: hidden;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
-  position: relative;
-}
+    .category-tab {
+      padding: 16rpx 32rpx;
+      border-radius: 32rpx;
+      background-color: #ffffff;
+      font-size: 28rpx;
+      color: #3f4a3c;
+      white-space: nowrap;
 
-.reward-image {
-  width: 100%;
-  height: 300rpx;
-}
+      &.active {
+        background-color: #006e1c;
+        color: #ffffff;
+      }
+    }
+  }
 
-.reward-cost-badge {
-  position: absolute;
-  top: 20rpx;
-  right: 20rpx;
-  background-color: $quadrant-q3;
-  color: $text-primary;
-  padding: 8rpx 16rpx;
-  border-radius: 24rpx;
-  font-size: 24rpx;
-  font-weight: 600;
-}
+  .rewards-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24rpx;
 
-.reward-name {
-  padding: 16rpx 20rpx 8rpx;
-  font-size: 28rpx;
-  font-weight: 600;
-  color: $text-primary;
-}
+    .reward-card {
+      background-color: #ffffff;
+      border-radius: 24rpx;
+      padding: 24rpx;
+      position: relative;
 
-.reward-desc {
-  padding: 0 20rpx 20rpx;
-  font-size: 24rpx;
-  color: $text-secondary-variant;
-}
+      .reward-image {
+        width: 100%;
+        height: 200rpx;
+        border-radius: 16rpx;
+        margin-bottom: 16rpx;
+        object-fit: cover;
+      }
 
-.exchange-button {
-  margin: 0 20rpx 20rpx;
-  background-color: $primary-color;
-  color: white;
-  border-radius: 48rpx;
-  padding: 16rpx 0;
-  text-align: center;
-  font-size: 28rpx;
-  font-weight: 600;
-}
+      .reward-cost-badge {
+        position: absolute;
+        top: 32rpx;
+        right: 32rpx;
+        background-color: #fff9c4;
+        padding: 8rpx 16rpx;
+        border-radius: 16rpx;
+        font-size: 24rpx;
+        color: #f9a825;
+        font-weight: 600;
+      }
 
-.empty-state {
-  padding: 60rpx 0;
-  text-align: center;
-  color: $text-secondary-variant;
-  font-size: 28rpx;
-  width: 100%;
+      .reward-name {
+        font-size: 28rpx;
+        font-weight: 600;
+        color: #1b1c1a;
+        margin-bottom: 8rpx;
+      }
+
+      .reward-desc {
+        font-size: 24rpx;
+        color: #3f4a3c;
+        margin-bottom: 16rpx;
+      }
+
+      .exchange-button {
+        background-color: #006e1c;
+        color: #ffffff;
+        text-align: center;
+        padding: 16rpx;
+        border-radius: 12rpx;
+        font-size: 28rpx;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .empty-state {
+    grid-column: span 2;
+    text-align: center;
+    padding: 120rpx 0;
+    color: #3f4a3c;
+    font-size: 28rpx;
+  }
 }

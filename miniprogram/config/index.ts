@@ -1,4 +1,5 @@
 import type { Config } from '@tarojs/cli';
+import path from 'path';
 
 const config: Config = {
   projectName: 'forest-family-miniprogram',
@@ -13,6 +14,9 @@ const config: Config = {
   outputRoot: 'dist',
   plugins: [],
   defineConstants: {},
+  alias: {
+    '@': path.resolve(__dirname, '..', 'src'),
+  },
   copy: {
     patterns: [],
     options: {},
