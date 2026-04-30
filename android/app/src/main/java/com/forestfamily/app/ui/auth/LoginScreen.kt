@@ -18,7 +18,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.forestfamily.app.ui.theme.ForestGreen
+import com.forestfamily.app.ui.theme.Primary
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,7 +76,7 @@ fun LoginScreen(
                 imageVector = Icons.Default.Park,
                 contentDescription = null,
                 modifier = Modifier.size(80.dp),
-                tint = ForestGreen
+                tint = Primary
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -236,7 +236,7 @@ fun RegisterScreen(
                 imageVector = Icons.Default.Park,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp),
-                tint = ForestGreen
+                tint = Primary
             )
 
             Spacer(modifier = Modifier.height(24.dp))

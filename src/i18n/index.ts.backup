@@ -72,7 +72,7 @@ const resources = {
         'title': '基础设置',
         'language': '多语言',
         'cache': '清除缓存',
-        'about': '关于愿望卡'
+        'about': '关于星愿卡'
       },
       'tasks': {
         'filter': {
@@ -155,7 +155,7 @@ const resources = {
         'take_long_break': '辛苦了，好好休息吧'
       },
       'welcome': {
-        'title': '愿望卡',
+        'title': '星愿卡',
         'subtitle': '用努力开启小确幸 🌱',
         'tagline': '记录成长每一步',
         'skip': '跳过',

@@ -13,14 +13,14 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
-    primary = ForestGreen,
+    primary = Primary,
     onPrimary = TextOnPrimary,
-    primaryContainer = ForestGreenLight,
-    onPrimaryContainer = ForestGreenDark,
-    secondary = StarGold,
+    primaryContainer = PrimaryLight,
+    onPrimaryContainer = PrimaryDark,
+    secondary = Secondary,
     onSecondary = TextPrimary,
-    secondaryContainer = StarGoldLight,
-    onSecondaryContainer = StarGoldDark,
+    secondaryContainer = SecondaryLight,
+    onSecondaryContainer = SecondaryDark,
     background = BackgroundLight,
     onBackground = TextPrimary,
     surface = SurfaceLight,
@@ -32,20 +32,20 @@ private val LightColorScheme = lightColorScheme(
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = ForestGreenLight,
-    onPrimary = ForestGreenDark,
-    primaryContainer = ForestGreen,
-    onPrimaryContainer = ForestGreenLight,
-    secondary = StarGoldLight,
-    onSecondary = StarGoldDark,
-    secondaryContainer = StarGold,
-    onSecondaryContainer = StarGoldLight,
+    primary = PrimaryLight,
+    onPrimary = PrimaryDark,
+    primaryContainer = Primary,
+    onPrimaryContainer = PrimaryLight,
+    secondary = SecondaryLight,
+    onSecondary = SecondaryDark,
+    secondaryContainer = Secondary,
+    onSecondaryContainer = SecondaryLight,
     background = BackgroundDark,
-    onBackground = TextOnPrimary,
+    onBackground = TextPrimaryDark,
     surface = SurfaceDark,
-    onSurface = TextOnPrimary,
-    surfaceVariant = SurfaceDark,
-    onSurfaceVariant = TextSecondary,
+    onSurface = TextPrimaryDark,
+    surfaceVariant = SurfaceContainerLowDark,
+    onSurfaceVariant = TextSecondaryDark,
     error = Q1Red,
     onError = TextOnPrimary
 )

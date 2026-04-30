@@ -712,7 +712,7 @@ export function startListening(lang = 'zh-CN'): Promise<string> {
 export function generateICSFile(tasks: AppContext['tasks'], members: AppContext['members'], familyName: string): string {
   const now = new Date();
   const timeStamp = formatICSDate(now);
-  const prodId = '-//愿望卡WishCard//AI语音助手//CN';
+  const prodId = '-//星愿卡WishCard//AI语音助手//CN';
 
   const events = tasks.filter(t => !t.isHabit && t.status !== 'completed').map(task => {
     const startDate = new Date(task.startTime);
@@ -736,7 +736,7 @@ export function generateICSFile(tasks: AppContext['tasks'], members: AppContext[
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     `PRODID:${prodId}`,
-    `X-WR-CALNAME:${familyName} - 愿望卡`,
+    `X-WR-CALNAME:${familyName} - 星愿卡`,
     'X-WR-TIMEZONE:Asia/Shanghai',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
@@ -782,7 +782,7 @@ export function getCalendarSyncGuide(brand: string): CalendarSyncGuide {
         '打开「日历」App',
         '点击右下角「更多」→「订阅管理」',
         '点击「+」添加订阅',
-        '粘贴愿望卡提供的 WebCal 订阅链接',
+        '粘贴星愿卡提供的 WebCal 订阅链接',
         '点击「确认」完成订阅',
         '等待同步完成（约15分钟）',
       ],
@@ -801,7 +801,7 @@ export function getCalendarSyncGuide(brand: string): CalendarSyncGuide {
         '打开「日历」App',
         '点击右上角「⋮」→「订阅日历」',
         '点击「+」添加新的订阅',
-        '粘贴愿望卡的 WebCal 订阅链接',
+        '粘贴星愿卡的 WebCal 订阅链接',
         '点击「确认」完成订阅',
       ],
       tips: [
@@ -819,7 +819,7 @@ export function getCalendarSyncGuide(brand: string): CalendarSyncGuide {
         '点击右上角「⋮」→「设置」',
         '找到「日历账号管理」→「订阅日历」',
         '点击「添加订阅」',
-        '粘贴愿望卡的 WebCal 订阅链接',
+        '粘贴星愿卡的 WebCal 订阅链接',
         '确认订阅，等待同步',
       ],
       tips: [
@@ -837,7 +837,7 @@ export function getCalendarSyncGuide(brand: string): CalendarSyncGuide {
         '打开「日历」App',
         '点击右下角「我的」→「订阅管理」',
         '点击「添加订阅」',
-        '粘贴愿望卡的 WebCal 订阅链接',
+        '粘贴星愿卡的 WebCal 订阅链接',
         '确认订阅',
       ],
       tips: [
@@ -855,7 +855,7 @@ export function getCalendarSyncGuide(brand: string): CalendarSyncGuide {
         '打开「日历」App',
         '点击右上角「⋮」→「设置」',
         '找到「订阅管理」→「添加订阅」',
-        '粘贴愿望卡的 WebCal 订阅链接',
+        '粘贴星愿卡的 WebCal 订阅链接',
         '确认订阅',
       ],
       tips: [
@@ -873,7 +873,7 @@ export function getCalendarSyncGuide(brand: string): CalendarSyncGuide {
         '打开「Samsung Calendar」App',
         '点击左上角菜单 →「管理日历」',
         '点击「添加日历」→「订阅日历」',
-        '粘贴愿望卡的 WebCal 订阅链接',
+        '粘贴星愿卡的 WebCal 订阅链接',
         '点击「确认」完成订阅',
       ],
       tips: [
@@ -888,7 +888,7 @@ export function getCalendarSyncGuide(brand: string): CalendarSyncGuide {
       brandLogo: '🍎',
       brandColor: '#555555',
       steps: [
-        '在 Safari 中打开愿望卡提供的 webcal:// 链接',
+        '在 Safari 中打开星愿卡提供的 webcal:// 链接',
         '系统会自动弹出「订阅日历」确认框',
         '点击「订阅」完成添加',
         '前往「设置」→「日历」→「账户」查看订阅',
@@ -909,7 +909,7 @@ export function getCalendarSyncGuide(brand: string): CalendarSyncGuide {
     steps: [
       '打开手机日历 App',
       '查找「订阅管理」或「导入日历」功能',
-      '粘贴愿望卡提供的 WebCal 订阅链接',
+      '粘贴星愿卡提供的 WebCal 订阅链接',
       '确认订阅，等待同步',
       '如果没有订阅功能，用浏览器打开 .ics 文件导入',
     ],

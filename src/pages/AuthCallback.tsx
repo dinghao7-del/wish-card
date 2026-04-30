@@ -149,7 +149,7 @@ export function AuthCallback() {
       <div className="bg-white rounded-[2.5rem] p-10 shadow-xl max-w-sm w-full text-center">
         {status === 'loading' && (
           <>
-            <Loader2 className="animate-spin mx-auto mb-4 text-[#006e1c]" size={48} />
+            <Loader2 className="animate-spin mx-auto mb-4 text-primary" size={48} />
             <h2 className="text-xl font-black text-on-surface mb-2">{t('auth_callback.verifying', '正在验证...')}</h2>
             <p className="text-sm text-on-surface-variant">{t('auth_callback.please_wait', '请稍候，正在完成邮箱验证')}</p>
           </>
@@ -168,7 +168,7 @@ export function AuthCallback() {
             <p className="text-sm text-red-500 mb-4">{errorMsg}</p>
             <button
               onClick={() => navigate('/welcome', { replace: true })}
-              className="h-12 px-8 bg-[#006e1c] text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-all"
+              className="h-12 px-8 bg-primary text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-all"
             >
               {t('auth_callback.back_to_login', '返回登录')}
             </button>

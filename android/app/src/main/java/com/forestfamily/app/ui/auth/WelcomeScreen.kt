@@ -47,14 +47,14 @@ fun WelcomeScreen(
         Box(
             modifier = Modifier
                 .size(100.dp)
-                .shadow(20.dp, CircleShape, spotColor = ForestGreen.copy(alpha = 0.3f))
+                .shadow(20.dp, CircleShape, spotColor = Primary.copy(alpha = 0.3f))
                 .clip(CircleShape)
                 .background(
                     Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFFA5D6A7),
-                            ForestGreen,
-                            ForestGreenDark
+                            PrimaryLight,
+                            Primary,
+                            PrimaryDark
                         )
                     )
                 ),
@@ -74,7 +74,7 @@ fun WelcomeScreen(
             text = "Forest Family",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Black,
-            color = ForestGreen
+            color = Primary
         )
         
         Text(
@@ -110,7 +110,7 @@ fun WelcomeScreen(
                 Icon(
                     Icons.Default.Star,
                     contentDescription = null,
-                    tint = StarGold.copy(alpha = 0.3f),
+                    tint = Secondary.copy(alpha = 0.3f),
                     modifier = Modifier
                         .size(48.dp)
                         .align(Alignment.TopStart)
@@ -120,7 +120,7 @@ fun WelcomeScreen(
                 Icon(
                     Icons.Default.AutoAwesome,
                     contentDescription = null,
-                    tint = StarGold.copy(alpha = 0.4f),
+                    tint = Secondary.copy(alpha = 0.4f),
                     modifier = Modifier
                         .size(64.dp)
                         .align(Alignment.BottomEnd)
@@ -146,7 +146,7 @@ fun WelcomeScreen(
                             Icon(
                                 Icons.Default.AutoAwesome,
                                 contentDescription = null,
-                                tint = StarGold,
+                                tint = Secondary,
                                 modifier = Modifier.size(14.dp)
                             )
                             Text(
@@ -173,7 +173,7 @@ fun WelcomeScreen(
                         Icon(
                             Icons.Default.Star,
                             contentDescription = null,
-                            tint = StarGold,
+                            tint = Secondary,
                             modifier = Modifier.size(32.dp)
                         )
                     }
@@ -214,7 +214,7 @@ fun WelcomeScreen(
         FeatureCard(
             icon = Icons.Default.Loop,
             iconBgColor = QuickActionGreen,
-            iconColor = ForestGreen,
+            iconColor = Primary,
             title = "习惯打卡",
             description = "养成好习惯，见证成长"
         )
@@ -239,7 +239,7 @@ fun WelcomeScreen(
                 .height(56.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = ForestGreen
+                containerColor = Primary
             )
         ) {
             Icon(Icons.Default.Add, contentDescription = null)
@@ -257,7 +257,7 @@ fun WelcomeScreen(
                 .height(56.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = ForestGreen
+                contentColor = Primary
             )
         ) {
             Icon(Icons.Default.Group, contentDescription = null)
@@ -280,7 +280,7 @@ fun WelcomeScreen(
                 Text(
                     text = "登录",
                     fontWeight = FontWeight.Black,
-                    color = ForestGreen
+                    color = Primary
                 )
             }
         }

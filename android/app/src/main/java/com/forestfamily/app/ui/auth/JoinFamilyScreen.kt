@@ -16,7 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.forestfamily.app.ui.theme.ForestGreen
+import com.forestfamily.app.ui.theme.Primary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,7 +59,7 @@ fun JoinFamilyScreen(
                 imageVector = Icons.Default.Group,
                 contentDescription = null,
                 modifier = Modifier.size(80.dp),
-                tint = ForestGreen
+                tint = Primary
             )
 
             Spacer(modifier = Modifier.height(24.dp))

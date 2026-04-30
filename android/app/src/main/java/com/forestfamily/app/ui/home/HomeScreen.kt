@@ -60,14 +60,14 @@ fun HomeScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(ForestGreen.copy(alpha = 0.2f)),
+                                .background(Primary.copy(alpha = 0.2f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = member?.avatar ?: member?.name?.firstOrNull()?.toString() ?: "?",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = ForestGreen
+                                color = Primary
                             )
                         }
                         
@@ -77,12 +77,12 @@ fun HomeScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFFFF9C4))
+                                .background(SecondaryContainer)
                         ) {
                             Icon(
                                 Icons.Default.Mic,
                                 contentDescription = "AI 助手",
-                                tint = ForestGreen,
+                                tint = Primary,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -103,7 +103,7 @@ fun HomeScreen(
                             Icon(
                                 Icons.Default.Star,
                                 contentDescription = null,
-                                tint = StarGold,
+                                tint = Secondary,
                                 modifier = Modifier.size(14.dp)
                             )
                             Text(
@@ -119,7 +119,7 @@ fun HomeScreen(
                         Icon(
                             Icons.Default.Settings,
                             contentDescription = "设置",
-                            tint = ForestGreen
+                            tint = Primary
                         )
                     }
                 },
@@ -235,7 +235,7 @@ fun EnergyBalanceCard(
             Icon(
                 Icons.Default.Star,
                 contentDescription = null,
-                tint = StarGold.copy(alpha = 0.3f),
+                tint = Secondary.copy(alpha = 0.3f),
                 modifier = Modifier
                     .size(48.dp)
                     .align(Alignment.TopStart)
@@ -246,7 +246,7 @@ fun EnergyBalanceCard(
             Icon(
                 Icons.Default.AutoAwesome,
                 contentDescription = null,
-                tint = StarGold.copy(alpha = 0.4f),
+                tint = Secondary.copy(alpha = 0.4f),
                 modifier = Modifier
                     .size(64.dp)
                     .align(Alignment.BottomEnd)
@@ -274,7 +274,7 @@ fun EnergyBalanceCard(
                         Icon(
                             Icons.Default.AutoAwesome,
                             contentDescription = null,
-                            tint = StarGold,
+                            tint = Secondary,
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
@@ -303,7 +303,7 @@ fun EnergyBalanceCard(
                     Icon(
                         Icons.Default.Star,
                         contentDescription = null,
-                        tint = StarGold,
+                        tint = Secondary,
                         modifier = Modifier.size(36.dp)
                     )
                 }
@@ -367,7 +367,7 @@ fun QuickActionsSection(
             icon = Icons.Default.Timer,
             label = "番茄钟",
             backgroundColor = QuickActionGreen,
-            iconColor = ForestGreen,
+            iconColor = Primary,
             onClick = onPomodoro,
             modifier = Modifier.weight(1f)
         )
@@ -456,7 +456,7 @@ fun SectionHeader(
                 text = "查看全部",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Black,
-                color = ForestGreen
+                color = Primary
             )
         }
     }
@@ -499,7 +499,7 @@ fun HomeTaskCard(
                 Icon(
                     if (task.completed) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
                     contentDescription = "完成",
-                    tint = if (task.completed) ForestGreen else statusColor
+                    tint = if (task.completed) Primary else statusColor
                 )
             }
             
@@ -567,7 +567,7 @@ fun EmptyTasksCard(onCreateTask: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(8.dp))
             TextButton(onClick = onCreateTask) {
-                Text("创建第一个任务", fontWeight = FontWeight.Black, color = ForestGreen)
+                Text("创建第一个任务", fontWeight = FontWeight.Black, color = Primary)
             }
         }
     }
@@ -717,7 +717,7 @@ fun PodiumItem(
                 .offset(y = (-8).dp)
                 .shadow(4.dp, CircleShape)
                 .clip(CircleShape)
-                .background(if (isFirst) StarGold else Color(0xFFBDBDBD))
+                .background(if (isFirst) Secondary else Color(0xFFBDBDBD))
                 .clickable(onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
@@ -737,7 +737,7 @@ fun PodiumItem(
                 .shadow(4.dp, CircleShape)
                 .clip(CircleShape)
                 .background(
-                    if (isFirst) StarGold.copy(alpha = 0.2f)
+                    if (isFirst) Secondary.copy(alpha = 0.2f)
                     else MaterialTheme.colorScheme.surfaceVariant
                 )
                 .clickable(onClick = onClick),
@@ -747,7 +747,7 @@ fun PodiumItem(
                 text = member.avatar ?: member.name.firstOrNull()?.toString() ?: "?",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (isFirst) StarGold else MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (isFirst) Secondary else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         
@@ -758,7 +758,7 @@ fun PodiumItem(
                 .height(height)
                 .offset(y = (-12).dp),
             shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
-            color = if (isFirst) ForestGreen else MaterialTheme.colorScheme.surfaceVariant
+            color = if (isFirst) Primary else MaterialTheme.colorScheme.surfaceVariant
         ) {
             Column(
                 modifier = Modifier
@@ -797,7 +797,7 @@ fun QuadrantView(
             .fillMaxWidth()
             .height(160.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(ForestGreen.copy(alpha = 0.1f))
+            .background(Primary.copy(alpha = 0.1f))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -808,7 +808,7 @@ fun QuadrantView(
                 Icons.Default.AutoAwesome,
                 contentDescription = null,
                 modifier = Modifier.size(48.dp),
-                tint = ForestGreen
+                tint = Primary
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(

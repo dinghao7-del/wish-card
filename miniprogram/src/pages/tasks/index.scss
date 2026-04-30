@@ -12,14 +12,14 @@
 .page-title {
   font-size: 36rpx;
   font-weight: 700;
-  color: #1B1B18;
+  color: $text-primary;
 }
 
 .add-button {
   width: 60rpx;
   height: 60rpx;
   border-radius: 50%;
-  background-color: #2E7D32;
+  background-color: $primary-dark;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -41,10 +41,10 @@
   padding: 16rpx 0;
   border-radius: 40rpx;
   font-size: 28rpx;
-  color: #78746E;
+  color: $text-secondary-variant;
   
   &.active {
-    background-color: #2E7D32;
+    background-color: $primary-dark;
     color: white;
     font-weight: 600;
   }
@@ -68,7 +68,7 @@
   width: 80rpx;
   height: 80rpx;
   border-radius: 50%;
-  background-color: rgba(#2E7D32, 0.1);
+  background-color: rgba($primary-dark, 0.1);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -82,20 +82,20 @@
   .task-title {
     font-size: 28rpx;
     font-weight: 500;
-    color: #1B1B18;
+    color: $text-primary;
     display: block;
     margin-bottom: 8rpx;
   }
   
   .task-time {
     font-size: 24rpx;
-    color: #78746E;
+    color: $text-secondary-variant;
   }
 }
 
 .task-stars {
   font-size: 28rpx;
-  color: #FFD54F;
+  color: $quadrant-q3;
   font-weight: 600;
   margin-right: 20rpx;
 }
@@ -104,14 +104,14 @@
   width: 48rpx;
   height: 48rpx;
   border-radius: 50%;
-  border: 4rpx solid #E8E4DF;
+  border: 4rpx solid $border-light;
   display: flex;
   justify-content: center;
   align-items: center;
   
   &.checked {
-    background-color: #2E7D32;
-    border-color: #2E7D32;
+    background-color: $primary-dark;
+    border-color: $primary-dark;
     color: white;
   }
 }
@@ -119,6 +119,6 @@
 .empty-state {
   padding: 60rpx 0;
   text-align: center;
-  color: #78746E;
+  color: $text-secondary-variant;
   font-size: 28rpx;
 }

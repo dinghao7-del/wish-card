@@ -177,7 +177,7 @@ const resources = {
         'dark_mode_hint': '深色模式请在设置中开启 🌙',
         'calendar_sync_redirect': '📅 正在打开日历同步...',
         'one_click_subscribe': '一键订阅',
-        'calendar_default_name': '愿望卡日历',
+        'calendar_default_name': '星愿卡日历',
         'ics_downloaded': '日历文件已下载，请在手机日历中导入',
         'chat_default': '你好！有什么可以帮助你的吗？',
         'unknown_command': '抱歉，我没有理解你的意思。你可以试试说：\n'
@@ -269,7 +269,7 @@ const resources = {
         'title': '基础设置',
         'language': '多语言',
         'cache': '清除缓存',
-        'about': '关于 愿望卡',
+        'about': '关于 星愿卡',
         'security': {
           'title': '账号安全',
           'subtitle': '管理您的账号安全选项',
@@ -310,17 +310,17 @@ const resources = {
         }
       },
       'welcome': {
-        'title': '愿望卡',
+        'title': '星愿卡',
         'subtitle': '初次见面，让我们把每个愿望都变成动力 🌱',
         'tagline': '用正向激励法给孩子建立好习惯',
-        'start_button': '开启家庭愿望之旅',
+        'start_button': '开启家庭星愿之旅',
         'skip': '跳过',
         'skip_error': '跳过失败，请重试',
         'guest_family': '访客家庭',
         'guest_name': '访客',
-        'my_family': '{0}的家庭',
         'has_account': '已有账号？去登录 →',
         'no_account': '没有账号？去注册 →',
+        'guest_mode': '先逛逛',
         'register': {
           'title': '欢迎注册',
           'subtitle': '只有家长才可以注册管理员哦 🌱',
@@ -334,11 +334,11 @@ const resources = {
           'error_nickname': '请输入昵称',
           'error_password': '请输入密码',
           'error_password_length': '密码至少6位',
-          'submit': '注册账号'
+          'submit': '注册'
         },
         'login': {
           'title': '欢迎登录',
-          'subtitle': '输入账号密码开启今日愿望 🌱',
+          'subtitle': '输入账号密码开启今日星愿 🌱',
           'username': '账号',
           'username_placeholder': '邮箱 或 昵称',
           'password': '密码',
@@ -346,7 +346,7 @@ const resources = {
           'error_invalid': '用户名或密码错误，请检查 🍃',
           'error_empty': '请输入账号',
           'error_password': '请输入密码',
-          'submit': '登录账号'
+          'submit': '登录'
         }
       },
       'feedback': {

@@ -23,7 +23,7 @@
   .user-name {
     font-size: 32rpx;
     font-weight: 600;
-    color: #1B1B18;
+    color: $text-primary;
   }
 }
 
@@ -32,7 +32,7 @@
 }
 
 .overview-card {
-  background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%);
+  background: linear-gradient(135deg, $primary-dark 0%, $primary-container 100%);
   border-radius: 24rpx;
   padding: 40rpx 30rpx;
   margin-bottom: 30rpx;
@@ -89,12 +89,12 @@
 .section-title {
   font-size: 32rpx;
   font-weight: 600;
-  color: #1B1B18;
+  color: $text-primary;
   margin-right: 15rpx;
 }
 
 .task-count-badge {
-  background-color: #2E7D32;
+  background-color: $primary-dark;
   color: white;
   border-radius: 20rpx;
   padding: 4rpx 16rpx;
@@ -123,21 +123,21 @@
   .task-title {
     font-size: 28rpx;
     font-weight: 500;
-    color: #1B1B18;
+    color: $text-primary;
     display: block;
     margin-bottom: 8rpx;
   }
   
   .task-time {
     font-size: 24rpx;
-    color: #78746E;
+    color: $text-secondary-variant;
   }
 }
 
 .task-stars {
   padding: 20rpx;
   font-size: 28rpx;
-  color: #FFD54F;
+  color: $quadrant-q3;
   font-weight: 600;
 }
 

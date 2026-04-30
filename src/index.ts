@@ -140,7 +140,7 @@ const resources = {
         'title': '基础设置',
         'language': '多语言',
         'cache': '清除缓存',
-        'about': '关于 愿望卡',
+        'about': '关于 星愿卡',
         'security': {
           'title': '账号安全',
           'subtitle': '管理您的账号安全选项',
@@ -181,7 +181,7 @@ const resources = {
         }
       },
       'welcome': {
-        'title': '愿望卡',
+        'title': '星愿卡',
         'subtitle': '初次见面，让我们把每个愿望都变成动力 🌱',
         'tagline': '用正向激励法给孩子建立好习惯',
         'start_button': '开启家庭愿望之旅',

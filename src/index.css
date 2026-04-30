@@ -3,12 +3,13 @@
 @theme {
   --font-sans: "Inter", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Plus Jakarta Sans", sans-serif;
-  --font-handwritten: "ZCOOL KuaiLe", cursive;
+  --font-handwritten: "Long Cang", cursive;
+  --font-artistic: "ZCOOL XiaoWei", serif;
 
   --color-primary: #006e1c;
   --color-primary-container: #4caf50;
-  --color-secondary: #686000;
-  --color-secondary-container: #f0e269;
+  --color-secondary: #f9a825;
+  --color-secondary-container: #ffd54f;
   --color-tertiary: #7a5649;
   --color-tertiary-container: #bd9283;
   --color-background: #fbf9f5;
@@ -36,7 +37,7 @@
   --color-surface-container-highest: #373834;
   --color-primary: #81d67a;
   --color-primary-container: #008126;
-  --color-secondary: #f0e269;
+  --color-secondary: #ffd54f;
 }
 
 @layer base {

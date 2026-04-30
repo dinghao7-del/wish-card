@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: #F5F5F0;
+  background-color: $bg-color-variant;
 }
 
 .tab-content {
@@ -18,7 +18,7 @@
   align-items: center;
   height: 120rpx;
   background-color: #FFFFFF;
-  border-top: 2rpx solid #E8E4DF;
+  border-top: 2rpx solid $border-light;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -33,11 +33,11 @@
   
   &.active {
     .tab-icon {
-      background-color: #2E7D32;
+      background-color: $primary-dark;
     }
     
     .tab-text {
-      color: #2E7D32;
+      color: $primary-dark;
       font-weight: 600;
     }
   }
@@ -47,7 +47,7 @@
   width: 48rpx;
   height: 48rpx;
   margin-bottom: 8rpx;
-  background-color: #78746E;
+  background-color: $text-secondary-variant;
   
   &.tab-icon-home {
     mask: url('@/assets/icons/home.svg') no-repeat center;
@@ -63,7 +63,7 @@
     width: 80rpx;
     height: 80rpx;
     border-radius: 50%;
-    background-color: #2E7D32;
+    background-color: $primary-dark;
     margin-top: -40rpx;
     mask: url('@/assets/icons/check.svg') no-repeat center;
     mask-size: 60%;

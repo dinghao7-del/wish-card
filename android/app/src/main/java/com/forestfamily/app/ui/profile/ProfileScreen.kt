@@ -116,14 +116,14 @@ fun ProfileScreen(
                         Icon(
                             Icons.Default.Star,
                             contentDescription = null,
-                            tint = StarGold,
+                            tint = Secondary,
                             modifier = Modifier.size(32.dp)
                         )
                         Text(
                             text = currentMember.stars.toString(),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            color = StarGold
+                            color = Secondary
                         )
                         Text(
                             text = "星星",

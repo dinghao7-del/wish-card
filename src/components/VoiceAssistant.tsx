@@ -424,7 +424,7 @@ export function VoiceAssistant({ isOpen, onClose, onOpenQuadrant, onOpenCalendar
           };
         }
         // 如果没有页面跳转，直接导出
-        const ics = generateICSFile(context.tasks, context.members, t('voice_assistant.calendar_default_name', { defaultValue: 'calendar default name' }) || '愿望卡');
+        const ics = generateICSFile(context.tasks, context.members, t('voice_assistant.calendar_default_name', { defaultValue: 'calendar default name' }) || '星愿卡');
         downloadICS(ics);
         return { message: t('voice_assistant.ics_downloaded', { defaultValue: '日历文件已下载，请在手机日历中导入' }) };
       }

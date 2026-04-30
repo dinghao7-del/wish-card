@@ -46,7 +46,7 @@ fun HabitsScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onNavigateToCreateHabit,
-                containerColor = StarGold
+                containerColor = Secondary
             ) {
                 Icon(Icons.Default.Add, contentDescription = "新建习惯")
             }
@@ -112,8 +112,8 @@ private fun HabitCard(
                     .size(56.dp)
                     .clip(CircleShape)
                     .background(
-                        if (isCompleted) ForestGreen.copy(alpha = 0.2f)
-                        else StarGold.copy(alpha = 0.1f)
+                        if (isCompleted) Primary.copy(alpha = 0.2f)
+                        else Secondary.copy(alpha = 0.1f)
                     )
                     .clickable(enabled = !isCompleted, onClick = onCheckIn),
                 contentAlignment = Alignment.Center
@@ -122,14 +122,14 @@ private fun HabitCard(
                     Icon(
                         Icons.Default.CheckCircle,
                         contentDescription = "已完成",
-                        tint = ForestGreen,
+                        tint = Primary,
                         modifier = Modifier.size(32.dp)
                     )
                 } else {
                     Icon(
                         Icons.Default.Add,
                         contentDescription = "打卡",
-                        tint = StarGold,
+                        tint = Secondary,
                         modifier = Modifier.size(32.dp)
                     )
                 }
@@ -177,7 +177,7 @@ private fun HabitCard(
                             .weight(1f)
                             .height(8.dp)
                             .clip(RoundedCornerShape(4.dp)),
-                        color = if (isCompleted) ForestGreen else StarGold,
+                        color = if (isCompleted) Primary else Secondary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                     Spacer(modifier = Modifier.width(8.dp))

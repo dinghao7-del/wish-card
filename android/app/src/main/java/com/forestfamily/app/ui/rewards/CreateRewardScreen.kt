@@ -12,8 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.forestfamily.app.ui.theme.ForestGreen
-import com.forestfamily.app.ui.theme.StarGold
+import com.forestfamily.app.ui.theme.Primary
+import com.forestfamily.app.ui.theme.Secondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +43,7 @@ fun CreateRewardScreen(
                         onClick = onRewardCreated,
                         enabled = name.isNotBlank()
                     ) {
-                        Text("保存", color = ForestGreen)
+                        Text("保存", color = Primary)
                     }
                 }
             )
@@ -133,7 +133,7 @@ fun CreateRewardScreen(
                     value = starCost,
                     onValueChange = { starCost = it.filter { c -> c.isDigit() } },
                     label = { Text("兑换所需星星数量") },
-                    leadingIcon = { Icon(Icons.Default.Star, contentDescription = null, tint = StarGold) },
+                    leadingIcon = { Icon(Icons.Default.Star, contentDescription = null, tint = Secondary) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
@@ -149,7 +149,7 @@ fun CreateRewardScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 enabled = name.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = StarGold)
+                colors = ButtonDefaults.buttonColors(containerColor = Secondary)
             ) {
                 Icon(Icons.Default.EmojiEvents, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))

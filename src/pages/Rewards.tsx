@@ -254,7 +254,7 @@ export function Rewards() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 bg-[#FFF9C4] dark:bg-yellow-500/20 px-4 py-1.5 rounded-full text-[#F9A825] dark:text-yellow-400 border border-white/50 dark:border-yellow-500/20 shadow-sm">
+                <div className="flex items-center gap-1 bg-secondary-container/30 dark:bg-secondary/20 px-4 py-1.5 rounded-full text-secondary dark:text-secondary border border-white/50 dark:border-secondary/20 shadow-sm">
                   <Star size={20} className="fill-current" strokeWidth={2.5} />
                   <span className="font-black text-xl">{selectedReward.cost}</span>
                 </div>

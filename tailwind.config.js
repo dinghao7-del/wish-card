@@ -33,7 +33,8 @@ module.exports = {
       fontFamily: {
         sans: ['Inter', 'Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         display: ['Plus Jakarta Sans', 'sans-serif'],
-        handwritten: ['ZCOOL KuaiLe', 'cursive'],
+        handwritten: ['Long Cang', 'cursive'],
+        artistic: ['ZCOOL XiaoWei', 'serif'],
       },
     },
   },

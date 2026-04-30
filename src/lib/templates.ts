@@ -112,7 +112,7 @@ export const REWARD_EXPERIENCE: RewardTemplate[] = [
   { id: 'e04', name: '游乐园',      description: '去游乐园玩一整天！',                           cost: 1000, category: '体验', icon: '/reward-icons/experience/Cute_flat_kawaii_amusement_par_2026-04-27T19-43-16.png' },
   { id: 'e05', name: '免费卡',      description: '免除一次家务任务的免费通行卡',             cost: 150,  category: '体验', icon: '/reward-icons/experience/Cute_flat_kawaii_free_pass_tic_2026-04-27T19-43-17.png' },
   { id: 'e06', name: '特权卡',      description: 'VIP特权：挑选今晚的晚餐菜单',                cost: 300,  category: '体验', icon: '/reward-icons/experience/Cute_flat_kawaii_privilege_VIP_2026-04-27T19-43-15.png' },
-  { id: 'e07', name: '超级卡',      description: '终极愿望卡：实现一个合理的任何愿望',          cost: 2000, category: '体验', icon: '/reward-icons/experience/Cute_flat_kawaii_super_premium_2026-04-27T19-43-34.png' },
+  { id: 'e07', name: '超级卡',      description: '终极星愿卡：实现一个合理的任何愿望',          cost: 2000, category: '体验', icon: '/reward-icons/experience/Cute_flat_kawaii_super_premium_2026-04-27T19-43-34.png' },
 ];
 
 // ─── 分类3：奖品（实物/数字奖品）─────────┤

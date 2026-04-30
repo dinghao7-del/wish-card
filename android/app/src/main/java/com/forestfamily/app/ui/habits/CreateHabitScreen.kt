@@ -14,8 +14,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.forestfamily.app.data.model.HabitFrequency
-import com.forestfamily.app.ui.theme.ForestGreen
-import com.forestfamily.app.ui.theme.StarGold
+import com.forestfamily.app.ui.theme.Primary
+import com.forestfamily.app.ui.theme.Secondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +43,7 @@ fun CreateHabitScreen(
                         onClick = onHabitCreated,
                         enabled = title.isNotBlank()
                     ) {
-                        Text("保存", color = ForestGreen)
+                        Text("保存", color = Primary)
                     }
                 }
             )
@@ -144,7 +144,7 @@ fun CreateHabitScreen(
                     value = starAmount,
                     onValueChange = { starAmount = it.filter { c -> c.isDigit() } },
                     label = { Text("每次完成奖励星星") },
-                    leadingIcon = { Icon(Icons.Default.Star, contentDescription = null, tint = StarGold) },
+                    leadingIcon = { Icon(Icons.Default.Star, contentDescription = null, tint = Secondary) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
@@ -160,7 +160,7 @@ fun CreateHabitScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 enabled = title.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = StarGold)
+                colors = ButtonDefaults.buttonColors(containerColor = Secondary)
             ) {
                 Icon(Icons.Default.Loop, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))

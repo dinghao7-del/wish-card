@@ -190,7 +190,7 @@ export function CalendarSync() {
       const ics = generateICSFile(
         tasks.filter(t => !t.isHabit),
         members,
-        '愿望卡'
+        '星愿卡'
       );
       downloadICS(ics, `wishcard-${new Date().toISOString().split('T')[0]}.ics`);
     } catch (error) {

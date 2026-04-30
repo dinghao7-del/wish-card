@@ -37,10 +37,10 @@ export function Layout() {
         <motion.div 
           initial={{ y: -60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-[#FFF9C4] to-[#FFF176] border-b border-[#FBC02D]/30 px-4 py-2.5 flex items-center justify-between max-w-md mx-auto"
+          className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-secondary-container/30 to-secondary-container/50 border-b border-secondary/30 px-4 py-2.5 flex items-center justify-between max-w-md mx-auto"
         >
           <div className="flex items-center gap-2">
-            <Sparkles size={16} className="text-[#F9A825]" />
+            <Sparkles size={16} className="text-secondary" />
             <span className="text-xs font-black text-[#5D4037]">
               体验模式 · 数据仅存于本地，注册后可永久保存
             </span>

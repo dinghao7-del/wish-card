@@ -20,7 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.forestfamily.app.data.model.Member
 import com.forestfamily.app.data.model.MemberRole
 import com.forestfamily.app.ui.theme.ChildColor
-import com.forestfamily.app.ui.theme.ForestGreen
+import com.forestfamily.app.ui.theme.Primary
 import com.forestfamily.app.ui.theme.ParentColor
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,7 +55,7 @@ fun SelectMemberScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddDialog = true },
-                containerColor = ForestGreen
+                containerColor = Primary
             ) {
                 Icon(Icons.Default.PersonAdd, contentDescription = "添加成员")
             }
@@ -72,7 +72,7 @@ fun SelectMemberScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = ForestGreen.copy(alpha = 0.1f)
+                        containerColor = Primary.copy(alpha = 0.1f)
                     )
                 ) {
                     Row(
@@ -82,7 +82,7 @@ fun SelectMemberScreen(
                         Icon(
                             Icons.Default.Home,
                             contentDescription = null,
-                            tint = ForestGreen,
+                            tint = Primary,
                             modifier = Modifier.size(40.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))

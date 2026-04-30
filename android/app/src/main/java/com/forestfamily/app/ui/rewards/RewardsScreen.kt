@@ -48,7 +48,7 @@ fun RewardsScreen(
                                     Icons.Default.Star,
                                     contentDescription = null,
                                     modifier = Modifier.size(16.dp),
-                                    tint = StarGold
+                                    tint = Secondary
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
@@ -70,7 +70,7 @@ fun RewardsScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onNavigateToCreateReward,
-                containerColor = ForestGreen
+                containerColor = Primary
             ) {
                 Icon(Icons.Default.Add, contentDescription = "添加奖励")
             }
@@ -148,7 +148,7 @@ fun RewardsScreen(
                         Icon(
                             Icons.Default.Star,
                             contentDescription = null,
-                            tint = StarGold,
+                            tint = Secondary,
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
@@ -202,7 +202,7 @@ private fun RewardCard(
                 modifier = Modifier
                     .size(64.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(ForestGreen.copy(alpha = 0.1f)),
+                    .background(Primary.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -260,7 +260,7 @@ private fun RewardCard(
                     onClick = onRedeem,
                     enabled = canAfford,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = StarGold
+                        containerColor = Secondary
                     )
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {

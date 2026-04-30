@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.forestfamily.app.ui.theme.StarGold
+import com.forestfamily.app.ui.theme.Secondary
 
 /**
  * 星星数量显示组件
@@ -36,7 +36,7 @@ fun StarCounter(
             Icon(
                 imageVector = Icons.Default.Star,
                 contentDescription = "星星",
-                tint = StarGold,
+                tint = Secondary,
                 modifier = Modifier.size(iconSize.dp)
             )
         }
@@ -44,7 +44,7 @@ fun StarCounter(
             text = stars.toString(),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = StarGold
+            color = Secondary
         )
     }
 }

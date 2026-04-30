@@ -75,9 +75,9 @@ fun CreateFamilyScreen(
                 .background(
                     Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFFA5D6A7),
-                            ForestGreen,
-                            ForestGreenDark
+                            PrimaryLight,
+                            Primary,
+                            PrimaryDark
                         )
                     )
                 ),
@@ -118,15 +118,15 @@ fun CreateFamilyScreen(
             label = { Text("家庭名称") },
             placeholder = { Text("例如：幸福的一家") },
             leadingIcon = { 
-                Icon(Icons.Default.Home, contentDescription = null, tint = ForestGreen) 
+                Icon(Icons.Default.Home, contentDescription = null, tint = Primary) 
             },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = ForestGreen,
-                focusedLabelColor = ForestGreen,
-                cursorColor = ForestGreen
+                focusedBorderColor = Primary,
+                focusedLabelColor = Primary,
+                cursorColor = Primary
             )
         )
         
@@ -172,7 +172,7 @@ fun CreateFamilyScreen(
             enabled = familyName.isNotBlank() && uiState !is AuthUiState.Loading,
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = ForestGreen
+                containerColor = Primary
             )
         ) {
             if (uiState is AuthUiState.Loading) {

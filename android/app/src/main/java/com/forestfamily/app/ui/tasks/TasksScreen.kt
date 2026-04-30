@@ -45,7 +45,7 @@ fun TasksScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onNavigateToCreateTask,
-                containerColor = ForestGreen
+                containerColor = Primary
             ) {
                 Icon(Icons.Default.Add, contentDescription = "新建任务")
             }
@@ -138,7 +138,7 @@ private fun TaskListCard(
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(
-                            if (task.completed) ForestGreen.copy(alpha = 0.2f)
+                            if (task.completed) Primary.copy(alpha = 0.2f)
                             else statusColor.copy(alpha = 0.2f)
                         ),
                     contentAlignment = Alignment.Center
@@ -146,7 +146,7 @@ private fun TaskListCard(
                     Icon(
                         imageVector = if (task.completed) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
                         contentDescription = null,
-                        tint = if (task.completed) ForestGreen else statusColor
+                        tint = if (task.completed) Primary else statusColor
                     )
                 }
 

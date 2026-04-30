@@ -11,7 +11,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.forestfamily.app.ui.components.*
-import com.forestfamily.app.ui.theme.ForestGreen
+import com.forestfamily.app.ui.theme.Primary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,7 +60,7 @@ fun EditTaskScreen(
                 },
                 actions = {
                     TextButton(onClick = onTaskUpdated) {
-                        Text("保存", color = ForestGreen)
+                        Text("保存", color = Primary)
                     }
                 }
             )

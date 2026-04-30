@@ -12,16 +12,16 @@
 .page-title {
   font-size: 36rpx;
   font-weight: 700;
-  color: #1B1B18;
+  color: $text-primary;
 }
 
 .star-balance {
-  background-color: #FFF9C4;
+  background-color: $star-bg;
   padding: 8rpx 24rpx;
   border-radius: 48rpx;
   font-size: 28rpx;
   font-weight: 600;
-  color: #F9A825;
+  color: $star-color;
 }
 
 .category-tabs {
@@ -38,10 +38,10 @@
   padding: 16rpx 0;
   border-radius: 40rpx;
   font-size: 28rpx;
-  color: #78746E;
+  color: $text-secondary-variant;
   
   &.active {
-    background-color: #2E7D32;
+    background-color: $primary-dark;
     color: white;
     font-weight: 600;
   }
@@ -71,8 +71,8 @@
   position: absolute;
   top: 20rpx;
   right: 20rpx;
-  background-color: #FFD54F;
-  color: #1B1B18;
+  background-color: $quadrant-q3;
+  color: $text-primary;
   padding: 8rpx 16rpx;
   border-radius: 24rpx;
   font-size: 24rpx;
@@ -83,18 +83,18 @@
   padding: 16rpx 20rpx 8rpx;
   font-size: 28rpx;
   font-weight: 600;
-  color: #1B1B18;
+  color: $text-primary;
 }
 
 .reward-desc {
   padding: 0 20rpx 20rpx;
   font-size: 24rpx;
-  color: #78746E;
+  color: $text-secondary-variant;
 }
 
 .exchange-button {
   margin: 0 20rpx 20rpx;
-  background-color: #2E7D32;
+  background-color: $primary-dark;
   color: white;
   border-radius: 48rpx;
   padding: 16rpx 0;
@@ -106,7 +106,7 @@
 .empty-state {
   padding: 60rpx 0;
   text-align: center;
-  color: #78746E;
+  color: $text-secondary-variant;
   font-size: 28rpx;
   width: 100%;
 }

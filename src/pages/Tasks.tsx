@@ -494,7 +494,7 @@ export function Tasks() {
                         {members.find(m => m.id === selectedTask.creatorId)?.name || '妈妈'}
                      </p>
                    </div>
-                   <div className="bg-[#FFF9C4] dark:bg-yellow-500/20 text-[#F9A825] dark:text-yellow-400 px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm border border-yellow-200 dark:border-yellow-500/20 uppercase tracking-wider">
+                   <div className="bg-secondary-container/30 dark:bg-secondary/20 text-secondary dark:text-secondary px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm border border-yellow-200 dark:border-secondary/20 uppercase tracking-wider">
                      {t('tasks.detail.tag', { defaultValue: '标签' })}
                    </div>
                 </div>

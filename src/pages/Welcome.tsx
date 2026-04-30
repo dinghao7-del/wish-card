@@ -70,9 +70,10 @@ export function Welcome() {
       setCurrentUser(user);
       // 立即导航，不等待可能的异步副作用
       navigate('/', { replace: true });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[GuestMode] handleSkip error:', err);
-      setError(err.message || t('welcome.skip_error', '跳过失败，请重试'));
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg || t('welcome.skip_error', '跳过失败，请重试'));
     } finally {
       setLoading(false);
     }
@@ -310,7 +311,7 @@ export function Welcome() {
       <button
         onClick={handleSkip}
         disabled={loading}
-        className="absolute top-6 right-6 z-50 flex items-center gap-1.5 px-4 h-11 bg-white/90 backdrop-blur-md rounded-full text-[#006e1c] hover:bg-white hover:shadow-lg transition-all active:scale-95 shadow-md border border-[#006e1c]/20 text-sm font-black"
+        className="absolute top-6 right-6 z-50 flex items-center gap-1.5 px-4 h-11 bg-white/90 backdrop-blur-md rounded-full text-primary hover:bg-white hover:shadow-lg transition-all active:scale-95 shadow-md border border-primary/20 text-sm font-black"
       >
         {loading ? <Loader2 className="animate-spin" size={16} /> : <X size={16} />}
         <span>{t('welcome.skip', '跳过')}</span>
@@ -339,32 +340,32 @@ export function Welcome() {
                 referrerPolicy="no-referrer"
               />
             </motion.div>
-            <h1 className="text-7xl font-handwritten text-on-surface mb-4">{t('welcome.title', '愿望卡')}</h1>
+            <h1 className="text-7xl font-artistic text-primary mb-4 tracking-wider bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent">{t('welcome.title', '星愿卡')}</h1>
             <p className="text-on-surface-variant font-bold text-base mb-2">{t('welcome.subtitle', '用努力开启小确幸 🌱')}</p>
-            <p className="text-[#2e7d32] font-black text-sm mb-12 tracking-tight">{t('welcome.tagline', '记录成长每一步')}</p>
+            <p className="text-primary font-black text-sm mb-12 tracking-tight">{t('welcome.tagline', '记录成长每一步')}</p>
 
             <div className="space-y-3">
               <button
                 onClick={() => { clearError(); setStep('register'); }}
-                className="w-full h-16 bg-[#006e1c] text-white rounded-[2rem] font-black text-lg flex items-center justify-center gap-3 shadow-xl shadow-green-900/20 hover:bg-[#005a16] transition-all active:scale-95"
+                className="w-full h-16 bg-primary text-white rounded-[2rem] font-black text-lg flex items-center justify-center gap-3 shadow-xl shadow-green-900/20 hover:bg-primary/80 transition-all active:scale-95"
               >
                 <UserPlus size={22} />
-                {t('welcome.register.submit', '注册账号')}
+                {t('welcome.register.submit', '注册')}
               </button>
               <button
                 onClick={() => { clearError(); setStep('login'); }}
-                className="w-full h-16 bg-white text-[#006e1c] rounded-[2rem] font-black text-lg flex items-center justify-center gap-3 shadow-lg border-2 border-[#006e1c]/10 hover:border-[#006e1c]/30 transition-all active:scale-95"
+                className="w-full h-16 bg-white text-primary rounded-[2rem] font-black text-lg flex items-center justify-center gap-3 shadow-lg border-2 border-primary/10 hover:border-primary/30 transition-all active:scale-95"
               >
                 <LogIn size={22} />
-                {t('welcome.login.submit', '登录账号')}
+                {t('welcome.login.submit', '登录')}
               </button>
               <button
                 onClick={handleSkip}
                 disabled={loading}
-                className="w-full h-12 text-[#006e1c]/60 bg-[#006e1c]/5 rounded-[2rem] font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#006e1c]/10 transition-all active:scale-95 border border-[#006e1c]/10"
+                className="w-full h-12 text-primary/60 bg-primary/5 rounded-[2rem] font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/10 transition-all active:scale-95 border border-primary/10"
               >
                 {loading ? <Loader2 className="animate-spin" size={16} /> : <ArrowRight size={16} />}
-                {t('welcome.guest_mode', '先逛逛（游客模式）')}
+                {t('welcome.guest_mode', '先逛逛')}
               </button>
             </div>
           </motion.div>
@@ -387,7 +388,7 @@ export function Welcome() {
             <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-outline-variant/10 relative">
               <button
                 onClick={() => { clearError(); setStep('intro'); }}
-                className="absolute -top-4 -right-4 w-10 h-10 bg-white border border-outline-variant/20 rounded-full shadow-lg flex items-center justify-center text-on-surface-variant hover:text-[#006e1c] transition-colors z-20"
+                className="absolute -top-4 -right-4 w-10 h-10 bg-white border border-outline-variant/20 rounded-full shadow-lg flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors z-20"
               >
                 <Plus className="rotate-45" size={24} />
               </button>
@@ -401,7 +402,7 @@ export function Welcome() {
                     value={regNickname}
                     onChange={(e) => setRegNickname(e.target.value)}
                     placeholder={t('welcome.register.nickname_placeholder', '如：妈妈')}
-                    className="w-full h-12 bg-[#f5f5f5] rounded-2xl px-5 font-bold text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all text-sm"
+                    className="w-full h-12 bg-surface-container-low rounded-2xl px-5 font-bold text-on-surface outline-none border-2 border-transparent focus:border-primary/30 transition-all text-sm"
                   />
                 </div>
 
@@ -416,7 +417,7 @@ export function Welcome() {
                     value={phoneOrEmail}
                     onChange={(e) => setPhoneOrEmail(e.target.value)}
                     placeholder={t('welcome.otp.placeholder', '手机号或邮箱')}
-                    className="w-full h-12 bg-[#f5f5f5] rounded-2xl px-5 font-bold text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all text-sm"
+                    className="w-full h-12 bg-surface-container-low rounded-2xl px-5 font-bold text-on-surface outline-none border-2 border-transparent focus:border-primary/30 transition-all text-sm"
                   />
                 </div>
 
@@ -429,7 +430,7 @@ export function Welcome() {
                       value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
                       placeholder={t('welcome.register.password_placeholder', '请输入管理密码')}
-                      className="w-full h-12 bg-[#f5f5f5] rounded-2xl px-5 pr-12 font-bold text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all text-sm"
+                      className="w-full h-12 bg-surface-container-low rounded-2xl px-5 pr-12 font-bold text-on-surface outline-none border-2 border-transparent focus:border-primary/30 transition-all text-sm"
                     />
                     <button
                       type="button"
@@ -450,7 +451,7 @@ export function Welcome() {
                       value={regConfirmPassword}
                       onChange={(e) => setRegConfirmPassword(e.target.value)}
                       placeholder={t('welcome.register.confirm_password_placeholder', '请再次输入密码')}
-                      className="w-full h-12 bg-[#f5f5f5] rounded-2xl px-5 pr-12 font-bold text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all text-sm"
+                      className="w-full h-12 bg-surface-container-low rounded-2xl px-5 pr-12 font-bold text-on-surface outline-none border-2 border-transparent focus:border-primary/30 transition-all text-sm"
                     />
                     <button
                       type="button"
@@ -477,7 +478,7 @@ export function Welcome() {
                   type="button"
                   onClick={handleRegisterSendOtp}
                   disabled={loading}
-                  className="w-full h-14 bg-[#006e1c] text-white rounded-2xl font-black text-base shadow-lg hover:shadow-green-900/20 active:scale-95 transition-all disabled:opacity-50"
+                  className="w-full h-14 bg-primary text-white rounded-2xl font-black text-base shadow-lg hover:shadow-green-900/20 active:scale-95 transition-all disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : t('welcome.otp.send', '发送验证码')}
                 </button>
@@ -511,7 +512,7 @@ export function Welcome() {
             <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-outline-variant/10 relative">
               <button
                 onClick={() => { clearError(); setStep('intro'); }}
-                className="absolute -top-4 -right-4 w-10 h-10 bg-white border border-outline-variant/20 rounded-full shadow-lg flex items-center justify-center text-on-surface-variant hover:text-[#006e1c] transition-colors z-20"
+                className="absolute -top-4 -right-4 w-10 h-10 bg-white border border-outline-variant/20 rounded-full shadow-lg flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors z-20"
               >
                 <Plus className="rotate-45" size={24} />
               </button>
@@ -525,7 +526,7 @@ export function Welcome() {
                     value={loginUsername}
                     onChange={(e) => setLoginUsername(e.target.value)}
                     placeholder={t('welcome.login.username_placeholder', '邮箱 或 昵称')}
-                    className="w-full h-12 bg-[#f5f5f5] rounded-2xl px-5 font-bold text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all text-sm"
+                    className="w-full h-12 bg-surface-container-low rounded-2xl px-5 font-bold text-on-surface outline-none border-2 border-transparent focus:border-primary/30 transition-all text-sm"
                   />
                 </div>
 
@@ -538,7 +539,7 @@ export function Welcome() {
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       placeholder={t('welcome.login.password_placeholder', '管理密码')}
-                      className="w-full h-12 bg-[#f5f5f5] rounded-2xl px-5 pr-12 font-bold text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all text-sm"
+                      className="w-full h-12 bg-surface-container-low rounded-2xl px-5 pr-12 font-bold text-on-surface outline-none border-2 border-transparent focus:border-primary/30 transition-all text-sm"
                     />
                     <button
                       type="button"
@@ -560,7 +561,7 @@ export function Welcome() {
                   type="button"
                   onClick={handleLogin}
                   disabled={loading}
-                  className="w-full h-14 bg-[#006e1c] text-white rounded-2xl font-black text-base shadow-lg hover:shadow-green-900/20 active:scale-95 transition-all disabled:opacity-50"
+                  className="w-full h-14 bg-primary text-white rounded-2xl font-black text-base shadow-lg hover:shadow-green-900/20 active:scale-95 transition-all disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : t('welcome.login.submit', '登录账号')}
                 </button>
@@ -596,7 +597,7 @@ export function Welcome() {
             <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-outline-variant/10 relative">
               <button
                 onClick={() => { setStep('register'); setOtpToken(''); clearError(); }}
-                className="absolute -top-4 -right-4 w-10 h-10 bg-white border border-outline-variant/20 rounded-full shadow-lg flex items-center justify-center text-on-surface-variant hover:text-[#006e1c] transition-colors z-20"
+                className="absolute -top-4 -right-4 w-10 h-10 bg-white border border-outline-variant/20 rounded-full shadow-lg flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors z-20"
               >
                 <Plus className="rotate-45" size={24} />
               </button>
@@ -607,7 +608,7 @@ export function Welcome() {
                   value={otpToken}
                   onChange={(e) => setOtpToken(e.target.value)}
                   placeholder={t('welcome.otp.code_placeholder', '请输入验证码')}
-                  className="w-full h-14 bg-[#f5f5f5] rounded-2xl px-6 font-bold text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all text-center text-2xl tracking-widest"
+                  className="w-full h-14 bg-surface-container-low rounded-2xl px-6 font-bold text-on-surface outline-none border-2 border-transparent focus:border-primary/30 transition-all text-center text-2xl tracking-widest"
                 />
 
                 {error && (
@@ -625,7 +626,7 @@ export function Welcome() {
                   type="button"
                   onClick={handleVerifyOtp}
                   disabled={loading}
-                  className="w-full h-14 bg-[#006e1c] text-white rounded-2xl font-black text-base shadow-lg hover:shadow-green-900/20 active:scale-95 transition-all disabled:opacity-50"
+                  className="w-full h-14 bg-primary text-white rounded-2xl font-black text-base shadow-lg hover:shadow-green-900/20 active:scale-95 transition-all disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : t('welcome.otp.verify', '验证')}
                 </button>
