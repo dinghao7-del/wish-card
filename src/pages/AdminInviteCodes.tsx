@@ -314,7 +314,7 @@ export function AdminInviteCodes() {
                     value={newMaxUses}
                     onChange={e => setNewMaxUses(parseInt(e.target.value) || 1)}
                     min={-1}
-                    className="w-full h-12 bg-[#f5f5f5] rounded-2xl px-5 font-bold text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all text-sm"
+                    className="w-full h-12 bg-surface-container-low rounded-2xl px-5 font-bold text-on-surface outline-none border-2 border-transparent focus:border-primary/30 transition-all text-sm"
                   />
                 </div>
 
@@ -325,14 +325,14 @@ export function AdminInviteCodes() {
                     type="datetime-local"
                     value={newExpires}
                     onChange={e => setNewExpires(e.target.value)}
-                    className="w-full h-12 bg-[#f5f5f5] rounded-2xl px-5 font-bold text-on-surface outline-none border-2 border-transparent focus:border-[#006e1c]/30 transition-all text-sm"
+                    className="w-full h-12 bg-surface-container-low rounded-2xl px-5 font-bold text-on-surface outline-none border-2 border-transparent focus:border-primary/30 transition-all text-sm"
                   />
                 </div>
 
                 <button
                   onClick={handleCreate}
                   disabled={creating}
-                  className="w-full h-14 bg-[#006e1c] text-white rounded-2xl font-black text-base shadow-lg active:scale-95 transition-all disabled:opacity-50"
+                  className="w-full h-14 bg-primary text-white rounded-2xl font-black text-base shadow-lg active:scale-95 transition-all disabled:opacity-50"
                 >
                   {creating ? <Loader2 className="animate-spin mx-auto" size={20} /> : '创建邀请码'}
                 </button>

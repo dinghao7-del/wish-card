@@ -193,15 +193,15 @@ export function QuadrantAnalysisView({ isOpen, onClose, dateRange = 'today', inl
             </div>
 
             {analysis.suggestions.length > 0 && (
-              <div className="bg-[#FFF9C4]/50 dark:bg-yellow-500/10 rounded-2xl p-5 border border-[#FBC02D]/20">
-                <h4 className="font-black text-[#F9A825] dark:text-yellow-400 text-sm mb-3 flex items-center gap-2">
+              <div className="bg-secondary-container/20 dark:bg-secondary/10 rounded-2xl p-5 border border-secondary/20">
+                <h4 className="font-black text-secondary dark:text-secondary text-sm mb-3 flex items-center gap-2">
                   <Sparkles size={16} />
                   {t('quadrant_analysis.suggestions', { defaultValue: '建议' })}
                 </h4>
                 <div className="space-y-2">
                   {analysis.suggestions.map((s, idx) => (
                     <div key={idx} className="flex items-start gap-2">
-                      <ArrowRight size={12} className="text-[#F9A825] dark:text-yellow-400 mt-1 shrink-0" />
+                      <ArrowRight size={12} className="text-secondary dark:text-secondary mt-1 shrink-0" />
                       <p className="text-xs font-bold text-on-surface leading-relaxed">{s}</p>
                     </div>
                   ))}

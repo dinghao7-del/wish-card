@@ -37,11 +37,11 @@ jobs:
       - name: Verify Version Consistency
         run: |
           echo "=== Checking Vercel Version ==="
-          VERCEL_JS=$(curl -s "https://wish-card-self.vercel.app/" | grep -oP 'index-[a-zA-Z0-9]+\.js' | head -1)
+          VERCEL_JS=$(curl -s "https://wish-card-self.vercel.app/" | grep -o 'index-[a-zA-Z0-9]*\.js' | head -1)
           echo "Vercel JS: $VERCEL_JS"
           
           echo "=== Checking Cloudflare Version ==="
-          CF_JS=$(curl -s "https://a764d2d4.wish-card-backup.pages.dev/" | grep -oP 'index-[a-zA-Z0-9]+\.js' | head -1)
+          CF_JS=$(curl -s "https://a764d2d4.wish-card-backup.pages.dev/" | grep -o 'index-[a-zA-Z0-9]*\.js' | head -1)
           echo "Cloudflare JS: $CF_JS"
           
           if [ "$VERCEL_JS" = "$CF_JS" ]; then

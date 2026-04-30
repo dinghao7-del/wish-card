@@ -8,8 +8,11 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "check-sites": "node scripts/check-sites.js",
+    "deploy:cf": "npm run build && npx wrangler pages deploy dist --project-name=wish-card-backup"
   },
+  "prepare": "node scripts/check-sites.js"
   "dependencies": {
     "@capacitor/camera": "^8.2.0",
     "@capacitor/cli": "^7.6.2",
