@@ -150,7 +150,7 @@ export function PopularTemplates({ isOpen, onClose, type, onSelect }: PopularTem
                       </div>
                       <p className="text-xs font-bold text-on-surface truncate w-full text-center">{tmpl.title}</p>
                       <div className="flex items-center gap-1">
-                        <Star size={10} className="text-[#FBC02D] fill-current" />
+                        <Star size={10} className="text-secondary fill-current" />
                         <span className="text-[10px] font-bold text-on-surface-variant">{tmpl.stars}</span>
                       </div>
                       {tmpl.source === 'community' && tmpl.usage_count && (

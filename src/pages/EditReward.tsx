@@ -105,9 +105,9 @@ export function EditReward() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFCF9] pb-40 animate-in fade-in duration-500">
+    <div className="min-h-screen bg-surface pb-40 animate-in fade-in duration-500">
       {/* Header */}
-      <header className="flex justify-between items-center px-4 py-4 sticky top-0 bg-[#FDFCF9]/80 backdrop-blur-xl z-50">
+      <header className="flex justify-between items-center px-4 py-4 sticky top-0 bg-surface/80 backdrop-blur-xl z-50">
         <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container/50 transition-colors">
           <ChevronLeft size={24} />
         </button>
@@ -130,17 +130,17 @@ export function EditReward() {
             </div>
           </div>
           
-          <button 
-            type="button"
-            onClick={() => setIsLibraryOpen(true)}
-            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#D4E157]/10 text-[#2E7D32] font-black text-sm active:scale-95 transition-all"
-          >
-            {t('edit_reward.template_import', '模板导入')} <ChevronRight size={16} strokeWidth={3} className="text-[#2E7D32]/40" />
-          </button>
+<button 
+  type="button"
+  onClick={() => setIsLibraryOpen(true)}
+  className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-primary-surface/10 text-primary-text font-black text-sm active:scale-95 transition-all"
+>
+  {t('edit_reward.template_import', '模板导入')} <ChevronRight size={16} strokeWidth={3} className="text-primary-text/40" />
+</button>
         </div>
 
-        {/* Section 1: Basic Info */}
-        <div className="bg-[#F1F1F1] rounded-[2rem] p-4 space-y-4 border border-white/50">
+{/* Section 1: Basic Info */}
+<div className="bg-surface-container rounded-[2rem] p-4 space-y-4 border border-white/50">
           <div className="flex gap-2">
             <div className="flex-[3] bg-white rounded-2xl p-4 flex items-center shadow-sm">
               <input 
@@ -181,9 +181,9 @@ export function EditReward() {
           {/* Unit Price */}
           <div className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3 font-black text-on-surface">
-              <div className="w-10 h-10 bg-[#FFF9C4] rounded-xl flex items-center justify-center shadow-sm border border-outline-variant/10">
-                <Star size={20} className="text-[#FBC02D] fill-current" />
-              </div>
+<div className="w-10 h-10 bg-secondary-container rounded-xl flex items-center justify-center shadow-sm border border-outline-variant/10">
+  <Star size={20} className="text-secondary fill-current" />
+</div>
               <span>{t('edit_reward.unit_price', '单价')}</span>
             </div>
             <div className="flex items-center gap-4 bg-surface-container-low rounded-2xl p-1 shadow-inner-sm">
@@ -208,9 +208,9 @@ export function EditReward() {
           {/* Quantity */}
           <div className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3 font-black text-on-surface">
-              <div className="w-10 h-10 bg-[#E8F5E9] rounded-xl flex items-center justify-center shadow-sm border border-outline-variant/10">
-                <LayoutGrid size={20} className="text-[#2E7D32]" />
-              </div>
+<div className="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center shadow-sm border border-outline-variant/10">
+  <LayoutGrid size={20} className="text-primary-text" />
+</div>
               <span>{t('edit_reward.quantity', '总数')}</span>
             </div>
             <div className="flex items-center gap-4 bg-surface-container-low rounded-2xl p-1 shadow-inner-sm">
@@ -237,19 +237,19 @@ export function EditReward() {
         <div className="bg-[#F1F1F1] rounded-[2rem] p-4 pb-6 border border-white/50">
           <div className="bg-white rounded-2xl p-4 mb-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3 font-black text-on-surface">
-              <div className="w-10 h-10 bg-[#E3F2FD] rounded-xl flex items-center justify-center shadow-sm border border-outline-variant/10">
-                <Ban size={20} className="text-[#1976D2]" />
-              </div>
+<div className="w-10 h-10 bg-tertiary-container rounded-xl flex items-center justify-center shadow-sm border border-outline-variant/10">
+  <Ban size={20} className="text-tertiary" />
+</div>
               <span>{t('edit_reward.redeem_limit', '兑换限制')}</span>
             </div>
-            <button 
-              type="button"
-              onClick={() => setFormData({ ...formData, hasLimit: !formData.hasLimit })}
-              className={cn(
-                "w-14 h-8 rounded-full transition-all relative border-2 border-white shadow-sm",
-                formData.hasLimit ? "bg-[#D4E157]" : "bg-[#BDBDBD]"
-              )}
-            >
+<button 
+  type="button"
+  onClick={() => setFormData({ ...formData, hasLimit: !formData.hasLimit })}
+  className={cn(
+    "w-14 h-8 rounded-full transition-all relative border-2 border-white shadow-sm",
+    formData.hasLimit ? "bg-primary-surface" : "bg-outline-variant"
+  )}
+>
               <div 
                 className={cn(
                   "absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-sm transition-all",
@@ -308,12 +308,12 @@ export function EditReward() {
 
         {/* Submit Button Section */}
         <div className="pt-4 pb-32">
-          <button 
-            type="submit"
-            className="w-full py-5 rounded-[2rem] bg-[#D4E157] text-[#2E7D32] font-black text-xl shadow-xl shadow-[#D4E157]/20 border-b-4 border-[#C5D34C] active:border-b-0 active:translate-y-1 transition-all"
-          >
-            {t('edit_reward.submit', '完成并提交心愿 🌿')}
-          </button>
+<button 
+  type="submit"
+  className="w-full py-5 rounded-[2rem] bg-primary-surface text-primary-text font-black text-xl shadow-xl shadow-primary-surface/20 border-b-4 border-primary-surface/80 active:border-b-0 active:translate-y-1 transition-all"
+>
+  {t('edit_reward.submit', '完成并提交心愿 🌿')}
+</button>
           <p className="text-center text-on-surface-variant/20 text-[10px] font-bold mt-4">
             {t('edit_reward.submit_hint', '保存后您的家庭成员就可以看到这个心愿啦')}
           </p>
@@ -342,10 +342,10 @@ export function EditReward() {
                   <button 
                     key={u}
                     onClick={() => { setFormData({...formData, unit: u}); setIsUnitSelectorOpen(false); }}
-                    className={cn(
-                      "py-4 rounded-2xl font-black text-lg transition-all border-2",
-                      formData.unit === u ? "bg-[#D4E157] border-[#C5D34C] text-[#2E7D32]" : "bg-surface-container-low border-transparent text-on-surface-variant/40"
-                    )}
+className={cn(
+  "py-4 rounded-2xl font-black text-lg transition-all border-2",
+  formData.unit === u ? "bg-primary-surface border-primary-surface/80 text-primary-text" : "bg-surface-container-low border-transparent text-on-surface-variant/40"
+)}
                   >
                     {u}
                   </button>
@@ -375,10 +375,10 @@ export function EditReward() {
                   <button 
                     key={p.id}
                     onClick={() => { setFormData({...formData, limitPeriod: p.id as any}); setIsPeriodSelectorOpen(false); }}
-                    className={cn(
-                      "w-full py-5 rounded-2xl font-black text-xl flex items-center justify-center gap-3 transition-all border-2",
-                      formData.limitPeriod === p.id ? "bg-[#D4E157] border-[#C5D34C] text-[#2E7D32]" : "bg-surface-container-low border-transparent text-on-surface-variant/40"
-                    )}
+className={cn(
+  "w-full py-5 rounded-2xl font-black text-xl flex items-center justify-center gap-3 transition-all border-2",
+  formData.limitPeriod === p.id ? "bg-primary-surface border-primary-surface/80 text-primary-text" : "bg-surface-container-low border-transparent text-on-surface-variant/40"
+)}
                   >
                     {t('edit_reward.per_period', '每{{period}}', { period: p.label })}
                   </button>
@@ -398,7 +398,7 @@ export function EditReward() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-lg bg-[#FDFCF9] rounded-t-[2.5rem] p-6 shadow-2xl relative max-h-[85vh] flex flex-col"
+              className="w-full max-w-lg bg-surface rounded-t-[2.5rem] p-6 shadow-2xl relative max-h-[85vh] flex flex-col"
             >
               <div className="flex justify-between items-center mb-4 px-2">
                 <h3 className="text-2xl font-black text-on-surface">{t('edit_reward.library_title', '心愿库')}</h3>
@@ -416,12 +416,12 @@ export function EditReward() {
                   <button
                     key={cat.id}
                     onClick={() => setLibraryCategory(cat.id)}
-                    className={cn(
-                      "px-4 py-2 rounded-full text-xs font-black whitespace-nowrap transition-all border-2 shrink-0",
-                      libraryCategory === cat.id
-                        ? "bg-[#D4E157] border-[#C5D34C] text-[#2E7D32] shadow-md"
-                        : "bg-white border-white text-on-surface-variant/40"
-                    )}
+className={cn(
+  "px-4 py-2 rounded-full text-xs font-black whitespace-nowrap transition-all border-2 shrink-0",
+  libraryCategory === cat.id
+    ? "bg-primary-surface border-primary-surface/80 text-primary-text shadow-md"
+    : "bg-white border-white text-on-surface-variant/40"
+)}
                   >
                     {cat.label}
                   </button>
@@ -455,7 +455,7 @@ export function EditReward() {
                         </span>
                         {/* 星星价格 */}
                         <div className="flex items-center gap-0.5 mt-0.5">
-                          <Star size={9} className="text-[#FBC02D] fill-current" />
+                          <Star size={9} className="text-secondary fill-current" />
                           <span className="text-[9px] font-bold text-on-surface-variant">{template.cost}</span>
                         </div>
                       </motion.div>

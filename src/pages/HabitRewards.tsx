@@ -158,7 +158,7 @@ export function HabitRewards() {
           
           <button 
             onClick={() => setIsAiDialogOpen(true)}
-            className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-primary/20 text-[#2E7D32] hover:bg-primary/5 active:scale-95 transition-all"
+            className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-primary/20 text-primary-text hover:bg-primary/5 active:scale-95 transition-all"
           >
             <Mic size={20} strokeWidth={2.5} />
           </button>
@@ -169,7 +169,7 @@ export function HabitRewards() {
             onClick={() => navigate('/history')}
             className="bg-surface-container-low backdrop-blur-sm py-1 sm:py-1.5 px-3 sm:px-4 rounded-full flex items-center gap-1.5 sm:gap-2 shadow-sm border border-outline-variant/10 cursor-pointer hover:bg-surface-container transition-colors active:scale-95"
           >
-            <Star size={14} className="sm:size-[18px] text-[#FBC02D] fill-current" />
+            <Star size={14} className="sm:size-[18px] text-secondary fill-current" />
             <span className="font-black text-on-surface text-sm sm:text-base">{stars.toLocaleString()}</span>
           </div>
           <button 
@@ -214,7 +214,7 @@ export function HabitRewards() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => navigate('/tasks/templates', { state: { fromMode: 'habit' } })}
-            className="w-10 h-10 bg-[#006E1B] text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all flex-shrink-0"
+            className="w-10 h-10 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all flex-shrink-0"
           >
             <Plus size={24} strokeWidth={3} />
           </motion.button>
@@ -250,7 +250,7 @@ export function HabitRewards() {
                 <div className="relative z-10">
                   <h4 className="text-sm font-black text-on-surface truncate mb-1.5">{habit.title}</h4>
                   <div className="flex items-center gap-1.5">
-                    <Star size={14} className={habit.rewardStars >= 0 ? "text-[#FBC02D] fill-current" : "text-red-400 fill-current"} />
+                    <Star size={14} className={habit.rewardStars >= 0 ? "text-secondary fill-current" : "text-red-400 fill-current"} />
                     <span className={cn(
                       "text-sm font-black",
                       habit.rewardStars >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500"
@@ -300,7 +300,7 @@ export function HabitRewards() {
                         initial={{ opacity: 0, scale: 0.95, y: -10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                        className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-[#E8E7E0] z-40 py-1.5 overflow-hidden"
+                        className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-outline-variant z-40 py-1.5 overflow-hidden"
                       >
                         <button
                           onClick={() => {

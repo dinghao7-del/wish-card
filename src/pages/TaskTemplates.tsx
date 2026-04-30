@@ -113,8 +113,8 @@ export function TaskTemplates() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] pb-24">
-      <header className="sticky top-0 z-50 bg-[#F8F9FA]/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-surface pb-24">
+      <header className="sticky top-0 z-50 bg-surface/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
         <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container/50 text-on-surface-variant transition-colors">
           <ArrowLeft size={20} />
         </button>
@@ -193,7 +193,7 @@ export function TaskTemplates() {
 
                 <div className="flex flex-col items-end gap-2 shrink-0">
                   <div className="flex items-center gap-1 bg-surface-container/30 px-2.5 py-0.5 rounded-full border border-outline-variant/10">
-                    <Star size={10} className="text-[#FBC02D] fill-current" />
+                    <Star size={10} className="text-secondary fill-current" />
                     <span className="text-[10px] font-black text-on-surface/60">{template.stars}</span>
                   </div>
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shadow-sm border border-primary/5 active:scale-90 transition-transform">

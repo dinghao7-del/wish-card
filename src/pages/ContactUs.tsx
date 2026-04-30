@@ -13,8 +13,8 @@ export function ContactUs() {
   };
 
   return (
-    <div className="px-6 min-h-screen bg-[#FDFCF9] animate-in fade-in slide-in-from-right-4 duration-500">
-      <header className="flex justify-between items-center py-6 sticky top-0 bg-[#FDFCF9]/80 backdrop-blur-xl z-40 -mx-6 px-6">
+    <div className="px-6 min-h-screen bg-surface animate-in fade-in slide-in-from-right-4 duration-500">
+      <header className="flex justify-between items-center py-6 sticky top-0 bg-surface/80 backdrop-blur-xl z-40 -mx-6 px-6">
         <button 
           onClick={() => navigate(-1)} 
           className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-[#E8E7E0]/30 shadow-sm text-on-surface-variant hover:bg-surface-container transition-all active:scale-95"
@@ -32,7 +32,7 @@ export function ContactUs() {
           className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E8E7E0]/30 flex items-center justify-between group active:scale-[0.98] transition-all cursor-pointer"
         >
           <div className="flex items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-[#E8F5E9] flex items-center justify-center text-[#2E8B57]">
+            <div className="w-14 h-14 rounded-2xl bg-primary-container flex items-center justify-center text-primary-text">
               <Headset size={28} />
             </div>
             <div>
@@ -40,7 +40,7 @@ export function ContactUs() {
               <p className="text-sm font-medium text-on-surface-variant/60">与我们在线对话 (每天 10:00-22:00)</p>
             </div>
           </div>
-          <ChevronRight size={20} className="text-on-surface-variant/30 group-hover:text-[#2E8B57] transition-colors" />
+          <ChevronRight size={20} className="text-on-surface-variant/30 group-hover:text-primary-text transition-colors" />
         </div>
 
         {/* QQ Group */}
@@ -49,7 +49,7 @@ export function ContactUs() {
           className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E8E7E0]/30 flex items-center justify-between group active:scale-[0.98] transition-all cursor-pointer"
         >
           <div className="flex items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-[#E3F2FD] flex items-center justify-center text-[#1976D2]">
+            <div className="w-14 h-14 rounded-2xl bg-tertiary-container flex items-center justify-center text-tertiary">
               <Users size={28} />
             </div>
             <div>
@@ -57,7 +57,7 @@ export function ContactUs() {
               <p className="text-sm font-medium text-on-surface-variant/60">与更多的家长用户一起交流</p>
             </div>
           </div>
-          <ChevronRight size={20} className="text-on-surface-variant/30 group-hover:text-[#1976D2] transition-colors" />
+          <ChevronRight size={20} className="text-on-surface-variant/30 group-hover:text-tertiary transition-colors" />
         </div>
 
         {/* Email */}

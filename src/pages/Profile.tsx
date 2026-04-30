@@ -181,7 +181,7 @@ export function Profile() {
             <div className="w-36 h-36 flex items-center justify-center relative z-10">
               <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={144} className="border-4 border-white dark:border-surface-container-highest shadow-xl" />
             </div>
-            <div className="absolute bottom-1 right-1 w-10 h-10 bg-[#e6d64d] rounded-full shadow-lg flex items-center justify-center text-black border-2 border-white dark:border-surface-container-highest z-20">
+            <div className="absolute bottom-1 right-1 w-10 h-10 bg-secondary-container rounded-full shadow-lg flex items-center justify-center text-on-secondary-container border-2 border-white dark:border-surface-container-highest z-20">
               <Edit3 size={18} strokeWidth={2.5} />
             </div>
           </button>
@@ -260,10 +260,10 @@ export function Profile() {
                     <span className="font-black text-sm">{t('profile.share.link_title', { defaultValue: 'link title' })}</span>
                   </div>
                   
-                  <button 
-                    onClick={handleCopyShareLink}
-                    className="w-full py-4 bg-[#FF6B00] text-white rounded-2xl font-black text-base shadow-lg shadow-orange-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                  >
+<button 
+  onClick={handleCopyShareLink}
+  className="w-full py-4 bg-amber-600 text-white rounded-2xl font-black text-base shadow-lg shadow-amber-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+>
                     {copySuccess ? <Check size={20} /> : <Share2 size={20} />}
                     {copySuccess ? t('profile.share.link_copied', { defaultValue: 'link copied' }) : t('profile.share.copy_link', { defaultValue: 'copy link' })}
                   </button>
@@ -280,17 +280,17 @@ export function Profile() {
                   
                   <div className="p-6 bg-surface-container-high dark:bg-white/5 rounded-[2.5rem] space-y-4 border border-outline-variant/10">
                     <div className="flex gap-2">
-                      <button 
-                        onClick={handleExport}
-                        disabled={isExporting}
-                        className="flex-1 py-3.5 bg-[#3B82F6] text-white rounded-xl font-black text-sm active:scale-[0.98] transition-all disabled:opacity-50"
-                      >
+<button 
+  onClick={handleExport}
+  disabled={isExporting}
+  className="flex-1 py-3.5 bg-tertiary text-on-tertiary rounded-xl font-black text-sm active:scale-[0.98] transition-all disabled:opacity-50"
+>
                         {t('profile.export.download', { defaultValue: '下载' })}
                       </button>
-                      <button 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex-1 py-3.5 bg-[#10B981] text-white rounded-xl font-black text-sm active:scale-[0.98] transition-all"
-                      >
+<button 
+  onClick={() => fileInputRef.current?.click()}
+  className="flex-1 py-3.5 bg-primary text-on-primary rounded-xl font-black text-sm active:scale-[0.98] transition-all"
+>
                         {t('profile.import.upload', { defaultValue: '上传' })}
                       </button>
                     </div>
@@ -368,10 +368,10 @@ export function Profile() {
               key={member.id} 
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate(`/profile/members/${member.id}`)}
-              className={cn(
-                "min-w-[90px] flex flex-col items-center bg-white dark:bg-surface-container-low rounded-[1.8rem] p-3 shadow-sm border transition-all cursor-pointer relative",
-                currentUser?.id === member.id ? "border-[#98EE99] bg-[#E8F5E9]/30 dark:bg-[#E8F5E9]/10 shadow-md" : "border-outline-variant/10"
-              )}
+className={cn(
+  "min-w-[90px] flex flex-col items-center bg-white dark:bg-surface-container-low rounded-[1.8rem] p-3 shadow-sm border transition-all cursor-pointer relative",
+  currentUser?.id === member.id ? "border-primary-surface bg-primary-container/30 dark:bg-primary-container/10 shadow-md" : "border-outline-variant/10"
+)}
             >
               <TextAvatar src={member.avatar} name={member.name} size={48} className="mb-2" />
               <span className="font-black text-[13px] mb-1 text-on-surface truncate w-full text-center">{member.name}</span>

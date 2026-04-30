@@ -64,7 +64,7 @@ export function Home() {
           {/* AI Microphone Button - Newly added */}
           <button 
             onClick={() => setIsAiDialogOpen(true)}
-            className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-primary/20 text-[#2E7D32] hover:bg-primary/5 active:scale-95 transition-all"
+            className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-primary/20 text-primary-text hover:bg-primary/5 active:scale-95 transition-all"
           >
             <Mic size={20} strokeWidth={2.5} />
           </button>
@@ -75,7 +75,7 @@ export function Home() {
             onClick={() => navigate('/history')}
             className="bg-surface-container-low backdrop-blur-sm py-1 sm:py-1.5 px-3 sm:px-4 rounded-full flex items-center gap-1.5 sm:gap-2 shadow-sm border border-outline-variant/10 cursor-pointer hover:bg-surface-container transition-colors active:scale-95"
           >
-            <Star size={14} className="sm:size-[18px] text-[#FBC02D] fill-current" />
+            <Star size={14} className="sm:size-[18px] text-secondary fill-current" />
             <span className="font-black text-on-surface text-sm sm:text-base">{stars.toLocaleString()}</span>
           </div>
           <button 
@@ -99,7 +99,7 @@ export function Home() {
         <motion.div 
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="relative bg-gradient-to-br from-[#A5D6A7] via-[#4CAF50] to-[#2E7D32] rounded-[3rem] py-8 sm:py-10 px-6 sm:px-10 text-white shadow-[0_20px_50px_-10px_rgba(46,125,50,0.4)] overflow-hidden"
+          className="relative bg-gradient-to-br from-primary-surface via-primary-container to-primary-text rounded-[3rem] py-8 sm:py-10 px-6 sm:px-10 text-white shadow-[0_20px_50px_-10px_rgba(46,125,50,0.4)] overflow-hidden"
         >
           {/* Floating cute elements */}
           <motion.div 

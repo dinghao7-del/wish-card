@@ -137,7 +137,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, idx, onClick, onCheckI
               e.stopPropagation();
               if (onCheckIn) onCheckIn(task.id);
             }}
-            className="px-5 py-2.5 rounded-full bg-[#2E7D32] text-white text-[11px] font-black shadow-lg shadow-[#2E7D32]/20 hover:scale-105 hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"
+            className="px-5 py-2.5 rounded-full bg-primary text-on-primary text-[11px] font-black shadow-lg shadow-primary/20 hover:scale-105 hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"
           >
             <CheckCircle2 size={13} strokeWidth={3} />
             {t('tasks.action.check_in', '打卡')}

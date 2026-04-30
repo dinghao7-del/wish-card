@@ -140,7 +140,7 @@ export function MemberDetail() {
               setNewStarsValue(0);
               setIsEditingStars(true);
             }}
-            className="flex-1 bg-[#2E7D32] text-white py-4 rounded-2xl font-black shadow-lg shadow-green-900/10 active:scale-95 transition-transform flex items-center justify-center gap-2"
+            className="flex-1 bg-primary text-on-primary py-4 rounded-2xl font-black shadow-lg shadow-primary/10 active:scale-95 transition-transform flex items-center justify-center gap-2"
           >
             <Plus size={18} strokeWidth={3} />
             {t('member_detail.add_stars', { defaultValue: 'add stars' })}
@@ -356,7 +356,7 @@ export function MemberDetail() {
               <div className="flex flex-col gap-3">
                 <button 
                   onClick={handleUpdateStars}
-                  className="w-full py-4 rounded-full bg-[#D1E0FF] text-[#4285F4] font-black shadow-sm active:scale-95 transition-transform"
+                  className="w-full py-4 rounded-full bg-tertiary-container text-tertiary font-black shadow-sm active:scale-95 transition-transform"
                 >
                   {t('common.confirm', { defaultValue: '确认' })}
                 </button>

@@ -30,8 +30,8 @@ export function History() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFCF9] pb-20 animate-in fade-in duration-500">
-      <header className="flex justify-between items-center px-4 py-4 sticky top-0 bg-[#FDFCF9]/80 backdrop-blur-xl z-50">
+    <div className="min-h-screen bg-surface pb-20 animate-in fade-in duration-500">
+      <header className="flex justify-between items-center px-4 py-4 sticky top-0 bg-surface/80 backdrop-blur-xl z-50">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container/50 transition-colors">
             <ChevronLeft size={24} />
@@ -41,7 +41,7 @@ export function History() {
       </header>
 
       <div className="px-4 py-4">
-        <div className="bg-[#E8F5E9] rounded-[2.5rem] py-6 px-8 mb-6 flex flex-col items-center justify-center text-[#2E7D32] shadow-sm relative overflow-hidden border border-[#D4E157]/30">
+        <div className="bg-primary-container rounded-[2.5rem] py-6 px-8 mb-6 flex flex-col items-center justify-center text-primary-text shadow-sm relative overflow-hidden border border-primary-surface/30">
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-3xl" />
           <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/20 rounded-full blur-3xl" />
           
@@ -68,10 +68,10 @@ export function History() {
                 className="bg-white rounded-3xl p-5 shadow-sm border border-outline-variant/5 flex items-center justify-between"
               >
                 <div className="flex items-center gap-4">
-                  <div className={cn(
-                    "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner",
-                    record.stars > 0 ? "bg-[#E8F5E9] text-[#2E7D32]" : "bg-[#FFF9C4] text-[#FBC02D]"
-                  )}>
+<div className={cn(
+  "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner",
+  record.stars > 0 ? "bg-primary-container text-primary-text" : "bg-secondary-container text-secondary"
+)}>
                     {getRecordIcon(record.icon || (record.stars > 0 ? 'TrendingUp' : 'TrendingDown'))}
                   </div>
                   <div>
@@ -79,10 +79,10 @@ export function History() {
                     <p className="text-[10px] font-bold text-on-surface-variant/40 mt-0.5">{formatDate(record.timestamp)}</p>
                   </div>
                 </div>
-                <div className={cn(
-                  "font-black text-lg",
-                  record.stars > 0 ? "text-[#2E7D32]" : "text-[#FBC02D]"
-                )}>
+<div className={cn(
+  "font-black text-lg",
+  record.stars > 0 ? "text-primary-text" : "text-secondary"
+)}>
                   {record.stars > 0 ? `+${record.stars}` : record.stars}
                 </div>
               </motion.div>

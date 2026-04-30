@@ -25,8 +25,8 @@ export function SettingsSubPage() {
         return {
           title: t('profile.menu.security', { defaultValue: '安全' }),
           icon: Shield,
-          iconBg: 'bg-[#F1F9F1]',
-          iconColor: 'text-[#22C55E]',
+          iconBg: 'bg-primary-container',
+          iconColor: 'text-primary-text',
           subHeadline: t('settings.security.subtitle', { defaultValue: '副标题' }),
           items: [
             { id: 'password', label: t('settings.security.password', { defaultValue: '密码' }), desc: t('settings.security.password_desc', { defaultValue: 'password desc' }) },
@@ -38,7 +38,7 @@ export function SettingsSubPage() {
         return {
           title: t('profile.menu.notifications', { defaultValue: '通知' }),
           icon: Bell,
-          iconBg: 'bg-[#F0F7FF]',
+          iconBg: 'bg-tertiary-container',
           iconColor: 'text-blue-500',
           subHeadline: t('settings.notifications.subtitle', { defaultValue: '副标题' }),
           items: [
@@ -89,8 +89,8 @@ export function SettingsSubPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] px-6 pb-24 animate-in fade-in slide-in-from-right-4 duration-500">
-      <header className="flex justify-between items-center py-4 bg-[#F8F9FA] sticky top-0 z-40 -mx-6 px-6">
+    <div className="min-h-screen bg-surface px-6 pb-24 animate-in fade-in slide-in-from-right-4 duration-500">
+      <header className="flex justify-between items-center py-4 bg-surface sticky top-0 z-40 -mx-6 px-6">
         <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
           <ArrowLeft size={24} />
         </button>
@@ -115,14 +115,14 @@ export function SettingsSubPage() {
             <div 
                key={idx} 
                onClick={() => handleItemClick(item)}
-               className="flex items-center justify-between p-6 border-b border-outline-variant/5 last:border-0 hover:bg-[#F8F9FA] active:bg-[#F1F3F5] transition-colors cursor-pointer group"
+               className="flex items-center justify-between p-6 border-b border-outline-variant/5 last:border-0 hover:bg-surface-container active:bg-surface-container-high transition-colors cursor-pointer group"
             >
               <div className="flex flex-col">
                 <span className="font-black text-[15px] text-on-surface">{item.label}</span>
                 <span className="text-xs text-on-surface-variant/50 font-bold mt-1 uppercase tracking-wider">{item.desc}</span>
               </div>
               {item.isToggle ? (
-                <div className="w-12 h-7 bg-[#98EE99] rounded-full relative p-1 flex items-center justify-end shadow-inner">
+                <div className="w-12 h-7 bg-primary-surface rounded-full relative p-1 flex items-center justify-end shadow-inner">
                   <div className="w-5 h-5 bg-white rounded-full shadow-md"></div>
                 </div>
               ) : (
@@ -249,7 +249,7 @@ export function SettingsSubPage() {
                             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-on-surface-variant"><Smartphone size={20} /></div>
                             <div>
                                <p className="font-bold text-sm">iPhone 15 Pro</p>
-                               <p className="text-[10px] text-[#22C55E] font-black uppercase">{t('settings.security.current_device', { defaultValue: 'current device' })}</p>
+                               <p className="text-[10px] text-primary-text font-black uppercase">{t('settings.security.current_device', { defaultValue: 'current device' })}</p>
                             </div>
                          </div>
                       </div>

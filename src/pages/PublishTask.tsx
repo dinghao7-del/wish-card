@@ -400,7 +400,7 @@ export function PublishTask() {
             <button 
               type="button" 
               onClick={() => navigate('/tasks/templates', { state: { fromMode: viewMode } })}
-              className="flex items-center gap-1 px-3 sm:px-4 py-2 bg-[#98EE99]/20 rounded-full text-[#2E7D32] text-xs sm:text-sm font-black transition-all active:scale-95 shrink-0"
+              className="flex items-center gap-1 px-3 sm:px-4 py-2 bg-primary-surface/20 rounded-full text-primary-text text-xs sm:text-sm font-black transition-all active:scale-95 shrink-0"
             >
               {t('publish_task.import', '导入')} <ChevronRight size={14} strokeWidth={3} />
             </button>
@@ -409,7 +409,7 @@ export function PublishTask() {
             <button
               type="button"
               onClick={handleSave}
-              className="text-[#2E7D32] text-sm font-black px-4 py-2"
+              className="text-primary-text text-sm font-black px-4 py-2"
             >
               {t('publish_task.save', '保存')}
             </button>
@@ -496,7 +496,7 @@ export function PublishTask() {
                         onClick={() => setIsRepeatEnabled(!isRepeatEnabled)}
                         className={cn(
                           "w-9 h-5 rounded-full transition-all flex items-center px-0.5 shadow-inner",
-                          isRepeatEnabled ? "bg-[#98EE99]" : "bg-outline-variant/30"
+                          isRepeatEnabled ? "bg-primary-surface" : "bg-outline-variant/30"
                         )}
                       >
                         <motion.div 
@@ -536,7 +536,7 @@ export function PublishTask() {
                         onClick={() => setIsTimeEnabled(!isTimeEnabled)}
                         className={cn(
                           "w-9 h-5 rounded-full transition-all flex items-center px-0.5 shadow-inner",
-                          isTimeEnabled ? "bg-[#98EE99]" : "bg-outline-variant/30"
+                          isTimeEnabled ? "bg-primary-surface" : "bg-outline-variant/30"
                         )}
                       >
                         <motion.div 
@@ -592,7 +592,7 @@ export function PublishTask() {
                   <button 
                     type="button" 
                     onClick={() => navigate('/tasks/templates', { state: { fromMode: viewMode } })}
-                    className="flex items-center gap-1 px-3 py-1 bg-[#98EE99]/10 rounded-full text-[#2E7D32] text-xs font-black transition-all active:scale-95"
+                    className="flex items-center gap-1 px-3 py-1 bg-primary-surface/10 rounded-full text-primary-text text-xs font-black transition-all active:scale-95"
                   >
                     {t('publish_task.import', '导入')} <ChevronRight size={12} strokeWidth={3} />
                   </button>
@@ -808,8 +808,8 @@ export function PublishTask() {
                    >
                      +
                    </button>
-                   <div className="ml-2 w-6 h-6 rounded-full bg-[#FBC02D]/10 flex items-center justify-center">
-                      <Star size={12} className="text-[#FBC02D] fill-current" />
+                   <div className="ml-2 w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center">
+                      <Star size={12} className="text-secondary fill-current" />
                    </div>
                 </div>
              </div>
@@ -827,12 +827,12 @@ export function PublishTask() {
                       className={cn(
                         "flex items-center gap-3 p-2.5 sm:p-3 rounded-2xl border-2 transition-all text-left",
                         formData.creatorId === parent.id 
-                          ? "border-[#98EE99] bg-[#98EE99]/5 shadow-sm" 
+                          ? "border-primary-surface bg-primary-surface/5 shadow-sm" 
                           : "border-outline-variant/5 bg-surface-container-low/30"
                       )}
                     >
                       <TextAvatar src={parent.avatar} name={parent.name} size={40} className="shadow-sm bg-white" />
-                      <span className={cn("font-bold text-xs sm:text-sm", formData.creatorId === parent.id ? "text-[#2E7D32]" : "text-on-surface-variant")}>
+                      <span className={cn("font-bold text-xs sm:text-sm", formData.creatorId === parent.id ? "text-primary-text" : "text-on-surface-variant")}>
                          {parent.name}
                       </span>
                     </button>
@@ -860,12 +860,12 @@ export function PublishTask() {
                       className={cn(
                         "flex items-center gap-3 p-2.5 sm:p-3 rounded-2xl border-2 transition-all text-left",
                         formData.assigneeIds?.includes(kid.id) 
-                          ? "border-[#98EE99] bg-[#98EE99]/5 shadow-sm" 
+                          ? "border-primary-surface bg-primary-surface/5 shadow-sm" 
                           : "border-outline-variant/5 bg-surface-container-low/30"
                       )}
                     >
                       <TextAvatar src={kid.avatar} name={kid.name} size={40} className="shadow-sm bg-white" />
-                      <span className={cn("font-bold text-xs sm:text-sm", formData.assigneeIds?.includes(kid.id) ? "text-[#2E7D32]" : "text-on-surface-variant")}>
+                      <span className={cn("font-bold text-xs sm:text-sm", formData.assigneeIds?.includes(kid.id) ? "text-primary-text" : "text-on-surface-variant")}>
                          {kid.name}
                       </span>
                     </button>
@@ -876,11 +876,11 @@ export function PublishTask() {
         )}
 
         {/* Submit Button Block (Shared but logic varies) */}
-        <div className="fixed bottom-0 left-0 right-0 z-[60] p-4 sm:p-6 bg-gradient-to-t from-[#FDFCF9] via-[#FDFCF9] to-transparent">
+        <div className="fixed bottom-0 left-0 right-0 z-[60] p-4 sm:p-6 bg-gradient-to-t from-surface via-surface to-transparent">
           <div className="max-w-md mx-auto">
             <button 
               type="submit"
-              className="w-full py-4 sm:py-5 bg-[#98EE99] text-[#2E7D32] font-black text-lg sm:text-xl rounded-full shadow-[0_12px_40px_-5px_rgba(152,238,153,0.4)] border-4 border-white active:scale-[0.98] transition-all relative overflow-hidden"
+              className="w-full py-4 sm:py-5 bg-primary-surface text-primary-text font-black text-lg sm:text-xl rounded-full shadow-[0_12px_40px_-5px_rgba(152,238,153,0.4)] border-4 border-white active:scale-[0.98] transition-all relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full animate-[shimmer_3s_infinite]" />
               {isEdit ? t('common.save', '保存修改') : t('publish_task.submit_add', '确认添加')}
@@ -914,7 +914,7 @@ export function PublishTask() {
                   setFormData({ ...formData, type: tempCategory as any });
                   setShowCategoryModal(false);
                 }}
-                className="w-10 h-10 flex items-center justify-center text-[#98EE99]"
+                className="w-10 h-10 flex items-center justify-center text-primary-surface"
               >
                 <Check size={28} strokeWidth={3} />
               </button>
@@ -1040,7 +1040,7 @@ export function PublishTask() {
                 </div>
               </div>
 
-              <div className="mb-8 pl-4 border-l-2 border-[#98EE99]/30">
+              <div className="mb-8 pl-4 border-l-2 border-primary-surface/30">
                 <p className="text-sm font-black text-on-surface-variant/40">
                    {t('publish_task.time_execution', '该目标执行时段：{{time}}', { time: getTimeLabel() })}
                 </p>
@@ -1059,7 +1059,7 @@ export function PublishTask() {
                     onClick={() => setIsReminderOn(!isReminderOn)}
                     className={cn(
                       "w-12 h-6 rounded-full transition-all flex items-center px-1",
-                      isReminderOn ? "bg-[#98EE99]" : "bg-outline-variant/30"
+                      isReminderOn ? "bg-primary-surface" : "bg-outline-variant/30"
                     )}
                   >
                     <motion.div 
@@ -1123,7 +1123,7 @@ export function PublishTask() {
                     />
                     <button 
                       onClick={handleAddTag}
-                      className="px-6 py-3 bg-[#98EE99] text-primary rounded-xl font-black text-sm shadow-sm"
+                      className="px-6 py-3 bg-primary-surface text-primary-text rounded-xl font-black text-sm shadow-sm"
                     >
                       {t('publish_task.add_tag', '添加')}
                     </button>
@@ -1201,7 +1201,7 @@ export function PublishTask() {
                          {repeatTab === tab && (
                            <motion.div 
                               layoutId="tab-underline"
-                              className="absolute bottom-0 left-0 right-0 h-1 bg-[#98EE99] rounded-full"
+                              className="absolute bottom-0 left-0 right-0 h-1 bg-primary-surface rounded-full"
                            />
                          )}
                       </button>
@@ -1209,7 +1209,7 @@ export function PublishTask() {
                  </div>
                  <button 
                     onClick={() => setShowRepeatModal(false)}
-                    className="w-12 h-12 flex items-center justify-center rounded-full text-[#98EE99]"
+                    className="w-12 h-12 flex items-center justify-center rounded-full text-primary-surface"
                  >
                     <Check size={32} strokeWidth={3} />
                  </button>
@@ -1309,8 +1309,8 @@ export function PublishTask() {
                           >
                             <span className={cn(
                               "w-10 h-10 flex items-center justify-center rounded-full text-base font-black transition-all",
-                              isSelected ? "bg-[#98EE99] text-[#2E7D32]" : "text-on-surface",
-                              isToday(day) && !isSelected && "border-2 border-[#98EE99]/50"
+                              isSelected ? "bg-primary-surface text-primary-text" : "text-on-surface",
+                              isToday(day) && !isSelected && "border-2 border-primary-surface/50"
                             )}>
                               {format(day, 'd')}
                             </span>
