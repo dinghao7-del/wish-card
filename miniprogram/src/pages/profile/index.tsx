@@ -1,5 +1,6 @@
-import { View, Text, Image } from '@tarojs/components';
+import { View, Text, Image, Switch } from '@tarojs/components';
 import { useState, useEffect } from 'react';
+import Taro from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
 import './index.scss';
 

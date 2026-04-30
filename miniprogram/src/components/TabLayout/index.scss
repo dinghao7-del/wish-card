@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: $bg-color-variant;
+  background-color: $bg-color;
 }
 
 .tab-content {
@@ -17,7 +17,7 @@
   justify-content: space-around;
   align-items: center;
   height: 120rpx;
-  background-color: #FFFFFF;
+  background-color: $card-bg;
   border-top: 2rpx solid $border-light;
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -33,11 +33,11 @@
   
   &.active {
     .tab-icon {
-      background-color: $primary-dark;
+      background-color: $primary-color;
     }
     
     .tab-text {
-      color: $primary-dark;
+      color: $primary-color;
       font-weight: 600;
     }
   }
@@ -63,7 +63,7 @@
     width: 80rpx;
     height: 80rpx;
     border-radius: 50%;
-    background-color: $primary-dark;
+    background-color: $primary-color;
     margin-top: -40rpx;
     mask: url('@/assets/icons/check.svg') no-repeat center;
     mask-size: 60%;
@@ -82,5 +82,5 @@
 
 .tab-text {
   font-size: 20rpx;
-  color: #78746E;
+  color: $text-secondary-variant;
 }

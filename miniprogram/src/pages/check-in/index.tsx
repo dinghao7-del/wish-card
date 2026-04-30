@@ -1,5 +1,6 @@
 import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
+import Taro from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
 import './index.scss';
 

@@ -27,7 +27,7 @@
 .category-tabs {
   display: flex;
   margin-bottom: 30rpx;
-  background-color: #FFFFFF;
+  background-color: $surface-container-low;
   border-radius: 48rpx;
   padding: 8rpx;
 }
@@ -41,7 +41,7 @@
   color: $text-secondary-variant;
   
   &.active {
-    background-color: $primary-dark;
+    background-color: $primary-color;
     color: white;
     font-weight: 600;
   }
@@ -55,7 +55,7 @@
 
 .reward-card {
   width: calc(50% - 12rpx);
-  background-color: white;
+  background-color: $card-bg;
   border-radius: 16rpx;
   overflow: hidden;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
@@ -94,7 +94,7 @@
 
 .exchange-button {
   margin: 0 20rpx 20rpx;
-  background-color: $primary-dark;
+  background-color: $primary-color;
   color: white;
   border-radius: 48rpx;
   padding: 16rpx 0;

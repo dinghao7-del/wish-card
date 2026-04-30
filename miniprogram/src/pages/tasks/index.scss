@@ -19,7 +19,7 @@
   width: 60rpx;
   height: 60rpx;
   border-radius: 50%;
-  background-color: $primary-dark;
+  background-color: $primary-color;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -44,7 +44,7 @@
   color: $text-secondary-variant;
   
   &.active {
-    background-color: $primary-dark;
+    background-color: $primary-color;
     color: white;
     font-weight: 600;
   }
@@ -57,7 +57,7 @@
 .task-card {
   display: flex;
   align-items: center;
-  background-color: white;
+  background-color: $card-bg;
   border-radius: 16rpx;
   padding: 20rpx;
   margin-bottom: 16rpx;
@@ -104,14 +104,14 @@
   width: 48rpx;
   height: 48rpx;
   border-radius: 50%;
-  border: 4rpx solid $border-light;
+  border: 4rpx solid $border-color;
   display: flex;
   justify-content: center;
   align-items: center;
   
   &.checked {
-    background-color: $primary-dark;
-    border-color: $primary-dark;
+    background-color: $primary-color;
+    border-color: $primary-color;
     color: white;
   }
 }

@@ -4,15 +4,15 @@
 // 颜色变量 (从 DESIGN_TOKENS.md 同步)
 $primary-color: #006e1c; // 主色 - 与Web一致
 $primary-container: #4caf50; // 主色容器
-$primary-dark: #2E7D32; // 主色深色变体 - 用于渐变
+$primary-dark: #005a15; // 主色深色变体 - 与Android一致
 $secondary-color: #686000; // 辅助色
 $secondary-container: #f0e269; // 辅助色容器
 $bg-color: #fbf9f5; // 背景 - 与Web一致
 $bg-color-variant: #F5F5F0; // 背景变体
 $card-bg: #FFFFFF; // 卡片白
 $text-primary: #1b1c1a; // 主文字 - 修正为小写
-$text-secondary: #3f4a3c; // 次要文字
-$text-secondary-variant: #78746E; // 次要文字变体
+$text-secondary: #3f4a3c; // 次要文字 (on-surface-variant)
+$text-secondary-variant: #3f4a3c; // 次要文字变体 (on-surface-variant) - Outline Variant
 $border-color: #becab9; // 边框色
 $border-light: #E8E4DF; // 浅色边框
 $surface-container-low: #f5f3ef;

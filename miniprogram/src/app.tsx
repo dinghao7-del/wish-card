@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { createApp } from '@tarojs/taro';
+import { useState, useEffect } from 'react';
+import Taro, { useLaunch, useShow, useHide } from '@tarojs/taro';
 import { Provider } from 'react-redux';
 import { configureStore } from './store';
 import TabLayout from './components/TabLayout';
@@ -9,7 +9,7 @@ import './app.scss';
 const store = configureStore();
 
 function App() {
-  const [launchOptions, setLaunchOptions] = useState(null);
+  const [launchOptions, setLaunchOptions] = useState<any>(null);
 
   // 小程序启动时
   useLaunch(() => {
@@ -44,4 +44,4 @@ function App() {
   );
 }
 
-export default createApp(App);
+export default App;
