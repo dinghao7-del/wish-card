@@ -15,6 +15,11 @@ val Secondary = Color(0xFF686000)
 val SecondaryLight = Color(0xFFf0e269)  // Secondary Container
 val SecondaryDark = Color(0xFF4a4400)
 
+// Material Design 3 Container Colors (向后兼容)
+val PrimaryContainer = PrimaryLight
+val SecondaryContainer = SecondaryLight
+val TertiaryContainer = Color(0xFFe0e0e0)  // 临时值，可根据需要修改
+
 // Background & Surface Colors - Light Mode
 val BackgroundLight = Color(0xFFfbf9f5)  // --color-background
 val SurfaceLight = Color(0xFFfbf9f5)     // --color-surface
@@ -57,6 +62,14 @@ val StatusCompleted = Color(0xFF81C784)
 // Role Colors (保持不变)
 val ParentColor = Color(0xFF5C6BC0)
 val ChildColor = Color(0xFF26A69A)
+
+// Additional Design Tokens (从 Web index.css 同步)
+val PrimarySurface = Color(0xFF98EE99)  // --color-primary-surface
+val PrimaryText = Color(0xFF2E7D32)     // --color-primary-text
+val AmberSurface = Color(0xFFFFE0B2)    // --color-amber-surface
+val AmberText = Color(0xFFF57C00)       // --color-amber-text
+val PurpleSurface = Color(0xFFE1BEE7)   // --color-purple-surface
+val PurpleText = Color(0xFF7B1FA2)      // --color-purple-text
 
 // Quick Action Colors (保持不变)
 val QuickActionYellow = Color(0xFFFFF9C4)  // 创建任务
