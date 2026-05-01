@@ -31,6 +31,7 @@ export function EditProfile() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
+  const [usePinCode, setUsePinCode] = useState(!!memberToEdit?.pin);
 
   useEffect(() => {
     if (memberToEdit) {
@@ -43,6 +44,7 @@ export function EditProfile() {
         pin: memberToEdit.pin || '',
         password: memberToEdit.password || ''
       });
+      setUsePinCode(!!memberToEdit.pin);
     }
   }, [memberToEdit]);
 
@@ -53,14 +55,22 @@ export function EditProfile() {
     e.preventDefault();
     setError('');
 
-    if (memberToEdit?.role === 'parent' && !formData.password?.trim()) {
-      setError(t('edit_profile.error_password_required', '管理员账号必须保留登录密码 🔐'));
-      return;
-    }
-
-    if (memberToEdit) {
-      updateMember({ ...memberToEdit, ...formData } as Member);
-      navigate(-1);
+    if (usePinCode) {
+      // PIN码模式：只清理数据
+      if (memberToEdit) {
+        updateMember({ ...memberToEdit, ...formData, password: '' } as Member);
+        navigate(-1);
+      }
+    } else {
+      // 系统密码模式
+      if (memberToEdit?.role === 'parent' && !formData.password?.trim()) {
+        setError(t('edit_profile.error_password_required', '管理员账号必须保留登录密码 🔐'));
+        return;
+      }
+      if (memberToEdit) {
+        updateMember({ ...memberToEdit, ...formData, pin: '' } as Member);
+        navigate(-1);
+      }
     }
   };
 
@@ -126,48 +136,108 @@ export function EditProfile() {
           </div>
 
           {canEditPin && (
-            <div className="space-y-2">
-              <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">{t('edit_profile.pin_label', '修改密码 (4位数字)')}</label>
-              <input
-                required
-                type="password"
-                maxLength={4}
-                pattern="[0-9]*"
-                inputMode="numeric"
-                value={formData.pin}
-                placeholder={t('edit_profile.pin_placeholder', '设置4位数字密码')}
-                onChange={e => {
-                  const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
-                  setFormData({ ...formData, pin: val });
-                }}
-                className="w-full bg-surface-container-high border-2 border-transparent rounded-[1.5rem] px-6 py-4.5 font-black focus:border-primary/20 transition-all tracking-[0.5em] text-center"
-              />
-              <p className="text-[10px] text-on-surface-variant/60 font-bold px-2">{t('edit_profile.pin_hint', '管理员可重置所有人的密码，用户也可以修改自己的密码。')}</p>
-            </div>
-          )}
+            <>
+              {/* 管理员切换开关 */}
+              {isAdmin && (
+                <div className="flex items-center justify-between bg-surface-container/50 rounded-2xl px-5 py-4">
+                  <div className="flex items-center gap-3">
+                    <Lock size={18} className="text-on-surface-variant" />
+                    <span className="text-sm font-bold text-on-surface">
+                      {usePinCode ? t('edit_profile.user_pin', '用户PIN码') : t('edit_profile.system_password', '系统密码')}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setUsePinCode(!usePinCode)}
+                    className={cn(
+                      "w-12 h-7 rounded-full transition-all flex items-center p-1 shadow-inner",
+                      usePinCode ? "bg-primary" : "bg-gray-200"
+                    )}
+                  >
+                    <motion.div 
+                      animate={{ x: usePinCode ? 20 : 0 }}
+                      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                      className="w-5 h-5 bg-white rounded-full shadow"
+                    />
+                  </button>
+                </div>
+              )}
 
-          {canEditPin && (
-            <div className="space-y-2">
-              <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2 flex items-center justify-between">
-                <span>{t('edit_profile.password_label', '登录密码')} {memberToEdit.role === 'parent' && <span className="text-red-500 text-[10px]">{t('edit_profile.password_required', '(必填)')}</span>}</span>
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={e => setFormData({ ...formData, password: e.target.value })}
-                  placeholder={memberToEdit.role === 'parent' ? t('edit_profile.password_placeholder_parent', '设置管理员密码') : t('edit_profile.password_placeholder_child', '选填：登录密码')}
-                  className="w-full bg-surface-container-high border-2 border-transparent rounded-[1.5rem] px-6 py-4.5 font-bold transition-all pr-12"
-                />
-                <button 
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-on-surface-variant/40 hover:text-primary"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
+              {usePinCode ? (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">{t('edit_profile.input_pin', '输入PIN码')}</label>
+                    <input
+                      type="password"
+                      maxLength={4}
+                      pattern="[0-9]*"
+                      inputMode="numeric"
+                      value={formData.pin}
+                      placeholder={t('edit_profile.pin_placeholder', '设置4位数字密码')}
+                      onChange={e => {
+                        const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                        setFormData({ ...formData, pin: val });
+                      }}
+                      className="w-full bg-surface-container-high border-2 border-transparent rounded-[1.5rem] px-6 py-4.5 font-black focus:border-primary/20 transition-all tracking-[0.5em] text-center"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">{t('edit_profile.confirm_pin', '确认PIN码')}</label>
+                    <input
+                      type="password"
+                      maxLength={4}
+                      pattern="[0-9]*"
+                      inputMode="numeric"
+                      placeholder={t('edit_profile.confirm_pin_placeholder', '再次输入PIN码')}
+                      className="w-full bg-surface-container-high border-2 border-transparent rounded-[1.5rem] px-6 py-4.5 font-black focus:border-primary/20 transition-all tracking-[0.5em] text-center"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2 flex items-center justify-between">
+                      <span>{t('edit_profile.change_password', '修改密码')} {memberToEdit.role === 'parent' && <span className="text-red-500 text-[10px] ml-1">{t('edit_profile.password_required', '(必填)')}</span>}</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={formData.password}
+                        onChange={e => setFormData({ ...formData, password: e.target.value })}
+                        placeholder={memberToEdit.role === 'parent' ? t('edit_profile.password_placeholder_parent', '设置管理员密码') : t('edit_profile.password_placeholder_child', '选填：登录密码')}
+                        className="w-full bg-surface-container-high rounded-[1.5rem] px-6 py-4.5 text-on-surface font-bold placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-primary/20 border-2 border-transparent focus:border-primary/20 transition-all pr-12"
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50 hover:text-primary transition-colors"
+                      >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">{t('edit_profile.confirm_password', '确认密码')}</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        placeholder={t('edit_profile.confirm_password_placeholder', '再次输入密码')}
+                        className="w-full bg-surface-container-high rounded-[1.5rem] px-6 py-4.5 text-on-surface font-bold placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-primary/20 border-2 border-transparent focus:border-primary/20 transition-all pr-12"
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50 hover:text-primary transition-colors"
+                      >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </>
           )}
         </div>
 
