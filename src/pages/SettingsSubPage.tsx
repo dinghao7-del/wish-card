@@ -140,7 +140,7 @@ export function SettingsSubPage() {
       </div>
 
       <div className="space-y-4">
-        <div className="bg-surface rounded-[2rem] shadow-sm border border-outline-variant/10 overflow-hidden">
+        <div className="ui-panel bg-surface rounded-[2rem] shadow-sm border border-outline-variant/10 overflow-hidden">
           {content.items.map((item: SettingsItem, idx) => {
             const isActiveSkin = item.skin?.id === activeSkinId;
             const isPlannedSkin = item.skin?.status === 'planned';

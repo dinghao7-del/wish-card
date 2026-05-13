@@ -84,7 +84,7 @@ export function Layout() {
         <motion.div 
           initial={{ y: -60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="fixed top-0 left-0 right-0 z-[45] h-12 bg-secondary-container border-b border-secondary/30 px-3 flex items-center justify-between gap-2 max-w-md mx-auto shadow-sm"
+          className="ui-guest-banner fixed top-0 left-0 right-0 z-[45] h-12 bg-secondary-container border-b border-secondary/30 px-3 flex items-center justify-between gap-2 max-w-md mx-auto shadow-sm"
         >
           <div className="flex min-w-0 items-center gap-2">
             <Sparkles size={16} className="text-secondary shrink-0" />

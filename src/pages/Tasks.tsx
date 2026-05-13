@@ -290,7 +290,7 @@ export function Tasks() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => navigate('/tasks/templates')}
-                          className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all ml-auto"
+                          className="ui-comic-button w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all ml-auto"
                         >
                           <Plus size={18} strokeWidth={3} />
                         </motion.button>

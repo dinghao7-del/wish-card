@@ -249,7 +249,7 @@ function QuickActionButton({ icon: Icon, label, onClick, highlight = false }: { 
   return (
     <button
       onClick={onClick}
-      className="min-h-[5.75rem] rounded-2xl bg-surface-container-low p-2.5 flex flex-col items-center justify-center gap-1.5 active:scale-95 transition-all group"
+      className="ui-quick-action min-h-[5.75rem] rounded-2xl bg-surface-container-low p-2.5 flex flex-col items-center justify-center gap-1.5 active:scale-95 transition-all group"
     >
       <div className={cn(
         "w-12 h-12 min-w-12 min-h-12 rounded-full flex items-center justify-center transition-colors",

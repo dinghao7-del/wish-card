@@ -390,7 +390,7 @@ export function Profile() {
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate(`/profile/members/${member.id}`)}
 className={cn(
-  "min-w-0 min-h-[120px] flex flex-col items-center bg-surface dark:bg-surface-container-low rounded-[1.8rem] p-3 shadow-sm border transition-all cursor-pointer relative",
+  "ui-panel-compact min-w-0 min-h-[120px] flex flex-col items-center bg-surface dark:bg-surface-container-low rounded-[1.8rem] p-3 shadow-sm border transition-all cursor-pointer relative",
   currentUser?.id === member.id ? "border-primary-surface bg-primary-container/30 dark:bg-primary-container/10 shadow-md" : "border-outline-variant/10"
 )}
             >
@@ -411,7 +411,7 @@ className={cn(
             <h3 className="font-black text-lg text-on-surface">最近操作</h3>
             <span className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest">本机记录</span>
           </div>
-          <div className="bg-surface dark:bg-surface-container-low rounded-[2rem] shadow-sm border border-outline-variant/5 overflow-hidden p-2">
+          <div className="ui-panel bg-surface dark:bg-surface-container-low rounded-[2rem] shadow-sm border border-outline-variant/5 overflow-hidden p-2">
             {auditLogs.slice(0, 5).map(log => (
               <div key={log.id} className="flex items-center gap-3 p-3 rounded-[1.5rem]">
                 <div className="w-10 h-10 rounded-2xl bg-surface-container flex items-center justify-center text-primary shrink-0">
@@ -434,7 +434,7 @@ className={cn(
 
       {/* Menu Groups */}
       <section className="space-y-4">
-        <div className="bg-surface dark:bg-surface-container-low rounded-[2.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-2">
+        <div className="ui-panel bg-surface dark:bg-surface-container-low rounded-[2.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-2">
           <MenuLink icon={Shield} label={t('profile.menu.security', { defaultValue: '安全' })} onClick={() => navigate('/settings/security')} />
           <MenuLink icon={Sparkles} label="AI 分析" desc="智能建档、家庭复盘、日程方案" onClick={() => navigate('/ai-analysis')} />
           <MenuLink icon={Download} label={t('profile.menu.share_backup', { defaultValue: 'share backup' })} desc={t('profile.menu.share_backup_desc', { defaultValue: 'share backup desc' })} onClick={() => setIsImportExportOpen(true)} />
@@ -444,7 +444,7 @@ className={cn(
           <MenuLink icon={MessageSquare} label={t('profile.menu.feedback', { defaultValue: '反馈' })} onClick={() => navigate('/support/feedback')} />
         </div>
 
-        <div className="bg-surface dark:bg-surface-container-low rounded-[2.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-2">
+        <div className="ui-panel bg-surface dark:bg-surface-container-low rounded-[2.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-2">
           <MenuLink icon={Palette} label="主题皮肤" desc="绿色漫画风 · 电玩漫画风可切换" onClick={() => navigate('/settings/appearance')} />
           <MenuLink icon={Moon} label={t('profile.menu.dark_mode', { defaultValue: '深色模式' })} isToggle active={isDarkMode} onToggle={toggleDarkMode} />
           <MenuLink icon={Settings} label={t('profile.menu.basic_settings', { defaultValue: '基础设置' })} onClick={() => navigate('/settings/basic')} />
