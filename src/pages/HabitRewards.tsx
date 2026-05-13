@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, ChevronLeft, MoreHorizontal, Plus, ChevronRight, Trophy, Ban, Globe, Edit, Trash2, CheckCircle2, Clock, AlertCircle, XCircle, Mic, X } from 'lucide-react';
+import { Star, ChevronLeft, MoreHorizontal, Plus, ChevronRight, Trophy, Ban, Globe, Edit, Trash2, CheckCircle2, Clock, AlertCircle, XCircle, Mic, X, Zap } from 'lucide-react';
 import { useFamily } from '../context/FamilyContext';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -110,6 +110,10 @@ export function HabitRewards() {
   // Filter habits for the current user and active tab
   const habits = tasks.filter(t => t.isHabit && (t.assigneeIds.includes(currentUser?.id || '') || currentUser?.role === 'parent'));
   const filteredHabits = habits.filter(h => activeTab === 'reward' ? h.rewardStars >= 0 : h.rewardStars < 0);
+  const rewardHabits = habits.filter(h => h.rewardStars >= 0);
+  const penaltyHabits = habits.filter(h => h.rewardStars < 0);
+  const streakDays = Math.max(0, ...habits.map(h => h.currentCount || 0));
+  const nextRewardHabit = rewardHabits.find(h => (h.currentCount || 0) < (h.targetCount || 5)) || rewardHabits[0];
 
   const getTaskIcon = (iconName: string, size = 32) => {
     if (!iconName) return <Trophy size={size} />;
@@ -218,10 +222,12 @@ export function HabitRewards() {
   return (
     <div className="min-h-screen bg-background pb-40 animate-in fade-in duration-500 text-on-surface px-6">
       {/* Header */}
-      <header className="flex justify-between items-center py-4 sticky top-[var(--app-sticky-top,0px)] bg-background/80 backdrop-blur-xl z-40 -mx-6 px-6">
+      <header className="ui-habit-header flex justify-between items-center py-4 sticky top-[var(--app-sticky-top,0px)] bg-background/80 backdrop-blur-xl z-40 -mx-6 px-6">
         <div className="flex items-center gap-3">
+          <Zap size={22} className="ui-habit-flash text-primary" strokeWidth={3} />
+          <h1 className="text-xl font-black text-on-surface">心愿清单</h1>
           <div
-            className="flex items-center gap-2 sm:gap-3 cursor-pointer group"
+            className="hidden items-center gap-2 sm:gap-3 cursor-pointer group"
             onClick={() => setIsUserSelectorOpen(true)}
           >
             <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={40} className="border-2 border-surface dark:border-surface shadow-sm group-hover:shadow-md transition-all" />
@@ -238,7 +244,7 @@ export function HabitRewards() {
         <div className="flex items-center gap-2 sm:gap-3">
           <div
             onClick={() => navigate('/history')}
-            className="bg-surface-container-low backdrop-blur-sm py-1 sm:py-1.5 px-3 sm:px-4 rounded-full flex items-center gap-1.5 sm:gap-2 shadow-sm border border-outline-variant/10 cursor-pointer hover:bg-surface-container transition-colors active:scale-95"
+            className="ui-home-stars-pill bg-surface-container-low backdrop-blur-sm py-1 sm:py-1.5 px-3 sm:px-4 rounded-full flex items-center gap-1.5 sm:gap-2 shadow-sm border border-outline-variant/10 cursor-pointer hover:bg-surface-container transition-colors active:scale-95"
           >
             <Star size={14} className="sm:size-[18px] text-reward-display fill-current" />
             <span className="font-black text-on-surface text-sm sm:text-base">{stars.toLocaleString()}</span>
@@ -254,9 +260,20 @@ export function HabitRewards() {
         onOpenCalendarSync={() => navigate('/calendar-sync')}
       />
 
+      <section className="ui-habit-summary mt-5 rounded-[2rem] bg-surface p-5">
+        <div>
+          <p className="text-xs font-black text-on-surface-variant">当前连续</p>
+          <p className="mt-1 text-4xl font-black leading-none">{streakDays || 0} 天</p>
+        </div>
+        <div className="ui-habit-score-pill">
+          <Star size={13} className="fill-current" />
+          <span>{stars.toLocaleString()} 积分</span>
+        </div>
+      </section>
+
       {/* Tab Switcher and Add Button */}
-      <div className="py-2 flex items-center justify-center gap-4">
-          <div className="flex items-center bg-surface-container-low p-1 rounded-full border border-outline-variant/10 w-full max-w-[240px]">
+      <div className="py-5 flex items-center justify-center gap-4">
+          <div className="ui-habit-tabs flex items-center bg-surface-container-low p-1 rounded-full border border-outline-variant/10 w-full max-w-[240px]">
             <button
               onClick={() => setActiveTab('reward')}
               className={cn(
@@ -265,6 +282,7 @@ export function HabitRewards() {
               )}
             >
               奖励
+              <span className="ml-1 text-[10px]">{rewardHabits.length}</span>
             </button>
             <button
               onClick={() => setActiveTab('penalty')}
@@ -274,6 +292,7 @@ export function HabitRewards() {
               )}
             >
               惩罚
+              <span className="ml-1 text-[10px]">{penaltyHabits.length}</span>
             </button>
           </div>
 
@@ -281,14 +300,14 @@ export function HabitRewards() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => setShowTemplatePicker(true)}
-            className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all flex-shrink-0"
+            className="ui-comic-button w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all flex-shrink-0"
           >
             <Plus size={24} strokeWidth={3} />
           </motion.button>
         </div>
 
       {/* Habit List - 双列网格新设计 */}
-      <div className="px-2 grid grid-cols-2 gap-3 mt-4 pb-4">
+      <div className="ui-habit-grid px-2 grid grid-cols-2 gap-3 mt-1 pb-4">
         {filteredHabits.length > 0 ? (
           <>
             {filteredHabits.map((habit, idx) => (
@@ -299,10 +318,10 @@ export function HabitRewards() {
                 transition={{ duration: 0.3, delay: idx * 0.03 }}
                 onClick={() => setSelectedHabit(habit)}
                 className={cn(
-                  "rounded-2xl p-3 shadow-sm active:scale-[0.97] transition-all cursor-pointer relative overflow-hidden",
+                  "ui-habit-card rounded-2xl p-3 shadow-sm active:scale-[0.97] transition-all cursor-pointer relative overflow-hidden",
                   habit.rewardStars >= 0
-                    ? "bg-green-50 dark:bg-green-500/10 border-2 border-green-200 dark:border-green-500/20"
-                    : "bg-red-50 dark:bg-red-500/10 border-2 border-red-200 dark:border-red-500/20"
+                    ? "ui-habit-card-reward bg-green-50 dark:bg-green-500/10 border-2 border-green-200 dark:border-green-500/20"
+                    : "ui-habit-card-penalty bg-red-50 dark:bg-red-500/10 border-2 border-red-200 dark:border-red-500/20"
                 )}
               >
                 {/* 大号图标背景装饰 - 使用React组件，无需外部请求 */}
@@ -314,16 +333,30 @@ export function HabitRewards() {
                 </div>
 
                 {/* 信息区域 */}
-                <div className="relative z-10">
-                  <h4 className="text-sm font-black text-on-surface truncate mb-1.5">{habit.title}</h4>
+                <div className="relative z-10 flex min-h-[8.5rem] flex-col">
+                  <div className="ui-habit-icon-box mb-4 flex h-12 w-12 items-center justify-center rounded-xl">
+                    {getTaskIcon(habit.icon, 24)}
+                  </div>
+                  <span className="ui-habit-type-badge">
+                    {habit.rewardStars >= 0 ? '奖励' : '惩罚'}
+                  </span>
+                  <h4 className="text-xl font-black text-on-surface mb-1.5 leading-tight">{habit.title}</h4>
                   <div className="flex items-center gap-1.5">
                     <Star size={14} className={habit.rewardStars >= 0 ? "text-reward-display fill-current" : "text-red-400 fill-current"} />
                     <span className={cn(
-                      "text-sm font-black",
+                      "text-base font-black",
                       habit.rewardStars >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500"
                     )}>
                       {habit.rewardStars >= 0 ? '+' : ''}{habit.rewardStars}
                     </span>
+                  </div>
+                  <div className="ui-habit-dot-row mt-auto">
+                    {Array.from({ length: 5 }).map((_, dotIdx) => (
+                      <span
+                        key={dotIdx}
+                        className={dotIdx < Math.min(5, habit.currentCount || 0) ? 'is-filled' : ''}
+                      />
+                    ))}
                   </div>
                 </div>
               </motion.div>
@@ -337,6 +370,31 @@ export function HabitRewards() {
           </div>
         )}
       </div>
+
+      {nextRewardHabit && (
+        <section className="ui-habit-next-reward mt-6 rounded-[2rem] bg-primary p-5">
+          <div className="flex items-center gap-4">
+            <div className="ui-habit-next-icon flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface">
+              {getTaskIcon(nextRewardHabit.icon, 42)}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-black">下一个奖励</p>
+              <h3 className="mt-1 truncate text-2xl font-black">{nextRewardHabit.title}</h3>
+              <div className="mt-2 flex items-center gap-2">
+                <div className="ui-habit-next-progress">
+                  <span style={{ width: `${Math.min(100, ((nextRewardHabit.currentCount || 0) / (nextRewardHabit.targetCount || 5)) * 100)}%` }} />
+                </div>
+                <span className="text-xs font-black">
+                  {Math.round(Math.min(100, ((nextRewardHabit.currentCount || 0) / (nextRewardHabit.targetCount || 5)) * 100))}%
+                </span>
+              </div>
+            </div>
+          </div>
+          <button type="button" onClick={() => setSelectedHabit(nextRewardHabit)}>
+            满 {nextRewardHabit.targetCount || 5} 次领取
+          </button>
+        </section>
+      )}
 
       {/* Habit Detail Modal */}
       <AnimatePresence>

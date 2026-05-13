@@ -593,3 +593,160 @@ input, textarea, select {
   background: var(--color-danger);
   color: var(--color-surface);
 }
+
+[data-theme-skin="arcade-comic"] .ui-habit-header {
+  background: var(--color-primary);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-flash {
+  color: var(--color-comic-ink);
+  fill: var(--color-primary);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 4px solid var(--color-comic-ink);
+  border-radius: 18px;
+  background: var(--color-surface);
+  box-shadow: 8px 10px 0 var(--color-comic-ink);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-score-pill {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 0.4rem;
+  border: 3px solid var(--color-comic-ink);
+  border-radius: 999px;
+  background: var(--color-primary);
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 950;
+  box-shadow: 3px 4px 0 var(--color-comic-ink);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-tabs {
+  border: 0;
+  background: transparent;
+  gap: 1rem;
+  max-width: none;
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-tabs button {
+  min-height: 44px;
+  border: 3px solid var(--color-comic-ink);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  box-shadow: 3px 4px 0 var(--color-comic-ink);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-tabs button[class*="bg-surface"] {
+  background: var(--color-primary);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-grid {
+  gap: 1.05rem;
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-card {
+  min-height: 12rem;
+  border: 4px solid var(--color-comic-ink);
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: 6px 8px 0 var(--color-comic-ink);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-card-penalty {
+  background: var(--color-surface);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-icon-box {
+  border: 2px solid var(--color-comic-ink);
+  background: var(--color-secondary-container);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-card-penalty .ui-habit-icon-box {
+  background: var(--color-danger-container);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-type-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: 2px solid var(--color-comic-ink);
+  border-radius: 999px;
+  background: var(--color-comic-green);
+  padding: 0.2rem 0.45rem;
+  font-size: 0.62rem;
+  font-weight: 950;
+  color: var(--color-on-surface);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-card-penalty .ui-habit-type-badge {
+  background: var(--color-danger);
+  color: var(--color-surface);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-dot-row {
+  display: flex;
+  gap: 0.25rem;
+  border-top: 1px solid var(--color-surface-container-high);
+  padding-top: 0.85rem;
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-dot-row span {
+  width: 0.65rem;
+  height: 0.65rem;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 999px;
+  background: var(--color-surface);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-dot-row span.is-filled {
+  border-color: var(--color-comic-ink);
+  background: var(--color-comic-green);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-card-penalty .ui-habit-dot-row span.is-filled {
+  background: var(--color-danger);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-next-reward {
+  border: 4px solid var(--color-comic-ink);
+  background: var(--color-primary);
+  box-shadow: 8px 10px 0 var(--color-comic-ink);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-next-icon {
+  border: 3px solid var(--color-comic-ink);
+  box-shadow: 4px 5px 0 var(--color-comic-ink);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-next-progress {
+  height: 12px;
+  flex: 1;
+  overflow: hidden;
+  border: 3px solid var(--color-comic-ink);
+  border-radius: 999px;
+  background: var(--color-surface);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-next-progress span {
+  display: block;
+  height: 100%;
+  background: var(--color-comic-ink);
+}
+
+[data-theme-skin="arcade-comic"] .ui-habit-next-reward button {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 1rem;
+  border: 3px solid var(--color-comic-ink);
+  border-radius: 14px;
+  background: var(--color-comic-ink);
+  color: var(--color-surface);
+  font-weight: 950;
+}
