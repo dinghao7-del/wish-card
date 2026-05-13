@@ -1,0 +1,154 @@
+.forgot-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f0f7ed 0%, #f8faf5 50%, #ffffff 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx 36rpx;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.forgot-card {
+  width: 100%;
+  max-width: 600rpx;
+  background-color: #ffffff;
+  border-radius: 40rpx;
+  padding: 56rpx 40rpx;
+  box-shadow: 0 8rpx 40rpx rgba(0, 110, 28, 0.08);
+}
+
+.forgot-icon-wrap, .success-icon-wrap {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 50%;
+  background-color: rgba(0, 110, 28, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 28rpx;
+}
+
+.forgot-title, .success-title {
+  font-size: 38rpx;
+  font-weight: 900;
+  color: #1a2e1a;
+  text-align: center;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.forgot-desc, .success-desc {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #7a8a70;
+  text-align: center;
+  line-height: 1.6;
+  display: block;
+  margin-bottom: 32rpx;
+}
+
+.email-highlight { color: #006e1c; font-weight: 800; }
+
+.error-msg {
+  display: block;
+  text-align: center;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #e53935;
+  background-color: rgba(229, 57, 53, 0.06);
+  padding: 16rpx 24rpx;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.form-group { margin-bottom: 24rpx; }
+.form-label { font-size: 24rpx; font-weight: 700; color: #3f4a3c; display: block; margin-bottom: 10rpx; }
+
+.form-input {
+  width: 100%;
+  height: 92rpx;
+  border-radius: 24rpx;
+  background-color: #f5f7f3;
+  padding: 0 28rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1a2e1a;
+  box-sizing: border-box;
+  border: 2rpx solid transparent;
+}
+.form-input:focus { border-color: #006e1c; }
+
+.reset-btn {
+  width: 100%;
+  height: 96rpx;
+  border-radius: 28rpx;
+  background-color: #006e1c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  box-shadow: 0 8rpx 24rpx rgba(0, 110, 28, 0.25);
+}
+.reset-btn:active { transform: scale(0.97); opacity: 0.85; }
+.reset-btn.disabled { opacity: 0.5; }
+
+.reset-btn-text {
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: 900;
+}
+
+.back-link { margin-top: 28rpx; text-align: center; }
+.back-link-text {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #7a8a70;
+}
+
+/* 发送中状态 */
+.sending-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24rpx;
+  padding: 48rpx 0;
+}
+.sending-text { font-size: 28rpx; font-weight: 700; color: #7a8a70; }
+
+/* 操作按钮组 */
+.actions {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 32rpx;
+}
+.action-btn {
+  flex: 1;
+  height: 88rpx;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 800;
+  transition: all 0.15s;
+}
+.action-btn:active { transform: scale(0.96); }
+.action-btn.primary { background-color: #006e1c; color: #ffffff; }
+.action-btn.secondary { background-color: #f5f7f3; color: #3f4a3c; }
+
+.help-hint {
+  margin-top: 32rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #becab9;
+  text-align: center;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin { animation: spin 1s linear infinite; }

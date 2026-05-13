@@ -34,7 +34,7 @@ export function PopularTemplates({ isOpen, onClose, type, onSelect }: PopularTem
   const loadTemplates = async () => {
     setLoading(true);
     try {
-      const { getTemplates } = await import('../lib/templateApi', { defaultValue: '/lib/template api' });
+      const { getTemplates } = await import('../lib/templateApi');
       const result = await getTemplates({
         type,
         source: activeTab === 'community' ? 'community' : undefined,
@@ -52,7 +52,7 @@ export function PopularTemplates({ isOpen, onClose, type, onSelect }: PopularTem
       })));
     } catch {
       // 降级到本地模板
-      const { ALL_TASK_TEMPLATES, ALL_REWARD_TEMPLATES } = await import('../lib/templates', { defaultValue: '/lib/templates' });
+      const { ALL_TASK_TEMPLATES, ALL_REWARD_TEMPLATES } = await import('../lib/templates');
       const localTemplates = type === 'reward'
         ? ALL_REWARD_TEMPLATES.map(r => ({
             title: r.name, description: r.description, category: r.category,
@@ -78,7 +78,7 @@ export function PopularTemplates({ isOpen, onClose, type, onSelect }: PopularTem
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 z-50"
+            className="fixed inset-0 bg-black/40 z-[100]"
             onClick={onClose}
           />
           <motion.div
@@ -86,7 +86,7 @@ export function PopularTemplates({ isOpen, onClose, type, onSelect }: PopularTem
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 bg-background rounded-t-3xl z-50 max-h-[80vh] flex flex-col"
+            className="fixed bottom-0 left-0 right-0 mx-auto max-w-lg bg-background rounded-t-3xl z-[101] max-h-[85svh] flex flex-col pb-[env(safe-area-inset-bottom,0px)]"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-outline-variant/20">

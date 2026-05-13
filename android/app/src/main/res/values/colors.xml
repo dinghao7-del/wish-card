@@ -8,6 +8,11 @@
     <color name="on_primary">#FFFFFFFF</color>
     <color name="on_primary_container">#FF002106</color>
 
+    <!-- Secondary colors -->
+    <color name="secondary">#FF686000</color>
+    <color name="secondary_container">#FFF0E269</color>
+    <color name="on_secondary">#FFFFFFFF</color>
+
     <!-- Surface colors -->
     <color name="surface">#FFFBF9F5</color>
     <color name="surface_container_low">#FFF5F3EF</color>
@@ -23,6 +28,13 @@
     <!-- Error colors -->
     <color name="error">#FFE57373</color>
     <color name="error_container">#FFFFDAD6</color>
+
+    <!-- Status and reward colors -->
+    <color name="status_pending">#FFFFB74D</color>
+    <color name="status_progress">#FF4FC3F7</color>
+    <color name="status_reviewing">#FFBA68C8</color>
+    <color name="status_completed">#FF81C784</color>
+    <color name="reward_display">#FFFBC02D</color>
 
     <!-- Outline -->
     <color name="outline">#FF6F7A6B</color>

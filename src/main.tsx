@@ -5,6 +5,7 @@ import App from './App.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import './index.css';
 import './styles/ipad-responsive.css';
+import './styles/android-adaptive.css';
 import './i18n';
 
 // 注册 PWA Elements (Capacitor 相机等组件)
@@ -18,15 +19,31 @@ if ('serviceWorker' in navigator && !(window as any).Capacitor) {
   });
 }
 
-// iOS 状态栏适配
-document.addEventListener('deviceready', () => {
+// 平台适配：注入平台类名，激活对应 CSS 规则
+function applyPlatformClass() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const capacitor = (window as any).Capacitor;
-  if (capacitor?.getPlatform() === 'ios') {
-    // iOS 特定初始化
+  const platform = capacitor?.getPlatform?.();
+  if (platform === 'ios') {
     document.body.classList.add('ios-native');
+  } else if (platform === 'android') {
+    document.body.classList.add('android-native');
+    // 强制 HTML 字体基准，防止 MIUI/EMUI 等系统字体缩放影响布局
+    document.documentElement.style.setProperty('font-size', '16px', 'important');
   }
-}, false);
+}
+
+// deviceready 事件（Capacitor 原生环境）
+document.addEventListener('deviceready', applyPlatformClass, false);
+
+// 也在 DOMContentLoaded 时尝试（Capacitor 有时不触发 deviceready）
+document.addEventListener('DOMContentLoaded', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const capacitor = (window as any).Capacitor;
+  if (capacitor?.getPlatform) {
+    applyPlatformClass();
+  }
+});
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

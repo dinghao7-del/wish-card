@@ -4,6 +4,21 @@ import * as api from '../lib/api';
 import { supabase, type Database } from '../lib/supabase';
 import { getGuestData } from '../lib/guestData';
 import { showToastGlobal } from '../components/Toast';
+import { getDataLayer, type DataMember, type DataOperationAuditLog, type DataPlan, type DataReward, type DataTask } from '../lib/DataLayer';
+import type { SyncStatus } from '../lib/SyncEngine';
+import { canApproveRewards, canApproveTasks, canManageFamily, canManageMembers, canManageRewards } from '../domain/familyPlanning';
+import { buildRewardFulfillmentTask, hasRewardFulfillmentTask } from '../domain/rewardFulfillment';
+import {
+  createMemberSession,
+  isMemberSessionValid,
+  persistMemberSession,
+  readStoredMemberSession,
+  type MemberSession,
+  type MemberVerificationMethod,
+} from '../lib/memberSession';
+import { prepareMemberCredentialsForStorage } from '../lib/memberCredentials';
+import { getStorageAdapter, STORAGE_KEYS, storageGetSync, storageSetSync } from '../lib/StorageAdapter';
+import { clearGuestPlans, saveGuestPlan } from '../lib/guestPlans';
 
 type DbMember = Database['public']['Tables']['members']['Row'];
 type DbTask = Database['public']['Tables']['tasks']['Row'];
@@ -15,8 +30,10 @@ interface FamilyContextType {
   tasks: Task[];
   rewards: Reward[];
   history: HistoryRecord[];
+  auditLogs: DataOperationAuditLog[];
   currentUser: Member | null;
-  setCurrentUser: (user: Member | null) => void;
+  memberSession: MemberSession | null;
+  setCurrentUser: (user: Member | null, verificationMethod?: MemberVerificationMethod) => void;
   stars: number;
   addStars: (amount: number) => void;
   addTask: (task: Task) => Promise<void>;
@@ -28,6 +45,7 @@ interface FamilyContextType {
   updateReward: (reward: Reward) => Promise<void>;
   deleteReward: (rewardId: string) => Promise<void>;
   redeemReward: (rewardId: string) => Promise<void>;
+  approveReward: (rewardId: string) => Promise<boolean>;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
   addMember: (member: Member) => Promise<void>;
@@ -40,13 +58,22 @@ interface FamilyContextType {
   setIsInitialized: (val: boolean) => void;
   loading: boolean;
   familyId: string | null;
+  setFamilyId: (id: string | null) => void;
   guestMode: boolean;
   setGuestMode: (val: boolean) => void;
+  syncStatus: SyncStatus;
+  syncNow: () => Promise<void>;
   loadGuestData: (memberId: string, famId: string) => Promise<void>;
-  loadGuestDemoData: () => void;
+  loadGuestDemoData: () => Member | null;
+  localImport: (data: { members?: Member[]; plans?: DataPlan[]; tasks?: Task[]; rewards?: Reward[]; history?: HistoryRecord[] }) => Promise<void>;
 }
 
 const FamilyContext = createContext<FamilyContextType | undefined>(undefined);
+
+function deny(message: string): false {
+  showToastGlobal(message, 'warning');
+  return false;
+}
 
 // DB 类型 → 前端类型映射
 function toMember(db: DbMember): Member {
@@ -61,6 +88,31 @@ function toMember(db: DbMember): Member {
   };
 }
 
+function toMemberFromDataLayer(dataMember: DataMember): Member {
+  return {
+    id: dataMember.id,
+    name: dataMember.name,
+    avatar: dataMember.avatar || '',
+    stars: dataMember.stars,
+    role: dataMember.role,
+    pin: dataMember.pin || undefined,
+    password: dataMember.password || undefined,
+  };
+}
+
+function toDataLayerMember(member: Member): Omit<DataMember, 'id' | 'isActive' | 'familyId'> {
+  const securedMember = prepareMemberCredentialsForStorage(member);
+  return {
+    name: securedMember.name,
+    avatar: securedMember.avatar || '',
+    role: securedMember.role,
+    stars: securedMember.stars || 0,
+    color: null,
+    pin: securedMember.pin || null,
+    password: securedMember.password || null,
+  };
+}
+
 function toTask(db: DbTask): Task {
   return {
     id: db.id,
@@ -70,18 +122,64 @@ function toTask(db: DbTask): Task {
     startTime: db.created_at || new Date().toISOString(),
     assigneeIds: db.assignee_ids || [],
     creatorId: db.creator_id || '',
+    planId: db.plan_id || undefined,
     rewardStars: db.star_amount || 0,
     status: db.status || 'pending',
     icon: db.icon || 'Star',
     isHabit: db.is_habit || false,
     targetCount: db.target_count || 1,
     currentCount: db.current_count || 0,
+    createdAt: db.created_at || undefined,
+    completedAt: db.completed_at || undefined,
+  };
+}
+
+function toTaskFromDataLayer(dataTask: DataTask): Task {
+  return {
+    id: dataTask.id,
+    title: dataTask.title,
+    description: dataTask.description,
+    type: 'daily',
+    startTime: dataTask.startTime || dataTask.createdAt || new Date().toISOString(),
+    deadline: dataTask.deadline || undefined,
+    assigneeIds: dataTask.assigneeIds,
+    creatorId: dataTask.creatorId,
+    planId: dataTask.planId || undefined,
+    rewardStars: dataTask.starAmount,
+    status: dataTask.status,
+    icon: dataTask.icon || 'Star',
+    isHabit: dataTask.isHabit,
+    targetCount: dataTask.targetCount,
+    currentCount: dataTask.currentCount,
+    createdAt: dataTask.createdAt,
+    completedAt: dataTask.completedAt || undefined,
+  };
+}
+
+function toDataLayerTask(task: Task, creatorId: string): Omit<DataTask, 'id' | 'createdAt' | 'updatedAt' | 'familyId'> {
+  return {
+    planId: task.planId || null,
+    title: task.title,
+    description: task.description || '',
+    starAmount: task.rewardStars || 0,
+    assigneeIds: task.assigneeIds || [],
+    creatorId: task.creatorId || creatorId,
+    status: task.status === 'expired' ? 'completed' : task.status,
+    isHabit: task.isHabit || false,
+    targetCount: task.targetCount || 1,
+    currentCount: task.currentCount || 0,
+    icon: task.icon || 'Star',
+    startTime: task.startTime || null,
+    deadline: task.deadline || null,
+    completed: task.status === 'completed',
+    completedAt: task.status === 'completed' ? new Date().toISOString() : null,
   };
 }
 
 function toReward(db: DbReward): Reward {
   return {
     id: db.id,
+    planId: db.plan_id || undefined,
     name: db.name,
     description: db.description || '',
     cost: db.star_cost || 0,
@@ -89,6 +187,42 @@ function toReward(db: DbReward): Reward {
     image: db.image_url || '',
     category: db.category || '',
     stock: db.stock ?? undefined,
+    status: db.status,
+    redeemedBy: db.redeemed_by || undefined,
+    redeemedAt: db.redeemed_at || undefined,
+  };
+}
+
+function toRewardFromDataLayer(dataReward: DataReward): Reward {
+  return {
+    id: dataReward.id,
+    planId: dataReward.planId || undefined,
+    name: dataReward.name,
+    description: dataReward.description,
+    cost: dataReward.starCost,
+    icon: dataReward.icon || 'Gift',
+    image: dataReward.imageUrl || '',
+    category: dataReward.category || '',
+    stock: dataReward.stock ?? undefined,
+    status: dataReward.status,
+    redeemedBy: dataReward.redeemedBy || undefined,
+    redeemedAt: dataReward.redeemedAt || undefined,
+  };
+}
+
+function toDataLayerReward(reward: Reward): Omit<DataReward, 'id' | 'familyId'> {
+  return {
+    planId: reward.planId || null,
+    name: reward.name,
+    description: reward.description || '',
+    starCost: reward.cost || 0,
+    icon: reward.icon || 'Gift',
+    imageUrl: reward.image || null,
+    category: reward.category || null,
+    status: reward.status || 'available',
+    stock: reward.stock ?? null,
+    redeemedBy: reward.redeemedBy || null,
+    redeemedAt: reward.redeemedAt || null,
   };
 }
 
@@ -104,28 +238,165 @@ function toHistory(db: DbStarTransaction): HistoryRecord {
   };
 }
 
+type GuestLocalState = {
+  guestMode: true;
+  familyId: string;
+  currentUser: Member;
+  members: Member[];
+  tasks: Task[];
+  rewards: Reward[];
+  history: HistoryRecord[];
+};
+
+const storageAdapter = getStorageAdapter();
+
+function readStoredGuestLocalState(): GuestLocalState | null {
+  const stored = storageGetSync<GuestLocalState | null>(storageAdapter, STORAGE_KEYS.GUEST_LOCAL_STATE, null);
+  if (!stored?.guestMode || !stored.currentUser || !stored.familyId) return null;
+  return stored;
+}
+
+function persistGuestLocalState(state: GuestLocalState) {
+  storageSetSync(storageAdapter, STORAGE_KEYS.GUEST_LOCAL_STATE, state);
+}
+
+function clearGuestLocalState() {
+  storageAdapter.removeItemSync(STORAGE_KEYS.GUEST_LOCAL_STATE);
+}
+
+function mergeMembers(existing: Member[], incoming: Member[]): Member[] {
+  const map = new Map(existing.map(item => [item.id, item]));
+  incoming.forEach(item => map.set(item.id, { ...map.get(item.id), ...item }));
+  return Array.from(map.values());
+}
+
+function mergeTasks(existing: Task[], incoming: Task[]): Task[] {
+  const map = new Map(existing.map(item => [item.id, item]));
+  incoming.forEach(item => map.set(item.id, { ...map.get(item.id), ...item }));
+  return Array.from(map.values());
+}
+
+function mergeRewards(existing: Reward[], incoming: Reward[]): Reward[] {
+  const map = new Map(existing.map(item => [item.id, item]));
+  incoming.forEach(item => map.set(item.id, { ...map.get(item.id), ...item }));
+  return Array.from(map.values());
+}
+
 export function FamilyProvider({ children }: { children: React.ReactNode }) {
-  const [currentUser, setCurrentUserState] = useState<Member | null>(null);
-  const currentUserRef = useRef<Member | null>(null);
+  const storedGuestLocalStateRef = useRef<GuestLocalState | null>(readStoredGuestLocalState());
+  const [currentUser, setCurrentUserState] = useState<Member | null>(() => storedGuestLocalStateRef.current?.currentUser ?? null);
+  const currentUserRef = useRef<Member | null>(storedGuestLocalStateRef.current?.currentUser ?? null);
+  const [memberSession, setMemberSession] = useState<MemberSession | null>(() => readStoredMemberSession());
+  const familyIdRef = useRef<string | null>(storedGuestLocalStateRef.current?.familyId ?? null);
   // 包装 setCurrentUser，同步更新 ref 以防止竞态
-  const setCurrentUser = (user: Member | null) => {
+  const setCurrentUser = (user: Member | null, verificationMethod?: MemberVerificationMethod) => {
     currentUserRef.current = user;
     setCurrentUserState(user);
+    const resolvedMethod = verificationMethod
+      || (memberSession?.memberId === user?.id ? memberSession.verificationMethod : 'none');
+    const nextSession = user
+      ? createMemberSession(user, familyIdRef.current, resolvedMethod)
+      : null;
+    setMemberSession(nextSession);
+    persistMemberSession(nextSession);
   };
-  const [members, setMembers] = useState<Member[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [rewards, setRewards] = useState<Reward[]>([]);
-  const [history, setHistory] = useState<HistoryRecord[]>([]);
+  const [members, setMembers] = useState<Member[]>(() => storedGuestLocalStateRef.current?.members ?? []);
+  const [tasks, setTasks] = useState<Task[]>(() => storedGuestLocalStateRef.current?.tasks ?? []);
+  const [rewards, setRewards] = useState<Reward[]>(() => storedGuestLocalStateRef.current?.rewards ?? []);
+  const [history, setHistory] = useState<HistoryRecord[]>(() => storedGuestLocalStateRef.current?.history ?? []);
+  const [auditLogs, setAuditLogs] = useState<DataOperationAuditLog[]>([]);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isUserSelectorOpen, setIsUserSelectorOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [familyId, setFamilyId] = useState<string | null>(null);
-  const [guestMode, setGuestMode] = useState(false);
-  const guestModeRef = useRef(false);
+  const [familyId, setFamilyId] = useState<string | null>(() => storedGuestLocalStateRef.current?.familyId ?? null);
+  const [guestMode, setGuestMode] = useState(() => Boolean(storedGuestLocalStateRef.current?.guestMode));
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>(() => ({
+    isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+    isSyncing: false,
+    pendingCount: 0,
+    lastSyncAt: null,
+    lastError: null,
+  }));
+  const guestModeRef = useRef(Boolean(storedGuestLocalStateRef.current?.guestMode));
+  const dataLayerRef = useRef(getDataLayer());
+
+  const updateFamilyId = useCallback((id: string | null) => {
+    familyIdRef.current = id;
+    setFamilyId(id);
+    const current = currentUserRef.current;
+    const currentSession = readStoredMemberSession();
+    if (current && isMemberSessionValid(currentSession) && currentSession.familyId !== id) {
+      const nextSession = createMemberSession(current, id, currentSession.verificationMethod);
+      setMemberSession(nextSession);
+      persistMemberSession(nextSession);
+    }
+  }, []);
+
+  async function refreshTasksFromDataLayer() {
+    const dataTasks = await dataLayerRef.current.getTasks();
+    setTasks(dataTasks.map(toTaskFromDataLayer));
+  }
+
+  async function refreshMembersFromDataLayer() {
+    const dataMembers = await dataLayerRef.current.getMembers();
+    const mappedMembers = dataMembers.map(toMemberFromDataLayer);
+    setMembers(mappedMembers);
+    const current = currentUserRef.current;
+    if (current) {
+      const updatedCurrent = mappedMembers.find(member => member.id === current.id);
+      if (updatedCurrent) setCurrentUser(updatedCurrent);
+    }
+  }
+
+  async function refreshRewardsFromDataLayer() {
+    const dataRewards = await dataLayerRef.current.getRewards();
+    setRewards(dataRewards.map(toRewardFromDataLayer));
+  }
+
+  async function refreshAuditLogsFromDataLayer() {
+    const logs = await dataLayerRef.current.getOperationAuditLogs(20);
+    setAuditLogs(logs);
+  }
+
+  async function ensureDataLayer(famId: string, userId: string) {
+    dataLayerRef.current.onDataChanged = () => {
+      refreshTasksFromDataLayer().catch((err) => {
+        console.warn('[DataLayer] 刷新任务缓存失败:', err);
+      });
+      refreshRewardsFromDataLayer().catch((err) => {
+        console.warn('[DataLayer] 刷新心愿缓存失败:', err);
+      });
+      refreshMembersFromDataLayer().catch((err) => {
+        console.warn('[DataLayer] 刷新成员缓存失败:', err);
+      });
+      refreshAuditLogsFromDataLayer().catch((err) => {
+        console.warn('[DataLayer] 刷新操作审计缓存失败:', err);
+      });
+      setSyncStatus(dataLayerRef.current.getSyncStatus());
+    };
+    dataLayerRef.current.onSyncStatusChange = (status) => {
+      setSyncStatus(status);
+    };
+    await dataLayerRef.current.initialize(famId, userId);
+    setSyncStatus(dataLayerRef.current.getSyncStatus());
+  }
 
   // 保持 guestMode ref 同步
   useEffect(() => { guestModeRef.current = guestMode; }, [guestMode]);
+
+  useEffect(() => {
+    if (!guestMode || !currentUser || !familyId) return;
+    persistGuestLocalState({
+      guestMode: true,
+      familyId,
+      currentUser,
+      members,
+      tasks,
+      rewards,
+      history,
+    });
+  }, [currentUser, familyId, guestMode, history, members, rewards, tasks]);
 
   useEffect(() => {
     if (isDarkMode) document.documentElement.classList.add('dark');
@@ -144,9 +415,13 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       // 给 Supabase getSession 设置超时，防止网络不可达时无限挂起
+      // Android 模拟器 SSL 问题会导致请求卡住，使用更短的超时
       const getSessionWithTimeout = Promise.race([
         supabase.auth.getSession(),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+        new Promise<null>((resolve) => setTimeout(() => {
+          console.log('[Init] getSession timeout, assuming no session');
+          resolve(null);
+        }, 2000)), // 缩短到 2 秒，避免 ANR
       ]);
       try {
         const result = await getSessionWithTimeout;
@@ -197,7 +472,8 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
           setTasks([]);
           setRewards([]);
           setHistory([]);
-          setFamilyId(null);
+          setAuditLogs([]);
+          updateFamilyId(null);
           setLoading(false);
         } else if (event === 'SIGNED_OUT' && currentUserRef.current) {
           console.log('[Auth] SIGNED_OUT but currentUser exists, skipping clear');
@@ -219,30 +495,34 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data: member, error } = await supabase
         .from('members')
-        .select('*', { defaultValue: '*' })
+        .select()
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
+      // 成员不存在时静默处理（新用户正在注册中，或刚验证完还没创建记录）
       if (error || !member) {
-        console.error('成员记录未找到:', userId, error?.message);
+        console.log('[loadUserData] 成员记录不存在，等待注册完成:', userId);
         setLoading(false);
         return;
       }
 
       const m = toMember(member);
-      setCurrentUser(m);
-      setFamilyId(member.family_id);
+      updateFamilyId(member.family_id);
+      setCurrentUser(m, 'account');
+      await ensureDataLayer(member.family_id!, userId);
 
-      const [membersRes, tasksRes, rewardsRes, historyRes] = await Promise.all([
-        api.getMembersByFamilyId(member.family_id!),
-        api.getTasksByFamilyId(member.family_id!, true),
-        api.getRewardsByFamilyId(member.family_id!),
+      const [dataMembers, dataTasks, dataRewards, auditLogRes, historyRes] = await Promise.all([
+        dataLayerRef.current.getMembers(),
+        dataLayerRef.current.getTasks(),
+        dataLayerRef.current.getRewards(),
+        dataLayerRef.current.getOperationAuditLogs(20),
         api.getStarTransactionsByMemberId(m.id),
       ]);
 
-      setMembers(membersRes.map(toMember));
-      setTasks(tasksRes.map(toTask));
-      setRewards(rewardsRes.map(toReward));
+      setMembers(dataMembers.map(toMemberFromDataLayer));
+      setTasks(dataTasks.map(toTaskFromDataLayer));
+      setRewards(dataRewards.map(toRewardFromDataLayer));
+      setAuditLogs(auditLogRes);
       setHistory(historyRes.map(toHistory));
     } catch (err) {
       console.error('加载用户数据失败:', err);
@@ -254,7 +534,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   // 访客模式：从数据库加载家庭数据（不需要 Supabase Auth session）
   async function loadGuestData(memberId: string, famId: string) {
     try {
-      setFamilyId(famId);
+      updateFamilyId(famId);
       const [membersRes, tasksRes, rewardsRes, historyRes] = await Promise.all([
         api.getMembersByFamilyId(famId),
         api.getTasksByFamilyId(famId, true),
@@ -265,6 +545,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       setTasks(tasksRes.map(toTask));
       setRewards(rewardsRes.map(toReward));
       setHistory(historyRes.map(toHistory));
+      setAuditLogs([]);
     } catch (err) {
       console.error('加载访客数据失败:', err);
     } finally {
@@ -282,77 +563,142 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     setTasks(data.tasks);
     setRewards(data.rewards);
     setHistory(data.history);
-    setFamilyId('guest-family');
+    setAuditLogs([]);
+    updateFamilyId('guest-family');
     setLoading(false);
     // 返回默认游客用户，让调用方同步设置 currentUser 和 ref
-    return data.members[0] || null;
+    const guestUser = data.members[0] || null;
+    if (guestUser) {
+      persistGuestLocalState({
+        guestMode: true,
+        familyId: 'guest-family',
+        currentUser: guestUser,
+        members: data.members,
+        tasks: data.tasks,
+        rewards: data.rewards,
+        history: data.history,
+      });
+    }
+    return guestUser;
+  }
+
+  async function localImport(data: { members?: Member[]; plans?: DataPlan[]; tasks?: Task[]; rewards?: Reward[]; history?: HistoryRecord[] }) {
+    if (guestModeRef.current || !familyId || !currentUser) {
+      if (data.plans) data.plans.forEach(plan => saveGuestPlan(plan));
+      if (data.members) setMembers(prev => [...prev, ...data.members!]);
+      if (data.tasks) setTasks(prev => [...prev, ...data.tasks!]);
+      if (data.rewards) setRewards(prev => [...prev, ...data.rewards!]);
+      if (data.history) setHistory(prev => [...data.history!, ...prev]);
+      return;
+    }
+
+    const now = new Date().toISOString();
+    await ensureDataLayer(familyId, currentUser.id);
+    await dataLayerRef.current.importLocalRecords({
+      members: data.members?.map(member => ({
+        ...toDataLayerMember(member),
+        id: member.id,
+        familyId,
+        isActive: true,
+      })),
+      plans: data.plans?.map(plan => ({
+        ...plan,
+        familyId,
+        isActive: plan.isActive !== false,
+      })),
+      tasks: data.tasks?.map(task => ({
+        ...toDataLayerTask(task, currentUser.id),
+        id: task.id,
+        familyId,
+        createdAt: task.createdAt || now,
+        updatedAt: now,
+      })),
+      rewards: data.rewards?.map(reward => ({
+        ...toDataLayerReward(reward),
+        id: reward.id,
+        familyId,
+      })),
+    });
+    if (data.members) setMembers(prev => mergeMembers(prev, data.members!));
+    if (data.tasks) setTasks(prev => mergeTasks(prev, data.tasks!));
+    if (data.rewards) setRewards(prev => mergeRewards(prev, data.rewards!));
+    if (data.history) setHistory(prev => [...data.history!, ...prev]);
   }
 
   // ==================== 任务 Mutations ====================
   const addTask = useCallback(async (task: Task) => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      throw new Error('未登录，无法创建任务');
+    }
+    if (!canManageFamily(currentUser)) {
+      deny('只有家长可以创建任务');
+      return;
+    }
     // 访客模式：纯前端本地添加
     if (guestModeRef.current) {
       setTasks(prev => [...prev, { ...task, id: task.id || `guest-t-${Date.now()}` }]);
       return;
     }
-    if (!familyId) return;
+    if (!familyId) {
+      throw new Error('未找到家庭信息，请重新登录');
+    }
     try {
-      const dbTask = await api.createTask(
-        familyId, task.title, task.description, task.rewardStars,
-        task.assigneeIds, currentUser.id,
-        {
-          is_habit: task.isHabit || false,
-          icon: task.icon || null,
-          target_count: task.targetCount || 1,
-          current_count: task.currentCount || 0,
-          category: task.type,
-          status: task.status,
-        }
-      );
-      setTasks(prev => [...prev, toTask(dbTask)]);
+      await ensureDataLayer(familyId, currentUser.id);
+      await dataLayerRef.current.addTask(toDataLayerTask(task, currentUser.id));
+      await refreshTasksFromDataLayer();
     } catch (err: any) {
       showToastGlobal(`创建任务失败: ${err.message}`, 'error');
+      throw err;
     }
   }, [currentUser, familyId]);
 
   const updateTask = useCallback(async (task: Task) => {
+    if (!currentUser) return;
+    if (!canManageFamily(currentUser)) {
+      deny('只有家长可以编辑任务');
+      return;
+    }
     // 访客模式：纯前端本地更新
     if (guestModeRef.current) {
       setTasks(prev => prev.map(t => t.id === task.id ? task : t));
       return;
     }
+    if (!currentUser || !familyId) {
+      showToastGlobal('未找到家庭信息，请重新登录', 'error');
+      return;
+    }
     try {
-      const dbTask = await api.updateTask(task.id, {
-        title: task.title,
-        description: task.description || null,
-        star_amount: task.rewardStars,
-        assignee_ids: task.assigneeIds,
-        status: task.status === 'expired' ? 'completed' : task.status,
-        is_habit: task.isHabit || false,
-        target_count: task.targetCount || 1,
-        current_count: task.currentCount || 0,
-        icon: task.icon,
-      });
-      setTasks(prev => prev.map(t => t.id === task.id ? toTask(dbTask) : t));
+      await ensureDataLayer(familyId, currentUser.id);
+      await dataLayerRef.current.updateTask(task.id, toDataLayerTask(task, currentUser.id));
+      await refreshTasksFromDataLayer();
     } catch (err: any) {
       showToastGlobal(`更新任务失败: ${err.message}`, 'error');
     }
-  }, []);
+  }, [currentUser, familyId]);
 
   const deleteTask = useCallback(async (taskId: string) => {
+    if (!currentUser) return;
+    if (!canManageFamily(currentUser)) {
+      deny('只有家长可以删除任务');
+      return;
+    }
     // 访客模式：纯前端本地删除
     if (guestModeRef.current) {
       setTasks(prev => prev.filter(t => t.id !== taskId));
       return;
     }
+    if (!currentUser || !familyId) {
+      showToastGlobal('未找到家庭信息，请重新登录', 'error');
+      return;
+    }
     try {
-      await api.deleteTask(taskId);
-      setTasks(prev => prev.filter(t => t.id !== taskId));
+      await ensureDataLayer(familyId, currentUser.id);
+      await dataLayerRef.current.deleteTask(taskId);
+      await refreshTasksFromDataLayer();
     } catch (err: any) {
       showToastGlobal(`删除任务失败: ${err.message}`, 'error');
     }
-  }, []);
+  }, [currentUser, familyId]);
 
   const completeTask = useCallback(async (taskId: string) => {
     if (!currentUser) return;
@@ -361,21 +707,39 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'reviewing' as const } : t));
       return;
     }
+    if (!familyId) return;
     try {
-      const dbTask = await api.completeTask(taskId, currentUser.id);
-      setTasks(prev => prev.map(t => t.id === taskId ? toTask(dbTask) : t));
+      await ensureDataLayer(familyId, currentUser.id);
+      const currentTask = tasks.find(t => t.id === taskId);
+      if (!currentTask) return;
+      const dataTask = await dataLayerRef.current.updateTask(taskId, {
+        ...toDataLayerTask(currentTask, currentUser.id),
+        status: 'reviewing',
+        completed: false,
+        completedAt: null,
+      });
+      setTasks(prev => prev.map(t => t.id === taskId ? toTaskFromDataLayer(dataTask) : t));
     } catch (err: any) {
       showToastGlobal(`完成任务失败: ${err.message}`, 'error');
     }
-  }, [currentUser]);
+  }, [currentUser, familyId, tasks]);
 
   const approveTask = useCallback(async (taskId: string) => {
     if (!currentUser) return;
+    if (!canApproveTasks(currentUser)) {
+      deny('只有家长可以确认任务');
+      return;
+    }
     // 访客模式：纯前端本地审批 + 加星星
     if (guestModeRef.current) {
       const task = tasks.find(t => t.id === taskId);
       if (task) {
-        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'completed' as const } : t));
+        const completedAt = new Date().toISOString();
+        setTasks(prev => prev.map(t => t.id === taskId ? {
+          ...t,
+          status: 'completed' as const,
+          completedAt,
+        } : t));
         // 给当前用户加星星
         if (task.assigneeIds.includes(currentUser.id)) {
           const newStars = currentUser.stars + task.rewardStars;
@@ -389,82 +753,126 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
           title: `完成任务: ${task.title}`,
           type: 'task',
           stars: task.rewardStars,
-          timestamp: new Date().toISOString(),
+          timestamp: completedAt,
           icon: 'CheckCircle',
         }, ...prev]);
       }
       return;
     }
+    if (!familyId) return;
     try {
-      const dbTask = await api.approveTask(taskId, currentUser.id);
-      setTasks(prev => prev.map(t => t.id === taskId ? toTask(dbTask) : t));
-      // 重新加载用户数据以刷新星星余额
-      await loadUserData(currentUser.id);
+      await ensureDataLayer(familyId, currentUser.id);
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+      const completedAt = new Date().toISOString();
+      const dataTask = await dataLayerRef.current.updateTask(taskId, {
+        ...toDataLayerTask(task, currentUser.id),
+        status: 'completed',
+        completed: true,
+        completedAt,
+      });
+      setTasks(prev => prev.map(t => t.id === taskId ? toTaskFromDataLayer(dataTask) : t));
+
+      for (const assigneeId of task.assigneeIds) {
+        await dataLayerRef.current.addStars(assigneeId, task.rewardStars, `完成任务(审批): ${task.title}`, { taskId });
+      }
+      setMembers(prev => prev.map(member =>
+        task.assigneeIds.includes(member.id)
+          ? { ...member, stars: member.stars + task.rewardStars }
+          : member
+      ));
+      if (task.assigneeIds.includes(currentUser.id)) {
+        setCurrentUser({ ...currentUser, stars: currentUser.stars + task.rewardStars });
+      }
+      const newHistoryRecords: HistoryRecord[] = task.assigneeIds.map(assigneeId => ({
+        id: `local-hist-${taskId}-${assigneeId}-${Date.now()}`,
+        userId: assigneeId,
+        title: `完成任务(审批): ${task.title}`,
+        type: 'task' as const,
+        stars: task.rewardStars,
+        timestamp: completedAt,
+        icon: 'CheckCircle',
+      }));
+      setHistory(prev => [...newHistoryRecords, ...prev]);
     } catch (err: any) {
       showToastGlobal(`审批任务失败: ${err.message}`, 'error');
     }
-  }, [currentUser, tasks]);
+  }, [currentUser, familyId, tasks]);
 
   // ==================== 奖励 Mutations ====================
   const addReward = useCallback(async (reward: Reward) => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      throw new Error('未登录，无法创建奖励');
+    }
+    if (!canManageRewards(currentUser)) {
+      deny('只有家长可以创建心愿');
+      return;
+    }
     // 访客模式：纯前端本地添加
     if (guestModeRef.current) {
       setRewards(prev => [...prev, { ...reward, id: reward.id || `guest-r-${Date.now()}` }]);
       return;
     }
-    if (!familyId) return;
+    if (!familyId) {
+      throw new Error('未找到家庭信息，请重新登录');
+    }
     try {
-      const dbReward = await api.createReward(
-        familyId, reward.name, reward.description, reward.cost, currentUser.id,
-        {
-          imageUrl: reward.image,
-          icon: reward.icon,
-          category: reward.category,
-          stock: reward.stock,
-        }
-      );
-      setRewards(prev => [...prev, toReward(dbReward)]);
+      await ensureDataLayer(familyId, currentUser.id);
+      await dataLayerRef.current.addReward(toDataLayerReward(reward));
+      await refreshRewardsFromDataLayer();
     } catch (err: any) {
       showToastGlobal(`创建奖励失败: ${err.message}`, 'error');
+      throw err;
     }
   }, [currentUser, familyId]);
 
   const updateReward = useCallback(async (reward: Reward) => {
+    if (!currentUser) return;
+    if (!canManageRewards(currentUser)) {
+      deny('只有家长可以编辑心愿');
+      return;
+    }
     // 访客模式：纯前端本地更新
     if (guestModeRef.current) {
       setRewards(prev => prev.map(r => r.id === reward.id ? reward : r));
       return;
     }
+    if (!currentUser || !familyId) {
+      showToastGlobal('未找到家庭信息，请重新登录', 'error');
+      return;
+    }
     try {
-      const dbReward = await api.updateReward(reward.id, {
-        name: reward.name,
-        description: reward.description || null,
-        star_cost: reward.cost,
-        icon: reward.icon,
-        image_url: reward.image || null,
-        category: reward.category || null,
-        stock: reward.stock ?? null,
-      });
-      setRewards(prev => prev.map(r => r.id === reward.id ? toReward(dbReward) : r));
+      await ensureDataLayer(familyId, currentUser.id);
+      await dataLayerRef.current.updateReward(reward.id, toDataLayerReward(reward));
+      await refreshRewardsFromDataLayer();
     } catch (err: any) {
       showToastGlobal(`更新奖励失败: ${err.message}`, 'error');
     }
-  }, []);
+  }, [currentUser, familyId]);
 
   const deleteReward = useCallback(async (rewardId: string) => {
+    if (!currentUser) return;
+    if (!canManageRewards(currentUser)) {
+      deny('只有家长可以删除心愿');
+      return;
+    }
     // 访客模式：纯前端本地删除
     if (guestModeRef.current) {
       setRewards(prev => prev.filter(r => r.id !== rewardId));
       return;
     }
+    if (!currentUser || !familyId) {
+      showToastGlobal('未找到家庭信息，请重新登录', 'error');
+      return;
+    }
     try {
-      await api.deleteReward(rewardId);
-      setRewards(prev => prev.filter(r => r.id !== rewardId));
+      await ensureDataLayer(familyId, currentUser.id);
+      await dataLayerRef.current.deleteReward(rewardId);
+      await refreshRewardsFromDataLayer();
     } catch (err: any) {
       showToastGlobal(`删除奖励失败: ${err.message}`, 'error');
     }
-  }, []);
+  }, [currentUser, familyId]);
 
   const redeemReward = useCallback(async (rewardId: string) => {
     if (!currentUser) return;
@@ -472,16 +880,16 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     if (guestModeRef.current) {
       const reward = rewards.find(r => r.id === rewardId);
       if (reward && currentUser.stars >= reward.cost) {
-        const newStars = currentUser.stars - reward.cost;
-        setCurrentUser({ ...currentUser, stars: newStars });
-        setMembers(prev => prev.map(m => m.id === currentUser.id ? { ...m, stars: newStars } : m));
-        // 添加历史记录
+        setRewards(prev => prev.map(r => r.id === rewardId
+          ? { ...r, status: 'pending_approval', redeemedBy: currentUser.id, redeemedAt: undefined }
+          : r
+        ));
         setHistory(prev => [{
           id: `guest-hist-${Date.now()}`,
           userId: currentUser.id,
-          title: `兑换心愿: ${reward.name}`,
+          title: `申请兑换心愿: ${reward.name}`,
           type: 'redeem',
-          stars: -reward.cost,
+          stars: 0,
           timestamp: new Date().toISOString(),
           icon: 'Gift',
         }, ...prev]);
@@ -489,66 +897,206 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     try {
-      const dbReward = await api.redeemReward(rewardId, currentUser.id);
-      setRewards(prev => prev.map(r => r.id === rewardId ? toReward(dbReward) : r));
+      if (!familyId) {
+        showToastGlobal('未找到家庭信息，请重新登录', 'error');
+        return;
+      }
+      const reward = rewards.find(r => r.id === rewardId);
+      if (!reward) return;
+      if (currentUser.stars < reward.cost) {
+        showToastGlobal('星星不足', 'warning');
+        return;
+      }
+      await ensureDataLayer(familyId, currentUser.id);
+      const updatedReward = await dataLayerRef.current.updateReward(rewardId, {
+        ...toDataLayerReward(reward),
+        status: 'pending_approval',
+        redeemedBy: currentUser.id,
+        redeemedAt: null,
+      });
+      setRewards(prev => prev.map(r => r.id === rewardId ? toRewardFromDataLayer(updatedReward) : r));
+      setHistory(prev => [{
+        id: `local-redeem-${rewardId}-${Date.now()}`,
+        userId: currentUser.id,
+        title: `申请兑换心愿: ${reward.name}`,
+        type: 'redeem',
+        stars: 0,
+        timestamp: new Date().toISOString(),
+        icon: 'Gift',
+      }, ...prev]);
     } catch (err: any) {
       showToastGlobal(`兑换奖励失败: ${err.message}`, 'error');
     }
-  }, [currentUser, rewards]);
+  }, [currentUser, familyId, rewards]);
+
+  const approveReward = useCallback(async (rewardId: string): Promise<boolean> => {
+    if (!currentUser) return false;
+    if (!canApproveRewards(currentUser)) {
+      deny('只有家长可以确认兑换');
+      return false;
+    }
+    const reward = rewards.find(r => r.id === rewardId);
+    if (!reward) return false;
+    const redeemerId = reward.redeemedBy || currentUser.id;
+    const redeemer = members.find(member => member.id === redeemerId);
+
+    if (guestModeRef.current) {
+      if (redeemer && redeemer.stars < reward.cost) {
+        showToastGlobal('星星不足，无法确认兑换', 'warning');
+        return false;
+      }
+      const redeemedAt = new Date().toISOString();
+      const fulfillmentTask = buildRewardFulfillmentTask({
+        reward,
+        redeemer,
+        parents: members.filter(member => member.role === 'parent'),
+        approver: currentUser,
+        redeemedAt,
+      });
+      setRewards(prev => prev.map(r => r.id === rewardId ? { ...r, status: 'redeemed', redeemedBy: redeemerId, redeemedAt } : r));
+      if (!hasRewardFulfillmentTask(tasks, reward.id)) {
+        setTasks(prev => [{ ...fulfillmentTask, id: `guest-fulfill-${reward.id}-${Date.now()}` }, ...prev]);
+      }
+      setMembers(prev => prev.map(member => member.id === redeemerId ? { ...member, stars: member.stars - reward.cost } : member));
+      if (currentUser.id === redeemerId) setCurrentUser({ ...currentUser, stars: currentUser.stars - reward.cost });
+      setHistory(prev => [{
+        id: `guest-redeem-approved-${Date.now()}`,
+        userId: redeemerId,
+        title: `兑换心愿: ${reward.name}`,
+        type: 'redeem',
+        stars: -reward.cost,
+        timestamp: redeemedAt,
+        icon: 'Gift',
+      }, ...prev]);
+      return true;
+    }
+
+    if (!familyId) {
+      showToastGlobal('未找到家庭信息，请重新登录', 'error');
+      return false;
+    }
+    if (redeemer && redeemer.stars < reward.cost) {
+      showToastGlobal('星星不足，无法确认兑换', 'warning');
+      return false;
+    }
+
+    try {
+      await ensureDataLayer(familyId, currentUser.id);
+      const redeemedAt = new Date().toISOString();
+      const updatedReward = await dataLayerRef.current.updateReward(rewardId, {
+        ...toDataLayerReward(reward),
+        status: 'redeemed',
+        redeemedBy: redeemerId,
+        redeemedAt,
+      });
+      const fulfillmentTask = buildRewardFulfillmentTask({
+        reward,
+        redeemer,
+        parents: members.filter(member => member.role === 'parent'),
+        approver: currentUser,
+        redeemedAt,
+      });
+      if (!hasRewardFulfillmentTask(tasks, reward.id)) {
+        const dataTask = await dataLayerRef.current.addTask(toDataLayerTask(fulfillmentTask, currentUser.id));
+        setTasks(prev => [toTaskFromDataLayer(dataTask), ...prev]);
+      }
+      await dataLayerRef.current.addStars(redeemerId, -reward.cost, `兑换心愿: ${reward.name}`, { rewardId });
+      setRewards(prev => prev.map(r => r.id === rewardId ? toRewardFromDataLayer(updatedReward) : r));
+      setMembers(prev => prev.map(member => member.id === redeemerId ? { ...member, stars: member.stars - reward.cost } : member));
+      if (currentUser.id === redeemerId) setCurrentUser({ ...currentUser, stars: currentUser.stars - reward.cost });
+      setHistory(prev => [{
+        id: `local-redeem-approved-${rewardId}-${Date.now()}`,
+        userId: redeemerId,
+        title: `兑换心愿: ${reward.name}`,
+        type: 'redeem',
+        stars: -reward.cost,
+        timestamp: redeemedAt,
+        icon: 'Gift',
+      }, ...prev]);
+      return true;
+    } catch (err: any) {
+      showToastGlobal(`确认兑换失败: ${err.message}`, 'error');
+      return false;
+    }
+  }, [currentUser, familyId, members, rewards, tasks]);
 
   // ==================== 成员 Mutations ====================
   const addMember = useCallback(async (member: Member) => {
-    // 访客模式：纯前端本地添加
-    if (guestModeRef.current) {
-      setMembers(prev => [...prev, { ...member, id: member.id || `guest-m-${Date.now()}` }]);
+    if (currentUser && !canManageMembers(currentUser)) {
+      deny('只有家长可以添加家庭成员');
       return;
     }
-    if (!familyId) return;
+    // 访客模式：纯前端本地添加
+    if (guestModeRef.current) {
+      const memberWithId = { ...member, id: member.id || `guest-m-${Date.now()}` };
+      setMembers(prev => [...prev, prepareMemberCredentialsForStorage(memberWithId)]);
+      return;
+    }
+    if (!familyId) {
+      throw new Error('未找到家庭信息，请重新登录');
+    }
     try {
-      const dbMember = await api.addMember(familyId, member.name, member.role, member.avatar);
-      setMembers(prev => [...prev, toMember(dbMember)]);
+      await ensureDataLayer(familyId, currentUser?.id || member.id);
+      await dataLayerRef.current.addMember(toDataLayerMember(member));
+      await refreshMembersFromDataLayer();
     } catch (err: any) {
       showToastGlobal(`添加成员失败: ${err.message}`, 'error');
+      throw err;
     }
-  }, [familyId]);
+  }, [currentUser, familyId]);
 
   const deleteMember = useCallback(async (memberId: string) => {
+    if (!currentUser) return;
+    if (!canManageMembers(currentUser)) {
+      deny('只有家长可以删除家庭成员');
+      return;
+    }
     // 访客模式：纯前端本地删除
     if (guestModeRef.current) {
       setMembers(prev => prev.filter(m => m.id !== memberId));
       return;
     }
-    try {
-      await api.deleteMember(memberId);
-      setMembers(prev => prev.filter(m => m.id !== memberId));
-    } catch (err: any) {
-      showToastGlobal(`删除成员失败: ${err.message}`, 'error');
-    }
-  }, []);
-
-  const updateMember = useCallback(async (member: Member) => {
-    // 访客模式：纯前端本地更新
-    if (guestModeRef.current) {
-      setMembers(prev => prev.map(m => m.id === member.id ? member : m));
-      if (currentUser?.id === member.id) setCurrentUser(member);
+    if (!currentUser || !familyId) {
+      showToastGlobal('未找到家庭信息，请重新登录', 'error');
       return;
     }
     try {
-      const dbMember = await api.updateMember(member.id, {
-        name: member.name,
-        avatar: member.avatar || null,
-        role: member.role,
-        stars: member.stars,
-        pin: member.pin || null,
-        password: member.password || null,
-      });
-      const updated = toMember(dbMember);
+      await ensureDataLayer(familyId, currentUser.id);
+      await dataLayerRef.current.deleteMember(memberId);
+      await refreshMembersFromDataLayer();
+    } catch (err: any) {
+      showToastGlobal(`删除成员失败: ${err.message}`, 'error');
+    }
+  }, [currentUser, familyId]);
+
+  const updateMember = useCallback(async (member: Member) => {
+    if (!currentUser) return;
+    const isSelfCredentialUpdate = currentUser.id === member.id;
+    if (!isSelfCredentialUpdate && !canManageMembers(currentUser)) {
+      deny('只有家长可以编辑其他家庭成员');
+      return;
+    }
+    // 访客模式：纯前端本地更新
+    if (guestModeRef.current) {
+      const securedMember = prepareMemberCredentialsForStorage(member);
+      setMembers(prev => prev.map(m => m.id === member.id ? securedMember : m));
+      if (currentUser?.id === member.id) setCurrentUser(securedMember);
+      return;
+    }
+    if (!currentUser || !familyId) {
+      showToastGlobal('未找到家庭信息，请重新登录', 'error');
+      return;
+    }
+    try {
+      await ensureDataLayer(familyId, currentUser.id);
+      const dataMember = await dataLayerRef.current.updateMember(member.id, toDataLayerMember(member));
+      const updated = toMemberFromDataLayer(dataMember);
       setMembers(prev => prev.map(m => m.id === member.id ? updated : m));
       if (currentUser?.id === member.id) setCurrentUser(updated);
     } catch (err: any) {
       showToastGlobal(`更新成员失败: ${err.message}`, 'error');
     }
-  }, [currentUser]);
+  }, [currentUser, familyId]);
 
   const logout = useCallback(async () => {
     if (!guestModeRef.current) {
@@ -560,9 +1108,12 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     setTasks([]);
     setRewards([]);
     setHistory([]);
-    setFamilyId(null);
+    setAuditLogs([]);
+    updateFamilyId(null);
     setGuestMode(false);
-  }, []);
+    clearGuestLocalState();
+    clearGuestPlans();
+  }, [updateFamilyId]);
 
   const toggleDarkMode = useCallback(() => setIsDarkMode(prev => !prev), []);
 
@@ -570,23 +1121,35 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     console.warn('addStars 已废弃，请使用 API 函数');
   }, []);
 
+  const syncNow = useCallback(async () => {
+    if (!familyId || !currentUser || guestModeRef.current) return;
+    await ensureDataLayer(familyId, currentUser.id);
+    const result = await dataLayerRef.current.syncNow(true);
+    setSyncStatus(dataLayerRef.current.getSyncStatus());
+    if (!result.success && result.error !== 'OFFLINE') {
+      showToastGlobal(`同步失败: ${result.error || '请稍后重试'}`, 'error');
+    }
+  }, [currentUser, familyId]);
+
   return (
     <FamilyContext.Provider
       value={{
-        members, tasks, rewards, history,
-        currentUser, setCurrentUser,
+        members, tasks, rewards, history, auditLogs,
+        currentUser, memberSession, setCurrentUser,
         stars: currentUser?.stars || 0,
         addStars, addTask, updateTask, deleteTask,
         completeTask, approveTask,
-        addReward, updateReward, deleteReward, redeemReward,
+        addReward, updateReward, deleteReward, redeemReward, approveReward,
         isDarkMode, toggleDarkMode,
         addMember, deleteMember, updateMember,
         logout,
         isUserSelectorOpen, setIsUserSelectorOpen,
         isInitialized, setIsInitialized,
         loading,
-        familyId,
-        guestMode, setGuestMode, loadGuestData, loadGuestDemoData,
+        familyId, setFamilyId: updateFamilyId,
+        guestMode, setGuestMode,
+        syncStatus, syncNow,
+        loadGuestData, loadGuestDemoData, localImport,
       }}
     >
       {children}

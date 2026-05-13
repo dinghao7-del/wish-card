@@ -1,0 +1,201 @@
+@import "../../app.scss";
+
+/* ===== AdminInviteCodes 管理页面 — 对齐Web AdminInviteCodes.tsx 样式 ===== */
+
+.admin-page {
+  min-height: 100vh;
+  background-color: $bg-color;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Header */
+.admin-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 24rpx 32rpx;
+  position: sticky; top: 0; z-index: 10;
+  background-color: rgba(#fff, 0.85); backdrop-filter: blur(30rpx);
+  border-bottom: 1rpx solid rgba(0,0,0,0.06);
+}
+.ah-left {
+  width: 80rpx; height: 80rpx;
+  border-radius: 20rpx;
+  background-color: #fff;
+  border: 2rpx solid rgba(0,0,0,0.06);
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.ah-left:active { background-color: $surface-container-low; transform: scale(0.95); }
+
+.ah-title { font-size: 36rpx; font-weight: 900; color: #333; letter-spacing: -0.5rpx; }
+.ah-right {
+  width: 72rpx; height: 72rpx;
+  border-radius: 18rpx;
+  background-color: $primary-color;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6rpx 18rpx rgba($primary-color, 0.3);
+  transition: all 0.15s;
+}
+.ah-right:active { transform: scale(0.92); }
+
+/* Stats Row — 对齐Web第150-163行 */
+.stats-row {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16rpx;
+  padding: 20rpx 32rpx;
+}
+.stat-card {
+  background-color: #fff; border-radius: 20rpx;
+  padding: 20rpx 12rpx; text-align: center;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+  border: 2rpx solid rgba(0,0,0,0.05);
+}
+.stat-card.disabled .stat-num { color: #f97316; }
+.stat-card.blue .stat-num { color: #3b82f6; }
+
+.stat-num {
+  font-size: 40rpx; font-weight: 900; color: $primary-color;
+  display: block; line-height: 1.2;
+}
+.stat-label {
+  font-size: 19rpx; font-weight: 700; color: $text-secondary;
+  margin-top: 4rpx; display: block;
+}
+
+/* Body */
+.admin-body { padding: 12rpx 32rpx; overflow-x: hidden; box-sizing: border-box; }
+
+/* Empty State */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 120rpx 0 40rpx; gap: 16rpx;
+}
+.empty-text {
+  font-size: 30rpx; font-weight: 700; color: rgba(0,0,0,0.35);
+}
+.empty-hint {
+  font-size: 24rpx; color: rgba(0,0,0,0.25); margin-top: 4rpx;
+}
+
+/* Code Card List — 对齐Web第179-243行 */
+.codes-list { display: flex; flex-direction: column; gap: 20rpx; }
+.code-card {
+  background-color: #fff; border-radius: 28rpx;
+  padding: 28rpx; position: relative;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.04);
+  border: 2rpx solid rgba(0,0,0,0.05);
+  transition: all 0.15s;
+}
+.code-card.disabled {
+  border-color: rgba(239,68,68,0.15);
+  opacity: 0.65;
+}
+
+.cc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12rpx; }
+.cc-code-row { display: flex; align-items: center; gap: 12rpx; }
+.cc-code {
+  font-size: 34rpx; font-weight: 900; color: #333;
+  letter-spacing: 2rpx;
+}
+.copy-btn {
+  width: 56rpx; height: 56rpx; border-radius: 14rpx;
+  background-color: $surface-container-low;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.copy-btn:active { transform: scale(0.92); }
+.copy-btn.copied { background-color: rgba(34,197,94,0.08); }
+
+.cc-actions { display: flex; gap: 10rpx; }
+.action-btn {
+  width: 64rpx; height: 64rpx; border-radius: 16rpx;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s;
+}
+.action-btn:active { transform: scale(0.9); }
+.action-btn.active { background-color: rgba(34,197,94,0.06); }
+.action-btn.delete { background-color: rgba(239,68,68,0.04); }
+
+.cc-desc {
+  font-size: 25rpx; color: $text-secondary; line-height: 1.5;
+  margin-bottom: 14rpx; display: block;
+}
+
+/* Meta info */
+.cc-meta { display: flex; align-items: center; gap: 28rpx; }
+.meta-item { display: flex; align-items: center; gap: 6rpx; }
+.meta-text {
+  font-size: 21rpx; font-weight: 700; color: $text-secondary-variant;
+}
+.meta-text.expired { color: #ef4444; }
+
+/* Status tags */
+.status-tag {
+  position: absolute; top: 28rpx; right: 140rpx;
+  font-size: 19rpx; font-weight: 900;
+  padding: 4rpx 12rpx; border-radius: 8rpx;
+}
+.status-tag.stopped { color: #ef4444; background-color: rgba(239,68,68,0.08); }
+.status-tag.expired { color: #ef4444; background-color: rgba(239,68,68,0.08); }
+
+/* Dialog Overlay */
+.dialog-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.4); z-index: 999;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.dialog-content {
+  background-color: #fff; border-radius: 40rpx 40rpx 0 0;
+  width: 100%; padding: 44rpx 36rpx 80rpx;
+  max-height: 85vh; overflow-y: auto;
+}
+.dialog-title {
+  font-size: 38rpx; font-weight: 900; color: #333;
+  display: block; margin-bottom: 28rpx;
+}
+
+.form-label {
+  font-size: 27rpx; font-weight: 800; color: #333;
+  margin-bottom: 12rpx; display: block; margin-top: 20rpx;
+}
+
+.dialog-input {
+  width: 100%; height: 88rpx; border-radius: 22rpx;
+  background-color: $surface-container-low;
+  padding: 0 26rpx; box-sizing: border-box;
+  font-size: 29rpx; font-weight: 700; color: #333;
+  border: 3rpx solid transparent;
+  margin-bottom: 8rpx;
+}
+.dialog-input:focus { border-color: $primary-color; }
+
+/* Stepper */
+.stepper-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 32rpx; margin-bottom: 8rpx;
+}
+.stepper-btn {
+  width: 72rpx; height: 72rpx; border-radius: 18rpx;
+  background-color: $primary-color; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36rpx; font-weight: 900;
+  transition: all 0.12s;
+}
+.stepper-btn:active { transform: scale(0.9); opacity: 0.8; }
+.stepper-value {
+  font-size: 38rpx; font-weight: 900; color: #333;
+  min-width: 60rpx; text-align: center;
+}
+
+.create-submit {
+  width: 100%; height: 92rpx; border-radius: 24rpx;
+  background-color: $primary-color;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 32rpx;
+  box-shadow: 0 6rpx 18rpx rgba($primary-color, 0.25);
+  transition: all 0.15s;
+}
+.create-submit:active { transform: scale(0.97); }
+.create-submit.disabled { opacity: 0.4; pointer-events: none; }
+create-submit Text { color: #ffffff; font-size: 30rpx; font-weight: 900; }

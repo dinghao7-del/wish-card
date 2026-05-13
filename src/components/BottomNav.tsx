@@ -21,7 +21,7 @@ export function BottomNav() {
   const { t } = useTranslation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 px-2 sm:px-4 pt-2 pb-safe bg-background/95 dark:bg-surface/95 backdrop-blur-lg border-t border-outline-variant/10" style={{ paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom, 0px))' }}>
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-outline-variant/10 bg-background/95 px-2 pt-2 backdrop-blur-lg sm:px-4 dark:bg-surface/95" style={{ paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom, 0px))' }}>
       <div className="grid grid-cols-5 items-center max-w-lg mx-auto h-16">
         {navItems.map(({ to, icon, labelKey, defaultLabel, variant }) => (
           <NavItem

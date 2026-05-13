@@ -1,0 +1,678 @@
+@import "../../app.scss";
+
+/* ===== OnboardingGuide 新手引导 — 干净排版版 ===== */
+
+/* ---- 页面容器 ---- */
+.ob-page {
+  min-height: 100vh; background-color: $bg-color;
+  display: flex; flex-direction: column;
+  overflow-x: hidden; width: 100%; box-sizing: border-box;
+}
+.ob-page.ob-center { align-items: center; justify-content: center; padding: 48rpx; }
+
+/* ---- Step Header ---- */
+.ob-step-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20rpx 32rpx;
+}
+.back-btn { width: 64rpx; height: 64rpx; display: flex; align-items: center; justify-content: center; }
+.step-num { font-size: 24rpx; font-weight: 700; color: $text-secondary; }
+
+/* ---- Welcome Card ---- */
+.ob-card {
+  width: 100%; max-width: 640rpx;
+  background-color: #fff; border-radius: 50rpx;
+  box-shadow: 0 20rpx 60rpx rgba(0,0,0,0.08);
+  padding: 80rpx 48rpx;
+  display: flex; flex-direction: column; align-items: center;
+}
+.welcome-icon-wrap {
+  width: 160rpx; height: 160rpx; border-radius: 50%;
+  background: rgba($primary-color, 0.1);
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ---- Titles ---- */
+.ob-title { font-size: 48rpx; font-weight: 900; color: #333; margin-top: 32rpx; text-align: center; display: block; }
+.ob-subtitle { font-size: 28rpx; color: $text-secondary; text-align: center; line-height: 1.6; margin-top: 16rpx; display: block; white-space: pre-line; }
+.ob-step-title { font-size: 40rpx; font-weight: 900; color: #333; text-align: center; padding: 16rpx 32rpx 8rpx; display: block; }
+.ob-step-hint { font-size: 26rpx; color: $text-secondary-variant; text-align: center; display: block; }
+
+/* ---- Buttons ---- */
+.ob-primary-btn {
+  width: 100%; max-width: 480rpx; height: 96rpx;
+  border-radius: 100rpx; background-color: $primary-color;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 56rpx;
+  box-shadow: 0 15rpx 30rpx rgba($primary-color, 0.2);
+}
+.ob-primary-btn:active { transform: scale(0.97); opacity: 0.9; }
+.ob-primary-btn Text { color: #fff; font-size: 34rpx; font-weight: 900; }
+
+.ob-secondary-btn {
+  height: 80rpx; border-radius: 22rpx;
+  background: #f5f5f5; border: 2rpx solid rgba(0,0,0,0.06);
+  display: flex; align-items: center; justify-content: center;
+}
+.ob-secondary-btn Text { font-size: 28rpx; font-weight: 800; color: #666; }
+
+/* ---- Body Scroll ---- */
+.ob-step-body { flex: 1; padding: 16rpx 32rpx; overflow-y: auto; overflow-x: hidden; width: 100%; box-sizing: border-box; }
+.rec-body { flex: 1; overflow-x: hidden; width: 100%; box-sizing: border-box; }
+
+/* ---- Bottom Bar ---- */
+.ob-bottom-bar {
+  position: sticky; bottom: 0; padding: 20rpx 32rpx 40rpx;
+  background: linear-gradient(to top, #fff 70%, transparent); z-index: 10;
+}
+.ob-next-btn {
+  width: 100%; height: 92rpx; border-radius: 28rpx;
+  background-color: $primary-color;
+  display: flex; align-items: center; justify-content: center; gap: 10rpx;
+  box-shadow: 0 8rpx 24rpx rgba($primary-color, 0.25);
+}
+.ob-next-btn:active { transform: scale(0.98); }
+.ob-next-btn Text { color: #fff; font-size: 30rpx; font-weight: 900; }
+.ob-next-btn.disabled { opacity: 0.4; }
+
+/* ---- Finish Button ---- */
+.ob-finish-btn {
+  width: 100%; height: 100rpx; border-radius: 100rpx;
+  background: linear-gradient(135deg, #006e1c, #00a33a);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 12rpx 32rpx rgba($primary-color, 0.35);
+}
+.ob-finish-btn:active { transform: scale(0.975); }
+.finish-text { margin-left: 12rpx; color: #fff; font-size: 30rpx; font-weight: 900; }
+
+.preview-bottom-btns {
+  padding: 16rpx 28rpx 36rpx; display: flex; flex-direction: column; gap: 12rpx;
+}
+
+
+/* ================================================================
+   Family Type
+   ================================================================ */
+
+.ft-list { display: flex; flex-direction: column; gap: 20rpx; margin-top: 24rpx; }
+.ft-item {
+  display: flex; align-items: center; gap: 22rpx;
+  background: #fff; border-radius: 32rpx;
+  padding: 28rpx 24rpx;
+  border: 3rpx solid rgba(0,0,0,0.05);
+}
+.ft-item:active { transform: scale(0.985); }
+.ft-item.active { border-color: $primary-color; background: rgba($primary-color, 0.05); box-shadow: 0 4rpx 16rpx rgba($primary-color, 0.08); }
+
+.ft-icon {
+  width: 80rpx; height: 80rpx; border-radius: 50%;
+  background: #f0f0f0; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.ft-icon.active { background: $primary-color; }
+
+.ft-text { flex: 1; min-width: 0; }
+.ft-label { font-size: 30rpx; font-weight: 900; color: #333; display: block; }
+.ft-desc { font-size: 24rpx; color: $text-secondary; margin-top: 4rpx; display: block; }
+
+.chk-row {
+  display: flex; align-items: center; gap: 22rpx;
+  padding: 28rpx 24rpx;
+  background: $surface-container-low; border-radius: 32rpx;
+  margin-top: 24rpx;
+}
+.chk-box {
+  width: 44rpx; height: 44rpx; border-radius: 12rpx;
+  border: 3rpx solid $primary-color; background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.chk-box.on { background: $primary-color; }
+.chk-lbl { font-size: 28rpx; font-weight: 700; color: #333; }
+
+.sp-h { height: 40rpx; }
+.sp-h-lg { height: 80rpx; }
+
+
+/* ================================================================
+   Children Count
+   ================================================================ */
+
+.cc-round-btn {
+  width: 96rpx; height: 96rpx; border-radius: 50%;
+  background: $surface-container-low;
+  display: flex; align-items: center; justify-content: center;
+}
+.cc-round-btn:active { transform: scale(0.9); }
+.cc-big-num { font-size: 72rpx; font-weight: 900; color: $primary-color; margin: 0 48rpx; }
+.cc-hint { font-size: 26rpx; color: $text-secondary-variant; margin-top: 24rpx; text-align: center; display: block; }
+
+
+/* ================================================================
+   Child Details
+   ================================================================ */
+
+.dots-row { display: flex; gap: 14rpx; justify-content: center; margin-bottom: 16rpx; }
+.dot {
+  width: 14rpx; height: 14rpx; border-radius: 50%;
+  background: #ddd; transition: all 0.2s;
+}
+.dot.active { width: 28rpx; border-radius: 10rpx; background: $primary-color; }
+
+.avatar-circle {
+  width: 192rpx; height: 192rpx; border-radius: 50%;
+  background: $surface-container-low; display: flex; align-items: center; justify-content: center;
+  border: 4rpx solid $primary-color; overflow: hidden;
+}
+
+.modal-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); z-index: 100;
+}
+
+.avatar-picker {
+  position: absolute; top: 200rpx; left: 50%; transform: translateX(-50%);
+  z-index: 101; width: 640rpx;
+  background: #fff;
+  border-radius: 48rpx;
+  padding: 28rpx;
+  box-shadow: 0 20rpx 60rpx rgba(0,0,0,0.2);
+  border: 2rpx solid rgba(0,0,0,0.06);
+}
+.tiny-close { width: 56rpx; height: 56rpx; display: flex; align-items: center; justify-content: center; }
+
+.avatar-pick {
+  width: 88rpx; height: 88rpx; border-radius: 18rpx;
+  overflow: hidden; border: 3rpx solid transparent;
+  display: flex; align-items: center; justify-content: center;
+}
+.avatar-pick.sel { border-color: $primary-color; box-shadow: 0 0 0 3rpx rgba($primary-color, 0.15); background: rgba($primary-color, 0.04); }
+
+.field-label { font-size: 28rpx; font-weight: 700; color: $text-secondary; margin-bottom: 12rpx; margin-top: 24rpx; display: block; }
+.field-input {
+  width: 100%; height: 84rpx;
+  border-radius: 28rpx;
+  background-color: #fff; padding: 0 26rpx; box-sizing: border-box;
+  font-size: 28rpx; font-weight: 700; color: #333;
+  border: 3rpx solid rgba(0,0,0,0.06);
+}
+.textarea-box { min-height: 200rpx; }
+.field-hint { font-size: 22rpx; color: $text-secondary-variant; margin-top: 8rpx; display: block; }
+
+.gender-row { display: flex; gap: 22rpx; margin-top: 8rpx; }
+.gender-chip {
+  flex: 1; height: 80rpx;
+  border-radius: 24rpx;
+  background: #fff; display: flex; align-items: center; justify-content: center;
+  border: 3rpx solid rgba(0,0,0,0.06);
+}
+.gender-chip.active { border-color: $primary-color; background: rgba($primary-color, 0.05); }
+.gender-chip Text { font-size: 28rpx; font-weight: 700; color: #333; }
+
+.pick-box {
+  width: 100%; height: 84rpx;
+  border-radius: 24rpx;
+  background: $surface-container-low;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24rpx; box-sizing: border-box;
+  border: 3rpx solid rgba(0,0,0,0.06);
+}
+.pick-box Text { font-size: 28rpx; font-weight: 700; color: #333; }
+
+
+/* ================================================================
+   Daily Schedule
+   ================================================================ */
+
+.schedule-card {
+  background: #fff; border-radius: 32rpx;
+  padding: 28rpx;
+  border: 2rpx solid rgba(0,0,0,0.04);
+}
+
+.time-pick-box {
+  width: 100%; height: 72rpx;
+  border-radius: 18rpx;
+  background: $surface-container-low; padding: 0 20rpx; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28rpx; font-weight: 800; color: #333;
+  border: 2rpx solid rgba(0,0,0,0.06);
+}
+
+
+/* ================================================================
+   Activities — 对齐 Web 原版分类分组 + 3列网格图标卡片
+   Web 参考:
+     - 自定义区: bg-surface-container rounded-2xl p-3
+     - 网格: grid grid-cols-3 gap-2
+     - 卡片: p-3 rounded-xl border-2
+     - 选中: border-primary bg-primary/5
+   ================================================================ */
+
+/* 自定义活动输入卡片 */
+.act-custom-card {
+  background: $surface-container-low; border-radius: 32rpx;
+  padding: 24rpx;
+  margin-top: 16rpx;
+}
+.act-custom-label {
+  display: flex; align-items: center; gap: 8rpx; margin-bottom: 6rpx;
+}
+.act-custom-label Text { font-size: 25rpx; font-weight: 800; color: $text-secondary-variant; }
+.act-custom-hint { font-size: 21rpx; color: #bbb; display: block; margin-bottom: 12rpx; }
+
+.act-input-row { display: flex; gap: 12rpx; }
+.act-input-field {
+  flex: 1; height: 72rpx;
+  padding: 0 20rpx; box-sizing: border-box;
+  border-radius: 24rpx;
+  background: #fff;
+  font-size: 26rpx; font-weight: 700;
+  border: 3rpx solid rgba(0,0,0,0.06);
+}
+.act-add-btn {
+  width: 120rpx; height: 72rpx; border-radius: 24rpx;
+  background-color: $primary-color;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.act-add-btn Text { color: #fff; font-size: 25rpx; font-weight: 800; }
+.act-add-btn.disabled { opacity: 0.4; }
+
+/* 已添加的自定义绿色标签 */
+.act-tag-list { display: flex; flex-wrap: wrap; gap: 10rpx; margin-top: 14rpx; }
+.act-green-pill {
+  display: flex; align-items: center; gap: 6rpx;
+  background: rgba($primary-color, 0.1); border-radius: 999rpx;
+  padding-left: 18rpx; padding-right: 6rpx; paddingVertical: 6rpx;
+}
+.act-green-pill Text { font-size: 23rpx; font-weight: 700; color: $primary-color; }
+.pill-x {
+  width: 32rpx; height: 32rpx; border-radius: 999rpx;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba($primary-color, 0.15);
+}
+
+/* 预置活动滚动区域 */
+.act-grid-scroll { margin-top: 20rpx; }
+
+/* 分类区块 */
+.act-cat-block { margin-bottom: 22rpx; }
+.act-cat-label {
+  font-size: 23rpx; font-weight: 900;
+  color: $text-secondary-variant;
+  text-transform: uppercase; letter-spacing: 2rpx;
+  margin-bottom: 10rpx; display: block;
+}
+
+/* 3列网格 — 对齐 grid-cols-3 gap-2 */
+.act-grid {
+  display: flex; flex-wrap: wrap;
+  gap: 14rpx;
+}
+
+/* 单个活动卡片 — 对齐 p-3 rounded-xl border-2 */
+.act-grid-item {
+  width: calc(33.33% - 10rpx);
+  border-radius: 24rpx; /* rounded-xl */
+  padding: 18rpx 8rpx; /* p-3 */
+  border: 3rpx solid rgba(0,0,0,0.06); /* border-outline-variant/20 */
+  background: $surface-container-low;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: all 0.12s;
+}
+.act-grid-item:active { transform: scale(0.96); }
+/* 选中态 — 对齐 border-primary bg-primary/5 */
+.act-grid-item.sel {
+  border-color: $primary-color;
+  background: rgba($primary-color, 0.05);
+}
+
+/* 网格卡片文字 */
+.act-grid-label {
+  font-size: 21rpx; font-weight: 700;
+  color: #444; margin-top: 6rpx;
+  text-align: center; display: block;
+}
+.act-grid-label.sel { color: $primary-color; }
+
+/* 底部已选汇总卡 */
+.act-summary-card {
+  background: $surface-container-low; border-radius: 32rpx;
+  padding: 24rpx; margin-top: 16rpx;
+}
+.act-summary-title {
+  font-size: 23rpx; font-weight: 800;
+  color: $text-secondary-variant;
+  margin-bottom: 10rpx; display: block;
+}
+.act-summary-tags {
+  display: flex; flex-wrap: wrap; gap: 8rpx;
+}
+.act-small-pill {
+  padding: 4rpx 16rpx; border-radius: 999rpx;
+  background: rgba($primary-color, 0.1);
+}
+.act-small-pill Text {
+  font-size: 19rpx; font-weight: 800; color: $primary-color;
+}
+
+
+/* ================================================================
+   Holiday Schedule
+   ================================================================ */
+
+.hol-tag {
+  padding: 18rpx 26rpx; border-radius: 999rpx;
+  border: 2rpx solid rgba(0,0,0,0.06);
+  background: $surface-container;
+}
+.hol-tag:active { transform: scale(0.96); }
+.hol-tag.active { border-color: $primary-color; background: rgba($primary-color, 0.06); }
+.hol-tag Text { font-size: 24rpx; font-weight: 800; color: #666; }
+.hol-tag.active Text { color: $primary-color; }
+
+
+/* ================================================================
+   Priorities
+   ================================================================ */
+
+.pri-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 22rpx; margin-top: 24rpx;
+}
+
+.pri-card {
+  background: #fff; border-radius: 32rpx;
+  padding: 28rpx 20rpx;
+  border: 3rpx solid rgba(0,0,0,0.05);
+  text-align: center;
+}
+.pri-card:active { transform: scale(0.97); }
+.pri-card.active { border-color: $primary-color; background: rgba($primary-color, 0.05); }
+
+.pri-emoji { font-size: 52rpx; display: block; text-align: center; margin-top: 8rpx; }
+.pri-label { font-size: 26rpx; font-weight: 700; text-align: center; color: #333; margin-top: 10rpx; display: block; }
+.pri-card.active .pri-label { color: $primary-color; }
+
+
+/* ================================================================
+   Analyzing Animation
+   ================================================================ */
+
+.analyze-spin {
+  width: 160rpx; height: 160rpx; border-radius: 46rpx;
+  background: rgba($primary-color, 0.1);
+  display: flex; align-items: center; justify-content: center;
+  animation: pulse 1.5s ease-in-out infinite alternate alternate;
+}
+.analyze-title { font-size: 36rpx; font-weight: 900; color: #333; margin-top: 24rpx; text-align: center; display: block; }
+.analyze-desc { font-size: 26rpx; color: $text-secondary; text-align: center; margin-top: 8rpx; display: block; }
+
+@keyframes pulse { from { transform: scale(1); } to { transform: scale(1.08); } }
+@keyframes bounceIn { 0%{transform:scale(0.5);opacity:0} 100%{transform:scale(1);opacity:1} }
+
+
+/* ================================================================
+   Recommendations — 干净排版版
+   ================================================================ */
+
+.rec-header-count { font-size: 25rpx; font-weight: 800; color: $primary-color; }
+
+/* 标题区 */
+.rec-title-block {
+  text-align: center;
+  padding: 20rpx 32rpx 16rpx;
+}
+.rec-main-title {
+  font-size: 38rpx; font-weight: 900; color: $primary-color;
+  letter-spacing: 1rpx;
+  display: block;
+}
+.rec-sub-title {
+  font-size: 24rpx; color: $text-secondary-variant;
+  margin-top: 6rpx; display: block;
+}
+
+/* 区块容器 */
+.rec-section { margin-bottom: 28rpx; }
+
+/* 区块标题行 */
+.rec-section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14rpx; padding: 0 4rpx;
+}
+.rec-section-label {
+  font-size: 25rpx; font-weight: 900; color: $text-secondary-variant;
+}
+.rec-section-label.habit { color: #9333ea; }
+
+/* 计数 pill badge */
+.rec-pill {
+  font-size: 21rpx; font-weight: 800;
+  padding: 4rpx 16rpx; border-radius: 999rpx;
+}
+.rec-pill.task-pill { background: #dbeafe; color: #2563eb; }
+.rec-pill.habit-badge { background: #f3e8ff; color: #9333ea; }
+.rec-pill.habit { background: #f3e8ff; color: #9333ea; }
+
+/* 任务卡片 — 统一风格 */
+.rec-item {
+  display: flex; align-items: center; gap: 18rpx;
+  background: #fff; border-radius: 36rpx;
+  padding: 24rpx 22rpx;
+  border: 2rpx solid rgba(0,0,0,0.03);
+  margin-bottom: 14rpx;
+  transition: all 0.12s;
+}
+.rec-item:active { transform: scale(0.99); }
+
+/* 选中态 */
+.rec-item.sel {
+  border-color: rgba($primary-color, 0.35);
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+}
+.rec-item.habit.sel { border-color: rgba(168,85,247,0.35); }
+
+/* 未选中态 */
+.rec-item:not(.sel) { opacity: 0.55; }
+.rec-item.habit:not(.sel) { background: rgba(147,51,234,0.03); }
+
+/* 左侧图标 */
+.rec-item-icon {
+  width: 82rpx; height: 82rpx; border-radius: 24rpx;
+  background: #f3f4f6;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.rec-item-icon.sel { background: rgba(22,163,74,0.08); }
+.rec-item-icon.habit.sel { background: rgba(168,85,247,0.08); }
+
+/* 中间内容区 */
+.rec-item-body { flex: 1; min-width: 0; }
+
+/* 标题 + 星星徽章行 */
+.rec-item-top {
+  display: flex; align-items: center; gap: 8rpx;
+  flex-wrap: wrap;
+}
+.rec-item-name {
+  font-size: 28rpx; font-weight: 900; color: #999;
+}
+.rec-item-name.sel { color: #333; }
+
+/* 星星 badge */
+.rec-star-badge {
+  font-size: 20rpx; font-weight: 900;
+  padding-vertical: 2rpx; padding-horizontal: 10rpx;
+  border-radius: 999rpx;
+  background: rgba(245,158,11,0.12); color: #b45309;
+}
+.rec-star-badge.habit {
+  background: rgba(168,85,247,0.1); color: #7e22ce;
+}
+
+/* 描述文字 */
+.rec-item-desc {
+  font-size: 22rpx; color: #bbb;
+  margin-top: 4rpx; display: block;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rec-item-desc.sel { color: #666; }
+
+/* 右侧选中圈 */
+.rec-check {
+  width: 52rpx; height: 52rpx; border-radius: 50%;
+  border: 3rpx solid #d1d5db;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.rec-check.sel {
+  background: $primary-color;
+  border-color: $primary-color;
+  box-shadow: 0 4rpx 12rpx rgba($primary-color, 0.2);
+}
+.rec-check.habit.sel {
+  background: #a855f7;
+  border-color: #a855f7;
+  box-shadow: 0 4rpx 12rpx rgba(168,85,247,0.2);
+}
+
+
+/* ================================================================
+   Preview — 干净预览版
+   ================================================================ */
+
+/* 家庭信息卡 */
+.prev-fam-card {
+  background: linear-gradient(135deg, #006e1c, #2d8a4e);
+  border-radius: 32rpx;
+  padding: 32rpx 24rpx;
+  margin-bottom: 20rpx;
+}
+.prev-fam-name {
+  font-size: 38rpx; font-weight: 900; color: #fff;
+  display: block;
+}
+.prev-fam-list {
+  display: flex; flex-wrap: wrap; gap: 12rpx;
+  margin-top: 18rpx;
+}
+.prev-fam-chip {
+  display: flex; align-items: center; gap: 12rpx;
+  background: rgba(255,255,255,0.15);
+  border-radius: 999rpx;
+  padding: 12rpx 20rpx;
+}
+.prev-fam-emoji { font-size: 30rpx; }
+.prev-fam-info { display: flex; flex-direction: column; }
+.prev-fam-kidname { font-size: 24rpx; font-weight: 900; color: #fff; display: block; }
+.prev-fam-detail { font-size: 18rpx; color: rgba(255,255,255,0.7); display: block; }
+
+/* 列表卡片容器 */
+.prev-list-card {
+  background: #fff; border-radius: 32rpx;
+  padding: 24rpx;
+  border: 2rpx solid rgba(0,0,0,0.04);
+  margin-bottom: 18rpx;
+}
+.prev-list-card.habit { border-left: 6rpx solid #a855f7; }
+
+/* 列表头部（标题 + 计数） */
+.prev-list-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14rpx;
+}
+.prev-list-title {
+  font-size: 28rpx; font-weight: 900; color: #333;
+}
+.prev-list-title.habit { color: #9333ea; }
+.prev-list-count {
+  font-size: 21rpx; font-weight: 800;
+  padding: 4rpx 14rpx; border-radius: 999rpx;
+  background: #f0fdf4; color: #16a34a;
+}
+.prev-list-count.habit { background: #faf5ff; color: #9333ea; }
+
+/* 行项目 — 统一布局 */
+.prev-row {
+  display: flex; align-items: flex-start; gap: 14rpx;
+  padding: 14rpx 0;
+  border-bottom: 2rpx solid rgba(0,0,0,0.04);
+}
+.prev-row:last-child { border-bottom: none; }
+.prev-row.habit-row { background: rgba(147,51,234,0.02); border-radius: 16rpx; padding: 14rpx; margin-bottom: 8rpx; border-bottom: none; }
+
+/* 序号 — 等宽固定宽度 */
+.prev-row-idx {
+  font-size: 22rpx; font-weight: 900; color: $primary-color;
+  width: 40rpx; flex-shrink: 0;
+  line-height: 1.6;
+  opacity: 0.7;
+}
+.prev-row-idx.habit { color: #9333ea; }
+
+/* 中间内容区 */
+.prev-row-body { flex: 1; min-width: 0; }
+
+/* 名称 — 固定字号 */
+.prev-row-name {
+  font-size: 27rpx; font-weight: 900; color: #333;
+  display: block;
+  line-height: 1.4;
+}
+
+/* 描述 — 更小字号灰色 */
+.prev-row-desc {
+  font-size: 21rpx; color: #999;
+  margin-top: 2rpx; display: block;
+  line-height: 1.4;
+  overflow: hidden; text-overflow: ellipsis;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+
+/* 右侧星星 */
+.prev-row-star {
+  font-size: 22rpx; font-weight: 800; color: #d97706;
+  flex-shrink: 0; line-height: 1.6;
+}
+.prev-row-star.habit { color: #9333ea; }
+
+/* 右侧组合（星星+天数） */
+.prev-row-right {
+  display: flex; flex-direction: column; align-items: flex-end;
+  gap: 4rpx; flex-shrink: 0;
+}
+
+/* 天数 badge */
+.prev-day-badge {
+  font-size: 19rpx; font-weight: 800;
+  padding: 2rpx 12rpx; border-radius: 999rpx;
+  background: rgba(168,85,247,0.1); color: #9333ea;
+}
+
+/* 文本框 */
+.prev-textarea {
+  width: 100%; min-height: 180rpx;
+  border-radius: 24rpx;
+  background: #f9fafb;
+  padding: 20rpx; box-sizing: border-box;
+  font-size: 26rpx; color: #333;
+  border: 2rpx solid rgba(0,0,0,0.06);
+  margin-top: 12rpx;
+}
+
+
+/* ================================================================
+   Success
+   ================================================================ */
+
+.success-icon {
+  width: 180rpx; height: 180rpx; border-radius: 50%;
+  background: rgba(34,197,94,0.1);
+  display: flex; align-items: center; justify-content: center;
+  animation: bounceIn 0.6s cubic-bezier(0.68,-0.55,0.265,1.55) both;
+}
+
+.success-big-title { font-size: 48rpx; font-weight: 900; color: #333; margin-top: 28rpx; display: block; text-align: center; }
+.success-big-desc { font-size: 28rpx; color: $text-secondary; text-align: center; line-height: 1.6; margin-top: 12rpx; display: block; }

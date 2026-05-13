@@ -2,13 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
-  ArrowLeft, Download, Smartphone, ChevronRight, Check, Copy, 
+  Download, Smartphone, ChevronRight, Check, Copy, 
   ExternalLink, Calendar, Plus, Trash2, Upload,
   Link, X, Monitor, Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFamily } from '../context/FamilyContext';
+import { TopAppBar } from '../components/navigation/TopAppBar';
+import { showToastGlobal } from '../components/Toast';
 import { generateICSFile, downloadICS, getCalendarSyncGuide, type CalendarSyncGuide } from '../lib/voiceAssistant';
+import { cn } from '../lib/utils';
 import * as api from '../lib/api';
 
 interface CalendarSubscription {
@@ -20,6 +23,8 @@ interface CalendarSubscription {
   last_accessed_at?: string;
   created_at: string;
 }
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 // 设备检测
 function detectDevice(): { brand: string; platform: string; icon: string } {
@@ -65,21 +70,70 @@ function detectDevice(): { brand: string; platform: string; icon: string } {
   return { brand: '通用', platform: '未知', icon: '📱' };
 }
 
+// 品牌Logo组件 - 使用真实品牌SVG
+function BrandLogo({ brand, size = 32 }: { brand: string; size?: number }) {
+  const logos: Record<string, React.ReactNode> = {
+    Apple: (
+      <svg viewBox="0 0 384 512" width={size} height={size} fill="currentColor">
+        <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 224.6 225.6 224.6c122-1.9 188.1-120.9 189.1-229.4zm-97-176.3c23.1-28.2 39.2-67.4 34.6-106.7-33.8 1.4-73.4 22.5-98 51.3-21.4 25.1-40.6 66-35.6 104.3 37.3 2.9 72.4-21.2 99-48.9z"/>
+      </svg>
+    ),
+    华为: (
+      <svg viewBox="0 0 100 60" width={size} height={size * 0.6}>
+        <text x="50" y="45" textAnchor="middle" fontSize="42" fontWeight="900" fontFamily="-apple-system, sans-serif" fill="currentColor">HUAWEI</text>
+      </svg>
+    ),
+    荣耀: (
+      <svg viewBox="0 0 80 30" width={size} height={size * 0.375}>
+        <text x="40" y="24" textAnchor="middle" fontSize="24" fontWeight="800" fill="currentColor">HONOR</text>
+      </svg>
+    ),
+    小米: (
+      <svg viewBox="0 0 200 200" width={size} height={size} fill="currentColor">
+        <rect x="10" y="10" width="180" height="180" rx="36"/>
+        <text x="100" y="130" textAnchor="middle" fontSize="110" fontWeight="bold" fill="white" fontFamily="Arial">MI</text>
+      </svg>
+    ),
+    OPPO: (
+      <svg viewBox="0 0 140 40" width={size} height={size * 0.29}>
+        <text x="70" y="32" textAnchor="middle" fontSize="32" fontWeight="700" fill="currentColor">OPPO</text>
+      </svg>
+    ),
+    vivo: (
+      <svg viewBox="0 0 100 30" width={size} height={size * 0.3}>
+        <text x="50" y="24" textAnchor="middle" fontSize="24" fontWeight="600" fill="currentColor">vivo</text>
+      </svg>
+    ),
+    三星: (
+      <svg viewBox="0 0 150 46" width={size} height={size * 0.31}>
+        <text x="75" y="37" textAnchor="middle" fontSize="36" fontWeight="700" fill="currentColor">SAMSUNG</text>
+      </svg>
+    ),
+    通用: (
+      <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18"/>
+      </svg>
+    ),
+  };
+  
+  return <>{logos[brand] || logos['通用']}</>;
+}
+
 const BRANDS = [
-  { id: 'Apple', icon: '🍎', color: '#555555', name: 'Apple / iOS' },
-  { id: '华为', icon: '🔴', color: '#CF0A2C', name: '华为' },
-  { id: '荣耀', icon: '🔵', color: '#1A6DB5', name: '荣耀' },
-  { id: '小米', icon: '🟠', color: '#FF6900', name: '小米' },
-  { id: 'OPPO', icon: '🟢', color: '#1D8348', name: 'OPPO' },
-  { id: 'vivo', icon: '🔵', color: '#415FFF', name: 'vivo' },
-  { id: '三星', icon: '🔵', color: '#1428A0', name: '三星' },
-  { id: '通用', icon: '📱', color: '#6B7280', name: '其他品牌' },
+  { id: 'Apple', toneClass: 'bg-surface-container-low text-on-surface', name: 'Apple / iOS' },
+  { id: '华为', toneClass: 'bg-tertiary-container/20 text-tertiary', name: '华为' },
+  { id: '荣耀', toneClass: 'bg-primary/10 text-primary', name: '荣耀' },
+  { id: '小米', toneClass: 'bg-amber-surface/40 text-amber-text', name: '小米' },
+  { id: 'OPPO', toneClass: 'bg-primary/10 text-primary-text', name: 'OPPO' },
+  { id: 'vivo', toneClass: 'bg-purple-surface/40 text-purple-text', name: 'vivo' },
+  { id: '三星', toneClass: 'bg-primary/10 text-primary', name: '三星' },
+  { id: '通用', toneClass: 'bg-surface-container-low text-outline', name: '其他品牌' },
 ];
 
 export function CalendarSync() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { tasks, members, currentUser, familyId } = useFamily();
+  const { tasks, members, currentUser, familyId, guestMode } = useFamily();
   
   const [subscriptions, setSubscriptions] = useState<CalendarSubscription[]>([]);
   const [detectedDevice, setDetectedDevice] = useState(detectDevice());
@@ -95,6 +149,7 @@ export function CalendarSync() {
 
   const activeTasks = tasks.filter(t => !t.isHabit && t.status !== 'completed');
   const guide = selectedBrand ? getCalendarSyncGuide(selectedBrand) : null;
+  const canUseCalendarSubscription = Boolean(familyId && !guestMode && UUID_PATTERN.test(familyId));
 
   // 页面加载时自动检测设备
   useEffect(() => {
@@ -108,12 +163,15 @@ export function CalendarSync() {
 
   // 加载订阅列表
   useEffect(() => {
-    if (familyId) {
+    if (canUseCalendarSubscription) {
       loadSubscriptions();
+      return;
     }
-  }, [familyId]);
+    setSubscriptions([]);
+  }, [canUseCalendarSubscription]);
 
   const loadSubscriptions = async () => {
+    if (!canUseCalendarSubscription) return;
     try {
       const data = await api.getCalendarSubscriptions(familyId!);
       setSubscriptions(data || []);
@@ -124,18 +182,23 @@ export function CalendarSync() {
 
   // 创建订阅
   const handleCreateSubscription = async () => {
+    if (!canUseCalendarSubscription) {
+      showToastGlobal('体验模式暂不支持在线订阅，可先导出 ICS 文件', 'info');
+      return;
+    }
     try {
       const newSub = await api.createCalendarSubscription(familyId!, {
         name: `${detectedDevice.brand} 订阅 ${subscriptions.length + 1}`,
       });
       setSubscriptions([...subscriptions, newSub]);
     } catch (error: any) {
-      alert(`创建失败: ${error.message}`);
+      showToastGlobal(`创建失败: ${error.message}`, 'error');
     }
   };
 
   // 删除订阅
   const handleDeleteSubscription = async (id: string) => {
+    if (!canUseCalendarSubscription) return;
     if (!confirm(t('calendar_sync.confirm_delete', { defaultValue: '确认删除' }) || '确定要删除此订阅吗？')) {
       return;
     }
@@ -143,7 +206,7 @@ export function CalendarSync() {
       await api.deleteCalendarSubscription(id);
       setSubscriptions(subscriptions.filter(s => s.id !== id));
     } catch (error: any) {
-      alert(`删除失败: ${error.message}`);
+      showToastGlobal(`删除失败: ${error.message}`, 'error');
     }
   };
 
@@ -180,7 +243,7 @@ export function CalendarSync() {
     
     // 其他设备：复制链接并提示
     await handleCopySubscribeLink(token);
-    alert(t('calendar_sync.copied_then_open_calendar', { defaultValue: '链接已复制！请在手机日历App中粘贴此链接' }) || '链接已复制！请在手机日历App中粘贴此链接');
+    showToastGlobal(t('calendar_sync.copied_then_open_calendar', { defaultValue: '链接已复制！请在手机日历App中粘贴此链接' }) || '链接已复制！请在手机日历App中粘贴此链接', 'success');
   };
 
   // 导出 ICS 文件
@@ -195,7 +258,7 @@ export function CalendarSync() {
       downloadICS(ics, `wishcard-${new Date().toISOString().split('T')[0]}.ics`);
     } catch (error) {
       console.error('导出 ICS 失败:', error);
-      alert('导出失败，请重试', { defaultValue: '导出失败，请重试' });
+      showToastGlobal('导出失败，请重试', 'error');
     } finally {
       setIsExporting(false);
     }
@@ -214,25 +277,26 @@ export function CalendarSync() {
         const events = parseICS(content);
         
         if (events.length === 0) {
-          alert(t('calendar_sync.no_events', { defaultValue: '未找到可导入的事件' }) || '未找到可导入的事件');
+          showToastGlobal(t('calendar_sync.no_events', { defaultValue: '未找到可导入的事件' }) || '未找到可导入的事件', 'warning');
           return;
         }
 
         if (confirm(`${t('calendar_sync.import_confirm', { defaultValue: '导入确认' }) || '发现'} ${events.length} ${t('calendar_sync.events_found', { defaultValue: '个事件，是否导入为任务？' }) || '个事件，是否导入为任务？'}`)) {
           for (const event of events) {
-            await api.createTask(familyId!, {
-              title: event.summary,
-              description: event.description,
-              rewardStars: 0,
-              assigneeIds: [currentUser?.id || ''],
-              startTime: event.start,
-              icon: '📅',
-            });
+            await api.createTask(
+              familyId!,
+              event.summary,
+              event.description,
+              0,
+              [currentUser?.id || ''],
+              currentUser?.id || '',
+              { icon: 'Calendar' }
+            );
           }
-          alert(`${t('calendar_sync.import_success', { defaultValue: '成功导入' }) || '成功导入'} ${events.length} ${t('calendar_sync.events', { defaultValue: '个事件' }) || '个事件'}`);
+          showToastGlobal(`${t('calendar_sync.import_success', { defaultValue: '成功导入' }) || '成功导入'} ${events.length} ${t('calendar_sync.events', { defaultValue: '个事件' }) || '个事件'}`, 'success');
         }
       } catch (error: any) {
-        alert(`导入失败: ${error.message}`);
+        showToastGlobal(`导入失败: ${error.message}`, 'error');
       } finally {
         setIsImporting(false);
         if (fileInputRef.current) {
@@ -300,18 +364,9 @@ export function CalendarSync() {
   return (
     <div className="min-h-screen bg-background pb-8">
       {/* Header */}
-      <header className="flex items-center gap-4 px-6 py-4 sticky top-0 bg-background/90 backdrop-blur-xl z-40 border-b border-outline-variant/10">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors"
-        >
-          <ArrowLeft size={24} />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-xl font-black text-on-surface">{t('calendar_sync.title', { defaultValue: '日历同步' })}</h1>
-          <p className="text-[10px] text-on-surface-variant font-bold">{t('calendar_sync.subtitle', { defaultValue: '与手机日历无缝同步' })}</p>
-        </div>
-      </header>
+      <TopAppBar
+        title={t('calendar_sync.title', { defaultValue: '日历同步' })}
+      />
 
       <div className="px-6 space-y-6 mt-4">
         {/* 自动检测的设备卡片 */}
@@ -452,11 +507,8 @@ export function CalendarSync() {
                     : 'border-transparent hover:border-primary/30'
                 }`}
               >
-                <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                  style={{ backgroundColor: `${brand.color}15` }}
-                >
-                  {brand.icon}
+                <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", brand.toneClass)}>
+                  <BrandLogo brand={brand.id} size={28} />
                 </div>
                 <div className="text-left">
                   <p className="font-black text-on-surface text-sm">{brand.name}</p>
@@ -478,13 +530,13 @@ export function CalendarSync() {
       {/* 品牌引导弹窗 - 完整的引导页面 */}
       <AnimatePresence>
         {showGuide && guide && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 backdrop-blur-sm">
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-lg bg-background rounded-t-[2.5rem] max-h-[90vh] overflow-y-auto shadow-2xl border-t border-outline-variant/10"
+              className="w-full max-w-lg bg-background rounded-t-[2.5rem] max-h-[90svh] overflow-y-auto shadow-2xl border-t border-outline-variant/10 pb-[env(safe-area-inset-bottom,0px)]"
             >
               <div className="p-6">
                 {/* Handle */}
@@ -494,10 +546,10 @@ export function CalendarSync() {
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <div 
-                      className="w-12 h-12 rounded-2xl flex items-center justify-center text-3xl"
-                      style={{ backgroundColor: `${guide.brandColor || '#555555'}15` }}
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                      style={{ backgroundColor: guide.brandColor || 'var(--color-surface-container-low)' }}
                     >
-                      {guide.brandLogo}
+                      <BrandLogo brand={guide.brand} size={32} />
                     </div>
                     <div>
                       <h2 className="text-xl font-black text-on-surface">{guide.brand}</h2>
@@ -632,12 +684,12 @@ export function CalendarSync() {
       {/* 导入弹窗 */}
       <AnimatePresence>
         {showImportModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-sm bg-white dark:bg-surface-container rounded-[2.5rem] shadow-2xl overflow-hidden"
+              className="w-full max-w-sm bg-white dark:bg-surface-container rounded-[2.5rem] shadow-2xl overflow-hidden max-h-[calc(100svh-2rem)]"
             >
               <div className="p-8">
                 <div className="flex justify-between items-center mb-6">
@@ -708,7 +760,7 @@ export function CalendarSync() {
                     </div>
                     <button
                       onClick={() => {
-                        alert(t('calendar_sync.coming_soon', { defaultValue: '即将推出' }) || '即将推出');
+                        showToastGlobal(t('calendar_sync.coming_soon', { defaultValue: '即将推出' }) || '即将推出', 'info');
                       }}
                       disabled={!importUrl}
                       className="w-full py-4 bg-primary text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-all disabled:opacity-50"

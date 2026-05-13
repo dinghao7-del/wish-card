@@ -125,12 +125,13 @@ export async function createTask(
   starAmount: number,
   assigneeIds: string[],
   createdBy: string,
-  extra?: { is_habit?: boolean; icon?: string; target_count?: number; current_count?: number; category?: string; frequency?: string; status?: string }
+  extra?: { is_habit?: boolean; icon?: string; target_count?: number; current_count?: number; category?: string; frequency?: string; status?: string; plan_id?: string | null }
 ): Promise<Task> {
   const { data, error } = await supabase
     .from('tasks')
     .insert({
       family_id: familyId,
+      plan_id: extra?.plan_id || null,
       title,
       description,
       star_amount: starAmount,
@@ -155,7 +156,7 @@ export async function createTask(
 export async function getTasksByFamilyId(familyId: string, includeCompleted = false): Promise<Task[]> {
   let query = supabase
     .from('tasks')
-    .select('*', { defaultValue: '*' })
+    .select()
     .eq('family_id', familyId);
 
   if (!includeCompleted) {
@@ -209,7 +210,7 @@ export async function completeTask(taskId: string, memberId: string): Promise<Ta
 
 export async function updateTask(
   taskId: string,
-  updates: Partial<Pick<Task, 'title' | 'description' | 'star_amount' | 'assignee_ids' | 'status' | 'is_habit' | 'target_count' | 'current_count' | 'icon'>>
+  updates: Partial<Pick<Task, 'title' | 'description' | 'star_amount' | 'assignee_ids' | 'status' | 'is_habit' | 'target_count' | 'current_count' | 'icon' | 'plan_id'>>
 ): Promise<Task> {
   const { data, error } = await supabase
     .from('tasks')
@@ -317,7 +318,7 @@ export async function createHabit(
 export async function getHabitsByFamilyId(familyId: string): Promise<Habit[]> {
   const { data, error } = await supabase
     .from('habits')
-    .select('*', { defaultValue: '*' })
+    .select()
     .eq('family_id', familyId)
     .eq('is_active', true)
     .order('created_at', { ascending: true });
@@ -410,12 +411,13 @@ export async function createReward(
   description: string | null,
   starCost: number,
   createdBy: string,
-  extra?: { imageUrl?: string; icon?: string; category?: string; stock?: number }
+  extra?: { imageUrl?: string; icon?: string; category?: string; stock?: number; plan_id?: string | null }
 ): Promise<Reward> {
   const { data, error } = await supabase
     .from('rewards')
     .insert({
       family_id: familyId,
+      plan_id: extra?.plan_id || null,
       name,
       description,
       star_cost: starCost,
@@ -450,7 +452,7 @@ export async function redeemReward(rewardId: string, memberId: string): Promise<
   // 先获取奖励和成员信息
   const { data: reward, error: rewardError } = await supabase
     .from('rewards')
-    .select('*, family_id', { defaultValue: '*, family id' })
+    .select()
     .eq('id', rewardId)
     .single();
 
@@ -462,7 +464,7 @@ export async function redeemReward(rewardId: string, memberId: string): Promise<
 
   const { data: member } = await supabase
     .from('members')
-    .select('stars', { defaultValue: '星星' })
+    .select()
     .eq('id', memberId)
     .single();
 
@@ -530,7 +532,7 @@ export async function approveReward(redeemedRewardId: string): Promise<void> {
 
 export async function updateReward(
   rewardId: string,
-  updates: Partial<Pick<Reward, 'name' | 'description' | 'star_cost' | 'icon' | 'image_url' | 'category' | 'stock'>>
+  updates: Partial<Pick<Reward, 'name' | 'description' | 'star_cost' | 'icon' | 'image_url' | 'category' | 'stock' | 'plan_id'>>
 ): Promise<Reward> {
   const { data, error } = await supabase
     .from('rewards')
@@ -624,7 +626,7 @@ export async function getAnalyticsEvents(
 ): Promise<any[]> {
   let query = supabase
     .from('analytics_events')
-    .select('*, member:members(name, avatar)', { defaultValue: '*, member:members(name, avatar)' })
+    .select()
     .eq('family_id', familyId);
 
   if (startDate) {
@@ -683,7 +685,7 @@ type InviteCode = Database['public']['Tables']['invite_codes']['Row'];
 export async function validateInviteCode(code: string): Promise<{ valid: boolean; message: string }> {
   const { data, error } = await supabase
     .from('invite_codes')
-    .select('*', { defaultValue: '*' })
+    .select()
     .eq('code', code.toUpperCase().trim())
     .eq('is_active', true)
     .single();
@@ -717,7 +719,7 @@ export async function useInviteCode(code: string): Promise<boolean> {
 export async function getInviteCodes(): Promise<InviteCode[]> {
   const { data, error } = await supabase
     .from('invite_codes')
-    .select('*', { defaultValue: '*' })
+    .select()
     .order('created_at', { ascending: false });
   if (error) throw new Error(`获取邀请码列表失败: ${error.message}`);
   return data || [];
@@ -868,7 +870,7 @@ export interface CalendarSubscription {
 export async function getCalendarSubscriptions(familyId: string): Promise<CalendarSubscription[]> {
   const { data, error } = await supabase
     .from('calendar_subscriptions')
-    .select('*', { defaultValue: '*' })
+    .select()
     .eq('family_id', familyId)
     .order('created_at', { ascending: false });
 
@@ -908,7 +910,7 @@ export async function deleteCalendarSubscription(subscriptionId: string): Promis
   // 先获取订阅信息用于日志
   const { data: sub } = await supabase
     .from('calendar_subscriptions')
-    .select('family_id', { defaultValue: 'family id' })
+    .select()
     .eq('id', subscriptionId)
     .single();
 

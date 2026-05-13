@@ -183,12 +183,7 @@ function main() {
   if (shouldUpdateBaseline) {
     const nextBaseline = {
       ...baseline,
-      allowedExistingViolations: Array.from(
-        new Set([
-          ...baseline.allowedExistingViolations,
-          ...allViolations.map(violationKey),
-        ])
-      ).sort(),
+      allowedExistingViolations: Array.from(new Set(allViolations.map(violationKey))).sort(),
     };
 
     fs.writeFileSync(baselinePath, `${JSON.stringify(nextBaseline, null, 2)}\n`);

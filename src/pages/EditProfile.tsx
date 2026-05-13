@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFamily } from '../context/FamilyContext';
-import { ArrowLeft, Save, Camera, Lock, Eye, EyeOff, X, Check } from 'lucide-react';
+import { Save, Camera, Lock, Eye, EyeOff, X, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Member } from '../types';
 import { cn } from '../lib/utils';
 import { useTranslation } from 'react-i18next';
-
-// 使用本地 PNG 亚洲风卡通头像
 import { BOY_AVATARS, GIRL_AVATARS, PARENT_AVATARS, GRANDPARENT_AVATARS } from '../lib/templates';
+import { TopAppBar } from '../components/navigation/TopAppBar';
+import { showConfirm } from '../components/ConfirmDialog';
+import { didChangeMemberCredential, getParentVerificationValue } from '../lib/sensitiveActions';
+import { displayCredentialPlaceholder, hasStoredCredential, verifyMemberPinOrPassword } from '../lib/memberCredentials';
 
 export function EditProfile() {
   const navigate = useNavigate();
@@ -41,36 +43,57 @@ export function EditProfile() {
         id: memberToEdit.id,
         stars: memberToEdit.stars,
         role: memberToEdit.role,
-        pin: memberToEdit.pin || '',
-        password: memberToEdit.password || ''
+        pin: displayCredentialPlaceholder(memberToEdit.pin),
+        password: displayCredentialPlaceholder(memberToEdit.password)
       });
-      setUsePinCode(!!memberToEdit.pin);
+      setUsePinCode(hasStoredCredential(memberToEdit.pin));
     }
   }, [memberToEdit]);
 
   const isAdmin = currentUser?.role === 'parent';
   const canEditPin = isAdmin || currentUser?.id === memberToEdit?.id;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
+    if (!memberToEdit) return;
+
+    const nextPin = formData.pin === displayCredentialPlaceholder(memberToEdit.pin) ? memberToEdit.pin : formData.pin;
+    const nextPassword = formData.password === displayCredentialPlaceholder(memberToEdit.password) ? memberToEdit.password : formData.password;
+    const updatedMember = usePinCode
+      ? { ...memberToEdit, ...formData, pin: nextPin, password: '' } as Member
+      : { ...memberToEdit, ...formData, pin: '', password: nextPassword } as Member;
+
+    if (didChangeMemberCredential(memberToEdit, updatedMember)) {
+      const verificationValue = getParentVerificationValue(currentUser);
+      const confirmed = await showConfirm({
+        title: '家长二次确认',
+        message: `正在修改「${memberToEdit.name}」的 PIN 或密码。为了保护家庭数据，请再次确认。`,
+        type: 'warning',
+        confirmText: '保存',
+        verificationValue: verificationValue || undefined,
+        verificationMatcher: currentUser?.role === 'parent'
+          ? (input) => verifyMemberPinOrPassword(currentUser, input) !== null
+          : undefined,
+        verificationLabel: verificationValue ? '输入当前家长 PIN 或密码' : undefined,
+        verificationPlaceholder: verificationValue ? 'PIN 或密码' : undefined,
+      });
+      if (!confirmed) return;
+    }
+
     if (usePinCode) {
       // PIN码模式：只清理数据
-      if (memberToEdit) {
-        updateMember({ ...memberToEdit, ...formData, password: '' } as Member);
-        navigate(-1);
-      }
+      updateMember(updatedMember);
+      navigate(-1);
     } else {
       // 系统密码模式
-      if (memberToEdit?.role === 'parent' && !formData.password?.trim()) {
+      if (memberToEdit?.role === 'parent' && !hasStoredCredential(updatedMember.password)) {
         setError(t('edit_profile.error_password_required', '管理员账号必须保留登录密码 🔐'));
         return;
       }
-      if (memberToEdit) {
-        updateMember({ ...memberToEdit, ...formData, pin: '' } as Member);
-        navigate(-1);
-      }
+      updateMember(updatedMember);
+      navigate(-1);
     }
   };
 
@@ -78,13 +101,10 @@ export function EditProfile() {
 
   return (
     <div className="px-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-screen bg-background">
-      <header className="flex justify-between items-center py-4 sticky top-0 bg-background/80 backdrop-blur-xl z-40 -mx-6 px-6">
-        <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
-          <ArrowLeft size={24} />
-        </button>
-        <h1 className="font-black text-xl tracking-tight">{id ? t('edit_profile.edit_name', `编辑 ${memberToEdit.name}`, { name: memberToEdit.name }) : t('edit_profile.title', '编辑个人信息')}</h1>
-        <div className="w-10" />
-      </header>
+      <TopAppBar
+        title={id ? t('edit_profile.edit_name', `编辑 ${memberToEdit.name}`, { name: memberToEdit.name }) : t('edit_profile.title', '编辑个人信息')}
+        backTo="/profile"
+      />
 
       <form onSubmit={handleSubmit} className="space-y-8 mt-8">
         <div className="flex flex-col items-center">

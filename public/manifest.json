@@ -1,7 +1,7 @@
 {
-  "name": "愿望卡 - Forest Family",
-  "short_name": "愿望卡",
-  "description": "家庭任务管理与激励系统 — 完成任务赚星星，星星兑换心愿奖励",
+  "name": "WishCard",
+  "short_name": "WishCard",
+  "description": "An AI family planner that turns routines into kid-friendly tasks, stars, wishes, and weekly reviews.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FAFDF7",
@@ -22,7 +22,7 @@
     }
   ],
   "categories": ["family", "education", "lifestyle"],
-  "lang": "zh-CN",
+  "lang": "en",
   "dir": "ltr",
   "screenshots": [],
   "prefer_related_applications": false

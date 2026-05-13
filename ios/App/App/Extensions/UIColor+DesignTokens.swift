@@ -89,6 +89,10 @@ extension UIColor {
     static let statusInProgress = UIColor(hex: "#4FC3F7")
     static let statusReviewing = UIColor(hex: "#BA68C8")
     static let statusCompleted = UIColor(hex: "#81C784")
+    
+    // MARK: - Reward Colors
+    static let rewardDisplay = UIColor(hex: "#FBC02D")
+    static let rewardDeep = UIColor(hex: "#F9A825")
 }
 
 // MARK: - Hex Color Initializer
@@ -136,4 +140,5 @@ extension Color {
     // 建议添加更多 Token
     static let textPrimaryToken = Color(UIColor.textPrimary)
     static let textSecondaryToken = Color(UIColor.textSecondary)
+    static let rewardDisplayToken = Color(UIColor.rewardDisplay)
 }

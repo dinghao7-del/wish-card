@@ -19,7 +19,7 @@ export const IPadLayout: React.FC<IPadLayoutProps> = ({ children }) => {
             <h1 className="sidebar-title">星愿卡</h1>
           </div>
           <nav className="sidebar-nav">
-            <BottomNav variant="sidebar" />
+            <BottomNav />
           </nav>
         </aside>
         <main className="main-content">
@@ -35,7 +35,7 @@ export const IPadLayout: React.FC<IPadLayoutProps> = ({ children }) => {
       <main className="app-content">
         {children}
       </main>
-      <BottomNav variant="bottom" />
+      <BottomNav />
     </div>
   );
 };

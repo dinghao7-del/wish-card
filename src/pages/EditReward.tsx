@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Star, Plus, Minus, Camera, ChevronRight, LayoutGrid, Ban } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Star, Plus, Minus, Camera, ChevronRight, LayoutGrid, Ban } from 'lucide-react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useFamily } from '../context/FamilyContext';
+import { showToastGlobal } from '../components/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { Reward } from '../types';
 import { REWARD_CATEGORIES, type RewardTemplate } from '../lib/templates';
 import { useTranslation } from 'react-i18next';
+import { TopAppBar } from '../components/navigation/TopAppBar';
 
 export function EditReward() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const { rewards, addReward, updateReward } = useFamily();
   const { t } = useTranslation();
   
   const isEdit = Boolean(id);
+  const planIdFromQuery = searchParams.get('planId') || undefined;
   const rewardToEdit = rewards.find(r => r.id === id);
 
   const [formData, setFormData] = useState({
@@ -67,34 +71,45 @@ export function EditReward() {
     setIsLibraryOpen(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name) return;
 
-    if (isEdit && id) {
-      updateReward({
-        id,
-        name: formData.name,
-        description: formData.description,
-        cost: formData.cost,
-        icon: formData.icon,
-        image: formData.image,
-        category: formData.category,
-        stock: formData.stock,
-      });
-    } else {
-      addReward({
-        id: crypto.randomUUID(),
-        name: formData.name,
-        description: formData.description,
-        cost: formData.cost,
-        icon: formData.icon,
-        image: formData.image,
-        category: formData.category,
-        stock: formData.stock,
-      });
+    setIsSubmitting(true);
+    try {
+      if (isEdit && id) {
+        await updateReward({
+          id,
+          planId: rewardToEdit?.planId || planIdFromQuery,
+          name: formData.name,
+          description: formData.description,
+          cost: formData.cost,
+          icon: formData.icon,
+          image: formData.image,
+          category: formData.category,
+          stock: formData.stock,
+        });
+      } else {
+        await addReward({
+          id: crypto.randomUUID(),
+          planId: planIdFromQuery,
+          name: formData.name,
+          description: formData.description,
+          cost: formData.cost,
+          icon: formData.icon,
+          image: formData.image,
+          category: formData.category,
+          stock: formData.stock,
+        });
+      }
+      navigate('/rewards');
+    } catch (error: any) {
+      showToastGlobal(error.message || '保存失败，请重试', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
-    navigate('/rewards');
   };
 
   const adjustValue = (field: 'cost' | 'stock' | 'limitCount', delta: number) => {
@@ -106,26 +121,38 @@ export function EditReward() {
 
   return (
     <div className="min-h-screen bg-surface pb-40 animate-in fade-in duration-500">
-      {/* Header */}
-      <header className="flex justify-between items-center px-4 py-4 sticky top-0 bg-surface/80 backdrop-blur-xl z-50">
-        <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container/50 transition-colors">
-          <ChevronLeft size={24} />
-        </button>
-        <h1 className="font-black text-xl text-on-surface">{isEdit ? t('edit_reward.edit_title', '编辑心愿') : t('edit_reward.add_title', '添加心愿')}</h1>
-        <div className="w-10" />
-      </header>
+      <TopAppBar
+        title={isEdit ? t('edit_reward.edit_title', '编辑心愿') : t('edit_reward.add_title', '添加心愿')}
+        backTo="/rewards"
+      />
 
-      <form onSubmit={handleSubmit} className="px-5 mt-6 space-y-6">
+      <form onSubmit={handleSubmit} className="px-4 mt-3 space-y-3">
         {/* Top Section: Image Selector & Library Button */}
-        <div className="flex items-center justify-between bg-white p-4 rounded-[2rem] shadow-sm border border-outline-variant/5">
+        <div className="flex items-center justify-between bg-white p-3 rounded-[1.5rem] shadow-sm border border-outline-variant/5">
           <div className="relative group">
-            <div className="w-20 h-20 rounded-2xl overflow-hidden bg-surface-container-low shadow-inner border border-outline-variant/10">
-              <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-black/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                <Camera size={18} />
+            {/* 隐藏的文件输入框 */}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (ev) => {
+                    setFormData({ ...formData, image: ev.target?.result as string });
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+              className="hidden"
+              id="reward-image-upload"
+            />
+            <label htmlFor="reward-image-upload" className="cursor-pointer block">
+              <div className="w-16 h-16 rounded-2xl overflow-hidden bg-surface-container-low shadow-inner border border-outline-variant/10 group-hover:border-primary/30 transition-colors">
+                <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
               </div>
-            </div>
-            <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md border border-outline-variant/10 text-on-surface-variant">
+            </label>
+            <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-primary rounded-full flex items-center justify-center shadow-md border-2 border-white text-white">
               <Camera size={14} />
             </div>
           </div>
@@ -140,9 +167,9 @@ export function EditReward() {
         </div>
 
 {/* Section 1: Basic Info */}
-<div className="bg-surface-container rounded-[2rem] p-4 space-y-4 border border-white/50">
+<div className="bg-surface-container rounded-[1.5rem] p-3 space-y-3 border border-white/50">
           <div className="flex gap-2">
-            <div className="flex-[3] bg-white rounded-2xl p-4 flex items-center shadow-sm">
+            <div className="flex-[3] bg-white rounded-2xl p-3 flex items-center shadow-sm">
               <input 
                 type="text" 
                 value={formData.name}
@@ -177,9 +204,9 @@ export function EditReward() {
         </div>
 
         {/* Section 2: Pricing & Stock */}
-        <div className="bg-[#F1F1F1] rounded-[2rem] p-4 space-y-4 border border-white/50">
+        <div className="bg-surface-container rounded-[1.5rem] p-3 space-y-3 border border-white/50">
           {/* Unit Price */}
-          <div className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm">
+          <div className="bg-white rounded-2xl p-3 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3 font-black text-on-surface">
 <div className="w-10 h-10 bg-secondary-container rounded-xl flex items-center justify-center shadow-sm border border-outline-variant/10">
   <Star size={20} className="text-secondary fill-current" />
@@ -206,7 +233,7 @@ export function EditReward() {
           </div>
 
           {/* Quantity */}
-          <div className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm">
+          <div className="bg-white rounded-2xl p-3 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3 font-black text-on-surface">
 <div className="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center shadow-sm border border-outline-variant/10">
   <LayoutGrid size={20} className="text-primary-text" />
@@ -234,7 +261,7 @@ export function EditReward() {
         </div>
 
         {/* Section 3: Limits */}
-        <div className="bg-[#F1F1F1] rounded-[2rem] p-4 pb-6 border border-white/50">
+        <div className="bg-surface-container rounded-[2rem] p-4 pb-6 border border-white/50">
           <div className="bg-white rounded-2xl p-4 mb-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3 font-black text-on-surface">
 <div className="w-10 h-10 bg-tertiary-container rounded-xl flex items-center justify-center shadow-sm border border-outline-variant/10">
@@ -242,21 +269,23 @@ export function EditReward() {
 </div>
               <span>{t('edit_reward.redeem_limit', '兑换限制')}</span>
             </div>
-<button 
-  type="button"
-  onClick={() => setFormData({ ...formData, hasLimit: !formData.hasLimit })}
-  className={cn(
-    "w-14 h-8 rounded-full transition-all relative border-2 border-white shadow-sm",
-    formData.hasLimit ? "bg-primary-surface" : "bg-outline-variant"
-  )}
->
-              <div 
+              <button
+                type="button"
+                role="switch"
+                aria-checked={formData.hasLimit}
+                onClick={() => setFormData({ ...formData, hasLimit: !formData.hasLimit })}
                 className={cn(
-                  "absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-sm transition-all",
-                  formData.hasLimit ? "left-7" : "left-0.5"
+                  "relative h-8 w-14 rounded-full p-1 transition-colors shadow-inner",
+                  formData.hasLimit ? "bg-primary" : "bg-surface-container-high"
                 )}
-              />
-            </button>
+              >
+                <span
+                  className={cn(
+                    "block h-6 w-6 rounded-full bg-white shadow-sm transition-transform",
+                    formData.hasLimit && "translate-x-6"
+                  )}
+                />
+              </button>
           </div>
 
           <AnimatePresence>
@@ -271,7 +300,7 @@ export function EditReward() {
                   <button 
                     type="button"
                     onClick={() => setIsPeriodSelectorOpen(true)}
-                    className="flex-1 bg-white rounded-2xl px-5 py-4 flex items-center justify-between font-black text-on-surface shadow-sm active:scale-95 transition-transform"
+                    className="flex-1 bg-white rounded-2xl px-4 py-3 flex items-center justify-between font-black text-on-surface shadow-sm active:scale-95 transition-transform"
                   >
                     <span className="text-sm">{t('edit_reward.per_period', '每{{period}}', { period: periods.find(p => p.id === formData.limitPeriod)?.label })}</span>
                     <ChevronRight size={16} className="rotate-90 opacity-30" />
@@ -299,7 +328,7 @@ export function EditReward() {
             )}
           </AnimatePresence>
 
-          <div className="mt-4 pt-4 border-t border-dashed border-outline-variant/40 text-center">
+          <div className="mt-3 pt-3 border-t border-dashed border-outline-variant/40 text-center">
             <p className="text-on-surface-variant/40 text-[11px] font-black">
               {formData.name || t('edit_reward.add_title', '心愿')} · {formData.cost}星 / {formData.unit} · {formData.hasLimit ? t('edit_reward.limit_per_period', '每{{period}}限兑{{count}}次', { period: periods.find(p => p.id === formData.limitPeriod)?.label, count: formData.limitCount }) : t('edit_reward.unlimited', '不限次')}
             </p>
@@ -310,9 +339,10 @@ export function EditReward() {
         <div className="pt-4 pb-32">
 <button 
   type="submit"
-  className="w-full py-5 rounded-[2rem] bg-primary-surface text-primary-text font-black text-xl shadow-xl shadow-primary-surface/20 border-b-4 border-primary-surface/80 active:border-b-0 active:translate-y-1 transition-all"
+  disabled={isSubmitting}
+  className="w-full py-3.5 rounded-[1.5rem] bg-primary-surface text-primary-text font-black text-lg shadow-xl shadow-primary-surface/20 border-b-4 border-primary-surface/80 active:border-b-0 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 >
-  {t('edit_reward.submit', '完成并提交心愿 🌿')}
+  {isSubmitting ? t('edit_reward.submitting', '提交中...') : t('edit_reward.submit', '完成并提交心愿 🌿')}
 </button>
           <p className="text-center text-on-surface-variant/20 text-[10px] font-bold mt-4">
             {t('edit_reward.submit_hint', '保存后您的家庭成员就可以看到这个心愿啦')}
@@ -324,12 +354,12 @@ export function EditReward() {
       <AnimatePresence>
         {/* Unit Selector */}
         {isUnitSelectorOpen && (
-          <div className="fixed inset-0 z-[70] flex items-end justify-center p-0 bg-black/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 bg-black/40 backdrop-blur-sm">
             <motion.div 
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              className="w-full max-w-lg bg-white rounded-t-[2.5rem] p-6 pb-12 shadow-2xl"
+              className="w-full max-w-lg bg-white rounded-t-[2.5rem] p-6 pb-[max(3rem,env(safe-area-inset-bottom,0px))] shadow-2xl max-h-[85svh] overflow-y-auto"
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-black text-on-surface">{t('edit_reward.select_unit', '选择单位')}</h3>
@@ -357,12 +387,12 @@ className={cn(
 
         {/* Period Selector - Annotation 2 */}
         {isPeriodSelectorOpen && (
-          <div className="fixed inset-0 z-[70] flex items-end justify-center p-0 bg-black/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 bg-black/40 backdrop-blur-sm">
             <motion.div 
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              className="w-full max-w-lg bg-white rounded-t-[2.5rem] p-6 pb-12 shadow-2xl"
+              className="w-full max-w-lg bg-white rounded-t-[2.5rem] p-6 pb-[max(3rem,env(safe-area-inset-bottom,0px))] shadow-2xl max-h-[85svh] overflow-y-auto"
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-black text-on-surface">{t('edit_reward.select_period', '选择周期')}</h3>
@@ -392,15 +422,15 @@ className={cn(
       {/* Library Modal - 心愿库（6大分类，49个条目，扁平化本地图标） */}
       <AnimatePresence>
         {isLibraryOpen && (
-          <div className="fixed inset-0 z-[60] flex items-end justify-center p-0 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 bg-black/60 backdrop-blur-sm">
             <motion.div 
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-lg bg-surface rounded-t-[2.5rem] p-6 shadow-2xl relative max-h-[85vh] flex flex-col"
+              className="w-full max-w-lg bg-surface rounded-t-[2.5rem] p-6 pb-[max(3rem,env(safe-area-inset-bottom,0px))] shadow-2xl relative max-h-[85svh] flex flex-col"
             >
-              <div className="flex justify-between items-center mb-4 px-2">
+              <div className="flex justify-between items-center mb-3 px-2">
                 <h3 className="text-2xl font-black text-on-surface">{t('edit_reward.library_title', '心愿库')}</h3>
                 <button 
                   onClick={() => setIsLibraryOpen(false)}
@@ -411,7 +441,7 @@ className={cn(
               </div>
 
               {/* 分类 Tab 切换栏（常用 | 体验 | 奖品 | 特权 | 成长 | 活动） */}
-              <div className="flex gap-2 overflow-x-auto no-scrollbar mb-4 pb-1 px-1">
+              <div className="flex gap-2 overflow-x-auto no-scrollbar mb-3 pb-1 px-1">
                 {REWARD_CATEGORIES.map(cat => (
                   <button
                     key={cat.id}
@@ -432,7 +462,7 @@ className={cn(
               {(() => {
                 const currentTemplates = REWARD_CATEGORIES.find(c => c.id === libraryCategory)?.templates || [];
                 return (
-                  <div className="grid grid-cols-4 gap-y-5 gap-x-3 overflow-y-auto no-scrollbar pb-10 px-1">
+                  <div className="grid grid-cols-4 gap-y-3 gap-x-2 overflow-y-auto no-scrollbar pb-8 px-1">
                     {currentTemplates.map((template) => (
                       <motion.div
                         key={template.id}

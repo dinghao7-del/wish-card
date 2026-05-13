@@ -33,10 +33,10 @@ export function AuthCallback() {
         if (!session?.user) {
           // 尝试从 URL hash 中手动解析（某些情况下 getSession 不一定能自动处理）
           const hashParams = new URLSearchParams(window.location.hash.substring(1));
-          const accessToken = hashParams.get('access_token', { defaultValue: 'access token' });
-          const refreshToken = hashParams.get('refresh_token', { defaultValue: 'refresh token' });
-          const error = hashParams.get('error', { defaultValue: '错误' });
-          const errorDescription = hashParams.get('error_description', { defaultValue: 'error description' });
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+          const error = hashParams.get('error');
+          const errorDescription = hashParams.get('error_description');
 
           if (error) {
             throw new Error(errorDescription || error);
@@ -58,7 +58,7 @@ export function AuthCallback() {
 
           // 也没有 hash params，检查 query params
           const queryParams = new URLSearchParams(window.location.search);
-          const code = queryParams.get('code', 'Code de Vérification');
+          const code = queryParams.get('code');
           if (code) {
             const { error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code);
             if (exchangeErr) throw exchangeErr;
@@ -89,7 +89,7 @@ export function AuthCallback() {
       // 检查是否已有成员记录
       const { data: existingMember } = await supabase
         .from('members')
-        .select('*', { defaultValue: '*' })
+        .select()
         .eq('id', userId)
         .single();
 
@@ -101,7 +101,7 @@ export function AuthCallback() {
           avatar: existingMember.avatar || '👤',
           stars: existingMember.stars || 0,
           role: existingMember.role,
-        });
+        }, 'account');
         setStatus('success');
         setTimeout(() => navigate('/', { replace: true }), 1500);
         return;
@@ -121,7 +121,7 @@ export function AuthCallback() {
 
       const { data: newMember } = await supabase
         .from('members')
-        .select('*', { defaultValue: '*' })
+        .select()
         .eq('id', userId)
         .single();
 
@@ -132,7 +132,7 @@ export function AuthCallback() {
           avatar: newMember.avatar || '👤',
           stars: newMember.stars || 0,
           role: newMember.role,
-        });
+        }, 'account');
       }
 
       setStatus('success');

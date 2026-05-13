@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Settings, Shield, Moon, Bell, Edit3, UserPlus, LogOut, ChevronRight, MessageSquare, Headset, Download, Upload, X, Link, HardDrive, Share2, Copy, Check, Calendar } from 'lucide-react';
+import { Settings, Shield, Moon, Bell, Edit3, UserPlus, LogOut, ChevronRight, MessageSquare, Headset, Download, Upload, X, Link, HardDrive, Share2, Copy, Check, Calendar, Sparkles, Palette } from 'lucide-react';
 import { useFamily } from '../context/FamilyContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +13,7 @@ import * as api from '../lib/api';
 export function Profile() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { currentUser, members, tasks, rewards, isDarkMode, toggleDarkMode, setIsUserSelectorOpen, logout, familyId } = useFamily();
+  const { currentUser, members, tasks, rewards, auditLogs, isDarkMode, toggleDarkMode, setIsUserSelectorOpen, logout, familyId } = useFamily();
   const [isImportExportOpen, setIsImportExportOpen] = useState(false);
   const [importUrl, setImportUrl] = useState('');
   const [isExporting, setIsExporting] = useState(false);
@@ -60,7 +60,7 @@ export function Profile() {
       const data = getFilteredData();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a', { defaultValue: 'a' });
+      const link = document.createElement('a');
       link.href = url;
       link.download = `family-backup-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(link);
@@ -78,7 +78,7 @@ export function Profile() {
     const data = getFilteredData();
     const base64Data = btoa(encodeURIComponent(JSON.stringify(data)));
     const shareUrl = `${window.location.origin}/import?data=${base64Data}`;
-    
+
     if (shareUrl.length > 2000) {
       showToastGlobal('分享内容过多，链接过长可能无法正常使用，建议使用文件备份。', 'warning');
     }
@@ -110,7 +110,7 @@ export function Profile() {
       try {
         const content = event.target?.result as string;
         const data = JSON.parse(content);
-        
+
         let message = t('profile.import.confirm_msg', { defaultValue: 'confirm msg' }) + '\n\n';
         if (data.members) message += t('profile.import.items.members', { defaultValue: '成员' }) + '\n';
         if (data.tasks) message += t('profile.import.items.tasks', { defaultValue: '任务' }) + '\n';
@@ -157,59 +157,80 @@ export function Profile() {
     }
   };
 
+  const auditActionLabel = (operationType: string) => {
+    const labels: Record<string, string> = {
+      insert_tasks: '创建任务',
+      update_tasks: '更新任务',
+      delete_tasks: '删除任务',
+      insert_plans: '创建计划',
+      update_plans: '更新计划',
+      insert_members: '添加成员',
+      update_members: '更新成员',
+      insert_rewards: '创建心愿',
+      update_rewards: '更新心愿',
+      delete_rewards: '删除心愿',
+      insert_star_transactions: '星星变动',
+    };
+    return labels[operationType] || operationType;
+  };
+
+  const auditTargetLabel = (log: typeof auditLogs[number]) => {
+    const payload = log.payload as Record<string, any>;
+    return payload.title || payload.name || payload.reason || log.targetId || '家庭数据';
+  };
+
+  const auditActorName = (memberId: string | null) => {
+    return members.find(member => member.id === memberId)?.name || '家庭成员';
+  };
+
   return (
     <div className="px-6 pb-12 animate-in fade-in slide-in-from-left-4 duration-500 min-h-screen bg-background text-on-surface">
-      <header className="flex justify-between items-center py-4 sticky top-0 bg-background/80 backdrop-blur-xl z-40 -mx-6 px-6">
+      <header className="flex justify-between items-center py-4 sticky top-[var(--app-sticky-top,0px)] bg-background/80 backdrop-blur-xl z-40 -mx-6 px-6">
         <div className="flex items-center gap-3">
           <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={32} />
           <h1 className="font-bold text-lg text-on-surface">{t('profile.title', { defaultValue: '标题' })}</h1>
         </div>
-        <button 
-           onClick={() => navigate('/settings/notifications')}
-           className="w-10 h-10 flex items-center justify-center rounded-full text-primary hover:bg-surface-container transition-colors"
-        >
-          <Bell size={22} />
-        </button>
+        <div className="w-10" />
       </header>
 
       {/* Profile Hero */}
-      <section className="relative mb-12 flex flex-col items-center mt-8">
-          <button 
+      <section className="relative mb-6 flex flex-col items-center mt-2">
+          <button
             onClick={() => navigate('/profile/edit')}
             className="relative group cursor-pointer transition-transform hover:scale-105"
           >
-            <div className="w-36 h-36 flex items-center justify-center relative z-10">
-              <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={144} className="border-4 border-white dark:border-surface-container-highest shadow-xl" />
+            <div className="w-28 h-28 flex items-center justify-center relative z-10">
+              <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={112} className="border-4 border-white dark:border-surface-container-highest shadow-xl" />
             </div>
-            <div className="absolute bottom-1 right-1 w-10 h-10 bg-secondary-container rounded-full shadow-lg flex items-center justify-center text-on-secondary-container border-2 border-white dark:border-surface-container-highest z-20">
-              <Edit3 size={18} strokeWidth={2.5} />
+            <div className="absolute bottom-0 right-0 w-9 h-9 bg-secondary-container rounded-full shadow-lg flex items-center justify-center text-on-secondary-container border-2 border-white dark:border-surface-container-highest z-20">
+              <Edit3 size={16} strokeWidth={2.5} />
             </div>
           </button>
-        
-        <h2 className="text-3xl font-black text-on-surface mt-4 mb-2">{currentUser?.name}</h2>
+
+        <h2 className="text-2xl font-black text-on-surface mt-2">{currentUser?.name}</h2>
       </section>
 
       <AnimatePresence>
         {isImportExportOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 outline-none">
-            <motion.div 
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 outline-none">
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsImportExportOpen(false)}
               className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             />
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-sm bg-white dark:bg-surface-container rounded-[2.5rem] shadow-2xl overflow-hidden"
+              className="relative w-full max-w-sm bg-surface dark:bg-surface-container rounded-[2.5rem] shadow-2xl overflow-y-auto max-h-[calc(100svh-2rem)]"
             >
               {/* Header */}
               <div className="p-8 pb-4">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-2xl font-black text-on-surface">{t('profile.menu.share_backup', { defaultValue: 'share backup' })}</h3>
-                  <button 
+                  <button
                     onClick={() => setIsImportExportOpen(false)}
                     className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container dark:bg-surface-container-high transition-colors text-on-surface-variant hover:text-on-surface"
                   >
@@ -228,7 +249,7 @@ export function Profile() {
                     </div>
                     <span className="font-black text-sm">{t('profile.share.select_content', { defaultValue: 'select content' })}</span>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-2">
                     {[
                       { id: 'tasks', label: t('profile.import.items.tasks', { defaultValue: '任务' }).replace('• ', ''), icon: Settings },
@@ -254,13 +275,13 @@ export function Profile() {
                 {/* Shared Link Section */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 mb-1">
-                    <div className="w-8 h-8 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-xl bg-warning-container text-warning flex items-center justify-center">
                       <Share2 size={16} strokeWidth={2.5} />
                     </div>
                     <span className="font-black text-sm">{t('profile.share.link_title', { defaultValue: 'link title' })}</span>
                   </div>
-                  
-<button 
+
+<button
   onClick={handleCopyShareLink}
   className="w-full py-4 bg-amber-600 text-white rounded-2xl font-black text-base shadow-lg shadow-amber-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
 >
@@ -277,17 +298,17 @@ export function Profile() {
                     </div>
                     <span className="font-black text-sm">{t('profile.menu.share_backup', { defaultValue: 'share backup' })}</span>
                   </div>
-                  
+
                   <div className="p-6 bg-surface-container-high dark:bg-white/5 rounded-[2.5rem] space-y-4 border border-outline-variant/10">
                     <div className="flex gap-2">
-<button 
+<button
   onClick={handleExport}
   disabled={isExporting}
   className="flex-1 py-3.5 bg-tertiary text-on-tertiary rounded-xl font-black text-sm active:scale-[0.98] transition-all disabled:opacity-50"
 >
                         {t('profile.export.download', { defaultValue: '下载' })}
                       </button>
-<button 
+<button
   onClick={() => fileInputRef.current?.click()}
   className="flex-1 py-3.5 bg-primary text-on-primary rounded-xl font-black text-sm active:scale-[0.98] transition-all"
 >
@@ -297,7 +318,7 @@ export function Profile() {
 
                     <div className="space-y-3">
                       <div className="relative">
-                        <input 
+                        <input
                           type="url"
                           placeholder="或粘贴还原链接地址..."
                           value={importUrl}
@@ -305,9 +326,9 @@ export function Profile() {
                             setImportUrl(e.target.value);
                             setUrlImportData(null);
                           }}
-                          className="w-full bg-white dark:bg-surface-container-high rounded-xl p-3.5 pr-12 font-bold text-xs outline-none transition-all placeholder:text-on-surface-variant/30 border border-outline-variant/20 focus:border-primary"
+                          className="w-full bg-surface dark:bg-surface-container-high rounded-xl p-3.5 pr-12 font-bold text-xs outline-none transition-all placeholder:text-on-surface-variant/30 border border-outline-variant/20 focus:border-primary"
                         />
-                        <button 
+                        <button
                           onClick={handleUrlImportPreview}
                           disabled={isImporting || !importUrl}
                           className="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-lg bg-primary/10 text-primary disabled:opacity-30 transition-all font-black"
@@ -317,19 +338,19 @@ export function Profile() {
                       </div>
 
                       {urlImportData && (
-                        <motion.div 
+                        <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           className="bg-primary/5 rounded-2xl p-4 border border-primary/20"
                         >
                           <div className="text-[10px] font-black text-primary mb-2 uppercase tracking-wider">{t('profile.import.confirm_title', { defaultValue: 'confirm title' })}</div>
                           <div className="flex flex-wrap gap-2 mb-4">
-                            {urlImportData.members && <span className="bg-white/80 dark:bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold">{t('profile.import.items.members', { defaultValue: '成员' }).replace('• ', '')}</span>}
-                            {urlImportData.tasks && <span className="bg-white/80 dark:bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold">{t('profile.import.items.tasks', { defaultValue: '任务' }).replace('• ', '')}</span>}
-                            {urlImportData.rewards && <span className="bg-white/80 dark:bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold">{t('profile.import.items.rewards', { defaultValue: '奖励' }).replace('• ', '')}</span>}
-                            {urlImportData.history && <span className="bg-white/80 dark:bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold">{t('profile.import.items.history', { defaultValue: 'history' }).replace('• ', '')}</span>}
+                            {urlImportData.members && <span className="bg-surface/80 dark:bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold">{t('profile.import.items.members', { defaultValue: '成员' }).replace('• ', '')}</span>}
+                            {urlImportData.tasks && <span className="bg-surface/80 dark:bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold">{t('profile.import.items.tasks', { defaultValue: '任务' }).replace('• ', '')}</span>}
+                            {urlImportData.rewards && <span className="bg-surface/80 dark:bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold">{t('profile.import.items.rewards', { defaultValue: '奖励' }).replace('• ', '')}</span>}
+                            {urlImportData.history && <span className="bg-surface/80 dark:bg-white/10 px-2 py-1 rounded-md text-[10px] font-bold">{t('profile.import.items.history', { defaultValue: 'history' }).replace('• ', '')}</span>}
                           </div>
-                          <button 
+                          <button
                             onClick={() => executeImport(urlImportData)}
                             className="w-full py-2 bg-primary text-on-primary rounded-lg text-xs font-black active:scale-95 transition-all"
                           >
@@ -351,25 +372,25 @@ export function Profile() {
       </AnimatePresence>
 
       {/* Family Members */}
-      <section className="mb-10">
-        <div className="flex justify-between items-center mb-4 px-1">
+      <section className="mb-6">
+        <div className="flex justify-between items-center mb-4 px-1 gap-3">
           <h3 className="font-black text-lg text-on-surface">{t('profile.members.title', { defaultValue: '标题' })}</h3>
-          <button 
+          <button
             onClick={() => navigate('/profile/members/add')}
-            className="text-primary text-sm font-black flex items-center gap-1.5 hover:opacity-70 transition-opacity"
+            className="min-h-[44px] shrink-0 text-primary text-sm font-black flex items-center gap-1.5 rounded-full px-2 hover:bg-primary/5 transition-colors"
           >
             <UserPlus size={18} strokeWidth={2.5} /> {t('profile.members.add', { defaultValue: '添加' })}
           </button>
         </div>
-        
-        <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar -mx-1 px-1">
+
+        <div className="grid grid-cols-2 gap-3 pb-4 sm:grid-cols-4">
           {members.map(member => (
-            <motion.div 
-              key={member.id} 
+            <motion.div
+              key={member.id}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate(`/profile/members/${member.id}`)}
 className={cn(
-  "min-w-[90px] flex flex-col items-center bg-white dark:bg-surface-container-low rounded-[1.8rem] p-3 shadow-sm border transition-all cursor-pointer relative",
+  "min-w-0 min-h-[120px] flex flex-col items-center bg-surface dark:bg-surface-container-low rounded-[1.8rem] p-3 shadow-sm border transition-all cursor-pointer relative",
   currentUser?.id === member.id ? "border-primary-surface bg-primary-container/30 dark:bg-primary-container/10 shadow-md" : "border-outline-variant/10"
 )}
             >
@@ -383,29 +404,60 @@ className={cn(
         </div>
       </section>
 
+      {/* Local Audit Logs */}
+      {currentUser?.role === 'parent' && auditLogs.length > 0 && (
+        <section className="mb-6">
+          <div className="flex items-center justify-between mb-4 px-1">
+            <h3 className="font-black text-lg text-on-surface">最近操作</h3>
+            <span className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest">本机记录</span>
+          </div>
+          <div className="bg-surface dark:bg-surface-container-low rounded-[2rem] shadow-sm border border-outline-variant/5 overflow-hidden p-2">
+            {auditLogs.slice(0, 5).map(log => (
+              <div key={log.id} className="flex items-center gap-3 p-3 rounded-[1.5rem]">
+                <div className="w-10 h-10 rounded-2xl bg-surface-container flex items-center justify-center text-primary shrink-0">
+                  <HardDrive size={18} strokeWidth={2.5} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-black text-on-surface truncate">
+                    {auditActionLabel(log.operationType)}
+                    <span className="font-bold text-on-surface-variant/60"> · {auditTargetLabel(log)}</span>
+                  </p>
+                  <p className="text-[11px] font-bold text-on-surface-variant/45 truncate">
+                    {auditActorName(log.actorMemberId)} · {new Date(log.createdAt).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Menu Groups */}
       <section className="space-y-4">
-        <div className="bg-white dark:bg-surface-container-low rounded-[2.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-2">
+        <div className="bg-surface dark:bg-surface-container-low rounded-[2.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-2">
           <MenuLink icon={Shield} label={t('profile.menu.security', { defaultValue: '安全' })} onClick={() => navigate('/settings/security')} />
+          <MenuLink icon={Sparkles} label="AI 分析" desc="智能建档、家庭复盘、日程方案" onClick={() => navigate('/ai-analysis')} />
           <MenuLink icon={Download} label={t('profile.menu.share_backup', { defaultValue: 'share backup' })} desc={t('profile.menu.share_backup_desc', { defaultValue: 'share backup desc' })} onClick={() => setIsImportExportOpen(true)} />
           <MenuLink icon={Calendar} label={t('profile.menu.calendar_sync', { defaultValue: '同步日历' })} desc={t('calendar_sync.subtitle', { defaultValue: '将任务同步到手机日历' })} onClick={() => navigate('/calendar-sync')} />
+          <MenuLink icon={Calendar} label="校历与公共时间" desc="开学、放假、极端天气、交通影响" onClick={() => navigate('/school-calendar')} />
           <MenuLink icon={Bell} label={t('profile.menu.notifications', { defaultValue: '通知' })} desc={t('settings.notifications.subtitle', { defaultValue: '副标题' })} onClick={() => navigate('/settings/notifications')} />
           <MenuLink icon={MessageSquare} label={t('profile.menu.feedback', { defaultValue: '反馈' })} onClick={() => navigate('/support/feedback')} />
         </div>
-        
-        <div className="bg-white dark:bg-surface-container-low rounded-[2.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-2">
+
+        <div className="bg-surface dark:bg-surface-container-low rounded-[2.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-2">
+          <MenuLink icon={Palette} label="主题皮肤" desc="绿色漫画风 · 新皮肤规划中" onClick={() => navigate('/settings/appearance')} />
           <MenuLink icon={Moon} label={t('profile.menu.dark_mode', { defaultValue: '深色模式' })} isToggle active={isDarkMode} onToggle={toggleDarkMode} />
           <MenuLink icon={Settings} label={t('profile.menu.basic_settings', { defaultValue: '基础设置' })} onClick={() => navigate('/settings/basic')} />
         </div>
       </section>
 
-      <div className="mt-auto pt-12 flex justify-center pb-8 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent">
-        <button 
+      <div className="mt-auto pt-6 flex justify-center pb-4 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent">
+        <button
           onClick={() => handleLogout()}
-          className="bg-red-50 dark:bg-red-500/10 px-10 py-3.5 rounded-full flex items-center gap-2 shadow-sm border border-red-100 dark:border-red-500/20 active:scale-95 transition-all"
+          className="bg-danger-container px-10 py-3.5 rounded-full flex items-center gap-2 shadow-sm border border-danger/20 active:scale-95 transition-all"
         >
-          <LogOut size={18} className="text-red-500" />
-          <span className="text-base font-black text-red-600 dark:text-red-400 tracking-wide">
+          <LogOut size={18} className="text-danger" />
+          <span className="text-base font-black text-danger tracking-wide">
             {t('profile.action.logout', { defaultValue: '退出' })}
           </span>
         </button>
@@ -416,11 +468,11 @@ className={cn(
 
 function MenuLink({ icon: Icon, label, desc, isToggle, active, onToggle, onClick, iconBg, iconColor }: any) {
   return (
-    <div 
+    <div
       onClick={!isToggle ? onClick : onToggle}
       className={cn(
         "flex items-center justify-between p-5 hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors cursor-pointer group rounded-[2rem] text-on-surface",
-        isToggle && "cursor-default" 
+        isToggle && "cursor-default"
       )}
     >
       <div className="flex items-center gap-4">
@@ -438,7 +490,7 @@ function MenuLink({ icon: Icon, label, desc, isToggle, active, onToggle, onClick
         </div>
       </div>
       {isToggle ? (
-        <div 
+        <div
           onClick={(e) => {
             e.stopPropagation();
             onToggle();
@@ -448,7 +500,7 @@ function MenuLink({ icon: Icon, label, desc, isToggle, active, onToggle, onClick
             active ? "bg-primary" : "bg-surface-container-highest"
           )}
         >
-          <motion.div 
+          <motion.div
             animate={{ x: active ? 20 : 0 }}
             className="w-5 h-5 bg-white rounded-full shadow-sm"
           ></motion.div>

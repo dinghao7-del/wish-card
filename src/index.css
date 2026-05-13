@@ -4,7 +4,7 @@
   --font-sans: "Inter", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Plus Jakarta Sans", sans-serif;
   --font-handwritten: "Long Cang", cursive;
-  --font-artistic: "ZCOOL XiaoWei", serif;
+  --font-artistic: "Great Vibes", "ZCOOL XiaoWei", serif;
 
   --color-primary: #006e1c;
   --color-primary-container: #4caf50;
@@ -18,6 +18,10 @@
   --color-amber-text: #F57C00;
   --color-purple-surface: #E1BEE7;
   --color-purple-text: #7B1FA2;
+  --color-warning: #b26a00;
+  --color-warning-container: #ffe2b8;
+  --color-danger: #ba1a1a;
+  --color-danger-container: #ffdad6;
   --color-reward-display: #FBC02D;
   --color-background: #fbf9f5;
   --color-surface: #fbf9f5;
@@ -47,14 +51,28 @@
   --color-secondary: #ffd54f;
   --color-primary-surface: #81d67a;
   --color-primary-text: #81d67a;
-}
+  --color-warning: #ffb95c;
+  --color-warning-container: #563700;
+  --color-danger: #ffb4ab;
+  --color-danger-container: #690005;
+  }
 
 @layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   body {
     @apply bg-background text-on-surface font-sans antialiased;
+    overflow-x: hidden;
   }
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-display tracking-tight;
+  }
+
+  img, svg, video, canvas {
+    max-width: 100%;
   }
 }
 
@@ -67,15 +85,95 @@
   scrollbar-width: none;
 }
 
+/* 移动端触摸滚动支持 - 对齐小程序端体验 */
+.touch-pan-y {
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* 模态框滚动容器优化 */
+.modal-scroll-container {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 底部安全区域 */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* 按钮底部留白 */
+.pb-0 {
+  padding-bottom: 0;
+}
+
 /* 移动端触摸目标优化：确保最小触摸尺寸 44x44px */
 button, [role="button"], a, input[type="button"], input[type="submit"] {
   min-width: 44px;
   min-height: 44px;
 }
 
-/* 过小文字修正：移动端最小 12px */
-@media (max-width: 768px) {
-  * {
-    font-size: max(12px, 1em) !important;
+button, a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+input, textarea, select {
+  max-width: 100%;
+}
+
+.text-safe {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.bottom-action-bar {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+}
+
+@layer components {
+  .ui-app-surface {
+    @apply min-h-screen bg-background text-on-surface;
+  }
+
+  .ui-panel {
+    @apply rounded-[2rem] border border-outline-variant/20 bg-surface shadow-sm;
+  }
+
+  .ui-panel-compact {
+    @apply rounded-2xl border border-outline-variant/20 bg-surface shadow-sm;
+  }
+
+  .ui-icon-button {
+    @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-on-surface-variant transition-all duration-150 hover:bg-surface-container/60 active:scale-95;
+  }
+
+  .ui-primary-button {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-black text-white shadow-lg shadow-primary/20 transition-all duration-150 hover:bg-primary/90 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40;
+  }
+
+  .ui-secondary-button {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-outline-variant/30 bg-surface px-5 py-3 text-sm font-black text-on-surface-variant transition-all duration-150 hover:bg-surface-container active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40;
+  }
+
+  .ui-danger-button {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-danger px-5 py-3 text-sm font-black text-white shadow-lg shadow-danger/20 transition-all duration-150 hover:bg-danger/90 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40;
+  }
+
+  .ui-warning-button {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-warning px-5 py-3 text-sm font-black text-white shadow-lg shadow-warning/20 transition-all duration-150 hover:bg-warning/90 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40;
+  }
+
+  .ui-bottom-action-bar {
+    @apply fixed bottom-0 left-0 right-0 z-40 mx-auto max-w-md border-t border-outline-variant/20 bg-surface/95 px-4 pt-3 backdrop-blur-xl;
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .ui-status-pill {
+    @apply inline-flex min-h-7 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black;
+  }
+
+  .ui-empty-state {
+    @apply flex flex-col items-center justify-center gap-4 px-6 py-16 text-center text-on-surface-variant;
   }
 }

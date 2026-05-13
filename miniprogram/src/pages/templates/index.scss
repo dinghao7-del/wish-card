@@ -1,0 +1,189 @@
+@import "../../app.scss";
+
+/* ===== 任务模板库页面 ===== */
+
+.templates-page {
+  min-height: 100vh;
+  background-color: $bg-color;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Header */
+.tpl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: rgba($card-bg, 0.9);
+}
+.tpl-header-left {
+  width: 72rpx; height: 72rpx;
+  border-radius: 18rpx;
+  background-color: rgba($text-primary, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.tpl-title { font-size: 36rpx; font-weight: 800; color: $text-primary; }
+
+/* Search Row */
+.tpl-search-row {
+  display: flex; align-items: center;
+  gap: 16rpx;
+  padding: 12rpx 24rpx;
+}
+.tpl-search-box {
+  flex: 1;
+  display: flex; align-items: center;
+  padding: 16rpx 20rpx;
+  background-color: $card-bg;
+  border-radius: 22rpx;
+  gap: 10rpx;
+  box-shadow: 0 2rpx 8rpx rgba($text-primary, 0.04);
+}
+.tpl-search-input {
+  flex: 1; height: 44rpx; font-size: 28rpx;
+  border: none; background: transparent; color: $text-primary;
+}
+
+/* 自定义添加按钮 */
+.tpl-custom-btn {
+  flex-shrink: 0; padding: 18rpx 20rpx;
+}
+.tpl-custom-text {
+  font-size: 26rpx; font-weight: 700;
+  color: $primary-color; white-space: nowrap;
+}
+
+/* Category Pills — 用内嵌 View 做 padding（避免 scroll-view padding 警告） */
+.cat-scroll { white-space: nowrap; width: 100%; box-sizing: border-box; }
+.cat-pills-wrap { padding: 12rpx 24rpx; display: inline-flex; gap: 14rpx; }
+
+.cat-pill {
+  flex-shrink: 0;
+  padding: 14rpx 28rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid transparent;
+  background-color: $surface-container-low;
+
+  &.active {
+    background-color: $primary-color;
+    .cat-pill-label { color: $card-bg; font-weight: 800; }
+  }
+}
+.cat-pill-label {
+  font-size: 25rpx; font-weight: 600; color: $text-secondary; white-space: nowrap;
+}
+
+/* Body — 用 View 包裹 padding */
+.tpl-body-scroll { flex: 1; overflow-x: hidden; width: 100%; box-sizing: border-box; }
+.tpl-list-wrap { padding: 16rpx 24rpx; }
+
+/* Template Card — 核心修复：box-sizing + 宽度约束 */
+.template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.template-card {
+  background-color: $card-bg;
+  border-radius: 24rpx;
+  padding: 24rpx 20rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba($text-primary, 0.04);
+  border: 1rpx solid rgba($border-color, 0.4);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+
+  &:active { transform: scale(0.985); }
+}
+
+/* 图标区域 — 使用 PNG 图片 */
+.tpl-icon-wrap {
+  width: 80rpx; height: 80rpx;
+  border-radius: 18rpx;
+  background: linear-gradient(145deg, rgba($primary-container, 0.16), rgba($primary-color, 0.08));
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+.tpl-icon-img { width: 56rpx; height: 56rpx; }
+.tpl-icon-emoji {
+  position: absolute;
+  font-size: 32rpx;
+  line-height: 1;
+}
+
+/* 信息区 — 关键修复：min-width: 0 防止文字撑开容器 */
+.tpl-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+.tpl-title-row {
+  display: flex; align-items: center; gap: 8rpx;
+}
+.tpl-name {
+  font-size: 28rpx; font-weight: 800; color: $text-primary;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* 频率 tag */
+.freq-tag {
+  padding: 4rpx 12rpx; border-radius: 999rpx; flex-shrink: 0;
+  Text { font-size: 19rpx; font-weight: 800; }
+}
+.freq-tag.daily { background-color: rgba($primary-color, 0.1); color: $primary-color; }
+.freq-tag.weekly { background-color: rgba($quadrant-q2, 0.14); color: $quadrant-q2; }
+
+.tpl-desc {
+  font-size: 23rpx; color: $text-secondary; line-height: 1.35;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  display: block;
+}
+
+/* 右侧区域 */
+.tpl-right {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 10rpx;
+  flex-shrink: 0;
+}
+.stars-badge {
+  display: flex; align-items: center; gap: 4rpx;
+  padding: 6rpx 12rpx; border-radius: 999rpx;
+  background-color: rgba($text-primary, 0.03);
+}
+.stars-num { font-size: 21rpx; font-weight: 800; color: rgba($text-primary, 0.55); }
+
+.select-btn {
+  width: 60rpx; height: 60rpx;
+  border-radius: 50%;
+  background-color: rgba($primary-color, 0.08);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+
+  &:active { transform: scale(0.9); }
+}
+
+/* Empty State */
+.empty-state {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 120rpx 0; gap: 16rpx;
+}
+.empty-text { font-size: 28rpx; font-weight: 700; color: rgba($text-secondary, 0.5); }

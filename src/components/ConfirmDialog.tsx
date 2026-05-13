@@ -1,5 +1,7 @@
 import { useState, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AlertTriangle, Info } from 'lucide-react';
+import { cn } from '../lib/utils';
 
 interface ConfirmOptions {
   title?: string;
@@ -7,6 +9,10 @@ interface ConfirmOptions {
   confirmText?: string;
   cancelText?: string;
   type?: 'danger' | 'warning' | 'info';
+  verificationValue?: string;
+  verificationMatcher?: (input: string) => boolean;
+  verificationLabel?: string;
+  verificationPlaceholder?: string;
 }
 
 interface ConfirmDialogProps {
@@ -18,6 +24,10 @@ interface ConfirmDialogProps {
   confirmText: string;
   cancelText: string;
   type: 'danger' | 'warning' | 'info';
+  verificationValue?: string;
+  verificationMatcher?: (input: string) => boolean;
+  verificationLabel?: string;
+  verificationPlaceholder?: string;
 }
 
 function ConfirmDialog({
@@ -29,38 +39,53 @@ function ConfirmDialog({
   confirmText,
   cancelText,
   type,
+  verificationValue,
+  verificationMatcher,
+  verificationLabel,
+  verificationPlaceholder,
 }: ConfirmDialogProps) {
+  const [verificationInput, setVerificationInput] = useState('');
+  const requiresVerification = !!verificationValue || !!verificationMatcher;
+  const canConfirm = !requiresVerification || (
+    verificationMatcher ? verificationMatcher(verificationInput) : verificationInput === verificationValue
+  );
+
   const typeStyles = {
     danger: {
-      icon: '⚠️',
-      confirmBg: 'bg-red-500 hover:bg-red-600',
-      iconBg: 'bg-red-100 text-red-600',
+      icon: AlertTriangle,
+      confirmClass: 'ui-danger-button',
+      iconBg: 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-300',
     },
     warning: {
-      icon: '⚠️',
-      confirmBg: 'bg-yellow-500 hover:bg-yellow-600',
-      iconBg: 'bg-yellow-100 text-yellow-600',
+      icon: AlertTriangle,
+      confirmClass: 'ui-warning-button',
+      iconBg: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300',
     },
     info: {
-      icon: 'ℹ️',
-      confirmBg: 'bg-blue-500 hover:bg-blue-600',
-      iconBg: 'bg-blue-100 text-blue-600',
+      icon: Info,
+      confirmClass: 'ui-primary-button',
+      iconBg: 'bg-primary/10 text-primary',
     },
   };
 
   const styles = typeStyles[type];
+  const Icon = styles.icon;
+  const closeDialog = () => {
+    setVerificationInput('');
+    onClose();
+  };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[180] flex items-center justify-center p-4">
           {/* 遮罩 */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 bg-black/50"
-            onClick={onClose}
+            onClick={closeDialog}
           />
 
           {/* 对话框 */}
@@ -68,38 +93,56 @@ function ConfirmDialog({
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+            className="ui-panel relative max-h-[calc(100svh-2rem)] w-full max-w-sm overflow-y-auto"
           >
             {/* 图标区域 */}
             <div className="flex justify-center pt-6 pb-2">
-              <div className={`w-16 h-16 rounded-full ${styles.iconBg} flex items-center justify-center text-3xl`}>
-                {styles.icon}
+              <div className={cn('flex h-16 w-16 items-center justify-center rounded-full', styles.iconBg)}>
+                <Icon size={30} strokeWidth={2.5} />
               </div>
             </div>
 
             {/* 内容区域 */}
             <div className="px-6 pb-6 text-center">
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">
+              <h3 className="mb-2 text-lg font-black text-on-surface">
                 {title}
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+              <p className="mb-6 text-sm font-semibold leading-6 text-on-surface-variant">
                 {message}
               </p>
+
+              {requiresVerification && (
+                <div className="mb-6 text-left">
+                  <label className="mb-2 block text-xs font-black uppercase tracking-widest text-on-surface-variant/70">
+                    {verificationLabel || '家长确认'}
+                  </label>
+                  <input
+                    autoFocus
+                    type="password"
+                    value={verificationInput}
+                    onChange={(event) => setVerificationInput(event.target.value)}
+                    placeholder={verificationPlaceholder || '请输入家长 PIN 或密码'}
+                    className="w-full rounded-2xl border border-outline-variant/40 bg-surface-container-low px-4 py-3 text-center font-bold tracking-widest text-on-surface outline-none transition-colors focus:border-primary"
+                  />
+                </div>
+              )}
 
               {/* 按钮 */}
               <div className="flex gap-3">
                 <button
-                  onClick={onClose}
-                  className="flex-1 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  onClick={closeDialog}
+                  className="ui-secondary-button flex-1"
                 >
                   {cancelText}
                 </button>
                 <button
+                  disabled={!canConfirm}
                   onClick={() => {
+                    if (!canConfirm) return;
                     onConfirm();
-                    onClose();
+                    setVerificationInput('');
                   }}
-                  className={`flex-1 py-3 rounded-xl text-white font-semibold transition-colors ${styles.confirmBg}`}
+                  className={cn('flex-1', styles.confirmClass)}
                 >
                   {confirmText}
                 </button>
@@ -153,6 +196,10 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
         confirmText={dialog?.confirmText || '确认'}
         cancelText={dialog?.cancelText || '取消'}
         type={dialog?.type || 'info'}
+        verificationValue={dialog?.verificationValue}
+        verificationMatcher={dialog?.verificationMatcher}
+        verificationLabel={dialog?.verificationLabel}
+        verificationPlaceholder={dialog?.verificationPlaceholder}
       />
     </>
   );

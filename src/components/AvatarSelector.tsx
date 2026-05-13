@@ -43,7 +43,7 @@ export function AvatarSelector({ onSelect, onClose, currentAvatar }: AvatarSelec
       animate={{ y: 0 }}
       exit={{ y: '100%' }}
       transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-      className="fixed inset-0 z-50 bg-white flex flex-col pt-safe"
+      className="fixed inset-0 z-[100] bg-surface flex flex-col pt-safe"
     >
       {/* 顶部栏 */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-outline-variant/10">
@@ -90,7 +90,7 @@ export function AvatarSelector({ onSelect, onClose, currentAvatar }: AvatarSelec
 
       {/* 内容区 */}
       <div className="flex-1 flex flex-col overflow-hidden p-3">
-        <div className="grid grid-cols-5 gap-2 overflow-y-auto no-scrollbar content-start" style={{maxHeight: 'calc(100vh - 180px)'}}>
+        <div className="grid grid-cols-5 gap-2 overflow-y-auto no-scrollbar content-start max-h-[calc(100svh-180px)]">
           {activeTabData.avatars.map((avatar) => {
             const isSelected = selectedSrc === avatar.src || currentAvatar === avatar.src;
             return (

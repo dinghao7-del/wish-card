@@ -1,0 +1,203 @@
+@import "../../app.scss";
+
+/* ===== 页面容器 ===== */
+.cs-page { min-height: 100vh; background-color: #f5f5f0; display: flex; flex-direction: column; overflow-x: hidden; width: 100%; box-sizing: border-box; }
+
+/* ===== Header ===== */
+.cs-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 24rpx 32rpx;
+  padding-top: calc(env(safe-area-inset-top) + 24rpx);
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(20px);
+  position: sticky; top: 0; z-index: 100;
+}
+.cs-back { width: 64rpx; height: 64rpx; display: flex; align-items: center; justify-content: center; }
+.cs-header-center { flex: 1; text-align: center; }
+.cs-header-title { font-size: 34rpx; font-weight: 900; color: #1a1a1a; display: block; }
+.cs-header-sub { font-size: 22rpx; color: #aaa; margin-top: 2rpx; display: block; }
+
+/* ===== 滚动区域 ===== */
+.cs-scroll { flex: 1; padding: 0 28rpx 40rpx; overflow-x: hidden; box-sizing: border-box; }
+
+/* ===== Section 通用 ===== */
+.cs-section { margin-top: 28rpx; }
+.cs-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18rpx; }
+.cs-section-title { font-size: 31rpx; font-weight: 800; color: #1a1a1a; }
+.cs-add-sub-btn { display: flex; align-items: center; gap: 4rpx; padding: 8rpx 20rpx; border-radius: 9999px; background: rgba(0,110,28,0.08); }
+.cs-add-sub-text { font-size: 24rpx; font-weight: 700; color: #006e1c; }
+
+/* ===== 设备检测卡 ===== */
+.cs-device-card {
+  display: flex; align-items: center; justify-content: space-between;
+  background: white; border-radius: 24rpx;
+  padding: 28rpx 24rpx; margin-top: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+}
+.cs-device-left { display: flex; align-items: center; gap: 18rpx; flex: 1; min-width: 0; }
+.cs-device-icon { font-size: 52rpx; }
+.cs-device-info { display: flex; flex-direction: column; gap: 2rpx; }
+.cs-device-brand { font-size: 32rpx; font-weight: 800; color: #1a1a1a; }
+.cs-device-detail { font-size: 23rpx; color: #888; }
+.cs-device-system { font-size: 21rpx; color: #bbb; }
+.cs-device-actions { display: flex; gap: 12rpx; flex-shrink: 0; }
+.cs-action-btn {
+  display: flex; align-items: center; gap: 6rpx;
+  padding: 12rpx 20rpx; border-radius: 12rpx;
+  &.cs-export { background: #006e1c; }
+  &.cs-import { background: #1565C0; }
+  &:active { opacity: 0.85; }
+}
+.cs-action-text { font-size: 22rpx; font-weight: 600; color: #fff; }
+
+/* ===== 空状态 ===== */
+.cs-empty-state { display: flex; flex-direction: column; align-items: center; gap: 14rpx; padding: 48rpx 0; }
+.cs-empty-text { font-size: 28rpx; font-weight: 600; color: #999; }
+.cs-empty-hint { font-size: 24rpx; color: #bbb; }
+
+/* ===== 订阅项 ===== */
+.cs-sub-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 24rpx 20rpx; background: white; border-radius: 18rpx;
+  margin-bottom: 12rpx; box-shadow: 0 1rpx 6rpx rgba(0,0,0,0.03);
+}
+.cs-sub-info { display: flex; align-items: center; gap: 12rpx; flex: 1; min-width: 0; }
+.cs-sub-status {
+  width: 14rpx; height: 14rpx; border-radius: 50%;
+  background: #ddd; flex-shrink: 0;
+  &.active { background: #4CAF50; }
+}
+.cs-sub-name { font-size: 27rpx; font-weight: 600; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-sub-time { font-size: 21rpx; color: #bbb; flex-shrink: 0; }
+.cs-sub-actions { display: flex; align-items: center; gap: 12rpx; flex-shrink: 0; }
+.cs-copy-btn { display: flex; align-items: center; gap: 4rpx; padding: 8rpx 16rpx; border-radius: 10rpx; background: rgba(0,110,28,0.06); }
+.cs-copy-text { font-size: 22rpx; font-weight: 600; color: #006e1c; }
+.cs-delete-btn { padding: 8rpx; }
+
+/* ===== 品牌网格（2列，对齐 Web）===== */
+.cs-brand-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+}
+.cs-brand-card {
+  display: flex; align-items: center; gap: 14rpx;
+  padding: 24rpx 20rpx; background: white; border-radius: 20rpx;
+  border-left: 6rpx solid var(--brand-color, #ccc);
+  box-shadow: 0 1rpx 6rpx rgba(0,0,0,0.03);
+  transition: all 0.2s;
+  &:active { transform: scale(0.97); background: #f8f8f5; }
+}
+.cs-brand-icon { font-size: 40rpx; }
+.cs-brand-name { flex: 1; font-size: 27rpx; font-weight: 700; color: #333; }
+
+/* ===== Modal 通用 ===== */
+.cs-modal-mask {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.35);
+  display: flex; align-items: flex-end; justify-content: center;
+  animation: csFadeIn 0.25s ease-out;
+}
+@keyframes csFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* 引导弹窗面板 */
+.cs-modal-panel {
+  width: 100%; max-width: 750rpx;
+  background: white;
+  border-radius: 40rpx 40rpx 0 0;
+  box-shadow: 0 -8rpx 40rpx rgba(0,0,0,0.15);
+  max-height: 78vh; display: flex; flex-direction: column;
+  animation: csSlideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes csSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.cs-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 32rpx 36rpx 20rpx; flex-shrink: 0;
+}
+.cs-modal-brand { display: flex; align-items: center; gap: 10rpx; }
+.cs-modal-icon { font-size: 36rpx; }
+.cs-modal-brand-name { font-size: 32rpx; font-weight: 800; color: #1a1a1a; }
+.cs-modal-close { padding: 8rpx; }
+
+.cs-modal-body {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 0 36rpx 20rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 引导内容块 */
+.cs-guide-block { margin-bottom: 28rpx; }
+.cs-guide-method-title {
+  font-size: 29rpx; font-weight: 800; color: #1a1a1a;
+  display: block; margin-bottom: 10rpx;
+}
+.cs-guide-desc { font-size: 25rpx; color: #666; line-height: 1.6; margin-bottom: 12rpx; display: block; }
+
+/* 链接复制框 */
+.cs-guide-link-box {
+  display: flex; align-items: center; gap: 10rpx;
+  padding: 16rpx 20rpx; background: #f5f5f0; border-radius: 14rpx;
+}
+.cs-guide-link {
+  flex: 1; font-size: 22rpx; color: #006e1c;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cs-guide-copy { padding: 8rpx; }
+
+/* 步骤列表 */
+.cs-guide-step {
+  display: flex; align-items: flex-start; gap: 14rpx;
+  padding: 14rpx 0;
+}
+.cs-step-num {
+  width: 40rpx; height: 40rpx; border-radius: 50%;
+  background: #006e1c; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 2rpx;
+  Text { font-size: 22rpx; font-weight: 700; color: #fff; }
+}
+.cs-step-text { font-size: 26rpx; color: #444; line-height: 1.55; }
+
+/* 温馨提示 */
+.cs-warn-box {
+  display: flex; gap: 12rpx; padding: 20rpx;
+  background: #FFF8E1; border-radius: 16rpx; margin-top: 12rpx;
+}
+.cs-warn-text { font-size: 24rpx; color: #F57C00; line-height: 1.55; flex: 1; }
+
+/* 底部按钮 */
+.cs-modal-footer {
+  padding: 24rpx 36rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  flex-shrink: 0;
+}
+.cs-footer-text {
+  text-align: center; padding: 24rpx 0;
+  background: #006e1c; border-radius: 9999px;
+  font-size: 29rpx; font-weight: 600; color: #fff;
+  display: block;
+}
+
+/* ===== 导入弹窗 ===== */
+.cs-import-panel {
+  width: 100%; max-width: 750rpx;
+  background: white;
+  border-radius: 40rpx 40rpx 0 0;
+  padding: 36rpx;
+  animation: csSlideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.cs-import-title { font-size: 33rpx; font-weight: 800; color: #1a1a1a; }
+.cs-import-body { padding: 24rpx 0; }
+.cs-import-label { font-size: 26rpx; font-weight: 600; color: #555; display: block; margin-bottom: 12rpx; }
+.cs-import-input {
+  width: 100%; padding: 22rpx 24rpx; border-radius: 16rpx;
+  background: #f5f5f0; border: 2rpx solid #ddd; font-size: 27rpx !important;
+}
+.cs-import-hint { font-size: 22rpx; color: #bbb; margin-top: 10rpx; display: block; }
+.cs-import-actions { display: flex; gap: 16rpx; margin-top: 28rpx; }
+.cs-import-cancel, .cs-import-confirm {
+  flex: 1; padding: 22rpx 0; border-radius: 9999px;
+  text-align: center; font-size: 28rpx; font-weight: 600;
+}
+.cs-import-cancel { background: #f0f0ec; color: #666; }
+.cs-import-confirm { background: #006e1c; color: #fff; }

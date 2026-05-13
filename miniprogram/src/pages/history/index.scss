@@ -1,0 +1,182 @@
+/* ============================================================
+   History 星星足迹 — 对齐 Web 端 History.tsx (101行)
+   ============================================================ */
+
+.history-page {
+  min-height: 100vh;
+  background: #f5f5f0;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ===== Header ===== */
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 32rpx;
+  padding-top: calc(env(safe-area-inset-top) + 24rpx);
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(20px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.history-back { padding: 8rpx; }
+.history-title {
+  font-size: 38rpx;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* ===== 余额卡 (对齐Web: primary-container 渐变) ===== */
+.history-balance-card {
+  margin: 28rpx 32rpx;
+  padding: 48rpx 32rpx;
+  background: linear-gradient(135deg, rgba(0,110,28,0.08), rgba(0,138,36,0.04));
+  border-radius: 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4rpx 24rpx rgba(0,110,28,0.08);
+}
+.balance-bg-decoration {
+  position: absolute;
+  top: -16rpx;
+  right: -16rpx;
+  opacity: 0.6;
+}
+.balance-num {
+  font-size: 80rpx; /* 超大字号 */
+  font-weight: 900;
+  color: #1a1a1a;
+  line-height: 1.1;
+}
+.balance-label {
+  font-size: 26rpx;
+  color: #888;
+  font-weight: 500;
+}
+
+/* ===== Loading ===== */
+.history-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 120rpx;
+  gap: 20rpx;
+}
+.loading-text { color: #999; font-size: 28rpx; }
+
+/* ===== Empty (对齐Web: Trophy图标) ===== */
+.history-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 100rpx;
+  gap: 14rpx;
+}
+.empty-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #666;
+  margin-top: 16rpx;
+}
+.empty-desc {
+  font-size: 26rpx;
+  color: #999;
+  text-align: center;
+  padding: 0 40rpx;
+}
+.empty-btn {
+  margin-top: 28rpx;
+  padding: 18rpx 52rpx;
+  background: linear-gradient(135deg, #006e1c, #008a24);
+  border-radius: 9999px;
+  text {
+    color: white;
+    font-size: 28rpx;
+    font-weight: 600;
+  }
+}
+
+/* ===== 列表 ===== */
+.history-list { height: calc(100vh - 420rpx); padding: 0 24rpx 40rpx; }
+
+/* 日期分组 */
+.history-date-group {
+  margin-bottom: 24rpx;
+  /* 入场动画 */
+  &.fade-in { animation: slideUpFade 0.35s ease both; }
+}
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(20rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.history-date-label {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+  font-weight: 600;
+  padding: 12rpx 0 12rpx 8rpx;
+}
+
+/* 记录条目 */
+.history-record {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 18rpx;
+  background: #ffffff;
+  border-radius: 22rpx;
+  margin-bottom: 12rpx;
+  box-shadow: 0 1rpx 6rpx rgba(0,0,0,0.03);
+  transition: transform 0.15s;
+  &:active { transform: scale(0.98); }
+}
+.record-icon-wrap {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+  &.earn { background: rgba(76,175,80,0.1); }
+  &.spend { background: rgba(229,115,115,0.1); }
+}
+.record-info { flex: 1; min-width: 0; }
+.record-reason {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.record-time {
+  display: block;
+  font-size: 22rpx;
+  color: #bbb;
+  margin-top: 4rpx;
+}
+.record-amount {
+  font-size: 30rpx;
+  font-weight: 800;
+  flex-shrink: 0;
+  margin-left: 12rpx;
+  &.earn { color: #4CAF50; }
+  &.spend { color: #E57373; }
+}
+.record-star-suffix {
+  font-size: 24rpx;
+}

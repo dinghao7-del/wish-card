@@ -1,19 +1,19 @@
 {
   "compilerOptions": {
     "typeRoots": ["node_modules/@types"],
-    "types": ["node"],
+    "types": ["node", "react"],
     "target": "ES2017",
     "module": "commonjs",
     "lib": ["ES2017", "ES7", "DOM"],
     "moduleResolution": "node",
-    "strict": true,
-    "jsx": "react",
-    "jsxFactory": "React.createElement",
-    "jsxFragmentFactory": "React.Fragment",
+    "strict": false,
+    "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
       "@/components/*": ["src/components/*"],
+      "@/lib/*": ["src/lib/*"],
       "@/pages/*": ["src/pages/*"],
+      "@/store": ["src/store/index"],
       "@/utils/*": ["src/utils/*"],
       "@/store/*": ["src/store/*"]
     },

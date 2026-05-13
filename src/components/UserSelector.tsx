@@ -6,6 +6,7 @@ import { cn } from '../lib/utils';
 import { Member } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { TextAvatar } from './TextAvatar';
+import { hasSwitchCredential, verifyMemberPinOrPassword } from '../lib/memberCredentials';
 
 interface UserSelectorProps {
   isOpen: boolean;
@@ -40,11 +41,10 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
       
       if (newPin.length === 4) {
         if (selectedUser) {
-          const isValidPin = newPin === selectedUser.pin;
-          const isValidPasswordAsPin = newPin === selectedUser.password?.slice(0, 4);
+          const verificationMethod = verifyMemberPinOrPassword(selectedUser, newPin);
           
-          if (isValidPin || isValidPasswordAsPin) {
-            setCurrentUser(selectedUser);
+          if (verificationMethod) {
+            setCurrentUser(selectedUser, verificationMethod);
             onClose(); 
           } else {
             setError(true);
@@ -61,13 +61,10 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
         return;
     }
 
-    // Only prompt for PIN if a specific 4-digit PIN is set.
-    // If they only have a login password but no PIN, we allow direct switching for now
-    // to avoid the numeric pad lockout.
-    const hasPin = member.pin && member.pin.trim() !== '' && member.pin.length === 4;
+    const hasPin = hasSwitchCredential(member);
                         
     if (!hasPin) {
-      setCurrentUser(member);
+      setCurrentUser(member, 'none');
       onClose();
       return;
     }
@@ -92,7 +89,7 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="w-full max-w-md bg-background rounded-t-[3rem] sm:rounded-[3rem] p-8 shadow-2xl relative overflow-hidden max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-md bg-background rounded-t-[3rem] sm:rounded-[3rem] p-8 shadow-2xl relative overflow-hidden max-h-[90svh] overflow-y-auto"
             onClick={e => e.stopPropagation()}
           >
             <div className="w-12 h-1.5 bg-outline-variant/20 rounded-full mx-auto mb-6 sm:hidden" />
@@ -100,7 +97,6 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
             <header className="flex justify-between items-center mb-8">
               <div>
                 <h2 className="text-2xl font-black tracking-tight text-primary">切换用户</h2>
-                <p className="text-on-surface-variant font-bold text-xs mt-1">今天是谁在探索森林花园？</p>
               </div>
               <button 
                 onClick={onClose}
@@ -196,7 +192,7 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
                           className={cn(
                             "w-4 h-4 rounded-full border-2 transition-all duration-200",
                             pin.length > i ? "bg-primary border-primary scale-110" : "bg-transparent border-outline-variant",
-                            error && "border-red-500"
+                            error && "border-danger"
                           )}
                         />
                     ))}
@@ -214,26 +210,26 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
                     ))}
                     <button 
                        onClick={() => setPin('')}
-                       className="aspect-square rounded-2xl bg-surface-container-low flex items-center justify-center text-on-surface-variant/40 hover:text-red-500 active:scale-90 transition-all border border-outline-variant/5"
+                       className="aspect-square rounded-2xl bg-surface-container-low flex items-center justify-center text-on-surface-variant/40 hover:text-danger active:scale-90 transition-all border border-outline-variant/5"
                     >
                       <Eraser size={18} />
                     </button>
                     <button 
-                       onClick={() => handlePinInput('0', { defaultValue: '0' })}
+                       onClick={() => handlePinInput('0')}
                        className="aspect-square rounded-2xl bg-surface-container-low text-lg font-black flex items-center justify-center hover:bg-primary/10 hover:text-primary active:scale-90 transition-all border border-outline-variant/5"
                     >
                       0
                     </button>
                     <button 
                        onClick={() => setPin(prev => prev.slice(0, -1))}
-                       className="aspect-square rounded-2xl bg-surface-container-low flex items-center justify-center text-on-surface-variant/40 hover:text-orange-500 active:scale-90 transition-all border border-outline-variant/5"
+                       className="aspect-square rounded-2xl bg-surface-container-low flex items-center justify-center text-on-surface-variant/40 hover:text-warning active:scale-90 transition-all border border-outline-variant/5"
                     >
                       <Delete size={18} />
                     </button>
                   </div>
                   
                   {error && (
-                    <p className="text-red-500 text-[10px] font-black text-center mt-4 animate-bounce">密码错误，请森林探险家再试一次 🍃</p>
+                    <p className="text-danger text-[10px] font-black text-center mt-4 animate-bounce">密码错误，请森林探险家再试一次 🍃</p>
                   )}
                 </motion.div>
               )}

@@ -1,10 +1,11 @@
 import React from 'react';
-import { ChevronLeft, Star, TrendingUp, TrendingDown, Clock, Trophy } from 'lucide-react';
+import { Star, TrendingUp, TrendingDown, Clock, Trophy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useFamily } from '../context/FamilyContext';
 import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
-import * as LucideIcons from 'lucide-react';
+import { TopAppBar } from '../components/navigation/TopAppBar';
+import { getRegisteredTaskIcon } from '../lib/lucideIconRegistry';
 
 export function History() {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ export function History() {
   const userHistory = currentUser ? history.filter(h => h.userId === currentUser.id) : [];
 
   const getRecordIcon = (iconName: string, size = 20) => {
-    const IconComponent = (LucideIcons as any)[iconName];
+    const IconComponent = getRegisteredTaskIcon(iconName);
     if (IconComponent) return <IconComponent size={size} />;
     return <Star size={size} />;
   };
@@ -31,23 +32,16 @@ export function History() {
 
   return (
     <div className="min-h-screen bg-surface pb-20 animate-in fade-in duration-500">
-      <header className="flex justify-between items-center px-4 py-4 sticky top-0 bg-surface/80 backdrop-blur-xl z-50">
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container/50 transition-colors">
-            <ChevronLeft size={24} />
-          </button>
-          <h1 className="font-black text-xl text-on-surface">星星足迹</h1>
-        </div>
-      </header>
+      <TopAppBar title="星星足迹" backTo="/profile" />
 
       <div className="px-4 py-4">
         <div className="bg-primary-container rounded-[2.5rem] py-6 px-8 mb-6 flex flex-col items-center justify-center text-primary-text shadow-sm relative overflow-hidden border border-primary-surface/30">
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-3xl" />
           <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/20 rounded-full blur-3xl" />
           
-          <Star size={40} className="mb-2 fill-current animate-pulse" />
-          <span className="text-xs font-black uppercase tracking-widest opacity-60 mb-0.5">当前余额</span>
-          <h2 className="text-5xl font-black">{currentUser?.stars || 0}</h2>
+          <Star size={40} className="mb-2 text-reward-display fill-current animate-pulse" />
+          <span className="text-xs font-black uppercase tracking-widest opacity-75 mb-0.5 text-secondary-container">当前余额</span>
+          <h2 className="text-[4rem] font-black tabular-nums text-white">{currentUser?.stars || 0}</h2>
         </div>
 
         <div className="space-y-4">

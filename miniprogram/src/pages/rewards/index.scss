@@ -1,114 +1,929 @@
 @import "../../app.scss";
 
+// ===== 全局 =====
 .rewards-page {
-  padding: 24rpx;
-  background-color: #fbf9f5;
   min-height: 100vh;
+  background: $bg-color;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
 
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 32rpx;
+.rw-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 200rpx;
 
-    .page-title {
-      font-size: 40rpx;
-      font-weight: 600;
-      color: #1b1c1a;
-    }
-
-    .star-balance {
-      background-color: #fff9c4;
-      padding: 12rpx 24rpx;
-      border-radius: 24rpx;
-      font-size: 28rpx;
-      color: #f9a825;
-      font-weight: 600;
-    }
-  }
-
-  .category-tabs {
-    display: flex;
-    gap: 16rpx;
-    margin-bottom: 32rpx;
-    overflow-x: auto;
-
-    .category-tab {
-      padding: 16rpx 32rpx;
-      border-radius: 32rpx;
-      background-color: #ffffff;
-      font-size: 28rpx;
-      color: #3f4a3c;
-      white-space: nowrap;
-
-      &.active {
-        background-color: #006e1c;
-        color: #ffffff;
-      }
-    }
-  }
-
-  .rewards-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24rpx;
-
-    .reward-card {
-      background-color: #ffffff;
-      border-radius: 24rpx;
-      padding: 24rpx;
-      position: relative;
-
-      .reward-image {
-        width: 100%;
-        height: 200rpx;
-        border-radius: 16rpx;
-        margin-bottom: 16rpx;
-        object-fit: cover;
-      }
-
-      .reward-cost-badge {
-        position: absolute;
-        top: 32rpx;
-        right: 32rpx;
-        background-color: #fff9c4;
-        padding: 8rpx 16rpx;
-        border-radius: 16rpx;
-        font-size: 24rpx;
-        color: #f9a825;
-        font-weight: 600;
-      }
-
-      .reward-name {
-        font-size: 28rpx;
-        font-weight: 600;
-        color: #1b1c1a;
-        margin-bottom: 8rpx;
-      }
-
-      .reward-desc {
-        font-size: 24rpx;
-        color: #3f4a3c;
-        margin-bottom: 16rpx;
-      }
-
-      .exchange-button {
-        background-color: #006e1c;
-        color: #ffffff;
-        text-align: center;
-        padding: 16rpx;
-        border-radius: 12rpx;
-        font-size: 28rpx;
-        font-weight: 600;
-      }
-    }
-  }
-
-  .empty-state {
-    grid-column: span 2;
-    text-align: center;
-    padding: 120rpx 0;
-    color: #3f4a3c;
+  .rw-loading-text {
+    margin-top: 20rpx;
     font-size: 28rpx;
+    color: $text-secondary;
   }
+}
+
+// ===== Header（对齐Web原版：头像 + 星星 + 设置） =====
+.rw-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 0;
+}
+
+.rw-header-left {
+  display: flex;
+  align-items: center;
+
+  &:active { opacity: 0.7; }
+}
+
+.rw-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  border: 3rpx solid rgba($primary-color, 0.15);
+}
+
+.rw-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.rw-star-badge {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  background: linear-gradient(135deg, #FFF9E6, #FFF3CD);
+  border-radius: 32rpx;
+  padding: 8rpx 18rpx;
+
+  Text {
+    font-size: 26rpx;
+    font-weight: 700;
+    color: #B8860B;
+  }
+
+  &:active { transform: scale(0.95); }
+}
+
+.rw-settings-btn {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:active { opacity: 0.7; }
+}
+
+// ===== 标题栏（对齐Web原版：标题左 + 大圆形FAB右）=====
+.rw-title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.rw-title {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: $text-primary;
+  letter-spacing: 1rpx;
+}
+
+/* + 号大圆形FAB — 对齐Web原版 w-12 h-12 rounded-full */
+.rw-fab-plus {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: $primary-color;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 28rpx rgba($primary-color, 0.35);
+
+  &:active { transform: scale(0.92); opacity: 0.85; }
+}
+
+// ===== 分类 Tab 横向滚动 =====
+.rw-category-scroll {
+  white-space: nowrap;
+  margin-bottom: 24rpx;
+}
+
+.rw-category-tabs {
+  display: inline-flex;
+  gap: 16rpx;
+  padding: 4rpx 12rpx;
+}
+
+.rw-cat-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14rpx 28rpx;
+  border-radius: 32rpx;
+  background: $card-bg;
+  border: 2rpx solid transparent;
+  box-shadow: 0 2rpx 8rpx rgba($text-primary, 0.04);
+  transition: all 0.25s;
+  flex-shrink: 0;
+
+  Text {
+    font-size: 26rpx;
+    font-weight: 600;
+    color: $text-secondary;
+    white-space: nowrap;
+  }
+
+  &.active {
+    background: $primary-color;
+    border-color: $primary-color;
+
+    Text {
+      color: white;
+    }
+  }
+  &:active { transform: scale(0.95); }
+}
+
+// ===== 奖励网格 =====
+.rw-grid-scroll {
+  height: calc(100vh - 420rpx);
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.rw-rewards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24rpx;
+  padding: 0 8rpx;
+}
+
+.rw-card {
+  background: $card-bg;
+  border-radius: 28rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba($text-primary, 0.08);
+  animation: cardSlideUp 0.35s ease-out both;
+  transition: transform 0.2s;
+
+  &:active { transform: scale(0.96); }
+
+  &.cannot-afford {
+    opacity: 0.7;
+  }
+}
+
+@keyframes cardSlideUp {
+  from { opacity: 0; transform: translateY(20rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// 图片区域（含标题悬浮 + 编辑删除按钮）
+.rw-card-img-area {
+  position: relative;
+  height: 260rpx;
+  overflow: hidden;
+}
+
+/* 卡片右上角编辑/删除按钮 — 对齐Web原版 */
+.rw-card-actions {
+  position: absolute;
+  top: 10rpx;
+  right: 10rpx;
+  display: flex;
+  gap: 8rpx;
+  z-index: 2;
+}
+
+.rw-card-action-btn {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2rpx 8rpx rgba($text-primary, 0.12);
+
+  &:active { transform: scale(0.9); }
+}
+
+.rw-card-img {
+  width: 100%;
+  height: 100%;
+}
+
+.rw-card-img-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, $primary-color 0%, #43C6AC 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// 标题悬浮在图片底部
+.rw-card-img-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 40rpx 16rpx 12rpx;
+  background: linear-gradient(transparent, rgba($text-primary, 0.65));
+
+  .rw-card-img-title {
+    font-size: 24rpx;
+    font-weight: 700;
+    color: white;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// 卡片底部操作栏
+.rw-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 18rpx;
+}
+
+.rw-card-cost {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+
+  Text {
+    font-size: 28rpx;
+    font-weight: 800;
+    color: #F59E0B;
+
+    &.insufficient { color: #ef4444; }
+  }
+}
+
+.rw-card-exchange-btn {
+  background: $primary-color;
+  border-radius: 24rpx;
+  padding: 12rpx 24rpx;
+
+  Text {
+    font-size: 24rpx;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+  }
+
+  &:active { opacity: 0.85; transform: scale(0.95); }
+}
+
+// 进度条（余额不足时显示）
+.rw-progress-bar {
+  position: relative;
+  width: 120rpx;
+  height: 16rpx;
+  background: #f0f0f0;
+  border-radius: 8rpx;
+  overflow: hidden;
+}
+
+.rw-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ef4444, #f97316);
+  border-radius: 8rpx;
+  transition: width 0.3s;
+}
+
+.rw-progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 18rpx;
+  font-weight: 600;
+  color: white;
+}
+
+// 空状态
+.rw-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 160rpx;
+}
+
+.rw-empty-text {
+  font-size: 30rpx;
+  color: $text-secondary;
+  margin-top: 20rpx;
+}
+
+.rw-empty-hint {
+  font-size: 24rpx;
+  color: $text-secondary-variant;
+  margin-top: 10rpx;
+}
+
+// ===== 兑换详情 Modal =====
+.rw-modal-mask {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba($text-primary, 0.5);
+  z-index: 999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: modalFadeIn 0.25s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.rw-modal-panel {
+  width: 100%;
+  max-height: 90vh;
+  background: $card-bg;
+  border-radius: 36rpx 36rpx 0 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: panelSlideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  // 启用触摸滚动
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+// 可滚动内容区 - 对齐Web端 touch-pan-y
+.rw-modal-scroll {
+  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
+  // 触摸滚动关键属性
+  -webkit-overflow-scrolling: touch;
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+  // iOS惯性滚动
+  touch-scrolling: y-axis;
+}
+
+@keyframes panelSlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+// 大图 (4:3)
+.rw-modal-img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+}
+
+.rw-modal-img-placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(135deg, $primary-color, #43C6AC);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// 信息区
+.rw-modal-info {
+  padding: 32rpx 32rpx 24rpx;
+}
+
+.rw-modal-name {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: $text-primary;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.rw-modal-cat-tag {
+  display: inline-block;
+  background: rgba($primary-color, 0.08);
+  border-radius: 8rpx;
+  padding: 6rpx 18rpx;
+  margin-bottom: 24rpx;
+
+  Text {
+    font-size: 22rpx;
+    font-weight: 600;
+    color: $primary-color;
+  }
+}
+
+.rw-modal-cost-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.rw-modal-cost-label {
+  font-size: 28rpx;
+  color: $text-secondary;
+}
+
+.rw-modal-cost-value {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+
+  Text {
+    font-size: 40rpx;
+    font-weight: 900;
+    color: #F59E0B;
+  }
+}
+
+.rw-modal-desc {
+  background: #f9f9f9;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  margin-bottom: 24rpx;
+
+  Text {
+    font-size: 26rpx;
+    color: $text-secondary;
+    line-height: 1.6;
+  }
+}
+
+// 余额不足提示
+.rw-modal-insufficient {
+  margin-bottom: 24rpx;
+
+  Text {
+    font-size: 24rpx;
+    color: #ef4444;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 10rpx;
+  }
+}
+
+.rw-insufficient-bar {
+  width: 100%;
+  height: 16rpx;
+  background: #f0f0f0;
+  border-radius: 8rpx;
+  overflow: hidden;
+}
+
+.rw-insufficient-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ef4444, #f97316);
+  border-radius: 8rpx;
+  transition: width 0.3s;
+}
+
+// 按钮
+.rw-modal-actions {
+  display: flex;
+  gap: 16rpx;
+  padding: 0 32rpx 32rpx;
+  padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
+  flex-shrink: 0;
+  background: $card-bg;
+}
+
+.rw-modal-cancel {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx 0;
+  border-radius: 16rpx;
+  background: $surface-container;
+
+  Text {
+    font-size: 28rpx;
+    font-weight: 600;
+    color: $text-secondary;
+  }
+
+  &:active { background: #ebebeb; }
+}
+
+.rw-modal-confirm {
+  flex: 2;
+  text-align: center;
+  padding: 24rpx 0;
+  border-radius: 16rpx;
+  background: $primary-color;
+
+  Text {
+    font-size: 28rpx;
+    font-weight: 700;
+    color: white;
+  }
+
+  &:not(.disabled):active { opacity: 0.85; }
+
+  &.disabled {
+    background: #ccc;
+
+    Text {
+      color: #999;
+    }
+  }
+
+  &.loading { opacity: 0.7; }
+}
+
+// ===== 创建奖励 — 全屏表单（对齐原版 /rewards/new） =====
+.rw-create-fullscreen {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: $bg-color;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: createFadeIn 0.2s ease-out;
+}
+
+@keyframes createFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+// 顶部导航栏（返回 + 标题）
+.rw-create-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 24rpx;
+  padding-top: calc(20rpx + env(safe-area-inset-top));
+  background: $bg-color;
+  flex-shrink: 0;
+}
+
+.rw-create-back {
+  width: 80rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  &:active { opacity: 0.6; }
+}
+
+.rw-create-nav-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: $text-primary;
+}
+
+// 可滚动内容区
+.rw-create-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+// 图片上传行 + 模板导入按钮
+.rw-create-img-row {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  margin: 12rpx 16rpx 16rpx;
+  background: $card-bg;
+  border-radius: 24rpx;
+  padding: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba($text-primary, 0.04);
+}
+
+.rw-create-img-box {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 24rpx;
+  background: $card-bg;  // 白底
+  border: 2rpx solid $border-color;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.rw-create-img-preview {
+  width: 100%;
+  height: 100%;
+}
+
+.rw-create-img-emoji {
+  font-size: 80rpx;
+}
+
+.rw-create-camera-icon {
+  position: absolute;
+  bottom: 6rpx;
+  right: 6rpx;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2rpx 6rpx rgba($text-primary, 0.12);
+}
+
+.rw-create-tpl-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 28rpx;
+  background: #E8F5E9;  // 浅绿
+  border-radius: 20rpx;
+
+  Text {
+    font-size: 28rpx;
+    font-weight: 600;
+    color: #2e7d32;
+  }
+
+  &:active { opacity: 0.75; }
+}
+
+// 通用卡片容器
+.rw-create-card {
+  margin: 0 16rpx 14rpx;
+  background: $card-bg;
+  border-radius: 24rpx;
+  padding: 24rpx;
+  box-shadow: 0 2rpx 10rpx rgba($text-primary, 0.03);
+}
+
+// 名称输入 + 次数badge（横排）
+.rw-create-name-input-wrap {
+  flex: 1;
+
+  .rw-create-name-input {
+    width: 100%;
+    height: 84rpx;
+    font-size: 30rpx;
+    color: $text-primary;
+    background: transparent;
+    border: none;
+  }
+}
+
+// 直接用于横排卡片中的name input
+.rw-create-name-input {
+  flex: 1;
+  height: 84rpx;
+  font-size: 30rpx;
+  color: $text-primary;
+  background: transparent;
+  border: none;
+}
+
+.rw-create-unit-badge {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 14rpx 20rpx;
+  background: $surface-container-low;
+  border-radius: 14rpx;
+  margin-left: 16rpx;
+  flex-shrink: 0;
+
+  Text {
+    font-size: 26rpx;
+    color: $text-secondary;
+    font-weight: 600;
+  }
+}
+
+// 描述展开触发器
+.rw-create-desc-trigger {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 28rpx !important;
+}
+
+.rw-create-desc-hint {
+  font-size: 28rpx;
+  color: #bbb;
+}
+
+.rw-create-desc-area {
+  width: 100%;
+  min-height: 140rpx;
+  font-size: 28rpx;
+  color: $text-primary;
+  line-height: 1.6;
+  background: transparent;
+  border: none;
+}
+
+// 分类区域
+.rw-create-section-label {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-bottom: 18rpx;
+
+  Text {
+    font-size: 28rpx;
+    font-weight: 700;
+    color: $text-primary;
+  }
+}
+
+.rw-create-cat-scroll {
+  white-space: nowrap;
+}
+
+.rw-create-cat-list {
+  display: inline-flex;
+  gap: 14rpx;
+}
+
+.rw-create-cat-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx 32rpx;
+  border-radius: 9999px;
+  background: $card-bg;
+  border: 2rpx solid $border-light;
+  flex-shrink: 0;
+
+  Text {
+    font-size: 26rpx;
+    font-weight: 600;
+    color: $text-secondary;
+    white-space: nowrap;
+  }
+
+  &.active {
+    background: $primary-color;
+    border-color: $primary-color;
+
+    Text {
+      color: white;
+    }
+  }
+
+  &:active { transform: scale(0.95); }
+}
+
+// 数字 stepper 行（单价 / 总数）
+.rw-create-num-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// 兑换限制 Toggle 行 — 必须与 num-row 保持相同 flex 布局
+.rw-create-limit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rw-create-num-left {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.rw-create-num-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 18rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rw-cost-icon {
+  background: linear-gradient(135deg, #FEF3C7, #FDE68A);  // 黄色渐变
+}
+
+.rw-qty-icon {
+  background: $primary-color;  // 绿色
+}
+
+.rw-limit-icon {
+  background: #66BB6A;  // 浅绿（对齐原版）
+}
+
+.rw-create-num-label {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+// Stepper 组件（对齐原版：圆角白底按钮）
+.rw-create-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: $surface-container;
+  border-radius: 18rpx;
+  padding: 8rpx;
+}
+
+.rw-step-btn {
+  width: 64rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14rpx;
+  background: $card-bg;
+  box-shadow: 0 1rpx 4rpx rgba($text-primary, 0.06);
+
+  Text {
+    font-size: 36rpx;
+    font-weight: 300;
+    color: #555;
+  }
+
+  &:active { background: $surface-container; }
+}
+
+.rw-step-value {
+  min-width: 96rpx;
+  text-align: center;
+  font-size: 34rpx;
+  font-weight: 800;
+  color: $text-primary;
+}
+
+// 底部固定按钮栏
+.rw-create-footer {
+  padding: 16rpx 16rpx 32rpx;
+  padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
+  background: $bg-color;
+  flex-shrink: 0;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.rw-create-footer-btn {
+  width: 100%;
+  height: 92rpx;
+  background: $primary-color;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  overflow: hidden;
+
+  Text {
+    font-size: 30rpx;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+  }
+
+  &:not(.disabled):active { opacity: 0.85; }
+
+  &.disabled {
+    background: #ccc;
+
+    Text {
+      color: #999;
+    }
+  }
+}
+
+// 摘要信息行
+.rw-create-summary {
+  margin: 8rpx 16rpx 4rpx;
+  padding: 12rpx 24rpx;
+  text-align: center;
+
+  Text {
+    font-size: 24rpx;
+    color: #bbb;
+  }
+}
+
+// 底部提示文字
+.rw-create-footer-hint {
+  display: block;
+  text-align: center;
+  font-size: 22rpx;
+  color: #ccc;
+  margin-top: 10rpx;
 }

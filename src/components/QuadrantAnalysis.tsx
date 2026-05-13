@@ -19,10 +19,10 @@ const QUADRANT_CONFIG = [
     titleKey: 'quadrant_analysis.q1_title',
     subtitleKey: 'quadrant_analysis.q1_subtitle',
     icon: AlertTriangle,
-    bgColor: 'bg-red-50 dark:bg-red-500/10',
-    borderColor: 'border-red-200 dark:border-red-500/20',
-    iconColor: 'text-red-500',
-    badgeColor: 'bg-red-500',
+    bgColor: 'bg-danger-container/50',
+    borderColor: 'border-danger/20',
+    iconColor: 'text-danger',
+    badgeColor: 'bg-danger',
     label: 'Q1',
   },
   {
@@ -30,10 +30,10 @@ const QUADRANT_CONFIG = [
     titleKey: 'quadrant_analysis.q2_title',
     subtitleKey: 'quadrant_analysis.q2_subtitle',
     icon: Target,
-    bgColor: 'bg-blue-50 dark:bg-blue-500/10',
-    borderColor: 'border-blue-200 dark:border-blue-500/20',
-    iconColor: 'text-blue-500',
-    badgeColor: 'bg-blue-500',
+    bgColor: 'bg-primary-container/20',
+    borderColor: 'border-primary/20',
+    iconColor: 'text-primary',
+    badgeColor: 'bg-primary',
     label: 'Q2',
   },
   {
@@ -41,10 +41,10 @@ const QUADRANT_CONFIG = [
     titleKey: 'quadrant_analysis.q3_title',
     subtitleKey: 'quadrant_analysis.q3_subtitle',
     icon: Clock,
-    bgColor: 'bg-orange-50 dark:bg-orange-500/10',
-    borderColor: 'border-orange-200 dark:border-orange-500/20',
-    iconColor: 'text-orange-500',
-    badgeColor: 'bg-orange-500',
+    bgColor: 'bg-warning-container/50',
+    borderColor: 'border-warning/20',
+    iconColor: 'text-warning',
+    badgeColor: 'bg-warning',
     label: 'Q3',
   },
   {
@@ -52,10 +52,10 @@ const QUADRANT_CONFIG = [
     titleKey: 'quadrant_analysis.q4_title',
     subtitleKey: 'quadrant_analysis.q4_subtitle',
     icon: Coffee,
-    bgColor: 'bg-gray-50 dark:bg-gray-500/10',
-    borderColor: 'border-gray-200 dark:border-gray-500/20',
-    iconColor: 'text-gray-500',
-    badgeColor: 'bg-gray-400',
+    bgColor: 'bg-surface-container-low',
+    borderColor: 'border-outline-variant/30',
+    iconColor: 'text-on-surface-variant',
+    badgeColor: 'bg-on-surface-variant',
     label: 'Q4',
   },
 ];
@@ -112,11 +112,11 @@ export function QuadrantAnalysisView({ isOpen, onClose, dateRange = 'today', inl
         )}
 
         {error && (
-          <div className="bg-red-50 dark:bg-red-500/10 rounded-2xl p-6 text-center">
-            <p className="text-sm font-bold text-red-500 mb-4">{error}</p>
+          <div className="bg-danger-container rounded-2xl p-6 text-center">
+            <p className="text-sm font-bold text-danger mb-4">{error}</p>
             <button
               onClick={runAnalysis}
-              className="bg-red-500 text-white px-6 py-2.5 rounded-2xl font-bold text-sm active:scale-95 transition-all"
+              className="bg-danger text-white px-6 py-2.5 rounded-2xl font-bold text-sm active:scale-95 transition-all"
             >
               {t('quadrant_analysis.retry', { defaultValue: '重试' })}
             </button>
@@ -173,7 +173,7 @@ export function QuadrantAnalysisView({ isOpen, onClose, dateRange = 'today', inl
                         >
                           <div className="px-4 pb-4 space-y-2">
                             {items.length > 0 ? items.map((item, idx) => (
-                              <div key={idx} className="bg-white/60 dark:bg-surface/60 rounded-xl p-3 backdrop-blur-sm">
+                              <div key={idx} className="bg-surface/70 rounded-xl p-3 backdrop-blur-sm">
                                 <div className="flex items-center justify-between">
                                   <span className="font-black text-on-surface text-sm">{item.task.title}</span>
                                   <span className="text-xs font-bold text-on-surface-variant/60">{item.task.rewardStars}★</span>
@@ -217,15 +217,15 @@ export function QuadrantAnalysisView({ isOpen, onClose, dateRange = 'today', inl
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
-            className="w-full max-w-lg bg-background rounded-t-[2.5rem] sm:rounded-[2.5rem] max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-outline-variant/10"
+            className="w-full max-w-lg bg-background rounded-t-[2.5rem] sm:rounded-[2.5rem] max-h-[90svh] overflow-hidden flex flex-col shadow-2xl border border-outline-variant/10"
           >
             {/* Header */}
-            <div className="p-6 border-b border-outline-variant/10 bg-white dark:bg-surface-container shrink-0">
+            <div className="p-6 border-b border-outline-variant/10 bg-surface-container shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
@@ -255,11 +255,11 @@ export function QuadrantAnalysisView({ isOpen, onClose, dateRange = 'today', inl
               )}
 
               {error && (
-                <div className="bg-red-50 dark:bg-red-500/10 rounded-2xl p-6 text-center">
-                  <p className="text-sm font-bold text-red-500 mb-4">{error}</p>
+                <div className="bg-danger-container rounded-2xl p-6 text-center">
+                  <p className="text-sm font-bold text-danger mb-4">{error}</p>
                   <button
                     onClick={runAnalysis}
-                    className="bg-red-500 text-white px-6 py-2.5 rounded-2xl font-bold text-sm active:scale-95 transition-all"
+                    className="bg-danger text-white px-6 py-2.5 rounded-2xl font-bold text-sm active:scale-95 transition-all"
                   >
                     {t('quadrant_analysis.retry', { defaultValue: '重试' })}
                   </button>
@@ -318,7 +318,7 @@ export function QuadrantAnalysisView({ isOpen, onClose, dateRange = 'today', inl
                               >
                                 <div className="px-4 pb-4 space-y-2">
                                   {items.length > 0 ? items.map((item, idx) => (
-                                    <div key={idx} className="bg-white/60 dark:bg-surface/60 rounded-xl p-3 backdrop-blur-sm">
+                                    <div key={idx} className="bg-surface/70 rounded-xl p-3 backdrop-blur-sm">
                                       <div className="flex items-center justify-between">
                                         <span className="font-black text-on-surface text-sm">{item.task.title}</span>
                                         <span className="text-xs font-bold text-on-surface-variant/60">{item.task.rewardStars}★</span>

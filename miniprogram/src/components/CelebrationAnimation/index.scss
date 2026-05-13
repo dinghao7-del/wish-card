@@ -1,0 +1,246 @@
+@import "../../app.scss";
+
+// ==================== 庆祝动画（对齐 Web CelebrationAnimation） ====================
+
+.celebration-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+// ==================== 中心区域 ====================
+
+.celebration-center {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 320rpx;
+  height: 320rpx;
+}
+
+// 外圈脉冲（对齐 Web L116-128）
+.celebration-pulse {
+  position: absolute;
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 50%;
+  border: 4rpx solid;
+  animation: pulseExpand 0.6s ease-out forwards;
+}
+
+@keyframes pulseExpand {
+  0% {
+    transform: scale(0);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(2.5);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+// 中心图标圆（对齐 Web L131-152）
+.celebration-icon-circle {
+  position: relative;
+  z-index: 10;
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.3);
+  animation: iconBounce 0.6s ease-out;
+}
+
+@keyframes iconBounce {
+  0% {
+    transform: scale(0) rotate(-180deg);
+  }
+  60% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+// ==================== 粒子爆炸（对齐 Web L155-209） ====================
+// 使用每个粒子独立的 @keyframes（微信小程序 keyframes 不支持 var()）
+
+.celebration-particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -12rpx;
+  margin-left: -12rpx;
+}
+
+.particle-0  { animation: p0 0.6s ease-out forwards; animation-delay: 0s; }
+.particle-1  { animation: p1 0.6s ease-out forwards; animation-delay: 0.08s; }
+.particle-2  { animation: p2 0.6s ease-out forwards; animation-delay: 0.16s; }
+.particle-3  { animation: p3 0.6s ease-out forwards; animation-delay: 0s; }
+.particle-4  { animation: p4 0.6s ease-out forwards; animation-delay: 0.08s; }
+.particle-5  { animation: p5 0.6s ease-out forwards; animation-delay: 0.16s; }
+.particle-6  { animation: p6 0.6s ease-out forwards; animation-delay: 0s; }
+.particle-7  { animation: p7 0.6s ease-out forwards; animation-delay: 0.08s; }
+.particle-8  { animation: p8 0.6s ease-out forwards; animation-delay: 0.16s; }
+.particle-9  { animation: p9 0.6s ease-out forwards; animation-delay: 0s; }
+.particle-10 { animation: p10 0.6s ease-out forwards; animation-delay: 0.08s; }
+.particle-11 { animation: p11 0.6s ease-out forwards; animation-delay: 0.16s; }
+
+@keyframes p0  { 0% { transform: scale(0) translate(0, 0); opacity: 1; } 30% { transform: scale(1) translate(54rpx, 0); opacity: 1; } 100% { transform: scale(0.5) translate(180rpx, 0); opacity: 0; } }
+@keyframes p1  { 0% { transform: scale(0) translate(0, 0); opacity: 1; } 30% { transform: scale(1) translate(47rpx, 27rpx); opacity: 1; } 100% { transform: scale(0.5) translate(156rpx, 90rpx); opacity: 0; } }
+@keyframes p2  { 0% { transform: scale(0) translate(0, 0); opacity: 1; } 30% { transform: scale(1) translate(27rpx, 47rpx); opacity: 1; } 100% { transform: scale(0.5) translate(90rpx, 156rpx); opacity: 0; } }
+@keyframes p3  { 0% { transform: scale(0) translate(0, 0); opacity: 1; } 30% { transform: scale(1) translate(0, 54rpx); opacity: 1; } 100% { transform: scale(0.5) translate(0, 180rpx); opacity: 0; } }
+@keyframes p4  { 0% { transform: scale(0) translate(0, 0); opacity: 1; } 30% { transform: scale(1) translate(-27rpx, 47rpx); opacity: 1; } 100% { transform: scale(0.5) translate(-90rpx, 156rpx); opacity: 0; } }
+@keyframes p5  { 0% { transform: scale(0) translate(0, 0); opacity: 1; } 30% { transform: scale(1) translate(-47rpx, 27rpx); opacity: 1; } 100% { transform: scale(0.5) translate(-156rpx, 90rpx); opacity: 0; } }
+@keyframes p6  { 0% { transform: scale(0) translate(0, 0); opacity: 1; } 30% { transform: scale(1) translate(-54rpx, 0); opacity: 1; } 100% { transform: scale(0.5) translate(-180rpx, 0); opacity: 0; } }
+@keyframes p7  { 0% { transform: scale(0) translate(0, 0); opacity: 1; } 30% { transform: scale(1) translate(-47rpx, -27rpx); opacity: 1; } 100% { transform: scale(0.5) translate(-156rpx, -90rpx); opacity: 0; } }
+@keyframes p8  { 0% { transform: scale(0) translate(0, 0); opacity: 1; } 30% { transform: scale(1) translate(-27rpx, -47rpx); opacity: 1; } 100% { transform: scale(0.5) translate(-90rpx, -156rpx); opacity: 0; } }
+@keyframes p9  { 0% { transform: scale(0) translate(0, 0); opacity: 1; } 30% { transform: scale(1) translate(0, -54rpx); opacity: 1; } 100% { transform: scale(0.5) translate(0, -180rpx); opacity: 0; } }
+@keyframes p10 { 0% { transform: scale(0) translate(0, 0); opacity: 1; } 30% { transform: scale(1) translate(27rpx, -47rpx); opacity: 1; } 100% { transform: scale(0.5) translate(90rpx, -156rpx); opacity: 0; } }
+@keyframes p11 { 0% { transform: scale(0) translate(0, 0); opacity: 1; } 30% { transform: scale(1) translate(47rpx, -27rpx); opacity: 1; } 100% { transform: scale(0.5) translate(156rpx, -90rpx); opacity: 0; } }
+
+.particle-dot {
+  border-radius: 50%;
+}
+
+// ==================== 旋转光环（对齐 Web L212-228） ====================
+
+.celebration-ring {
+  position: absolute;
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: 50%;
+  border: 6rpx dashed;
+  animation: ringExpand 0.6s ease-out forwards;
+}
+
+@keyframes ringExpand {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.5) rotate(180deg);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(2) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+// ==================== 文字动画（对齐 Web L232-263） ====================
+
+.celebration-text {
+  position: absolute;
+  bottom: 30%;
+  text-align: center;
+  animation: textFadeUp 0.3s ease-out 0.1s both;
+}
+
+@keyframes textFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(60rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.celebration-title {
+  font-size: 64rpx;
+  font-weight: 900;
+  display: block;
+  animation: titlePulse 0.3s ease-out 0.15s;
+}
+
+@keyframes titlePulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.celebration-subtitle {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: rgba($text-primary, 0.7);
+  display: block;
+  margin-top: 8rpx;
+}
+
+.celebration-stars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  margin-top: 24rpx;
+  animation: starsAppear 0.3s ease-out 0.2s both;
+}
+
+@keyframes starsAppear {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.celebration-stars-value {
+  font-size: 40rpx;
+  font-weight: 900;
+}
+
+// ==================== 背景星星装饰（对齐 Web L266-287） ====================
+
+.celebration-bg-star {
+  position: absolute;
+  animation: bgStarTwinkle 0.6s ease-out both;
+}
+
+.bg-star-0 { top: 10%; left: 15%; animation-delay: 0s; }
+.bg-star-1 { top: 25%; left: 85%; animation-delay: 0.1s; }
+.bg-star-2 { top: 60%; left: 10%; animation-delay: 0.05s; }
+.bg-star-3 { top: 75%; left: 90%; animation-delay: 0.15s; }
+.bg-star-4 { top: 40%; left: 5%;  animation-delay: 0.2s; }
+.bg-star-5 { top: 15%; left: 60%; animation-delay: 0.08s; }
+.bg-star-6 { top: 80%; left: 40%; animation-delay: 0.12s; }
+.bg-star-7 { top: 50%; left: 95%; animation-delay: 0.18s; }
+
+@keyframes bgStarTwinkle {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}

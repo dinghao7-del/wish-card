@@ -18,8 +18,8 @@ const resources = {
       'nav': {
         'home': '首页',
         'tasks': '任务',
-        'rewards': '奖惩',
-        'wishlist': '心愿',
+        'habits': '奖惩',
+        'rewards': '心愿',
         'profile': '我的'
       },
       'home': {
@@ -494,8 +494,8 @@ const resources = {
       'nav': {
         'home': 'Home',
         'tasks': 'Tasks',
-        'rewards': 'Habits',
-        'wishlist': 'Wishes',
+        'habits': 'Habits',
+        'rewards': 'Rewards',
         'profile': 'Me'
       },
       'home': {
@@ -780,43 +780,43 @@ const resources = {
         }
       },
       'welcome': {
-        'title': 'WishCard',
-        'subtitle': 'Nice to meet you, let\'s turn every wish into motivation 🌱',
-        'tagline': 'Establish good habits for children with positive incentives',
-        'start_button': 'Start Family Journey',
-        'skip': 'Skip',
-        'skip_error': 'Skip failed, please retry',
-        'guest_family': 'Guest Family',
-        'guest_name': 'Guest',
-        'my_family': '{0}\'s Family',
-        'has_account': 'Already have an account? Login →',
-        'no_account': 'No account? Register →',
+        'title': '星愿卡',
+        'subtitle': '初次见面，让我们把每个愿望都变成动力 🌱',
+        'tagline': '用正向激励法给孩子建立好习惯',
+        'start_button': '开启家庭星愿之旅',
+        'skip': '跳过',
+        'skip_error': '跳过失败，请重试',
+        'guest_family': '访客家庭',
+        'guest_name': '访客',
+        'my_family': '{{name}} 的家庭',
+        'has_account': '已有账号？去登录 →',
+        'no_account': '没有账号？去注册 →',
         'register': {
-          'title': 'Welcome Register',
-          'subtitle': 'Only parents can register as administrators 🌱',
-          'nickname': 'Admin Nickname',
-          'nickname_placeholder': 'e.g., Mom',
-          'password': 'Login Password',
-          'password_placeholder': 'Enter management password (min 6 chars)',
-          'confirm_password': 'Confirm Password',
-          'confirm_password_placeholder': 'Re-enter password',
-          'error_mismatch': 'Passwords do not match 🍃',
-          'error_nickname': 'Please enter a nickname',
-          'error_password': 'Please enter a password',
-          'error_password_length': 'Password must be at least 6 characters',
-          'submit': 'Register'
+          'title': '欢迎注册',
+          'subtitle': '只有家长才可以注册管理员哦 🌱',
+          'nickname': '管理员昵称',
+          'nickname_placeholder': '如：妈妈',
+          'password': '登录密码',
+          'password_placeholder': '请输入管理密码（至少6位）',
+          'confirm_password': '确认密码',
+          'confirm_password_placeholder': '请再次输入密码',
+          'error_mismatch': '两次输入的密码不一致哦 🍃',
+          'error_nickname': '请输入昵称',
+          'error_password': '请输入密码',
+          'error_password_length': '密码至少6位',
+          'submit': '注册'
         },
         'login': {
-          'title': 'Welcome Login',
-          'subtitle': 'Enter your account and password to start today\'s wish 🌱',
-          'username': 'Account',
-          'username_placeholder': 'Email or Nickname',
-          'password': 'Password',
-          'password_placeholder': 'Management password',
-          'error_invalid': 'Incorrect username or password, please check 🍃',
-          'error_empty': 'Please enter your account',
-          'error_password': 'Please enter your password',
-          'submit': 'Login'
+          'title': '欢迎登录',
+          'subtitle': '输入账号密码开启今日星愿 🌱',
+          'username': '账号',
+          'username_placeholder': '邮箱 或 昵称',
+          'password': '密码',
+          'password_placeholder': '管理密码',
+          'error_invalid': '用户名或密码错误，请检查 🍃',
+          'error_empty': '请输入账号',
+          'error_password': '请输入密码',
+          'submit': '登录'
         }
       },
       'feedback': {
@@ -960,8 +960,8 @@ const resources = {
       'nav': {
         'home': 'ホーム',
         'tasks': 'タスク',
+        'habits': '習慣',
         'rewards': '報酬',
-        'wishlist': '願い事',
         'profile': 'マイ'
       },
       'home': {
@@ -1016,8 +1016,8 @@ const resources = {
       'nav': {
         'home': '홈',
         'tasks': '할 일',
+        'habits': '습관',
         'rewards': '보상',
-        'wishlist': '소원',
         'profile': '내 정보'
       },
       'home': {
@@ -1072,8 +1072,8 @@ const resources = {
       'nav': {
         'home': 'Inicio',
         'tasks': 'Tareas',
+        'habits': 'Hábitos',
         'rewards': 'Premios',
-        'wishlist': 'Deseos',
         'profile': 'Perfil'
       },
       'home': {
@@ -1217,8 +1217,8 @@ const resources = {
       'nav': {
         'home': 'Accueil',
         'tasks': 'Tâches',
+        'habits': 'Habitudes',
         'rewards': 'Récompenses',
-        'wishlist': 'Souhaits',
         'profile': 'Moi'
       },
       'home': {
@@ -1358,20 +1358,16 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: undefined, // 让 LanguageDetector 决定，但下面设置默认
+    lng: undefined,
     fallbackLng: 'zh-CN',
-    // 语言检测配置：优先使用用户保存的选择，其次使用默认中文
+    // 默认面向中文家庭；只有用户主动在设置里切换语言后，才读取本地保存的选择。
     detection: {
-      order: ['localStorage', 'navigator', 'htmlTag'],
+      order: ['localStorage'],
       caches: ['localStorage'],
       lookupLocalStorage: 'i18nextLng',
-      // 如果没有保存的语言，默认使用中文而不是浏览器语言
-      navigator: {
-        convertDetectedLanguage: (lng: string) => {
-          // 如果浏览器语言不是支持的语言，返回中文
-          const supported = ['zh-CN', 'en-US', 'ja-JP', 'ko-KR', 'es-ES', 'fr-FR'];
-          return supported.includes(lng) ? lng : 'zh-CN';
-        },
+      convertDetectedLanguage: (lng: string) => {
+        const supported = ['zh-CN', 'en-US', 'ja-JP', 'ko-KR', 'es-ES', 'fr-FR'];
+        return supported.includes(lng) ? lng : 'zh-CN';
       },
     },
     interpolation: {

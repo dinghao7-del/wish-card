@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { 
-  Calendar as CalendarIcon, 
-  ChevronLeft, 
-  ChevronRight, 
-  ListTodo, 
-  Star, 
-  User, 
-  Clock, 
-  CheckCircle2, 
-  ClipboardList, 
+import {
+  Calendar as CalendarIcon,
+  ListTodo,
+  Star,
+  User,
+  Clock,
+  CheckCircle2,
+  ClipboardList,
   Plus,
   Brush,
   Book,
@@ -26,12 +24,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { TextAvatar } from '../components/TextAvatar';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, isToday } from 'date-fns';
+import {
+  format,
+  isSameDay,
+} from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { Task as TaskType } from '../types';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { TaskCard } from '../components/TaskCard';
+import { CalendarView, getSelectedDateLabel } from '../components/calendar/CalendarView';
 import { VoiceAssistant } from '../components/VoiceAssistant';
+import { NotificationBell } from '../components/NotificationCenter';
+import { isRewardFulfillmentTask } from '../domain/rewardFulfillment';
 
 const getTaskIcon = (iconName: string, size = 24) => {
   switch (iconName) {
@@ -44,14 +48,13 @@ const getTaskIcon = (iconName: string, size = 24) => {
 };
 
 export function Tasks() {
-  const { tasks, members, completeTask, approveTask, currentUser, setIsUserSelectorOpen, deleteTask, stars } = useFamily();
+  const { tasks, members, completeTask, approveTask, currentUser, setIsUserSelectorOpen, deleteTask, stars, guestMode } = useFamily();
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>(location.state?.mode || 'list');
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'promise' | 'completed'>('all');
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(() => {
     if (location.state?.selectedTaskId) {
@@ -75,13 +78,11 @@ export function Tasks() {
     t('common.days.sat', { defaultValue: '六' })
   ];
 
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(monthStart);
-  const calendarDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
-
-  const filteredTasks = viewMode === 'calendar' 
+  const filteredTasks = viewMode === 'calendar'
     ? tasks.filter(t => isSameDay(new Date(t.startTime), selectedDate) && !t.isHabit)
     : tasks.filter(t => !t.isHabit);
+  const promiseTasks = filteredTasks.filter(t => isRewardFulfillmentTask(t) && t.status !== 'completed');
+  const visiblePendingTasks = filteredTasks.filter(t => t.status === 'pending' && !isRewardFulfillmentTask(t));
 
   const handleTaskClick = (task: TaskType) => {
     setSelectedTask(task);
@@ -107,109 +108,87 @@ export function Tasks() {
   };
 
   return (
-    <div className="px-6 pb-24 animate-in fade-in slide-in-from-right-4 duration-500">
-      <header className="flex justify-between items-center py-4 sticky top-0 bg-background/80 backdrop-blur-xl z-40 -mx-6 px-6">
+    <div className="px-5 pb-20 animate-in fade-in slide-in-from-right-4 duration-500">
+      <header className="flex justify-between items-center py-3 sticky top-[var(--app-sticky-top,0px)] bg-background/80 backdrop-blur-xl z-40 -mx-5 px-5">
         <div className="flex items-center gap-3">
-          <div 
+          <div
             className="flex items-center gap-2 sm:gap-3 cursor-pointer group"
             onClick={() => setIsUserSelectorOpen(true)}
           >
             <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={40} className="border-2 border-surface dark:border-surface shadow-sm group-hover:shadow-md transition-all" />
           </div>
-          
-          <button 
+
+          <button
             onClick={() => setIsAiDialogOpen(true)}
-            className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-primary/20 text-[#2E7D32] hover:bg-primary/5 active:scale-95 transition-all"
+            className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-primary/20 text-primary-text hover:bg-primary/5 active:scale-95 transition-all"
           >
             <Mic size={20} strokeWidth={2.5} />
           </button>
         </div>
 
-        <div className="flex bg-surface-container-high rounded-full p-1 shadow-inner">
-          <button 
+        <div className="flex items-center justify-center gap-0.5 bg-surface-container rounded-full p-[3px] h-[34px] shadow-inner overflow-hidden">
+          <button
             onClick={() => setViewMode('list')}
-            className={cn("p-1.5 rounded-full transition-all", viewMode === 'list' ? "bg-surface shadow-sm text-primary" : "text-on-surface-variant/40")}
+            className={cn(
+              "w-7 h-7 rounded-full border-0 cursor-pointer flex items-center justify-center transition-all",
+              viewMode === 'list' ? "bg-surface text-primary shadow-sm" : "bg-transparent text-on-surface-variant/50"
+            )}
           >
-            <ListTodo size={18} />
+            <ListTodo size={13} />
           </button>
-          <button 
+          <button
             onClick={() => setViewMode('calendar')}
-            className={cn("p-1.5 rounded-full transition-all", viewMode === 'calendar' ? "bg-surface shadow-sm text-primary" : "text-on-surface-variant/40")}
+            className={cn(
+              "w-7 h-7 rounded-full border-0 cursor-pointer flex items-center justify-center transition-all",
+              viewMode === 'calendar' ? "bg-surface text-primary shadow-sm" : "bg-transparent text-on-surface-variant/50"
+            )}
           >
-            <CalendarIcon size={18} />
+            <CalendarIcon size={13} />
           </button>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <div 
+          <div
             onClick={() => navigate('/history')}
             className="bg-surface-container-low backdrop-blur-sm py-1 sm:py-1.5 px-3 sm:px-4 rounded-full flex items-center gap-1.5 sm:gap-2 shadow-sm border border-outline-variant/10 cursor-pointer hover:bg-surface-container transition-colors active:scale-95"
           >
-            <Star size={14} className="sm:size-[18px] text-[#FBC02D] fill-current" />
+            <Star size={14} className="sm:size-[18px] text-reward-display fill-current" />
             <span className="font-black text-on-surface text-sm sm:text-base">{stars.toLocaleString()}</span>
           </div>
+          {!guestMode && <NotificationBell />}
         </div>
       </header>
 
-      <VoiceAssistant 
-        isOpen={isAiDialogOpen} 
+      <VoiceAssistant
+        isOpen={isAiDialogOpen}
         onClose={() => setIsAiDialogOpen(false)}
+        onOpenQuadrant={(range = 'today') => navigate(`/quadrant?range=${range}`)}
         onOpenCalendarSync={() => navigate('/calendar-sync')}
       />
 
       {viewMode === 'calendar' ? (
-        <section className="space-y-6">
-          {/* Month Selector */}
-          <div className="flex items-center justify-between px-2">
-            <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors">
-              <ChevronLeft size={24} />
-            </button>
-            <h2 className="text-2xl font-bold tracking-tight">
-              {format(currentMonth, i18n.language === 'zh-CN' ? 'yyyy年M月' : 'MMMM yyyy', { locale: i18n.language === 'zh-CN' ? zhCN : undefined })}
-            </h2>
-            <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors">
-              <ChevronRight size={24} />
-            </button>
-          </div>
+        <section className="space-y-5">
+          {/* 日历视图组件 */}
+          <CalendarView
+            tasks={tasks.filter(t => !t.isHabit)}
+            onDateSelect={(date) => setSelectedDate(date)}
+            initialDate={selectedDate}
+            dayLabels={days}
+          />
 
-          {/* Calendar Grid */}
-          <div className="bg-surface rounded-[2.5rem] p-6 shadow-sm border border-outline-variant/10">
-            <div className="grid grid-cols-7 text-center mb-4 text-on-surface-variant/40 font-bold text-[10px] uppercase tracking-widest">
-              {days.map(d => <span key={d}>{d}</span>)}
-            </div>
-            <div className="grid grid-cols-7 gap-y-4 gap-x-2">
-              {calendarDays.map((day, idx) => (
-                <button 
-                  key={idx}
-                  onClick={() => setSelectedDate(day)}
-                  className={cn(
-                    "flex flex-col items-center justify-center py-2 relative text-sm font-bold transition-all rounded-full h-10 w-10 mx-auto",
-                    isSameDay(day, selectedDate) ? "bg-primary text-white shadow-lg shadow-primary/20" : "hover:bg-surface-container",
-                    isToday(day) && !isSameDay(day, selectedDate) && "text-primary font-black"
-                  )}
-                >
-                  <span className="z-10">{format(day, 'd')}</span>
-                  {tasks.some(t => isSameDay(new Date(t.startTime), day)) && (
-                    <div className={cn("w-1 h-1 rounded-full absolute bottom-1", isSameDay(day, selectedDate) ? "bg-white" : "bg-primary")} />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Selected Day View */}
+          {/* 选中日期显示 */}
           <div className="space-y-4">
             <h3 className="text-xl font-bold px-2">
-              {format(selectedDate, i18n.language === 'zh-CN' ? 'M月d日 EEEE' : 'EEEE, MMMM d', { locale: i18n.language === 'zh-CN' ? zhCN : undefined })}
+              {getSelectedDateLabel(selectedDate)}
             </h3>
             <div className="space-y-3">
                   {filteredTasks.length > 0 ? (
                     filteredTasks.map((task, idx) => (
-                      <TaskCard 
-                        key={task.id} 
-                        task={task} 
-                        idx={idx} 
-                        onClick={() => handleTaskClick(task)} 
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        idx={idx}
+                        onClick={() => handleTaskClick(task)}
                         onCheckIn={(id) => navigate(`/check-in/${id}`)}
                         isAdmin={isAdmin}
                       />
@@ -224,30 +203,39 @@ export function Tasks() {
           </div>
         </section>
       ) : (
-        <section className="space-y-8">
-            <div className="flex gap-4 overflow-x-auto no-scrollbar py-2">
-              <button 
+        <section className="space-y-6">
+            <div className="flex gap-3 overflow-x-auto no-scrollbar py-1.5">
+              <button
                 onClick={() => setFilter('all')}
                 className={cn(
-                  "px-6 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap",
+                  "px-5 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap",
                   filter === 'all' ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-surface text-on-surface-variant shadow-sm"
                 )}
               >
                 {t('tasks.filter.all', { defaultValue: '全部' })}
               </button>
-              <button 
+              <button
                 onClick={() => setFilter('pending')}
                 className={cn(
-                  "px-6 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap",
+                  "px-5 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap",
                   filter === 'pending' ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-surface text-on-surface-variant shadow-sm"
                 )}
               >
                 {t('tasks.filter.pending', { defaultValue: '待完成' })}
               </button>
-              <button 
+              <button
+                onClick={() => setFilter('promise')}
+                className={cn(
+                  "px-5 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap",
+                  filter === 'promise' ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-surface text-on-surface-variant shadow-sm"
+                )}
+              >
+                兑现
+              </button>
+              <button
                 onClick={() => setFilter('completed')}
                 className={cn(
-                  "px-6 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap",
+                  "px-5 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap",
                   filter === 'completed' ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-surface text-on-surface-variant shadow-sm"
                 )}
               >
@@ -255,20 +243,65 @@ export function Tasks() {
               </button>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-6">
+                {(filter === 'all' || filter === 'promise') && promiseTasks.length > 0 && (
+                  <div>
+                    <div className="rounded-3xl p-4 mb-3 bg-primary-container border border-primary/10 shadow-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h2 className="text-lg font-black flex items-center gap-2 text-on-primary-container">
+                            <Star size={18} className="text-reward-display fill-current" />
+                            父母兑现待办
+                          </h2>
+                          <p className="text-xs font-bold text-on-surface-variant leading-relaxed mt-1">
+                            这里是孩子用星星兑换后的家庭约定，完成它会让孩子看到努力真的有回应。
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => navigate('/quadrant?range=week')}
+                          className="rounded-full px-3 py-1.5 text-[11px] font-black bg-primary text-white shrink-0 active:scale-95"
+                        >
+                          本周安排
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      {promiseTasks.map((t, i) => (
+                        <TaskCard
+                          key={t.id}
+                          task={t}
+                          idx={i}
+                          onClick={() => handleTaskClick(t)}
+                          onCheckIn={(id) => navigate(`/check-in/${id}`)}
+                          isAdmin={isAdmin}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {(filter === 'all' || filter === 'pending') && filteredTasks.some(t => t.status === 'reviewing') && (
                   <div>
-                    <h2 className="text-xl font-black mb-4 flex items-center gap-2">
-                        <Clock size={20} className="text-orange-500" />
+                    <h2 className="text-lg font-black mb-3 flex items-center gap-2">
+                        <Clock size={18} className="text-orange-500" />
                         {t('tasks.status.reviewing', { defaultValue: '待审核' })}
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => navigate('/tasks/templates')}
+                          className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all ml-auto"
+                        >
+                          <Plus size={18} strokeWidth={3} />
+                        </motion.button>
                     </h2>
                     <div className="space-y-3">
                         {filteredTasks.filter(t => t.status === 'reviewing').map((t, i) => (
-                          <TaskCard 
-                            key={t.id} 
-                            task={t} 
-                            idx={i} 
-                            onClick={() => handleTaskClick(t)} 
+                          <TaskCard
+                            key={t.id}
+                            task={t}
+                            idx={i}
+                            onClick={() => handleTaskClick(t)}
                             onCheckIn={(id) => navigate(`/check-in/${id}`)}
                             isAdmin={isAdmin}
                           />
@@ -279,32 +312,22 @@ export function Tasks() {
 
                 {(filter === 'all' || filter === 'pending') && (
                   <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-xl font-black flex items-center gap-2">
-                          <Clock size={20} className="text-primary" />
+                      <h2 className="text-lg font-black flex items-center gap-2">
+                          <Clock size={18} className="text-primary" />
                           {t('tasks.status.pending', { defaultValue: '待完成' })}
                       </h2>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => navigate('/tasks/templates')}
-                        className="w-10 h-10 bg-[#006E1B] text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all mr-1"
-                      >
-                        <Plus size={24} strokeWidth={3} />
-                      </motion.button>
-                    </div>
                     <div className="space-y-3">
-                        {filteredTasks.filter(t => t.status === 'pending').map((t, i) => (
-                        <TaskCard 
-                          key={t.id} 
-                          task={t} 
-                          idx={i} 
-                          onClick={() => handleTaskClick(t)} 
+                        {visiblePendingTasks.map((t, i) => (
+                        <TaskCard
+                          key={t.id}
+                          task={t}
+                          idx={i}
+                          onClick={() => handleTaskClick(t)}
                           onCheckIn={(id) => navigate(`/check-in/${id}`)}
                           isAdmin={isAdmin}
                         />
                         ))}
-                        {(filter === 'pending' && filteredTasks.filter(t => t.status === 'pending' || t.status === 'reviewing').length === 0) && (
+                        {(filter === 'pending' && filteredTasks.filter(t => (t.status === 'pending' && !isRewardFulfillmentTask(t)) || t.status === 'reviewing').length === 0) && (
                            <div className="flex flex-col items-center justify-center py-12 text-on-surface-variant/40">
                               <ClipboardList size={40} className="mb-2 opacity-20" />
                               <p className="text-sm italic">{t('tasks.list.empty_pending', { defaultValue: 'empty pending' })}</p>
@@ -314,19 +337,26 @@ export function Tasks() {
                   </div>
                 )}
 
+                {filter === 'promise' && promiseTasks.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-12 text-on-surface-variant/40">
+                    <Star size={40} className="mb-2 opacity-20" />
+                    <p className="text-sm italic">暂无需要父母兑现的心愿</p>
+                  </div>
+                )}
+
                 {(filter === 'all' || filter === 'completed') && (
                   <div>
-                    <h2 className="text-xl font-black mb-4 flex items-center gap-2">
-                        <CheckCircle2 size={20} className="text-secondary" />
+                    <h2 className="text-lg font-black mb-3 flex items-center gap-2">
+                        <CheckCircle2 size={18} className="text-secondary" />
                         {t('tasks.status.completed', { defaultValue: '已完成' })}
                     </h2>
                     <div className="space-y-3">
                         {filteredTasks.filter(t => t.status === 'completed').map((t, i) => (
-                          <TaskCard 
-                            key={t.id} 
-                            task={t} 
-                            idx={i} 
-                            onClick={() => handleTaskClick(t)} 
+                          <TaskCard
+                            key={t.id}
+                            task={t}
+                            idx={i}
+                            onClick={() => handleTaskClick(t)}
                             onCheckIn={(id) => navigate(`/check-in/${id}`)}
                             isAdmin={isAdmin}
                           />
@@ -347,7 +377,7 @@ export function Tasks() {
       {/* Task Detail Modal */}
       <AnimatePresence>
         {selectedTask && (
-          <motion.div 
+          <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -355,7 +385,7 @@ export function Tasks() {
             className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden"
           >
             <header className="flex items-center px-6 py-4 bg-background/80 backdrop-blur-xl shrink-0 z-20 border-b border-outline-variant/10">
-                <button 
+                <button
                   onClick={() => setSelectedTask(null)}
                   className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container/50 transition-colors"
                 >
@@ -364,19 +394,19 @@ export function Tasks() {
                 <h1 className="flex-1 text-center font-bold text-lg text-on-surface">{t('tasks.detail.title', { defaultValue: '标题' })}</h1>
                 {isAdmin ? (
                   <div className="relative">
-                    <button 
+                    <button
                       onClick={() => setIsDetailSettingsOpen(!isDetailSettingsOpen)}
                       className="w-10 h-10 flex items-center justify-center rounded-full text-primary hover:bg-primary/10 transition-colors"
                     >
                       <Settings size={20} />
                     </button>
-                    
+
                     <AnimatePresence>
                       {isDetailSettingsOpen && (
                         <>
-                          <div 
-                            className="fixed inset-0 z-30" 
-                            onClick={() => setIsDetailSettingsOpen(false)} 
+                          <div
+                            className="fixed inset-0 z-30"
+                            onClick={() => setIsDetailSettingsOpen(false)}
                           />
                           <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: -10 }}
@@ -391,7 +421,7 @@ export function Tasks() {
                               }}
                               className="w-full px-5 py-3.5 flex items-center gap-3 hover:bg-surface-container/50 transition-colors text-on-surface font-black text-sm"
                             >
-                              <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
+	                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                                 <Edit size={16} />
                               </div>
                               {t('tasks.detail.edit', { defaultValue: '编辑' })}
@@ -401,9 +431,9 @@ export function Tasks() {
                                 setIsDeleteConfirmOpen(true);
                                 setIsDetailSettingsOpen(false);
                               }}
-                              className="w-full px-5 py-3.5 flex items-center gap-3 hover:bg-red-500/10 transition-colors text-red-500 font-black text-sm"
+	                              className="w-full px-5 py-3.5 flex items-center gap-3 hover:bg-danger-container/40 transition-colors text-danger font-black text-sm"
                             >
-                              <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">
+	                              <div className="w-8 h-8 rounded-full bg-danger-container flex items-center justify-center text-danger">
                                 <Trash2 size={16} />
                               </div>
                               {t('tasks.detail.delete', { defaultValue: '删除' })}
@@ -417,33 +447,33 @@ export function Tasks() {
                     <AnimatePresence>
                       {isDeleteConfirmOpen && (
                         <div className="fixed inset-0 z-[60] flex items-center justify-center px-6">
-                          <motion.div 
+                          <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                             onClick={() => setIsDeleteConfirmOpen(false)}
                           />
-                          <motion.div 
+                          <motion.div
                             initial={{ scale: 0.9, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className="bg-white rounded-[2rem] p-8 w-full max-w-xs relative z-10 shadow-2xl text-center"
+	                            className="bg-surface rounded-[2rem] p-8 w-full max-w-xs relative z-10 shadow-2xl text-center max-h-[calc(100svh-2rem)] overflow-y-auto"
                           >
-                            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+	                            <div className="w-16 h-16 bg-danger-container text-danger rounded-2xl flex items-center justify-center mx-auto mb-6">
                               <Trash2 size={32} />
                             </div>
                             <h3 className="text-xl font-black text-on-surface mb-2">{t('tasks.delete.confirm_title', { defaultValue: 'confirm title' })}</h3>
                             <p className="text-on-surface-variant/60 text-sm font-bold mb-8">{t('tasks.delete.confirm_desc', { defaultValue: 'confirm desc' })}</p>
-                            
+
                             <div className="flex flex-col gap-3">
-                              <button 
+                              <button
                                 onClick={handleDeleteTask}
-                                className="w-full py-4 bg-red-500 text-white font-black rounded-2xl shadow-lg shadow-red-200 active:scale-95 transition-all"
+	                                className="w-full py-4 bg-danger text-white font-black rounded-2xl shadow-lg shadow-danger/20 active:scale-95 transition-all"
                               >
                                 {t('common.confirm_delete', { defaultValue: '确认删除' })}
                               </button>
-                              <button 
+                              <button
                                 onClick={() => setIsDeleteConfirmOpen(false)}
                                 className="w-full py-4 bg-surface-container-low text-on-surface-variant/60 font-black rounded-2xl active:scale-95 transition-all"
                               >
@@ -464,14 +494,14 @@ export function Tasks() {
                 <div className="flex flex-col items-center">
                 {/* Large Icon Container */}
                 <div className="mt-8 mb-8 relative">
-                   <div className="w-28 h-28 rounded-[2.5rem] bg-gradient-to-br from-[#2E8B57] to-[#1B5E20] text-white flex items-center justify-center shadow-[0_20px_50px_rgba(46,139,87,0.3)] relative z-10">
+	                   <div className="w-28 h-28 rounded-[2.5rem] bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center shadow-xl shadow-primary/20 relative z-10">
                       {getTaskIcon(selectedTask.icon, 48)}
                    </div>
-                   <div className="absolute inset-0 bg-green-500/20 blur-3xl rounded-[2.5rem] -z-10 animate-pulse" />
+	                   <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-[2.5rem] -z-10 animate-pulse" />
                 </div>
 
                 <h2 className="text-3xl font-black mb-4 text-on-surface tracking-tight">{selectedTask.title}</h2>
-                
+
                 <div className="flex items-center gap-2 bg-surface-container-lowest px-5 py-2.5 rounded-full mb-10 shadow-sm border border-outline-variant/5">
                    <Clock size={16} className="text-on-surface-variant/70" />
                    <span className="text-sm font-bold text-on-surface-variant font-mono">
@@ -482,10 +512,10 @@ export function Tasks() {
                 {/* Assigner Section */}
                 <div className="w-full bg-surface rounded-[2.5rem] p-5 flex items-center gap-4 mb-10 shadow-sm border border-outline-variant/10">
                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-outline-variant/10">
-                     <img 
-                       src={members.find(m => m.id === selectedTask.creatorId)?.avatar || 'https://picsum.photos/seed/mother/100/100'} 
-                       alt="Assigner" 
-                       className="w-full h-full object-cover" 
+                     <img
+                       src={members.find(m => m.id === selectedTask.creatorId)?.avatar || 'https://picsum.photos/seed/mother/100/100'}
+                       alt="Assigner"
+                       className="w-full h-full object-cover"
                      />
                    </div>
                    <div className="flex-1">
@@ -494,7 +524,7 @@ export function Tasks() {
                         {members.find(m => m.id === selectedTask.creatorId)?.name || '妈妈'}
                      </p>
                    </div>
-                   <div className="bg-secondary-container/30 dark:bg-secondary/20 text-secondary dark:text-secondary px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm border border-yellow-200 dark:border-secondary/20 uppercase tracking-wider">
+	                   <div className="bg-secondary-container/30 dark:bg-secondary/20 text-secondary dark:text-secondary px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm border border-secondary/20 uppercase tracking-wider">
                      {t('tasks.detail.tag', { defaultValue: '标签' })}
                    </div>
                 </div>
@@ -511,17 +541,17 @@ export function Tasks() {
                 </div>
 
                 {/* Reward Card */}
-                <div className="w-full bg-gradient-to-br from-[#FFF59D] to-[#FBC02D] rounded-[2.5rem] p-8 flex items-center gap-6 mb-12 shadow-[0_15px_35px_rgba(251,192,45,0.2)] relative overflow-hidden group">
+	                <div className="w-full bg-gradient-to-br from-secondary-container to-secondary rounded-[2.5rem] p-8 flex items-center gap-6 mb-12 shadow-xl shadow-secondary/15 relative overflow-hidden group">
                    <div className="w-20 h-20 rounded-[2rem] bg-white flex items-center justify-center shadow-md relative z-10 group-hover:scale-110 transition-transform duration-500">
-                      <Star size={40} className="text-[#FBC02D] fill-current" />
+                      <Star size={40} className="text-secondary fill-current" />
                    </div>
                    <div className="relative z-10">
-                      <p className="text-[10px] font-black text-[#827717]/60 uppercase tracking-widest mb-1">{t('tasks.detail.reward', { defaultValue: '奖励' })}</p>
+	                      <p className="text-[10px] font-black text-secondary/70 uppercase tracking-widest mb-1">{t('tasks.detail.reward', { defaultValue: '奖励' })}</p>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-5xl font-black text-[#33691E] tracking-tighter">{selectedTask.rewardStars}</span>
+	                        <span className="text-5xl font-black text-secondary tracking-tighter">{selectedTask.rewardStars}</span>
                         <div className="flex flex-col gap-0.5">
-                           <Star size={10} className="fill-[#33691E] text-[#33691E]" />
-                           <Star size={8} className="fill-[#33691E] text-[#33691E] opacity-60" />
+	                           <Star size={10} className="fill-secondary text-secondary" />
+	                           <Star size={8} className="fill-secondary text-secondary opacity-60" />
                         </div>
                       </div>
                    </div>
@@ -536,15 +566,15 @@ export function Tasks() {
                        const member = members.find(m => m.id === mid);
                        if (!member) return null;
                        const status = selectedTask.memberProgress?.[mid] || (selectedTask.status === 'completed' ? 'completed' : 'pending');
-                       
+
                        return (
                          <div key={mid} className="bg-surface rounded-[2rem] p-4 flex items-center justify-between shadow-sm border border-outline-variant/10 hover:border-primary/20 transition-all group">
                            <div className="flex items-center gap-4">
                              <div className="relative">
-                                <img 
-                                  src={member.avatar} 
-                                  alt={member.name} 
-                                  className="w-14 h-14 rounded-[1.25rem] object-cover border-2 border-surface dark:border-surface shadow-sm group-hover:scale-105 transition-transform" 
+                                <img
+                                  src={member.avatar}
+                                  alt={member.name}
+                                  className="w-14 h-14 rounded-[1.25rem] object-cover border-2 border-surface dark:border-surface shadow-sm group-hover:scale-105 transition-transform"
                                 />
                                 {status === 'completed' && (
                                   <div className="absolute -bottom-1 -right-1 bg-primary text-white rounded-full p-1 border-2 border-surface dark:border-surface shadow-sm">
@@ -554,11 +584,11 @@ export function Tasks() {
                              </div>
                              <span className="font-black text-lg text-on-surface">{member.name}</span>
                            </div>
-                           
+
                            <div className={cn(
                              "px-5 py-2.5 rounded-full flex items-center gap-2 text-[10px] font-black uppercase tracking-wider transition-all",
-                             status === 'completed' 
-                               ? "bg-primary/10 text-primary border border-primary/10" 
+                             status === 'completed'
+                               ? "bg-primary/10 text-primary border border-primary/10"
                                : "bg-surface-container-low text-on-surface-variant/50 border border-transparent"
                            )}>
                              {status === 'completed' ? (
@@ -576,33 +606,33 @@ export function Tasks() {
             </div>
 
             {/* Action FAB Area */}
-            <div className="shrink-0 p-6 bg-background border-t border-outline-variant/10 shadow-[0_-15px_40px_rgba(0,0,0,0.05)] z-30 select-none">
+	            <div className="shrink-0 p-6 bg-background border-t border-outline-variant/10 shadow-xl shadow-on-surface/5 z-30 select-none">
                {(selectedTask.status === 'pending' || selectedTask.status === 'in_progress') && (
-                 <button 
+                 <button
                    onClick={(e) => {
                      e.stopPropagation();
                      navigate(`/check-in/${selectedTask.id}`);
                    }}
-                   className="w-full py-5 rounded-[2.5rem] bg-primary text-white font-black text-lg shadow-[0_15px_30px_rgba(0,110,28,0.2)] flex items-center justify-center gap-3 active:scale-[0.97] transition-all hover:bg-primary-container hover:shadow-lg"
+                   className="w-full py-5 rounded-[2.5rem] bg-primary text-white font-black text-lg shadow-lg shadow-primary/20 flex items-center justify-center gap-3 active:scale-[0.97] transition-all hover:bg-primary-container hover:shadow-lg"
                  >
                    <CheckCircle2 size={24} />
                    {t('tasks.detail.check_in', { defaultValue: 'check in' })}
                  </button>
                )}
                {selectedTask.status === 'reviewing' && isAdmin && (
-                 <button 
+                 <button
                    onClick={(e) => {
                      e.stopPropagation();
                      navigate(`/check-in/${selectedTask.id}`);
                    }}
-                   className="w-full py-5 rounded-[2.5rem] bg-[#0070D3] text-white font-black text-lg shadow-[0_15px_30px_rgba(0,112,211,0.3)] flex items-center justify-center gap-3 active:scale-[0.97] transition-all hover:bg-[#005bb2]"
+	                   className="w-full py-5 rounded-[2.5rem] bg-primary text-white font-black text-lg shadow-lg shadow-primary/20 flex items-center justify-center gap-3 active:scale-[0.97] transition-all hover:bg-primary/90"
                  >
                    <CheckCircle2 size={24} />
                    {t('tasks.detail.approve', { defaultValue: 'approve' })}
                  </button>
                )}
                {selectedTask.status === 'reviewing' && !isAdmin && (
-                 <div className="w-full py-5 rounded-[2.5rem] bg-orange-500/10 text-orange-600 dark:text-orange-400 font-black text-lg flex items-center justify-center gap-3 border border-orange-500/10 italic">
+	                 <div className="w-full py-5 rounded-[2.5rem] bg-warning-container text-warning font-black text-lg flex items-center justify-center gap-3 border border-warning/10 italic">
                     <Clock size={24} className="animate-pulse" />
                     {t('tasks.detail.waiting_approval', { defaultValue: 'waiting approval' })}
                  </div>

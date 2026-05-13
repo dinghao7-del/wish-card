@@ -51,10 +51,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const typeStyles = {
-    success: 'bg-green-500',
-    error: 'bg-red-500',
-    warning: 'bg-yellow-500',
-    info: 'bg-blue-500',
+    success: 'bg-primary',
+    error: 'bg-danger',
+    warning: 'bg-warning',
+    info: 'bg-on-surface',
   };
 
   const typeIcons = {

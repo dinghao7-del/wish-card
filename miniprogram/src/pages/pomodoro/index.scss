@@ -1,0 +1,442 @@
+@import "../../app.scss";
+
+/* ===== 页面容器 ===== */
+.po-page {
+  min-height: 100vh;
+  background-color: #fafaf7;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ===== 庆祝动画 ===== */
+@keyframes po-celebration-spin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+@keyframes po-celebration-fade-in {
+  from { opacity: 0; transform: translateY(20rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.po-celebration {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  flex-direction: column;
+  gap: 24rpx;
+}
+.po-celebration-icon {
+  width: 240rpx; height: 240rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #006e1c, #43a047);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 110rpx; color: #fff; font-weight: bold;
+  animation: po-celebration-spin 1s ease-in-out 2;
+  box-shadow: 0 16rpx 48rpx rgba(0,110,28,0.3);
+}
+.po-celebration-text {
+  font-size: 42rpx; font-weight: 900; color: #1a1a1a;
+  animation: po-celebration-fade-in 0.5s ease-out 0.3s both;
+}
+
+/* ===== Header ===== */
+.po-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 40rpx;
+  padding-top: calc(env(safe-area-inset-top) + 24rpx);
+}
+.po-header-btn {
+  width: 72rpx; height: 72rpx;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+}
+.po-header-title {
+  font-size: 30rpx;
+  font-weight: 300;
+  color: #999;
+  letter-spacing: 4rpx;
+}
+/* 番茄计数（对齐 Web 右侧统计）*/
+.po-pomodoro-count {
+  display: flex; align-items: center; gap: 6rpx;
+  padding: 8rpx 20rpx;
+  background: rgba(229,57,53,0.08);
+  border-radius: 9999px;
+}
+.po-count-text {
+  font-size: 26rpx; font-weight: 800; color: #e53935;
+}
+
+/* ===== 阶段指示器（三阶段Tab，对齐 Web）===== */
+.po-phase-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8rpx;
+  padding: 16rpx 48rpx 8rpx;
+}
+.po-phase-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12rpx 32rpx;
+  border-radius: 16rpx 16rpx 0 0;
+  position: relative;
+  transition: background 0.25s;
+  &:active { opacity: 0.7; }
+}
+.po-phase-tab.active {
+  background: rgba(0,0,0,0.03);
+}
+.po-phase-tab-text {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #bbb;
+  transition: color 0.25s;
+  &.active { font-weight: 800; }
+}
+.po-phase-tab.work .po-phase-tab-text.active,
+.po-phase-tab.work .po-phase-indicator { color: #006e1c; background-color: #006e1c; }
+.po-phase-tab.shortBreak .po-phase-tab-text.active,
+.po-phase-tab.shortBreak .po-phase-indicator { color: #686000; background-color: #686000; }
+.po-phase-tab.longBreak .po-phase-tab-text.active,
+.po-phase-tab.longBreak .po-phase-indicator { color: #7a5649; background-color: #7a5649; }
+
+.po-phase-indicator {
+  width: 40rpx;
+  height: 5rpx;
+  border-radius: 4rpx;
+  margin-top: 8rpx;
+  transition: all 0.3s;
+}
+
+/* 当前阶段消息 */
+.po-phase-msg {
+  text-align: center;
+  padding: 8rpx 0 16rpx;
+}
+.po-phase-msg text {
+  font-size: 24rpx; font-weight: 500;
+}
+
+/* ===== 任务选择器 ===== */
+.po-task-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  padding-bottom: 12rpx;
+  margin-bottom: 8rpx;
+  border-bottom-width: 2rpx;
+  border-bottom-style: solid;
+  border-bottom-color: #eee;
+}
+.po-task-text {
+  font-size: 26rpx; color: #666;
+  &.selected { color: #006e1c; }
+  &.disabled { opacity: 0.35; }
+}
+
+/* ===== 计时器圆环（CSS conic-gradient 对齐 Web SVG）===== */
+.po-timer-circle-wrap {
+  position: relative;
+  width: 85vw; height: 85vw;
+  max-width: 560rpx; max-height: 560rpx;
+  margin: 24rpx auto 16rpx;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  /* 轻触反馈 */
+  &:active { opacity: 0.9; }
+}
+
+.po-ring-bg {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%; border-radius: 50%;
+  border: 14rpx solid #f0f0ec;
+  box-sizing: border-box;
+}
+
+.po-ring-progress {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%; border-radius: 50%;
+  border: 14rpx solid transparent;
+  box-sizing: border-box;
+  transition: background 0.3s linear;
+}
+
+.po-timer-display {
+  position: relative; z-index: 10;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4rpx;
+}
+.po-time-text {
+  font-size: 110rpx; font-weight: 900;
+  letter-spacing: -2rpx;
+  line-height: 1;
+  transition: color 0.3s;
+}
+.po-time-hint {
+  font-size: 20rpx; font-weight: 500;
+}
+
+/* ===== 操作按钮区 ===== */
+.po-actions {
+  display: flex; flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx 64rpx;
+  padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
+  margin-top: auto;
+}
+.po-btn-main-wrap {
+  width: 580rpx; max-width: 100%;
+  height: 96rpx; border-radius: 48rpx;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8rpx 28rpx rgba(0,0,0,0.15);
+  transition: all 0.2s;
+  &:active { opacity: 0.88; transform: scale(0.98); }
+  &.running { box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.1); }
+}
+.po-btn-main-text {
+  font-size: 34rpx; font-weight: 600;
+  color: #fff; letter-spacing: 6rpx;
+}
+
+/* 暂停双按钮 */
+.po-btn-paused-row {
+  display: flex; align-items: center; gap: 24rpx;
+  width: 580rpx; max-width: 100%;
+}
+.po-btn-half {
+  flex: 1; height: 96rpx; border-radius: 48rpx;
+  display: flex; align-items: center; justify-content: center;
+  &.terminate { background: #e8e8e8; }
+  &.continue { box-shadow: 0 8rpx 28rpx rgba(0,0,0,0.15); }
+}
+.po-btn-half-text {
+  font-size: 30rpx; font-weight: 500; letter-spacing: 2rpx;
+  .terminate & { color: #333; }
+  .continue & { color: #fff; }
+}
+
+/* 重置链接 */
+.po-reset-link {
+  display: flex; align-items: center; gap: 8rpx;
+}
+.po-reset-text { font-size: 24rpx; color: #aaa; }
+
+/* 统计提示 */
+.po-stats-hint {
+  font-size: 22rpx; color: #bbb; font-weight: 500;
+  text-align: center;
+}
+
+/* ===== 弹窗通用样式 ===== */
+@keyframes po-modal-slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes po-fade-in {
+  from { opacity: 0; } to { opacity: 1; }
+}
+
+.po-modal-mask {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(0,0,0,0.3);
+  display: flex; align-items: flex-end; justify-content: center;
+  animation: po-fade-in 0.25s ease-out;
+}
+.po-modal-content {
+  width: 100%; max-width: 750rpx;
+  background: #fff;
+  border-radius: 44rpx 44rpx 0 0;
+  box-shadow: 0 -8rpx 40rpx rgba(0,0,0,0.12);
+  padding: 40rpx 40rpx 0;
+  animation: po-modal-slide-up 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.po-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 36rpx;
+}
+.po-modal-title {
+  font-size: 34rpx; font-weight: 300;
+  letter-spacing: 2rpx; color: #1a1a1a;
+}
+.po-modal-close { padding: 8rpx; }
+
+/* ===== 帮助弹窗 ===== */
+.po-modal-body-wrap { max-height: 70vh; overflow-x: hidden; width: 100%; box-sizing: border-box; }
+.po-modal-body {
+  display: flex; flex-direction: column; gap: 28rpx;
+  padding-bottom: 32rpx;
+}
+.po-modal-intro {
+  font-size: 27rpx; font-weight: 400;
+  color: #555; line-height: 1.7;
+}
+.po-modal-card {
+  background: #f8f8f5; border-radius: 20rpx;
+  padding: 28rpx; display: flex; flex-direction: column; gap: 10rpx;
+}
+.po-modal-card-title {
+  font-size: 27rpx; font-weight: 700; color: #333;
+}
+.po-modal-card-detail {
+  font-size: 24rpx; font-weight: 400; color: #777;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+/* 步骤卡片网格 (对齐Web 5步骤) */
+.po-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14rpx;
+}
+.po-step-card {
+  background: linear-gradient(135deg, #f0f7ee, #e8f5e9);
+  border-radius: 18rpx;
+  padding: 20rpx 16rpx;
+  display: flex; flex-direction: column; align-items: center; gap: 6rpx;
+}
+.po-step-card-wide {
+  grid-column: span 2;
+  background: linear-gradient(135deg, #fff8e1, #ffecb3);
+}
+.po-step-num {
+  font-size: 30rpx; font-weight: 900; color: #006e1c;
+}
+.po-step-desc {
+  font-size: 22rpx; font-weight: 600; color: #555;
+}
+.po-modal-footer {
+  padding: 24rpx;
+  background: #b8860b; border-radius: 9999px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 24rpx;
+}
+.po-modal-footer-text {
+  font-size: 28rpx; font-weight: 300;
+  color: #fff; letter-spacing: 8rpx;
+}
+
+/* ===== 任务选择器弹窗 (65vh) ===== */
+.po-task-modal {
+  display: flex; flex-direction: column;
+  height: 62vh; padding: 0;
+}
+.po-task-modal > .po-modal-header {
+  padding: 32rpx 40rpx; margin-bottom: 0;
+  border-bottom: 1rpx solid #f0f0ec;
+}
+.po-task-list {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 24rpx 36rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+.po-task-empty {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 20rpx;
+  padding-top: 60rpx;
+}
+.po-task-empty-icon { font-size: 80rpx; opacity: 0.2; }
+.po-task-empty-text { font-size: 27rpx; color: #aaa; }
+
+/* 任务项 (带复选框+星星数) */
+.po-task-item {
+  display: flex; align-items: center; gap: 16rpx;
+  padding: 26rpx 20rpx;
+  margin-bottom: 10rpx;
+  background: transparent; border-radius: 18rpx;
+  transition: background 0.2s;
+  &:active { background: #f5f5f0; }
+}
+.po-task-check {
+  width: 40rpx; height: 40rpx; border-radius: 50%;
+  border: 3rpx solid #ddd;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  &.checked { background: #006e1c; border-color: #006e1c; }
+}
+.po-task-item-text {
+  flex: 1; font-size: 27rpx; font-weight: 500; color: #333;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.po-task-stars {
+  font-size: 24rpx; font-weight: 800; color: #F9A825;
+  flex-shrink: 0;
+}
+.po-task-footer {
+  border-top: 1rpx solid #f0f0ec;
+  background: transparent !important;
+  margin-top: 0;
+}
+.po-new-task-text {
+  font-size: 28rpx; font-weight: 400;
+  color: #006e1c; letter-spacing: 2rpx;
+}
+
+/* ===== 时长选择器弹窗（新增！）===== */
+.po-duration-modal { padding-bottom: 24rpx; }
+.po-duration-body {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 28rpx; padding: 16rpx 0;
+}
+.po-duration-current {
+  font-size: 72rpx; font-weight: 900; color: #1a1a1a;
+}
+/* 快捷按钮行 */
+.po-duration-shortcuts {
+  display: flex; gap: 16rpx; flex-wrap: wrap; justify-content: center;
+}
+.po-sc-btn {
+  padding: 14rpx 28rpx; border-radius: 9999px;
+  background: #f5f5f0; border: 2rpx solid transparent;
+  transition: all 0.2s;
+  &.active {
+    background: #fff;
+    border-color: var(--active-color, #006e1c);
+    box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.06);
+  }
+  &:active { transform: scale(0.95); }
+}
+.po-sc-text {
+  font-size: 26rpx; font-weight: 600; color: #888;
+  &.active { color: var(--active-color, #006e1c); font-weight: 800; }
+}
+/* +/- 数字调节行 */
+.po-duration-slider-row {
+  display: flex; align-items: center; gap: 28rpx;
+  width: 80%;
+}
+.po-ds-btn {
+  width: 76rpx; height: 76rpx; border-radius: 50%;
+  background: #f5f5f0;
+  display: flex; align-items: center; justify-content: center;
+  border: 2rpx solid #eee;
+  &:active { background: #eee; transform: scale(0.95); }
+}
+.po-ds-display {
+  display: flex; align-items: baseline; gap: 6rpx;
+  flex: 1; justify-content: center;
+}
+.po-ds-input {
+  width: 120rpx; text-align: center;
+  font-size: 52rpx !important; font-weight: 900;
+  color: #1a1a1a; background: transparent;
+  border: none; border-bottom: 3rpx solid #ddd;
+}
+.po-ds-unit { font-size: 26rpx; color: #888; font-weight: 500; }
+.po-dur-footer { margin-top: 0; }
+.po-dur-footer .po-modal-footer-text { background: var(--active-color, #006e1c); }

@@ -53,7 +53,7 @@ export function TopAppBar({
   return (
     <header
       className={cn(
-        'sticky top-0 z-40 flex items-end justify-between',
+        'sticky top-[var(--app-sticky-top,0px)] z-40 flex items-end justify-between',
         'min-h-14 px-4 pb-1 pt-[max(0.5rem,env(safe-area-inset-top,0px))]',
         'bg-surface/90 backdrop-blur-xl',
         'border-b border-outline-variant/30',
@@ -65,14 +65,7 @@ export function TopAppBar({
         {showBack && (
           <button
             onClick={handleBack}
-            className={cn(
-              'w-11 h-11 flex items-center justify-center',
-              'rounded-xl',
-              'text-on-surface-variant',
-              'hover:bg-surface-container/50',
-              'active:scale-95',
-              'transition-all duration-150'
-            )}
+            className="ui-icon-button"
             aria-label="返回"
             type="button"
           >

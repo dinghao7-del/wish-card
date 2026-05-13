@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Camera, Phone, Send, CheckCircle2 } from 'lucide-react';
+import { Camera, Phone, Send, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
 import { showToastGlobal } from '../components/Toast';
+import { TopAppBar } from '../components/navigation/TopAppBar';
 
 export function Feedback() {
   const navigate = useNavigate();
@@ -59,16 +60,13 @@ export function Feedback() {
 
   return (
     <div className="px-6 pb-32 min-h-screen bg-surface animate-in fade-in slide-in-from-right-4 duration-500">
-      <header className="flex justify-between items-center py-6 sticky top-0 bg-surface/80 backdrop-blur-xl z-40 -mx-6 px-6">
-<button 
-  onClick={() => navigate(-1)} 
-  className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-outline-variant/30 shadow-sm text-on-surface-variant hover:bg-surface-container transition-all active:scale-95"
->
-          <ArrowLeft size={24} />
-        </button>
-        <h1 className="font-black text-xl tracking-tight text-on-surface">{t('feedback.title', { defaultValue: '标题' })}</h1>
-        <button className="text-on-surface-variant text-sm font-bold opacity-60">{t('feedback.my_feedback', { defaultValue: 'my feedback' })}</button>
-      </header>
+      <TopAppBar
+        title={t('feedback.title', { defaultValue: '意见反馈' })}
+        backTo="/profile"
+        rightContent={
+          <button className="text-on-surface-variant text-sm font-bold opacity-60">{t('feedback.my_feedback', { defaultValue: '我的反馈' })}</button>
+        }
+      />
 
       <div className="mt-8 space-y-10">
         {/* Category Selection */}
@@ -95,7 +93,7 @@ className={cn(
         {/* Feedback Content */}
         <section className="space-y-4">
           <h3 className="text-lg font-black text-on-surface pl-1">{t('feedback.content', { defaultValue: '内容' })}</h3>
-          <div className="relative bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-outline-variant/30">
+          <div className="relative bg-surface rounded-[2rem] p-6 shadow-sm border border-outline-variant/30">
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -149,7 +147,7 @@ className={cn(
         {/* Contact info */}
         <section className="space-y-4">
           <h3 className="text-lg font-black text-on-surface pl-1">{t('feedback.contact', { defaultValue: '联系方式' })}</h3>
-          <div className="relative bg-white rounded-[2rem] px-6 py-5 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-outline-variant/30 flex items-center gap-4 group focus-within:border-primary/30 transition-all">
+          <div className="relative bg-surface rounded-[2rem] px-6 py-5 shadow-sm border border-outline-variant/30 flex items-center gap-4 group focus-within:border-primary/30 transition-all">
             <Phone size={20} className="text-on-surface-variant/40 group-focus-within:text-primary transition-colors" />
             <input
               type="text"

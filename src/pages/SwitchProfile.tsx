@@ -6,6 +6,7 @@ import { ArrowLeft, Settings, Star, UserPlus, Shield, X, Delete, Eraser } from '
 import { cn } from '../lib/utils';
 import { Member } from '../types';
 import { TextAvatar } from '../components/TextAvatar';
+import { hasSwitchCredential, verifyMemberPinOrPassword } from '../lib/memberCredentials';
 
 export function SwitchProfile() {
   const navigate = useNavigate();
@@ -31,12 +32,11 @@ export function SwitchProfile() {
       
       if (newPin.length === 4) {
         if (selectedUser) {
-          const isValidPin = newPin === selectedUser.pin;
-          const isValidPasswordAsPin = newPin === selectedUser.password?.slice(0, 4);
+          const verificationMethod = verifyMemberPinOrPassword(selectedUser, newPin);
 
-          if (isValidPin || isValidPasswordAsPin) {
+          if (verificationMethod) {
             setSelectedUser(null);
-            setCurrentUser(selectedUser);
+            setCurrentUser(selectedUser, verificationMethod);
             navigate('/', { replace: true });
           } else {
             setError(true);
@@ -48,11 +48,10 @@ export function SwitchProfile() {
   };
 
   const handleProfileClick = (member: Member) => {
-    // Only prompt for PIN if a specific 4-digit PIN is set.
-    const hasPin = member.pin && member.pin.trim() !== '' && member.pin.length === 4;
+    const hasPin = hasSwitchCredential(member);
     
     if (!hasPin) {
-      setCurrentUser(member);
+      setCurrentUser(member, 'none');
       navigate('/');
       return;
     }
@@ -174,7 +173,7 @@ export function SwitchProfile() {
                       className={cn(
                         "w-4 h-4 rounded-full border-2 transition-all duration-200",
                         pin.length > i ? "bg-primary border-primary scale-110" : "bg-transparent border-outline-variant",
-                        error && "border-red-500"
+                        error && "border-danger"
                       )}
                     />
                  ))}
@@ -193,26 +192,26 @@ export function SwitchProfile() {
                 ))}
                 <button 
                    onClick={() => setPin('')}
-                   className="aspect-square rounded-[1.5rem] bg-surface-container-low flex items-center justify-center text-on-surface-variant/40 hover:text-red-500 active:scale-90 transition-all border border-outline-variant/5"
+                   className="aspect-square rounded-[1.5rem] bg-surface-container-low flex items-center justify-center text-on-surface-variant/40 hover:text-danger active:scale-90 transition-all border border-outline-variant/5"
                 >
                   <Eraser size={20} />
                 </button>
                 <button 
-                   onClick={() => handlePinInput('0', { defaultValue: '0' })}
+                   onClick={() => handlePinInput('0')}
                    className="aspect-square rounded-[1.5rem] bg-surface-container-low text-xl font-black flex items-center justify-center hover:bg-primary/10 hover:text-primary active:scale-90 transition-all border border-outline-variant/5"
                 >
                   0
                 </button>
                 <button 
                    onClick={() => setPin(prev => prev.slice(0, -1))}
-                   className="aspect-square rounded-[1.5rem] bg-surface-container-low flex items-center justify-center text-on-surface-variant/40 hover:text-orange-500 active:scale-90 transition-all border border-outline-variant/5"
+                   className="aspect-square rounded-[1.5rem] bg-surface-container-low flex items-center justify-center text-on-surface-variant/40 hover:text-warning active:scale-90 transition-all border border-outline-variant/5"
                 >
                   <Delete size={20} />
                 </button>
               </div>
               
               {error && (
-                <p className="text-red-500 text-[10px] font-black text-center mt-6 animate-bounce">密码错误，请森林探险家再试一次 🍃</p>
+                <p className="text-danger text-[10px] font-black text-center mt-6 animate-bounce">密码错误，请森林探险家再试一次 🍃</p>
               )}
             </motion.div>
           </motion.div>

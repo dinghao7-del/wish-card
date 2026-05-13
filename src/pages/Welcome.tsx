@@ -10,13 +10,15 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import * as api from '../lib/api';
+import { getActiveThemeSkin } from '../lib/themeSkins';
 
 type Step = 'intro' | 'register' | 'login' | 'otp' | 'verify';
 
 export function Welcome() {
-  const { currentUser, setCurrentUser, members, setGuestMode, loadGuestData, loadGuestDemoData } = useFamily();
+  const { currentUser, setCurrentUser, loadGuestDemoData, setFamilyId } = useFamily();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const themeSkin = getActiveThemeSkin();
 
   // currentUser 变化后自动跳转首页
   useEffect(() => {
@@ -32,6 +34,7 @@ export function Welcome() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+  const [logoFailed, setLogoFailed] = useState(false);
 
   // 注册状态
   const [regNickname, setRegNickname] = useState('');
@@ -46,29 +49,22 @@ export function Welcome() {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   // ==================== 跳过登录（访客模式） ====================
-  const handleSkip = async () => {
+  const handleSkip = () => {
     setLoading(true);
     setError('');
+
     try {
-      // 如果已有成员，直接选第一个（说明已登录过，有 session）
-      if (members.length > 0) {
-        setCurrentUser(members[0]);
-        return;
-      }
-      // 访客模式：纯前端本地数据，不写数据库
-      // loadGuestDemoData 内部已同步设置 guestModeRef 防止 onAuthStateChange 竞态
-      loadGuestDemoData();
-      // loadGuestDemoData 设置了 members，取第一个作为当前用户
-      const user = {
-        id: 'guest-mom',
-        name: t('welcome.guest_name', '妈妈'),
-        avatar: '/avatars/parent/Cute_cartoon_avatar_of_a_young_2026-04-27T18-33-05.png',
-        stars: 320,
-        role: 'parent' as const,
+      // 访客模式：强制加载本地体验数据，不依赖远端登录状态，不写数据库
+      const demoUser = loadGuestDemoData();
+      const fallbackUser = {
+          id: 'guest-mom',
+          name: t('welcome.guest_name', '妈妈'),
+          avatar: '/avatars/parent/Cute_cartoon_avatar_of_a_young_2026-04-27T18-33-05.png',
+          stars: 320,
+          role: 'parent' as const,
       };
-      console.log('[GuestMode] Setting currentUser:', user.id, user.name);
-      setCurrentUser(user);
-      // 立即导航，不等待可能的异步副作用
+      setFamilyId('guest-family');
+      setCurrentUser(demoUser || fallbackUser);
       navigate('/', { replace: true });
     } catch (err: unknown) {
       console.error('[GuestMode] handleSkip error:', err);
@@ -152,17 +148,105 @@ export function Welcome() {
       const isEmail = username.includes('@');
       if (isEmail) {
         // 邮箱+密码登录
-        const { error: loginErr } = await supabase.auth.signInWithPassword({
+        const { data: loginData, error: loginErr } = await supabase.auth.signInWithPassword({
           email: username,
           password: loginPassword,
         });
-        if (loginErr) throw loginErr;
-        // onAuthStateChange 会自动加载用户数据
+        
+        if (loginErr) {
+          // 详细的错误处理
+          const errorMsg = loginErr.message || '';
+          if (errorMsg.includes('Invalid login credentials') || errorMsg.includes('密码错误')) {
+            throw new Error(t('welcome.login.error_wrong_password', '密码错误，请检查或点击"忘记密码"重置'));
+          } else if (errorMsg.includes('Email not confirmed') || errorMsg.includes('邮箱未确认')) {
+            throw new Error(t('welcome.login.error_email_not_confirmed', '邮箱未验证，请检查收件箱或重新注册'));
+          } else if (errorMsg.includes('User not found') || errorMsg.includes('用户不存在')) {
+            throw new Error(t('welcome.login.error_user_not_found', '该邮箱未注册，请先注册账号'));
+          } else if (errorMsg.includes('Too many requests') || errorMsg.includes('请求过多')) {
+            throw new Error(t('welcome.login.error_too_many_requests', '登录尝试次数过多，请稍后再试'));
+          } else {
+            throw new Error(errorMsg || t('welcome.login.error_invalid', '登录失败，请检查账号密码'));
+          }
+        }
+        
+        // 登录成功但没有 session（不应该发生，但做防护）
+        if (!loginData.session) {
+          throw new Error(t('welcome.login.error_no_session', '登录异常，请刷新页面重试'));
+        }
+        
+        // 登录成功后，检查是否需要创建成员记录（兼容旧用户）
+        const { data: existingMember } = await supabase
+          .from('members')
+          .select('id')
+          .eq('id', loginData.session.user.id)
+          .maybeSingle();
+        
+        if (!existingMember) {
+          // 用户存在但 members 记录不存在，自动创建
+          console.log('[Login] 创建缺失的成员记录:', loginData.session.user.id);
+          const nickname = loginData.session.user.user_metadata?.nickname || loginData.session.user.email?.split('@')[0] || '家长';
+          
+          // 创建家庭
+          const family = await api.createFamily(t('welcome.my_family', '{0}的家庭').replace('{0}', nickname));
+          
+          // 创建成员记录
+          const { error: insertErr } = await supabase.from('members').insert({
+            id: loginData.session.user.id,
+            family_id: family.id,
+            name: nickname,
+            role: 'parent',
+            avatar: '👨‍👩‍👧',
+            password: loginPassword,
+          });
+          
+          if (insertErr) {
+            console.error('[Login] 创建成员记录失败:', insertErr);
+            throw new Error(t('welcome.login.error_create_member', '登录成功但创建用户记录失败，请重试'));
+          }
+          
+          // 设置当前用户
+          setCurrentUser({
+            id: loginData.session.user.id,
+            name: nickname,
+            avatar: '👨‍👩‍👧',
+            stars: 0,
+            role: 'parent',
+          });
+          setFamilyId(family.id);
+          
+          // 显示成功提示
+          setInfo(t('welcome.login.success', '登录成功！'));
+        } else {
+          // 成员记录已存在，加载用户数据
+          const { data: memberData, error: memberErr } = await supabase
+            .from('members')
+            .select('*')
+            .eq('id', loginData.session.user.id)
+            .single();
+          
+          if (memberErr || !memberData) {
+            console.error('[Login] 加载成员数据失败:', memberErr);
+            throw new Error(t('welcome.login.error_load_member', '登录成功但加载用户数据失败'));
+          }
+          
+          // 设置当前用户
+          setCurrentUser({
+            id: memberData.id,
+            name: memberData.name,
+            avatar: memberData.avatar || '👤',
+            stars: memberData.stars || 0,
+            role: memberData.role,
+          });
+          setFamilyId(memberData.family_id);
+          
+          // 显示成功提示
+          setInfo(t('welcome.login.success', '登录成功！'));
+        }
       } else {
         // 手机号+密码登录（Supabase 不直接支持，需通过查询 members 表验证）
         const { data: memberData, error: memberErr } = await supabase
           .from('members')
-          .select('*', { defaultValue: '*' })
+          .select()
           .eq('name', username)
           .eq('password', loginPassword)
           .eq('is_active', true)
@@ -179,6 +263,8 @@ export function Welcome() {
           stars: memberData.stars || 0,
           role: memberData.role,
         });
+        
+        setInfo(t('welcome.login.success', '登录成功！'));
       }
     } catch (err: any) {
       const msg = err.message || '';
@@ -186,6 +272,42 @@ export function Welcome() {
         setError(t('welcome.network_error', '网络连接失败，无法连接到服务器。请检查网络后重试，或先使用游客模式体验'));
       } else {
         setError(msg || t('welcome.login.error_invalid', '登录失败'));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ==================== 忘记密码 ====================
+  const handleForgotPassword = async () => {
+    const email = loginUsername.trim();
+    if (!email) {
+      setError(t('welcome.forgot_password.error_empty_email', '请输入邮箱地址'));
+      return;
+    }
+    if (!email.includes('@')) {
+      setError(t('welcome.forgot_password.error_invalid_email', '请输入有效的邮箱地址'));
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/welcome?reset=true`,
+      });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      setInfo(t('welcome.forgot_password.success', '重置密码邮件已发送，请检查收件箱（包括垃圾邮件）'));
+    } catch (err: any) {
+      const msg = err.message || '';
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+        setError(t('welcome.network_error', '网络连接失败，请检查网络后重试'));
+      } else {
+        setError(msg || t('welcome.forgot_password.error', '发送失败，请稍后重试'));
       }
     } finally {
       setLoading(false);
@@ -217,12 +339,12 @@ export function Welcome() {
       // 验证成功后，为新用户创建家庭和成员记录
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        // 检查是否已有成员记录
+        // 检查是否已有成员记录（用 maybeSingle 避免记录不存在时抛错）
         const { data: existingMember } = await supabase
           .from('members')
-          .select('id', { defaultValue: 'id' })
+          .select()
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (!existingMember) {
           // 新用户：创建家庭和成员
@@ -247,7 +369,7 @@ export function Welcome() {
           // 重新加载数据
           const { data: newMember } = await supabase
             .from('members')
-            .select('*', { defaultValue: '*' })
+            .select()
             .eq('id', session.user.id)
             .single();
 
@@ -259,12 +381,14 @@ export function Welcome() {
               stars: newMember.stars || 0,
               role: newMember.role,
             });
+            // 验证成功 + 创建用户完成，立即导航
+            navigate('/', { replace: true });
           }
         } else {
           // 已有成员记录，直接设置 currentUser
           const { data: memberData } = await supabase
             .from('members')
-            .select('*', { defaultValue: '*' })
+            .select()
             .eq('id', session.user.id)
             .single();
           if (memberData) {
@@ -275,6 +399,8 @@ export function Welcome() {
               stars: memberData.stars || 0,
               role: memberData.role,
             });
+            // 验证成功，立即导航
+            navigate('/', { replace: true });
           }
         }
       }
@@ -294,24 +420,12 @@ export function Welcome() {
 
   // ==================== UI ====================
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* 动画背景 */}
-      <motion.div
-        animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
-        transition={{ duration: 20, repeat: Infinity }}
-        className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-[120px]"
-      />
-      <motion.div
-        animate={{ scale: [1.2, 1, 1.2], rotate: [0, -90, 0] }}
-        transition={{ duration: 25, repeat: Infinity }}
-        className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-secondary/5 rounded-full blur-[120px]"
-      />
-
+    <div className="min-h-[100svh] bg-background flex flex-col items-center justify-start sm:justify-center px-4 sm:px-6 pt-20 pb-8 sm:py-10 relative overflow-x-hidden overflow-y-auto">
       {/* 右上角关闭/跳过按钮 - 始终可见，无延迟 */}
       <button
         onClick={handleSkip}
         disabled={loading}
-        className="absolute top-6 right-6 z-50 flex items-center gap-1.5 px-4 h-11 bg-white/90 backdrop-blur-md rounded-full text-primary hover:bg-white hover:shadow-lg transition-all active:scale-95 shadow-md border border-primary/20 text-sm font-black"
+        className="fixed top-4 right-4 sm:top-6 sm:right-6 z-50 flex items-center gap-1.5 px-3 sm:px-4 h-11 bg-white/90 backdrop-blur-md rounded-full text-primary hover:bg-white hover:shadow-lg transition-all active:scale-95 shadow-md border border-primary/20 text-sm font-black"
       >
         {loading ? <Loader2 className="animate-spin" size={16} /> : <X size={16} />}
         <span>{t('welcome.skip', '跳过')}</span>
@@ -330,31 +444,38 @@ export function Welcome() {
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="w-56 h-56 mx-auto mb-8 relative flex items-center justify-center p-4 bg-gradient-to-br from-[#98EE99]/10 to-transparent rounded-[3rem]"
+              className="w-48 h-48 min-[380px]:w-56 min-[380px]:h-56 sm:w-64 sm:h-64 mx-auto mb-2 sm:mb-3 relative flex items-center justify-center"
             >
-              <div className="absolute inset-0 bg-primary/5 rounded-full blur-3xl animate-pulse" />
-              <img
-                src="https://illustrations.popsy.co/green/paper-plane.svg"
-                alt="Welcome Illustration"
-                className="w-full h-full object-contain relative z-10"
-                referrerPolicy="no-referrer"
-              />
+              {logoFailed ? (
+                <div className="w-full h-full relative z-10 rounded-[1.75rem] sm:rounded-[2.25rem] bg-white/80 shadow-inner border border-primary/10 flex items-center justify-center">
+                  <span className="text-7xl" aria-label="星愿卡">🌟</span>
+                </div>
+              ) : (
+                <img
+                  src={themeSkin.assets.welcomeIllustration}
+                  alt="星愿卡"
+                  className="w-full h-full object-contain relative z-10"
+                  referrerPolicy="no-referrer"
+                  onError={() => setLogoFailed(true)}
+                />
+              )}
             </motion.div>
-            <h1 className="text-7xl font-artistic text-primary mb-4 tracking-wider bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent">{t('welcome.title', '星愿卡')}</h1>
-            <p className="text-on-surface-variant font-bold text-base mb-2">{t('welcome.subtitle', '用努力开启小确幸 🌱')}</p>
-            <p className="text-primary font-black text-sm mb-12 tracking-tight">{t('welcome.tagline', '记录成长每一步')}</p>
+            <h1 className="font-artistic bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent text-[48px] min-[380px]:text-[56px] sm:text-[72px] leading-[1.1] mb-2"
+            >{t('welcome.title', '星愿卡')}</h1>
+            <p className="text-safe text-on-surface-variant font-bold text-sm sm:text-base mb-2">{t('welcome.subtitle', '用努力开启小确幸 🌱')}</p>
+            <p className="text-safe text-primary font-black text-sm mb-6 sm:mb-12 tracking-tight">{t('welcome.tagline', '记录成长每一步')}</p>
 
             <div className="space-y-3">
               <button
                 onClick={() => { clearError(); setStep('register'); }}
-                className="w-full h-16 bg-primary text-white rounded-[2rem] font-black text-lg flex items-center justify-center gap-3 shadow-xl shadow-green-900/20 hover:bg-primary/80 transition-all active:scale-95"
+                className="w-full h-14 sm:h-16 bg-primary text-white rounded-[2rem] font-black text-base sm:text-lg flex items-center justify-center gap-3 shadow-xl shadow-green-900/20 hover:bg-primary/80 transition-all active:scale-95"
               >
                 <UserPlus size={22} />
                 {t('welcome.register.submit', '注册')}
               </button>
               <button
                 onClick={() => { clearError(); setStep('login'); }}
-                className="w-full h-16 bg-white text-primary rounded-[2rem] font-black text-lg flex items-center justify-center gap-3 shadow-lg border-2 border-primary/10 hover:border-primary/30 transition-all active:scale-95"
+                className="w-full h-14 sm:h-16 bg-white text-primary rounded-[2rem] font-black text-base sm:text-lg flex items-center justify-center gap-3 shadow-lg border-2 border-primary/10 hover:border-primary/30 transition-all active:scale-95"
               >
                 <LogIn size={22} />
                 {t('welcome.login.submit', '登录')}
@@ -380,12 +501,12 @@ export function Welcome() {
             exit={{ opacity: 0, x: -20 }}
             className="w-full max-w-md z-10"
           >
-            <div className="text-center mb-6">
+            <div className="text-center mb-5 sm:mb-6">
               <h2 className="text-4xl font-handwritten text-on-surface mb-2">{t('welcome.register.title', '欢迎注册')}</h2>
               <p className="text-on-surface-variant font-bold text-sm tracking-tight">{t('welcome.register.subtitle', '只有家长才可以注册管理员哦 🌱')}</p>
             </div>
 
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-outline-variant/10 relative">
+            <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-xl border border-outline-variant/10 relative">
               <button
                 onClick={() => { clearError(); setStep('intro'); }}
                 className="absolute -top-4 -right-4 w-10 h-10 bg-white border border-outline-variant/20 rounded-full shadow-lg flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors z-20"
@@ -406,17 +527,17 @@ export function Welcome() {
                   />
                 </div>
 
-                {/* 邮箱或手机号 */}
+                {/* 邮箱 */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-on-surface-variant ml-2 flex items-center gap-2">
-                    {phoneOrEmail.includes('@') ? <Mail size={14} /> : <Phone size={14} />}
-                    {t('welcome.otp.phone_email', '手机号或邮箱')}
+                    <Mail size={14} />
+                    {t('welcome.otp.email', '邮箱')}
                   </label>
                   <input
-                    type="text"
+                    type="email"
                     value={phoneOrEmail}
                     onChange={(e) => setPhoneOrEmail(e.target.value)}
-                    placeholder={t('welcome.otp.placeholder', '手机号或邮箱')}
+                    placeholder={t('welcome.otp.email_placeholder', '请输入邮箱地址')}
                     className="w-full h-12 bg-surface-container-low rounded-2xl px-5 font-bold text-on-surface outline-none border-2 border-transparent focus:border-primary/30 transition-all text-sm"
                   />
                 </div>
@@ -504,12 +625,12 @@ export function Welcome() {
             exit={{ opacity: 0, x: -20 }}
             className="w-full max-w-md z-10"
           >
-            <div className="text-center mb-6">
+            <div className="text-center mb-5 sm:mb-6">
               <h2 className="text-4xl font-handwritten text-on-surface mb-2">{t('welcome.login.title', '欢迎登录')}</h2>
               <p className="text-on-surface-variant font-bold text-sm tracking-tight">{t('welcome.login.subtitle', '输入账号密码开启今日愿望 🌱')}</p>
             </div>
 
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-outline-variant/10 relative">
+            <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-xl border border-outline-variant/10 relative">
               <button
                 onClick={() => { clearError(); setStep('intro'); }}
                 className="absolute -top-4 -right-4 w-10 h-10 bg-white border border-outline-variant/20 rounded-full shadow-lg flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors z-20"
@@ -566,6 +687,18 @@ export function Welcome() {
                   {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : t('welcome.login.submit', '登录账号')}
                 </button>
 
+                {/* 忘记密码链接 */}
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={loading}
+                    className="text-primary font-bold text-xs hover:underline disabled:opacity-50"
+                  >
+                    {t('welcome.forgot_password.link', '忘记密码？')}
+                  </button>
+                </div>
+
                 <button
                   type="button"
                   onClick={() => { clearError(); setStep('register'); }}
@@ -587,14 +720,14 @@ export function Welcome() {
             exit={{ opacity: 0, x: -20 }}
             className="w-full max-w-md z-10"
           >
-            <div className="text-center mb-6">
+            <div className="text-center mb-5 sm:mb-6">
               <h2 className="text-4xl font-handwritten text-on-surface mb-2">{t('welcome.otp.verify_title', '输入验证码')}</h2>
               <p className="text-on-surface-variant font-bold text-sm tracking-tight">
                 {t('welcome.otp.verify_subtitle', `验证码已发送至 ${phoneOrEmail}`)}
               </p>
             </div>
 
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-outline-variant/10 relative">
+            <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-xl border border-outline-variant/10 relative">
               <button
                 onClick={() => { setStep('register'); setOtpToken(''); clearError(); }}
                 className="absolute -top-4 -right-4 w-10 h-10 bg-white border border-outline-variant/20 rounded-full shadow-lg flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors z-20"

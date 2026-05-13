@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Headset, Users, Mail, Copy, ChevronRight } from 'lucide-react';
+import { Headset, Users, Mail, Copy, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { showToastGlobal } from '../components/Toast';
+import { TopAppBar } from '../components/navigation/TopAppBar';
 
 export function ContactUs() {
   const navigate = useNavigate();
@@ -14,22 +15,13 @@ export function ContactUs() {
 
   return (
     <div className="px-6 min-h-screen bg-surface animate-in fade-in slide-in-from-right-4 duration-500">
-      <header className="flex justify-between items-center py-6 sticky top-0 bg-surface/80 backdrop-blur-xl z-40 -mx-6 px-6">
-        <button 
-          onClick={() => navigate(-1)} 
-          className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-[#E8E7E0]/30 shadow-sm text-on-surface-variant hover:bg-surface-container transition-all active:scale-95"
-        >
-          <ArrowLeft size={24} />
-        </button>
-        <h1 className="font-black text-xl tracking-tight text-on-surface">联系我们</h1>
-        <div className="w-12" />
-      </header>
+      <TopAppBar title="联系我们" backTo="/profile" />
 
       <section className="mt-8 space-y-4">
         {/* Customer Service */}
         <div 
-          onClick={() => navigate('/feedback')}
-          className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E8E7E0]/30 flex items-center justify-between group active:scale-[0.98] transition-all cursor-pointer"
+          onClick={() => navigate('/support/feedback')}
+          className="bg-surface rounded-[2rem] p-6 shadow-sm border border-outline-variant/30 flex items-center justify-between group active:scale-[0.98] transition-all cursor-pointer"
         >
           <div className="flex items-center gap-5">
             <div className="w-14 h-14 rounded-2xl bg-primary-container flex items-center justify-center text-primary-text">
@@ -46,7 +38,7 @@ export function ContactUs() {
         {/* QQ Group */}
         <div 
           onClick={() => copyToClipboard('123456789')}
-          className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E8E7E0]/30 flex items-center justify-between group active:scale-[0.98] transition-all cursor-pointer"
+          className="bg-surface rounded-[2rem] p-6 shadow-sm border border-outline-variant/30 flex items-center justify-between group active:scale-[0.98] transition-all cursor-pointer"
         >
           <div className="flex items-center gap-5">
             <div className="w-14 h-14 rounded-2xl bg-tertiary-container flex items-center justify-center text-tertiary">
@@ -61,7 +53,7 @@ export function ContactUs() {
         </div>
 
         {/* Email */}
-        <div className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E8E7E0]/30 flex items-center justify-between group transition-all">
+        <div className="bg-surface rounded-[2rem] p-6 shadow-sm border border-outline-variant/30 flex items-center justify-between group transition-all">
           <div className="flex items-center gap-5 flex-1 min-w-0">
             <div className="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface-variant/60">
               <Mail size={28} />

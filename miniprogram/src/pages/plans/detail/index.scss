@@ -1,0 +1,189 @@
+@import '../../../app.scss';
+
+/* ===== 计划详情页 — 严格对齐Web端 PlanDetail.tsx ===== */
+.detail-page {
+  min-height: 100vh;
+  background-color: $surface-container-low;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ===== Header — 对齐Web第104-117行 ===== */
+.detail-header {
+  background-color: #ffffff;
+  border-bottom: 1rpx solid rgba(0,0,0,0.06);
+  padding: 24rpx 32rpx;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.header-nav { display: flex; align-items: center; gap: 16rpx; }
+.back-btn {
+  width: 72rpx; height: 72rpx; border-radius: 20rpx;
+  background-color: $surface-container-low;
+  display: flex; align-items: center; justify-content: center;
+}
+.back-btn:active { opacity: 0.7; }
+.header-info { flex: 1; }
+.header-title { font-size: 36rpx; font-weight: 900; color: #333; }
+.header-subtitle { font-size: 22rpx; font-weight: 700; color: rgba(0,0,0,0.35); margin-top: 4rpx; }
+
+/* ===== Body ===== */
+.detail-body { flex: 1; padding: 24rpx 32rpx; overflow-x: hidden; width: 100%; box-sizing: border-box; }
+
+/* ===== 统计卡片 — 对齐Web第121-159行 ===== */
+.stat-card {
+  background-color: #ffffff;
+  border-radius: 28rpx;
+  padding: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+  margin-bottom: 20rpx;
+}
+.stat-card-name { font-size: 34rpx; font-weight: 900; color: #333; margin-bottom: 24rpx; }
+
+.stat-row { display: flex; gap: 16rpx; }
+
+.stat-box {
+  flex: 1;
+  border-radius: 20rpx;
+  padding: 20rpx;
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+.stat-box-target { background-color: rgba($primary-color, 0.06); }
+.stat-box-wish { background-color: rgba(245,158,11,0.08); }
+
+.stat-icon-wrap {
+  width: 68rpx; height: 68rpx; border-radius: 16rpx;
+  display: flex; align-items: center; justify-content: center;
+}
+.stat-icon-wrap-target { background-color: rgba($primary-color, 0.12); }
+.stat-icon-wrap-wish { background-color: rgba(245,158,11,0.18); }
+
+.stat-label { font-size: 20rpx; font-weight: 700; color: rgba(0,0,0,0.35); display: block; }
+.stat-num { font-size: 40rpx; font-weight: 900; color: #333; display: block; line-height: 1.2; }
+
+/* 标签行 — 对齐Web第143-158行 (含grade/timezone) */
+.type-tags-row { display: flex; flex-wrap: wrap; gap: 10rpx; margin-top: 20rpx; padding-top: 20rpx; border-top: 2rpx solid rgba(0,0,0,0.05); }
+.type-tag {
+  padding: 8rpx 18rpx; border-radius: 100rpx;
+  background-color: $surface-container-low;
+  display: flex; align-items: center; gap: 6rpx;
+}
+.type-tag-text { font-size: 21rpx; font-weight: 800; color: rgba(0,0,0,0.5); }
+.type-tag-grade { background-color: rgba($primary-color, 0.08); }
+.type-tag-grade .type-tag-text { color: $primary-color; }
+.type-tag-tz { background-color: rgba(99,102,241,0.06); }
+
+/* ===== ⭐ 每日作息展示区块 — 对齐Web第162-211行 (新增) ===== */
+.schedule-card { margin-bottom: 20rpx; }
+
+/* 起床/就寝 — 对齐Web第168-183行 */
+.wake-bed-row { display: flex; gap: 16rpx; margin-bottom: 24rpx; }
+.wb-item {
+  flex: 1;
+  border-radius: 20rpx;
+  padding: 18rpx 22rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+.wb-wake { background-color: rgba(245,158,11,0.06); }
+.wb-bed { background-color: rgba(99,102,241,0.06); }
+.wb-label { font-size: 20rpx; font-weight: 700; color: rgba(0,0,0,0.3); display: block; }
+.wb-value { font-size: 28rpx; font-weight: 900; color: #333; }
+
+/* 时段列表 — 对齐Web第184-199行 */
+.slot-list { border-top: 2rpx solid rgba(0,0,0,0.04); }
+.slot-row {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid rgba(0,0,0,0.03);
+}
+.slot-row:last-child { border-bottom: none; }
+.slot-emoji { width: 48rpx; text-align: center; font-size: 28rpx; }
+.slot-time {
+  width: 160rpx;
+  font-size: 23rpx;
+  font-weight: 800;
+  color: $primary-color;
+  shrink: 0;
+}
+.slot-detail { flex: 1; min-width: 0; }
+.slot-name { font-size: 26rpx; font-weight: 900; color: #333; display: block; }
+.slot-desc { font-size: 20rpx; color: rgba(0,0,0,0.3); margin-left: 6rpx; }
+
+/* 三餐信息 — 对齐Web第201-210行 */
+.meals-info {
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 2rpx solid rgba(0,0,0,0.05);
+}
+.meals-label { font-size: 20rpx; font-weight: 800; color: rgba(0,0,0,0.3); margin-bottom: 12rpx; }
+.meals-row { display: flex; align-items: center; gap: 12rpx; }
+.meal-text { font-size: 25rpx; font-weight: 700; color: #333; }
+.meal-sep { color: rgba(0,0,0,0.15); }
+
+/* ===== ⭐ 每周固定活动区块 — 对齐Web第214-229行 (新增) ===== */
+.activities-card { margin-bottom: 20rpx; }
+.act-item-row {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid rgba(0,0,0,0.03);
+}
+.act-item-row:last-child { border-bottom: none; }
+.act-day {
+  width: 100rpx;
+  font-size: 25rpx;
+  font-weight: 900;
+  color: $primary-color;
+  shrink: 0;
+}
+.act-time-val { font-size: 23rpx; color: rgba(0,0,0,0.45); width: 100rpx; }
+.act-name-val { font-size: 26rpx; font-weight: 900; color: #333; flex: 1; }
+
+/* ===== Section Card（目标/心愿列表）— 对齐Web第233/256行 ===== */
+.section-card {
+  background-color: #ffffff;
+  border-radius: 28rpx;
+  padding: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+  margin-bottom: 20rpx;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+.section-title { font-size: 30rpx; font-weight: 900; color: #333; }
+
+.section-action {
+  display: flex; align-items: center; gap: 6rpx;
+  padding: 10rpx 20rpx; border-radius: 100rpx;
+  transition: transform 0.12s;
+}
+.section-action:active { transform: scale(0.95); }
+.section-action-text { font-size: 23rpx; font-weight: 900; color: $primary-color; }
+.section-action-wish .section-action-text { color: #f59e0b; }
+
+.section-empty {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 48rpx 0 24rpx; gap: 14rpx;
+}
+.section-empty-text { font-size: 25rpx; font-weight: 700; color: rgba(0,0,0,0.3); text-align: center; }
+
+.section-count {
+  text-align: center;
+  padding: 24rpx 0;
+}
+.section-count text { font-size: 27rpx; font-weight: 700; color: rgba(0,0,0,0.45); }

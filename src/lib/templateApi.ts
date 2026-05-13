@@ -113,7 +113,7 @@ export async function useTemplate(templateId: string): Promise<void> {
   const { error } = await supabase.rpc('increment_template_usage', { p_template_id: templateId });
   if (error) {
     // 降级：直接更新
-    const { data: tmpl } = await supabase.from('templates').select('usage_count', { defaultValue: 'usage count' }).eq('id', templateId).single();
+    const { data: tmpl } = await supabase.from('templates').select().eq('id', templateId).single();
     if (tmpl) {
       await supabase.from('templates').update({ usage_count: tmpl.usage_count + 1 }).eq('id', templateId);
     }
@@ -178,7 +178,7 @@ export async function syncCommunityTemplates(): Promise<{ synced: number }> {
 export async function searchTemplates(keyword: string, type?: 'task' | 'habit' | 'reward'): Promise<DbTemplate[]> {
   let query = supabase
     .from('templates')
-    .select('*', { defaultValue: '*' })
+    .select()
     .eq('is_active', true)
     .or(`title.ilike.%${keyword}%,description.ilike.%${keyword}%`)
     .order('usage_count', { ascending: false })

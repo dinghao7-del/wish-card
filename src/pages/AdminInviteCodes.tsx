@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Plus, Trash2, Copy, Check, RefreshCw,
+  Plus, Trash2, Copy, Check, RefreshCw,
   Power, PowerOff, Loader2, AlertCircle, Key, Users, Clock, X
 } from 'lucide-react';
 import { useFamily } from '../context/FamilyContext';
 import { showToastGlobal } from '../components/Toast';
 import { showConfirm } from '../components/ConfirmDialog';
 import * as api from '../lib/api';
+import { TopAppBar } from '../components/navigation/TopAppBar';
 
 interface InviteCodeRow {
   id: string;
@@ -131,20 +132,17 @@ export function AdminInviteCodes() {
   return (
     <div className="min-h-screen bg-background text-on-surface">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-outline-variant/10">
-        <div className="flex items-center justify-between px-4 h-14">
-          <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
-            <ArrowLeft size={22} />
-          </button>
-          <h1 className="font-black text-lg">{t('admin.invite_codes.title', '邀请码管理')}</h1>
+      <TopAppBar
+        title={t('admin.invite_codes.title', '邀请码管理')}
+        rightContent={
           <button
             onClick={() => setShowCreate(true)}
             className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white shadow-lg active:scale-95 transition-all"
           >
             <Plus size={20} />
           </button>
-        </div>
-      </header>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 px-4 py-4">

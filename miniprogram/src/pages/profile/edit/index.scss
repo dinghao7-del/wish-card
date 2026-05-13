@@ -1,0 +1,44 @@
+@import "../../../app.scss";
+
+.pe-page {
+  min-height: 100vh;
+  background-color: $bg-color;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+.pe-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 24rpx 32rpx; position: sticky; top: 0; background-color: $bg-color; z-index: 10;
+}
+.pe-back { width: 64rpx; height: 64rpx; display: flex; align-items: center; justify-content: center; }
+.pe-header-title { font-size: 36rpx; font-weight: 900; color: $text-primary; }
+.pe-body { padding: 0 32rpx 48rpx; display: flex; flex-direction: column; gap: 32rpx; align-items: center; }
+.pe-avatar-section { display: flex; flex-direction: row; align-items: center; gap: 20rpx; padding: 24rpx 32rpx; background-color: $card-bg; border-radius: 20rpx; &:active { opacity: 0.7; } }
+.pe-avatar { width: 120rpx; height: 120rpx; border-radius: 50%; background-color: $surface-container-high; border: 4rpx solid rgba($primary-color, 0.15); }
+.pe-avatar-emoji-wrap {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background-color: #E3F2FD;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pe-avatar-emoji { font-size: 64rpx; }
+.pe-avatar-hint { flex: 1; font-size: 26rpx; font-weight: 600; color: $text-secondary-variant; }
+.pe-card { width: 100%; background-color: $card-bg; border-radius: 24rpx; padding: 32rpx; display: flex; flex-direction: column; gap: 24rpx; }
+.pe-field { display: flex; flex-direction: column; gap: 12rpx; }
+.pe-label { font-size: 24rpx; font-weight: 800; color: $text-secondary; }
+.pe-input { height: 88rpx; background-color: $surface-container-low; border-radius: 20rpx; padding: 0 28rpx; font-size: 28rpx; font-weight: 600; color: $text-primary; }
+.pe-submit { width: 100%; height: 100rpx !important; background-color: $primary-color !important; color: #ffffff !important; border-radius: 24rpx !important; font-size: 32rpx !important; font-weight: 900 !important; display: flex !important; align-items: center !important; justify-content: center !important; box-shadow: 0 8rpx 24rpx rgba($primary-color, 0.25) !important; }
+.pe-submit::after { border: none !important; }
+
+/* ===== 新增：PIN 码区块 ===== */
+.pe-clickable { cursor: pointer; &:active { opacity: 0.7; } }
+.pe-field-header { display: flex; align-items: center; gap: 16rpx; width: 100%; }
+.pe-field-info { flex: 1; }
+.pe-desc { font-size: 22rpx; color: $text-secondary-variant; margin-top: 4rpx; display: block; }
+.pe-pin-section { display: flex; flex-direction: column; gap: 16rpx; padding-top: 16rpx; border-top: 1rpx solid rgba($border-color, 0.08); margin-top: 8rpx; }
+.pe-pin-btn { height: 76rpx !important; background-color: $surface-container-low !important; color: $text-primary !important; border-radius: 16rpx !important; font-size: 28rpx !important; font-weight: 800 !important; display: flex !important; align-items: center !important; justify-content: center !important; border: 2rpx solid $border-color !important; }
+.pe-pin-btn::after { border: none !important; }

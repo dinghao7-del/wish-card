@@ -7,6 +7,13 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 import supabase from './supabase';
+import { recognizeScheduleArrangementSkill } from './scheduleArrangementSkill';
+import {
+  buildFamilyButlerAdvice as buildFamilyButlerAdviceDomain,
+  buildFamilyButlerContextSummary as buildFamilyButlerContextSummaryDomain,
+  isFamilyPromiseLike,
+} from '../domain/familyButlerAdvice';
+import { inferHolidayPlayPreference } from './recommendationInventory';
 
 // ==================== 类型定义 ====================
 
@@ -274,6 +281,10 @@ export type VoiceIntent =
   | 'create_task' | 'edit_task' | 'delete_task' | 'complete_task' | 'approve_task' | 'query_tasks'
   | 'create_habit' | 'checkin_habit' | 'edit_habit' | 'delete_habit' | 'query_habits'
   | 'create_wish' | 'edit_wish' | 'redeem_wish' | 'query_wishes'
+  | 'create_plan'
+  | 'holiday_play_preference'
+  | 'schedule_arrangement'
+  | 'public_calendar_query'
   | 'query_stars' | 'add_stars' | 'deduct_stars' | 'query_history'
   | 'quadrant_analysis' | 'smart_suggestion' | 'today_summary' | 'weekly_report' | 'conflict_detect'
   | 'start_pomodoro' | 'stop_pomodoro' | 'set_pomodoro_duration'
@@ -301,9 +312,9 @@ export interface AppContext {
   tasks: Array<{
     id: string; title: string; description: string; status: string;
     rewardStars: number; assigneeIds: string[]; creatorId: string;
-    isHabit?: boolean; icon: string; startTime: string; deadline?: string;
+    type?: string; isHabit?: boolean; icon: string; startTime: string; endTime?: string; deadline?: string; planId?: string; createdAt?: string;
   }>;
-  rewards: Array<{ id: string; name: string; cost: number; category: string }>;
+  rewards: Array<{ id: string; name: string; cost: number; category: string; status?: string; redeemedBy?: string }>;
   currentUser: { id: string; name: string; role: 'parent' | 'child'; stars: number } | null;
   familyId: string | null;
 }
@@ -311,6 +322,21 @@ export interface AppContext {
 // ==================== 意图识别 ====================
 
 export async function recognizeIntent(userInput: string, context: AppContext, language: string = 'zh-CN'): Promise<VoiceCommand> {
+  const localScheduleArrangementIntent = recognizeLocalScheduleArrangementIntent(userInput);
+  if (localScheduleArrangementIntent) return localScheduleArrangementIntent;
+  const localPublicCalendarIntent = recognizeLocalPublicCalendarIntent(userInput);
+  if (localPublicCalendarIntent) return localPublicCalendarIntent;
+  const localHolidayPlayPreferenceIntent = recognizeLocalHolidayPlayPreferenceIntent(userInput);
+  if (localHolidayPlayPreferenceIntent) return localHolidayPlayPreferenceIntent;
+  const localPlanIntent = recognizeLocalPlanIntent(userInput);
+  if (localPlanIntent) return localPlanIntent;
+  const localReportIntent = recognizeLocalReportIntent(userInput);
+  if (localReportIntent) return localReportIntent;
+  const localQuadrantIntent = recognizeLocalQuadrantIntent(userInput);
+  if (localQuadrantIntent) return localQuadrantIntent;
+  const localButlerIntent = recognizeLocalButlerIntent(userInput);
+  if (localButlerIntent) return localButlerIntent;
+
   const config = await getAIConfig();
   
   if (!config.apiKey) {
@@ -367,6 +393,10 @@ You need to recognize intents and extract parameters from the user's natural lan
 **Task Management**: create_task, edit_task, delete_task, complete_task, approve_task, query_tasks
 **Habit Check-in**: create_habit, checkin_habit, edit_habit, delete_habit, query_habits
 **Wish Rewards**: create_wish, edit_wish, redeem_wish, query_wishes
+**Family Plans**: create_plan
+**Holiday Play Preference**: holiday_play_preference
+**Schedule Arrangement Skill**: schedule_arrangement
+**Public Calendar Intelligence**: public_calendar_query
 **Star System**: query_stars, add_stars, deduct_stars, query_history
 **Schedule Analysis**: quadrant_analysis, smart_suggestion, today_summary, weekly_report, conflict_detect
 **Pomodoro**: start_pomodoro, stop_pomodoro, set_pomodoro_duration
@@ -379,6 +409,12 @@ Parameter extraction rules:
 - Task/wish name→ID: match based on task/wish list
 - Number extraction: star count, duration, etc.
 - Time extraction: "tomorrow"→calculate date, "3pm"→time
+- For create_plan, extract params.scene as weekday/holiday/exchange/custom and params.name when the user asks to create or make a plan. Default scene to custom.
+- For holiday_play_preference, use it when the user describes holiday play/travel preference such as small/medium/big play, pure fun, science-oriented play, interest development, caregiver time, budget, or effort level. Extract holidayPlayScale, holidayPlayMode, caregiverLoad, budgetLevel, effortLevel.
+- For schedule_arrangement, use it when the user asks to add weekly classes, change class time, pause, postpone, or shift extracurricular schedules because of travel, school changes, holidays, or temporary events. Extract params.operation as add_recurring_class or shift_schedule. For add_recurring_class, extract activityName, weekday, startTime, endTime. For shift_schedule, extract scope, shiftWeeks, reason.
+- For public_calendar_query, use it when the user asks whether holidays, makeup workdays, school calendar, disasters, public events, opening school, vacation, or traffic/public changes will affect the family schedule. Extract params.range as week/month/year and params.direction as current/next.
+- For quadrant_analysis, extract params.dateRange as today/week/month when the user says today, this week, or this month. Default to today.
+- For weekly_report, extract params.period as week/month/term/year when the user asks for a family report, recap, review, or next-period schedule advice. Default to week.
 - If operation involves dangerous actions like delete, deduct stars, set needsConfirmation=true
 - If information is incomplete, explain what is missing in the missingInfo field
 
@@ -418,6 +454,178 @@ When intent is 'chat', provide a helpful response in the user's language in the 
   };
 }
 
+function recognizeLocalButlerIntent(input: string): VoiceCommand | null {
+  const text = input.toLowerCase();
+  if (/(智能建议|管家建议|给.*建议|下一步|怎么办|整体看看|帮我看看|有什么建议|suggestion|advice)/.test(text)) {
+    return {
+      intent: 'smart_suggestion',
+      params: {},
+      confidence: 0.9,
+      needsConfirmation: false,
+    };
+  }
+  if (/(今日总结|今天总结|今天怎么样|今天表现|summary)/.test(text)) {
+    return {
+      intent: 'today_summary',
+      params: {},
+      confidence: 0.9,
+      needsConfirmation: false,
+    };
+  }
+  return null;
+}
+
+function recognizeLocalScheduleArrangementIntent(input: string): VoiceCommand | null {
+  const command = recognizeScheduleArrangementSkill(input);
+  if (!command) return null;
+
+  return {
+    intent: 'schedule_arrangement',
+    params: command,
+    confidence: command.confidence,
+    needsConfirmation: true,
+    confirmationMessage: command.summary,
+  };
+}
+
+export type PublicCalendarRangeParam = 'week' | 'month' | 'year';
+export type PublicCalendarDirectionParam = 'current' | 'next';
+
+export function parsePublicCalendarRangeFromText(input: string): PublicCalendarRangeParam {
+  const text = input.toLowerCase();
+  if (/(全年|今年|明年|年度|year)/.test(text)) return 'year';
+  if (/(本月|这个月|下月|下个月|月度|month)/.test(text)) return 'month';
+  return 'week';
+}
+
+export function parsePublicCalendarDirectionFromText(input: string): PublicCalendarDirectionParam {
+  const text = input.toLowerCase();
+  return /(下周|下星期|下个月|明年|next)/.test(text) ? 'next' : 'current';
+}
+
+function recognizeLocalPublicCalendarIntent(input: string): VoiceCommand | null {
+  const text = input.toLowerCase();
+  const asksPublicTime = /(节假日|放假|调休|补班|补课|开学|校历|寒假|暑假|灾情|台风|暴雨|暴雪|极端天气|公共事件|交通管制|停课|public holiday|holiday|school calendar)/.test(text)
+    && /(影响|安排|日程|提醒|看看|有没有|查一下|查询|注意|变化|改动|什么时候|哪天)/.test(text);
+  if (!asksPublicTime) return null;
+
+  return {
+    intent: 'public_calendar_query',
+    params: {
+      range: parsePublicCalendarRangeFromText(input),
+      direction: parsePublicCalendarDirectionFromText(input),
+    },
+    confidence: 0.88,
+    needsConfirmation: false,
+  };
+}
+
+function recognizeLocalHolidayPlayPreferenceIntent(input: string): VoiceCommand | null {
+  const text = input.toLowerCase();
+  const mentionsHolidayPlay = /(假期|暑假|寒假|小长假|周末|玩|旅行|出游|度假|营地|研学|科学馆|博物馆|vacation|holiday|trip)/.test(text);
+  const mentionsPreference = /(小玩|中玩|大玩|纯玩|科学|兴趣|培养|预算|省心|省力|陪伴|家长忙|投入|托管|深度陪|低成本|高预算|big|science|budget|easy)/.test(text);
+  if (!mentionsHolidayPlay || !mentionsPreference) return null;
+
+  const preference = inferHolidayPlayPreference({ text: input });
+  return {
+    intent: 'holiday_play_preference',
+    params: {
+      holidayPlayScale: preference.scale,
+      holidayPlayMode: preference.mode,
+      caregiverLoad: preference.caregiverLoad,
+      budgetLevel: preference.budgetLevel,
+      effortLevel: preference.effortLevel,
+      sourceText: input,
+    },
+    confidence: 0.9,
+    needsConfirmation: false,
+  };
+}
+
+export function parseQuadrantDateRangeFromText(input: string): QuadrantDateRange {
+  const text = input.toLowerCase();
+  if (/(本月|这个月|这月|月度|monthly|month)/.test(text)) return 'month';
+  if (/(本周|这周|这星期|这个星期|周度|weekly|week)/.test(text)) return 'week';
+  if (/(今天|今日|当天|现在|today)/.test(text)) return 'today';
+  return 'today';
+}
+
+function recognizeLocalQuadrantIntent(input: string): VoiceCommand | null {
+  const text = input.toLowerCase();
+  const asksQuadrant = /(四象限|象限|轻重缓急|优先级|先做什么|先干什么|怎么安排|压力大不大|quadrant|priority)/.test(text);
+  if (!asksQuadrant) return null;
+
+  return {
+    intent: 'quadrant_analysis',
+    params: {
+      dateRange: parseQuadrantDateRangeFromText(input),
+    },
+    confidence: 0.9,
+    needsConfirmation: false,
+  };
+}
+
+export type PlanSceneParam = 'weekday' | 'holiday' | 'exchange' | 'custom';
+
+export function parsePlanSceneFromText(input: string): PlanSceneParam {
+  const text = input.toLowerCase();
+  if (/(暑假|寒假|假期|节假日|holiday|vacation|summer|winter)/.test(text)) return 'holiday';
+  if (/(留学|交换|海外|时差|exchange|abroad|overseas)/.test(text)) return 'exchange';
+  if (/(平日|工作日|上学日|日常作息|weekday|school day)/.test(text)) return 'weekday';
+  return 'custom';
+}
+
+export function extractPlanNameFromText(input: string): string {
+  const text = input.trim();
+  const match = text.match(/(?:帮我|给.*?孩子|给孩子|制定|创建|做|生成|安排)?(.{2,24}?(?:计划|安排|方案))/);
+  return match?.[1]
+    ?.replace(/^(帮我|给.*?孩子|给孩子|制定|创建|做|生成|安排|一个|一份|一下)+/, '')
+    .trim() || '';
+}
+
+function recognizeLocalPlanIntent(input: string): VoiceCommand | null {
+  const text = input.toLowerCase();
+  const asksCreatePlan = /(创建|制定|做一个|做一份|生成|帮我做|帮我制定|规划).{0,12}(计划|安排|方案)|(?:计划|安排|方案).{0,8}(创建|制定|生成)/.test(text);
+  if (!asksCreatePlan) return null;
+
+  const scene = parsePlanSceneFromText(input);
+  return {
+    intent: 'create_plan',
+    params: {
+      scene,
+      name: extractPlanNameFromText(input) || (scene === 'holiday' ? '假期计划' : scene === 'weekday' ? '平日计划' : scene === 'exchange' ? '交换留学计划' : '自定义计划'),
+    },
+    confidence: 0.9,
+    needsConfirmation: false,
+  };
+}
+
+export type ReportPeriodParam = 'week' | 'month' | 'term' | 'year';
+
+export function parseReportPeriodFromText(input: string): ReportPeriodParam {
+  const text = input.toLowerCase();
+  if (/(年度|全年|今年|年报|year)/.test(text)) return 'year';
+  if (/(学期|本学期|这学期|term|semester)/.test(text)) return 'term';
+  if (/(月报|本月|这个月|这月|下月|monthly|month)/.test(text)) return 'month';
+  return 'week';
+}
+
+function recognizeLocalReportIntent(input: string): VoiceCommand | null {
+  const text = input.toLowerCase();
+  const asksReport = /(复盘|周报|月报|年报|学期报|总结|回顾|下周.*安排|下个周期|家庭安排建议|report|review|recap)/.test(text);
+  if (!asksReport) return null;
+
+  return {
+    intent: 'weekly_report',
+    params: {
+      period: parseReportPeriodFromText(input),
+      focus: /(下周|下月|下个周期|安排建议|next)/.test(text) ? 'next_period' : 'review',
+    },
+    confidence: 0.9,
+    needsConfirmation: false,
+  };
+}
+
 // ==================== 四象限分析 ====================
 
 export interface QuadrantItem {
@@ -431,6 +639,8 @@ export interface QuadrantItem {
   reason: string;
 }
 
+export type QuadrantDateRange = 'all' | 'today' | 'next3days' | 'next7days' | 'week' | 'month' | 'next30days' | 'year';
+
 export interface QuadrantAnalysis {
   urgentImportant: QuadrantItem[];     // 紧急且重要
   notUrgentImportant: QuadrantItem[];  // 重要不紧急
@@ -438,9 +648,13 @@ export interface QuadrantAnalysis {
   notUrgentNotImportant: QuadrantItem[]; // 不紧急不重要
   suggestions: string[];
   summary: string;
+  periodLabel: string;
+  coachingSummary: string;
+  childEncouragement: string;
+  parentAction: string;
 }
 
-export async function analyzeQuadrant(context: AppContext, dateRange?: 'today' | 'week' | 'month'): Promise<QuadrantAnalysis> {
+export async function analyzeQuadrant(context: AppContext, dateRange: QuadrantDateRange = 'all'): Promise<QuadrantAnalysis> {
   const now = new Date();
   
   // 输入验证
@@ -452,17 +666,15 @@ export async function analyzeQuadrant(context: AppContext, dateRange?: 'today' |
     throw new Error('任务数据无效或为空');
   }
   
+  const range = getQuadrantDateRange(dateRange, now);
+
   // 过滤任务
-  const targetTasks = context.tasks.filter(t => {
-    if (!t || typeof t !== 'object') return false;
-    if (t.status === 'completed') return false;
-    if (dateRange === 'today') {
-      if (!t.startTime) return false;
-      const taskDate = new Date(t.startTime);
-      return taskDate.toDateString() === now.toDateString();
-    }
-    return true;
-  });
+  const targetTasks = filterQuadrantTasksByDateRange(context.tasks, dateRange, now);
+
+  if (context.familyId === 'guest-family') {
+    const rangeLabel = range?.label || '全部任务';
+    return localQuadrantAnalysis(context, targetTasks, rangeLabel);
+  }
 
   // 获取AI配置
   const config = await getAIConfig();
@@ -482,9 +694,14 @@ export async function analyzeQuadrant(context: AppContext, dateRange?: 'today' |
         assigneeNames: t.assigneeIds.map(id => context.members.find(m => m.id === id)?.name || '未知'),
         isHabit: t.isHabit,
         startTime: t.startTime,
+        endTime: t.endTime,
+        deadline: t.deadline,
+        planId: t.planId,
       }));
 
-      const systemInstruction = `你是时间管理专家。根据艾森豪威尔矩阵对任务进行四象限分类：
+      const systemInstruction = `你是星愿卡的家庭 AI 管家，不是冷冰冰的项目经理。你的任务是帮助家长减少决策负担，也帮助孩子看到努力和下一步。
+
+根据艾森豪威尔矩阵对家庭任务进行四象限分类：
 - 紧急且重要：有明确截止日期且影响大的任务
 - 重要不紧急：长期价值高但无紧迫截止日期的任务(如习惯养成)
 - 紧急不重要：时间紧迫但价值较低的任务
@@ -496,15 +713,23 @@ export async function analyzeQuadrant(context: AppContext, dateRange?: 'today' |
 3. 待审核任务通常紧急
 4. 长期未完成的待办可能紧急度上升
 
-请用中文回答，给出简洁有力的建议。返回JSON格式。`;
+表达要求：
+1. 建议要像家庭管家在帮忙做取舍，而不是生成报表。
+2. 对孩子以鼓励为主，避免批评。
+3. 对家长给出可执行动作，例如“今天先保住两件关键事”“把某件事延后到周末”。
+4. 如果任务过多，要主动建议减法。
+
+请用中文回答，返回JSON格式。`;
 
       const response = await callAI(
-        `请分析以下任务的四象限分布。当前用户: ${context.currentUser?.name}，日期: ${now.toLocaleDateString('zh-CN')}。
+        `请分析${range?.label || '全部'}家庭任务的四象限分布。当前用户: ${context.currentUser?.name}，日期: ${now.toLocaleDateString('zh-CN')}。
 
 待分析任务:
 ${JSON.stringify(taskList, null, 2)}
 
-请按照艾森豪威尔矩阵(紧急-重要)分类，并给出建议。返回JSON格式，包含字段：urgentImportant, notUrgentImportant, urgentNotImportant, notUrgentNotImportant(每个是包含taskId和reason的对象数组), suggestions(字符串数组), summary(总结)。`,
+请按照艾森豪威尔矩阵(紧急-重要)分类，并给出建议。返回JSON格式，包含字段：
+urgentImportant, notUrgentImportant, urgentNotImportant, notUrgentNotImportant(每个是包含taskId和reason的对象数组),
+suggestions(字符串数组), summary(一句总结), coachingSummary(家庭管家式权衡建议), childEncouragement(给孩子的鼓励), parentAction(给家长的下一步动作)。`,
         systemInstruction
       );
 
@@ -530,6 +755,10 @@ ${JSON.stringify(taskList, null, 2)}
         })),
         suggestions: analysis.suggestions || [],
         summary: analysis.summary || '',
+        periodLabel: range?.label || '全部任务',
+        coachingSummary: analysis.coachingSummary || analysis.summary || '',
+        childEncouragement: analysis.childEncouragement || '先把最重要的一小步做好，今天的努力就会被看见。',
+        parentAction: analysis.parentAction || '建议先帮孩子确认今天最关键的一件事，再把不急的任务顺延。',
       };
     } catch (error) {
       console.warn('AI分析失败，使用本地规则分析:', error);
@@ -538,11 +767,11 @@ ${JSON.stringify(taskList, null, 2)}
   }
 
   // 本地规则分析（无 API Key 或 AI 失败时的备用方案）
-  return localQuadrantAnalysis(context, targetTasks);
+  return localQuadrantAnalysis(context, targetTasks, range?.label || '全部任务');
 }
 
 // 本地规则分析函数
-function localQuadrantAnalysis(context: AppContext, tasks: any[]): QuadrantAnalysis {
+function localQuadrantAnalysis(context: AppContext, tasks: any[], periodLabel = '当前'): QuadrantAnalysis {
   const now = new Date();
   const urgentImportant: QuadrantItem[] = [];
   const notUrgentImportant: QuadrantItem[] = [];
@@ -550,14 +779,14 @@ function localQuadrantAnalysis(context: AppContext, tasks: any[]): QuadrantAnaly
   const notUrgentNotImportant: QuadrantItem[] = [];
 
   tasks.forEach(task => {
-    const hasDeadline = task.endTime || task.startTime;
+    const hasDeadline = task.deadline || task.endTime || task.startTime;
     const isUrgent = hasDeadline ? (() => {
-      const deadline = new Date(task.endTime || task.startTime);
+      const deadline = new Date(task.deadline || task.endTime || task.startTime);
       const hoursDiff = (deadline.getTime() - now.getTime()) / (1000 * 60 * 60);
-      return hoursDiff <= 24; // 24小时内算紧急
+      return hoursDiff <= 24 || task.status === 'reviewing'; // 24小时内或待审核算紧急
     })() : false;
     
-    const isImportant = task.rewardStars >= 10 || task.isHabit; // 高奖励或习惯任务算重要
+    const isImportant = task.rewardStars >= 10 || task.isHabit || isFamilyPromiseTask(task); // 高奖励、习惯或家庭承诺算重要
     
     const reason = getClassificationReason(task, isUrgent, isImportant);
 
@@ -580,18 +809,27 @@ function localQuadrantAnalysis(context: AppContext, tasks: any[]): QuadrantAnaly
   // 生成建议
   const suggestions: string[] = [];
   if (urgentImportant.length > 0) {
-    suggestions.push(`有 ${urgentImportant.length} 个紧急重要任务需要优先处理`);
+    suggestions.push(`先守住 ${urgentImportant.length} 个紧急重要任务，其他事项可以适当顺延`);
   }
   if (notUrgentImportant.length > 0) {
-    suggestions.push(`有 ${notUrgentImportant.length} 个重要不紧急任务，建议制定计划逐步完成`);
+    suggestions.push(`${notUrgentImportant.length} 个重要不紧急任务适合稳定坚持，不要都挤到今天`);
   }
   if (urgentNotImportant.length > 3) {
-    suggestions.push('紧急不重要任务较多，考虑委托或快速处理');
+    suggestions.push('紧急但不重要的事项偏多，建议家长帮孩子做一次减法');
   }
 
   // 生成总结
   const totalTasks = tasks.length;
-  const summary = `当前共有 ${totalTasks} 个待处理任务。其中紧急重要 ${urgentImportant.length} 个，重要不紧急 ${notUrgentImportant.length} 个，紧急不重要 ${urgentNotImportant.length} 个，不紧急不重要 ${notUrgentNotImportant.length} 个。${suggestions.length > 0 ? '建议：' + suggestions[0] : ''}`;
+  const summary = `${periodLabel}共有 ${totalTasks} 个待处理事项，优先关注 ${urgentImportant.length} 个紧急重要任务。`;
+  const coachingSummary = urgentImportant.length > 0
+    ? `${periodLabel}先不要追求全部完成，建议把最关键的 ${urgentImportant.length} 件事排在前面，让孩子知道“先做什么”比“什么都做”更重要。`
+    : `${periodLabel}压力不高，可以把重心放在重要不紧急的习惯和成长任务上。`;
+  const childEncouragement = notUrgentImportant.length > 0
+    ? '你现在坚持的小习惯，虽然不一定马上紧急，但它们会慢慢变成真正的进步。'
+    : '先完成眼前最清楚的一小步，就已经是在往前走了。';
+  const parentAction = urgentNotImportant.length > 0
+    ? '建议家长把紧急但价值不高的事情合并处理，给孩子留出专注完成关键任务的时间。'
+    : '建议家长今天只强调一两个重点，减少反复催促，让孩子更容易进入状态。';
 
   return {
     urgentImportant,
@@ -600,24 +838,117 @@ function localQuadrantAnalysis(context: AppContext, tasks: any[]): QuadrantAnaly
     notUrgentNotImportant,
     suggestions,
     summary,
+    periodLabel,
+    coachingSummary,
+    childEncouragement,
+    parentAction,
   };
 }
 
 // 生成分类原因
 function getClassificationReason(task: any, isUrgent: boolean, isImportant: boolean): string {
   if (isUrgent && isImportant) {
-    return `截止时间临近（${task.endTime || task.startTime}），且奖励星星数为 ${task.rewardStars}，属于高优先级任务`;
+    if (isFamilyPromiseTask(task)) {
+      return '这是孩子已经兑换的家庭承诺，建议家长优先安排兑现';
+    }
+    return `时间比较靠前，且对成长或当天节奏影响较大，建议优先完成`;
   }
   if (!isUrgent && isImportant) {
-    if (task.isHabit) {
-      return '习惯养成类任务，长期价值高，建议每天坚持';
+    if (isFamilyPromiseTask(task)) {
+      return '这是需要父母兑现的心愿承诺，重要性来自亲子信任';
     }
-    return `奖励星星数为 ${task.rewardStars}，重要但无紧迫截止日期`;
+    if (task.isHabit) {
+      return '这是习惯养成类任务，长期价值高，适合稳定坚持';
+    }
+    return `这件事有较高成长价值，但不用挤占最紧急的时间`;
   }
   if (isUrgent && !isImportant) {
-    return '时间紧迫，但任务价值较低，建议快速处理或委托他人';
+    return '时间比较近，但价值相对有限，适合快速处理或由家长协助简化';
   }
-  return '既不紧迫也不重要，可以稍后处理或删除';
+  return '暂时不需要占用主要精力，可以稍后处理或考虑删减';
+}
+
+export function isFamilyPromiseTask(task: { title?: string; description?: string; type?: string }): boolean {
+  return isFamilyPromiseLike(task);
+}
+
+export function buildFamilyButlerContextSummary(context: AppContext) {
+  return buildFamilyButlerContextSummaryDomain({
+    tasks: context.tasks,
+    rewards: context.rewards,
+    currentStars: context.currentUser?.stars || 0,
+  });
+}
+
+export function buildFamilyButlerSuggestions(context: AppContext): string[] {
+  return buildFamilyButlerAdvice(context).suggestions;
+}
+
+export function buildFamilyButlerAdvice(context: AppContext) {
+  return buildFamilyButlerAdviceDomain({
+    tasks: context.tasks,
+    rewards: context.rewards,
+    currentStars: context.currentUser?.stars || 0,
+  });
+}
+
+export function filterQuadrantTasksByDateRange<T extends { status?: string }>(
+  tasks: T[],
+  dateRange: QuadrantDateRange,
+  now: Date = new Date(),
+): T[] {
+  const range = getQuadrantDateRange(dateRange, now);
+  return tasks.filter(t => {
+    if (!t || typeof t !== 'object') return false;
+    if (t.status === 'completed') return false;
+    if (!range) return true;
+    const taskTime = getTaskReferenceDate(t);
+    if (!taskTime) return false;
+    return taskTime >= range.start.getTime() && taskTime <= range.end.getTime();
+  });
+}
+
+export function getQuadrantDateRange(dateRange: QuadrantDateRange, now: Date): { start: Date; end: Date; label: string } | null {
+  const startOfDay = new Date(now);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(now);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  if (dateRange === 'today') return { start: startOfDay, end: endOfDay, label: '今天' };
+  if (dateRange === 'next3days') return { start: startOfDay, end: addDaysEnd(startOfDay, 3), label: '未来3天' };
+  if (dateRange === 'next7days') return { start: startOfDay, end: addDaysEnd(startOfDay, 7), label: '未来7天' };
+  if (dateRange === 'next30days') return { start: startOfDay, end: addDaysEnd(startOfDay, 30), label: '未来30天' };
+  if (dateRange === 'week') {
+    const start = new Date(startOfDay);
+    const day = start.getDay() || 7;
+    start.setDate(start.getDate() - day + 1);
+    return { start, end: addDaysEnd(start, 7), label: '本周' };
+  }
+  if (dateRange === 'month') {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    return { start, end, label: '本月' };
+  }
+  if (dateRange === 'year') {
+    const start = new Date(now.getFullYear(), 0, 1);
+    const end = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+    return { start, end, label: '今年' };
+  }
+  return null;
+}
+
+function addDaysEnd(start: Date, days: number): Date {
+  const end = new Date(start);
+  end.setDate(end.getDate() + days - 1);
+  end.setHours(23, 59, 59, 999);
+  return end;
+}
+
+function getTaskReferenceDate(task: any): number | null {
+  const value = task.deadline || task.endTime || task.startTime || task.createdAt;
+  if (!value) return null;
+  const time = new Date(value).getTime();
+  return Number.isFinite(time) ? time : null;
 }
 
 // ==================== 今日总结 ====================
@@ -752,7 +1083,7 @@ function formatICSDate(date: Date): string {
 export function downloadICS(content: string, filename = 'wishcard-calendar.ics'): void {
   const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a', { defaultValue: 'a' });
+  const link = document.createElement('a');
   link.href = url;
   link.download = filename;
   document.body.appendChild(link);
@@ -777,7 +1108,7 @@ export function getCalendarSyncGuide(brand: string): CalendarSyncGuide {
     '华为': {
       brand: '华为',
       brandLogo: '📱',
-      brandColor: '#CF0A2C',
+      brandColor: 'var(--color-tertiary)',
       steps: [
         '打开「日历」App',
         '点击右下角「更多」→「订阅管理」',
@@ -796,7 +1127,7 @@ export function getCalendarSyncGuide(brand: string): CalendarSyncGuide {
     '荣耀': {
       brand: '荣耀',
       brandLogo: '📱',
-      brandColor: '#1A6DB5',
+      brandColor: 'var(--color-primary)',
       steps: [
         '打开「日历」App',
         '点击右上角「⋮」→「订阅日历」',
@@ -813,7 +1144,7 @@ export function getCalendarSyncGuide(brand: string): CalendarSyncGuide {
     '小米': {
       brand: '小米',
       brandLogo: '📱',
-      brandColor: '#FF6900',
+      brandColor: 'var(--color-amber-text)',
       steps: [
         '打开「日历」App',
         '点击右上角「⋮」→「设置」',
@@ -832,7 +1163,7 @@ export function getCalendarSyncGuide(brand: string): CalendarSyncGuide {
     'OPPO': {
       brand: 'OPPO',
       brandLogo: '📱',
-      brandColor: '#1D8348',
+      brandColor: 'var(--color-primary-text)',
       steps: [
         '打开「日历」App',
         '点击右下角「我的」→「订阅管理」',
@@ -850,7 +1181,7 @@ export function getCalendarSyncGuide(brand: string): CalendarSyncGuide {
     'vivo': {
       brand: 'vivo',
       brandLogo: '📱',
-      brandColor: '#415FFF',
+      brandColor: 'var(--color-purple-text)',
       steps: [
         '打开「日历」App',
         '点击右上角「⋮」→「设置」',
@@ -868,7 +1199,7 @@ export function getCalendarSyncGuide(brand: string): CalendarSyncGuide {
     '三星': {
       brand: '三星',
       brandLogo: '📱',
-      brandColor: '#1428A0',
+      brandColor: 'var(--color-primary)',
       steps: [
         '打开「Samsung Calendar」App',
         '点击左上角菜单 →「管理日历」',
@@ -886,7 +1217,7 @@ export function getCalendarSyncGuide(brand: string): CalendarSyncGuide {
     'Apple': {
       brand: 'Apple',
       brandLogo: '🍎',
-      brandColor: '#555555',
+      brandColor: 'var(--color-on-surface-variant)',
       steps: [
         '在 Safari 中打开星愿卡提供的 webcal:// 链接',
         '系统会自动弹出「订阅日历」确认框',
@@ -905,7 +1236,7 @@ export function getCalendarSyncGuide(brand: string): CalendarSyncGuide {
   return guides[brand] || {
     brand: brand || '通用',
     brandLogo: '📲',
-    brandColor: '#6B7280',
+    brandColor: 'var(--color-outline)',
     steps: [
       '打开手机日历 App',
       '查找「订阅管理」或「导入日历」功能',

@@ -1,0 +1,56 @@
+@import "../../app.scss";
+
+.mini-top-app-bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  min-height: 112rpx;
+  padding: calc(env(safe-area-inset-top) + 12rpx) 32rpx 8rpx;
+  background-color: rgba($bg-color, 0.92);
+  backdrop-filter: blur(30rpx);
+  border-bottom: 2rpx solid rgba($border-color, 0.3);
+  box-sizing: border-box;
+}
+
+.mini-top-app-bar__side {
+  width: 88rpx;
+  min-width: 88rpx;
+  display: flex;
+  align-items: center;
+}
+
+.mini-top-app-bar__side--right {
+  justify-content: flex-end;
+}
+
+.mini-top-app-bar__back {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $text-secondary;
+  transition: all 0.15s ease;
+}
+
+.mini-top-app-bar__back:active {
+  background-color: rgba($surface-container, 0.85);
+  transform: scale(0.95);
+}
+
+.mini-top-app-bar__title {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 34rpx;
+  line-height: 88rpx;
+  font-weight: 800;
+  color: $text-primary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

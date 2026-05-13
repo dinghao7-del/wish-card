@@ -122,12 +122,12 @@ export function AISmartTaskDialog({ isOpen, onClose }: AISmartTaskDialogProps) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[160] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
-            className="w-full max-w-lg bg-surface flex flex-col rounded-t-[2.5rem] sm:rounded-[2.5rem] h-[80vh] sm:h-[600px] shadow-2xl overflow-hidden border border-outline-variant/10"
+            className="w-full max-w-lg bg-surface flex flex-col rounded-t-[2.5rem] sm:rounded-[2.5rem] h-[80svh] max-h-[calc(100svh-1rem)] sm:h-[600px] shadow-2xl overflow-hidden border border-outline-variant/10"
           >
             {/* Header */}
             <div className="p-6 border-b border-outline-variant/10 flex items-center justify-between bg-white dark:bg-surface-container">

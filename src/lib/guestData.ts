@@ -452,7 +452,7 @@ export const GUEST_REWARDS: Reward[] = [
     name: '冰淇淋',
     description: '享用一个大号冰淇淋',
     cost: 40,
-    icon: '/reward-icons/privilege/Cute_flat_kawaii_ice_cream_con_2026-04-27T20-45-45.png',
+    icon: '/reward-icons/privilege/Cute_flat_kawaii_ice_cream_con_2026-04-27T19-45-45.png',
     image: '',
     category: '特权',
   },

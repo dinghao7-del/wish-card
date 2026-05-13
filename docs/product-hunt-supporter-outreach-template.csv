@@ -1,0 +1,6 @@
+Name,Segment,Relationship,Channel,Timezone,Warmth,Prelaunch Status,Launch-Day Status,Personal Hook,Message Sent,Replied,Follow-Up Needed,Notes
+Example Parent,Parent,Tester,Email,America/Los_Angeles,Warm,Demo sent,Not sent,"Asked about bedtime routines",No,No,No,"Ask for feedback on the family planning loop"
+Example Founder,Builder,Peer,X,Europe/London,Warm,Teaser sent,Not sent,"Builds productivity tools",No,No,No,"Ask whether positioning is clear"
+Example Educator,Educator,Community,LinkedIn,Asia/Shanghai,Medium,Not sent,Not sent,"Interested in student routines",No,No,No,"Ask about templates for homework and reading"
+Example Investor,Investor,Advisor,Email,America/New_York,Medium,Not sent,Not sent,"Asked about parenting AI",No,No,No,"Ask for category framing feedback"
+Example Creator,Creator,Parenting newsletter,Email,America/Chicago,Cold,Not sent,Not sent,"Writes about family systems",No,No,No,"Send short demo link only if relevant"

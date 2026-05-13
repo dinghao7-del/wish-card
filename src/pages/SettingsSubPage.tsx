@@ -1,12 +1,22 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Shield, Bell, Settings, ChevronRight, Smartphone, Mail, Globe } from 'lucide-react';
+import { Shield, Bell, Settings, ChevronRight, Smartphone, Mail, Globe, Palette, CheckCircle2, Clock3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
 import { useFamily } from '../context/FamilyContext';
 import { showToastGlobal } from '../components/Toast';
 import { showConfirm } from '../components/ConfirmDialog';
+import { TopAppBar } from '../components/navigation/TopAppBar';
+import { getActiveThemeSkin, getSelectableThemeSkins, saveActiveThemeSkin, type ThemeSkin } from '../lib/themeSkins';
+
+type SettingsItem = {
+  id: string;
+  label: string;
+  desc: string;
+  isToggle?: boolean;
+  skin?: ThemeSkin;
+};
 
 export function SettingsSubPage() {
   const navigate = useNavigate();
@@ -18,6 +28,7 @@ export function SettingsSubPage() {
   const [phoneForm, setPhoneForm] = React.useState({ phone: '', code: '' });
   const [codeSent, setCodeSent] = React.useState(false);
   const [codeCountdown, setCodeCountdown] = React.useState(0);
+  const [activeSkinId, setActiveSkinId] = React.useState(() => getActiveThemeSkin().id);
 
   const getContent = () => {
     switch (type) {
@@ -46,6 +57,20 @@ export function SettingsSubPage() {
             { id: 'points', label: t('settings.notifications.points_change', { defaultValue: 'points change' }), desc: t('settings.notifications.points_change_desc', { defaultValue: 'points change desc' }), isToggle: true },
             { id: 'announcements', label: t('settings.notifications.system_announcement', { defaultValue: 'system announcement' }), desc: t('settings.notifications.system_announcement_desc', { defaultValue: 'system announcement desc' }), isToggle: true }
           ]
+        };
+      case 'appearance':
+        return {
+          title: '主题皮肤',
+          icon: Palette,
+          iconBg: 'bg-primary-container',
+          iconColor: 'text-primary-text',
+          subHeadline: '选择星愿卡的视觉风格',
+          items: getSelectableThemeSkins().map(skin => ({
+            id: `skin:${skin.id}`,
+            label: skin.name,
+            desc: skin.description,
+            skin,
+          })),
         };
       case 'basic':
       default:
@@ -80,6 +105,17 @@ export function SettingsSubPage() {
 
   const handleItemClick = (item: any) => {
     if (item.isToggle) return;
+    if (item.skin) {
+      if (item.skin.status !== 'active') {
+        showToastGlobal('这套皮肤还在打磨中，暂时不能切换', 'info');
+        return;
+      }
+
+      const selectedSkin = saveActiveThemeSkin(item.skin.id);
+      setActiveSkinId(selectedSkin.id);
+      showToastGlobal(`已使用${selectedSkin.name}`, 'success');
+      return;
+    }
     setActiveItem(item);
   };
 
@@ -90,13 +126,7 @@ export function SettingsSubPage() {
 
   return (
     <div className="min-h-screen bg-surface px-6 pb-24 animate-in fade-in slide-in-from-right-4 duration-500">
-      <header className="flex justify-between items-center py-4 bg-surface sticky top-0 z-40 -mx-6 px-6">
-        <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
-          <ArrowLeft size={24} />
-        </button>
-        <h1 className="font-extrabold text-lg text-on-surface">{content.title}</h1>
-        <div className="w-10" />
-      </header>
+      <TopAppBar title={content.title} backTo="/profile" />
 
       <div className="mt-8 flex flex-col items-center mb-10">
         <div className={cn(
@@ -110,12 +140,19 @@ export function SettingsSubPage() {
       </div>
 
       <div className="space-y-4">
-        <div className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-outline-variant/10 overflow-hidden">
-          {content.items.map((item, idx) => (
+        <div className="bg-surface rounded-[2rem] shadow-sm border border-outline-variant/10 overflow-hidden">
+          {content.items.map((item: SettingsItem, idx) => {
+            const isActiveSkin = item.skin?.id === activeSkinId;
+            const isPlannedSkin = item.skin?.status === 'planned';
+            return (
             <div 
                key={idx} 
                onClick={() => handleItemClick(item)}
-               className="flex items-center justify-between p-6 border-b border-outline-variant/5 last:border-0 hover:bg-surface-container active:bg-surface-container-high transition-colors cursor-pointer group"
+               className={cn(
+                 "flex items-center justify-between p-6 border-b border-outline-variant/5 last:border-0 hover:bg-surface-container active:bg-surface-container-high transition-colors cursor-pointer group",
+                 isActiveSkin && "bg-primary/5",
+                 isPlannedSkin && "opacity-75"
+               )}
             >
               <div className="flex flex-col">
                 <span className="font-black text-[15px] text-on-surface">{item.label}</span>
@@ -125,11 +162,19 @@ export function SettingsSubPage() {
                 <div className="w-12 h-7 bg-primary-surface rounded-full relative p-1 flex items-center justify-end shadow-inner">
                   <div className="w-5 h-5 bg-white rounded-full shadow-md"></div>
                 </div>
+              ) : item.skin ? (
+                <div className={cn(
+                  "ml-4 shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black",
+                  isActiveSkin ? "bg-primary text-white" : "bg-surface-container-high text-on-surface-variant"
+                )}>
+                  {isActiveSkin ? <CheckCircle2 size={13} /> : <Clock3 size={13} />}
+                  {isActiveSkin ? '已启用' : isPlannedSkin ? '规划中' : '可用'}
+                </div>
               ) : (
                 <ChevronRight size={18} className="text-on-surface-variant/20 group-hover:text-on-surface transition-colors" />
               )}
             </div>
-          ))}
+          )})}
         </div>
       </div>
       
@@ -146,14 +191,14 @@ export function SettingsSubPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setActiveItem(null)}
-              className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+              className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm"
             />
             <motion.div 
               initial={{ y: '100%', x: 0 }}
               animate={{ y: 0, x: 0 }}
               exit={{ y: '100%', x: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-[60] bg-white rounded-t-[3rem] p-8 pb-12 shadow-2xl safe-area-bottom"
+              className="fixed bottom-0 left-0 right-0 z-[101] bg-surface rounded-t-[3rem] p-8 pb-[max(3rem,env(safe-area-inset-bottom,0px))] shadow-2xl max-h-[85svh] overflow-y-auto"
             >
               <div className="w-12 h-1.5 bg-surface-container-highest rounded-full mx-auto mb-8" />
               

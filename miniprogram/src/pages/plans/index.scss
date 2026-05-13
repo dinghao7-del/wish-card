@@ -1,0 +1,297 @@
+@import '../../app.scss';
+
+/* ===== 计划列表页 — 对齐Web Plans.tsx 样式 ===== */
+.plans-page {
+  min-height: 100vh;
+  background-color: $surface-container-low; /* #f8faf5 */
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ===== Header — 对齐Web第119-127行: 返回+标题 sticky header ===== */
+.plans-header {
+  background-color: #ffffff;
+  border-bottom: 1rpx solid rgba(0,0,0,0.06);
+  padding: 24rpx 32rpx;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 12rpx;
+}
+.header-left:active { opacity: 0.7; }
+.header-title {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: #333;
+}
+
+/* ===== Body Scroll ===== */
+.plans-body { flex: 1; padding: 24rpx 32rpx; overflow-x: hidden; box-sizing: border-box; }
+
+/* ===== 计划卡片 — 对齐Web第137-177行: 白底圆角卡片 ===== */
+.plans-list { display: flex; flex-direction: column; gap: 20rpx; }
+
+.plan-card {
+  background-color: #ffffff;
+  border-radius: 28rpx;
+  padding: 28rpx 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+  /* 对齐Web active:scale-[0.98] */
+  transition: transform 0.15s;
+}
+.plan-card:active { transform: scale(0.97); }
+
+.plan-card-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 左侧信息区 */
+.plan-info { flex: 1; min-width: 0; }
+.plan-name {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: #333;
+  display: block;
+  margin-bottom: 10rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plan-stats-row { display: flex; align-items: center; gap: 20rpx; }
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+.stat-text {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: rgba(0,0,0,0.45);
+}
+
+/* 右侧操作区 — 删除+箭头（对齐Web第165-175行）*/
+.plan-actions {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+.delete-btn {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background-color: rgba(239,68,68,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s;
+}
+.delete-btn:active { transform: scale(0.9); }
+.arrow-btn {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background-color: $surface-container-low;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s;
+}
+.arrow-btn:active { transform: scale(0.9); }
+
+/* ===== 编辑按钮 — 对齐Web editDialog ===== */
+.edit-btn {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background-color: $surface-container-low;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s;
+}
+.edit-btn:active { transform: scale(0.9); background-color: rgba($primary-color, 0.08); }
+
+/* ===== separateWishes Toggle — 对齐Web第42行 ===== */
+.wishes-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 8rpx;
+  margin-bottom: 16rpx;
+}
+.wishes-toggle-label {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: $text-secondary;
+}
+
+/* ===== 空状态 — 对齐Web第182-186行 ===== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0 40rpx;
+  gap: 16rpx;
+}
+.empty-text {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: rgba(0,0,0,0.35);
+}
+
+/* ===== 🤖 智能创建计划 — 对齐Web第190-197行: 渐变色按钮 ===== */
+.smart-create-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 30rpx 0;
+  border-radius: 28rpx;
+  background: linear-gradient(135deg, #006e1c 0%, #00a33a 100%);
+  box-shadow: 0 8rpx 24rpx rgba(0,110,28,0.25);
+  margin-top: 20rpx;
+  transition: transform 0.15s;
+}
+.smart-create-btn:active { transform: scale(0.97); }
+.smart-create-text {
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 900;
+}
+.new-badge {
+  background-color: rgba(255,255,255,0.22);
+  padding: 4rpx 14rpx;
+  border-radius: 100rpx;
+}
+.new-badge-text {
+  color: #ffffff;
+  font-size: 18rpx;
+  font-weight: 900;
+}
+
+/* ===== + 添加计划（虚线）— 对齐Web第199-206行 ===== */
+.add-plan-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+  padding: 26rpx 0;
+  border-radius: 28rpx;
+  border: 4rpx dashed rgba(0,0,0,0.1);
+  margin-top: 16rpx;
+  transition: transform 0.15s;
+}
+.add-plan-btn:active { transform: scale(0.97); }
+.add-plan-text {
+  color: $primary-color;
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+/* ===== 添加计划弹窗 — 对齐Web第209-263行 ===== */
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.35);
+  z-index: 999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.dialog-content {
+  background-color: #ffffff;
+  border-radius: 40rpx 40rpx 0 0;
+  width: 100%;
+  padding: 44rpx 36rpx 80rpx;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.dialog-title {
+  font-size: 38rpx;
+  font-weight: 900;
+  color: #333;
+  display: block;
+  margin-bottom: 28rpx;
+}
+
+/* 输入框 — 对齐Web第228-234行 */
+.dialog-input {
+  width: 100%;
+  height: 96rpx;
+  border-radius: 24rpx;
+  background-color: $surface-container-low;
+  padding: 0 28rpx;
+  box-sizing: border-box;
+  font-size: 29rpx;
+  font-weight: 700;
+  color: #333;
+  border: 3rpx solid transparent;
+  margin-bottom: 24rpx;
+}
+.dialog-input:focus { border-color: $primary-color; }
+
+/* 预设模板标签 — 对齐Web第237-251行 */
+.preset-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+  margin-bottom: 32rpx;
+}
+.preset-tag {
+  padding: 12rpx 24rpx;
+  border-radius: 100rpx;
+  border: 3rpx solid rgba(0,0,0,0.08);
+  background-color: #ffffff;
+  transition: all 0.15s;
+}
+.preset-tag:active { transform: scale(0.95); }
+.preset-tag.active {
+  background-color: $primary-color;
+  border-color: $primary-color;
+}
+.preset-tag-text {
+  font-size: 23rpx;
+  font-weight: 900;
+  color: rgba(0,0,0,0.45);
+}
+.preset-tag-text.active { color: #ffffff; }
+
+/* 确认按钮 — 对齐Web第254-260行 */
+.dialog-confirm-btn {
+  width: 100%;
+  height: 92rpx;
+  border-radius: 24rpx;
+  background-color: $primary-color;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  box-shadow: 0 6rpx 18rpx rgba($primary-color, 0.25);
+}
+.dialog-confirm-btn:active { transform: scale(0.97); }
+.dialog-confirm-btn.disabled {
+  background-color: rgba(0,0,0,0.12);
+  box-shadow: none;
+}
+.dialog-confirm-text {
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 900;
+}

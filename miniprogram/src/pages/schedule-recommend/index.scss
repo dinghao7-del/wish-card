@@ -1,0 +1,1060 @@
+@import "../../app.scss";
+
+/* ============================================================
+ * AI 智能日程推荐 — 100% 对齐 Web 版 ScheduleRecommend.tsx 视觉规范
+ *
+ * 设计系统映射:
+ *   surface          → #FAFAFA (页面底色)
+ *   primary          → #006e1c (品牌绿)
+ *   primary-dark     → #004d12 (深绿)
+ *   on-surface       → #1a1a1a (主文字)
+ *   on-surface-variant→ #666666 (次文字)
+ *   outline-variant  → rgba(0,0,0,0.06) (边框)
+ *   surface-container-low → #F5F5F5 (输入框背景)
+ *   rounded-2xl      → 32rpx (大圆角)
+ *   rounded-full     → 999rpx (pill/胶囊)
+ *   text-xs          → 22rpx (小字)
+ *   text-sm          → 26rpx (中文字)
+ *   font-black       → weight:900
+ * ============================================================ */
+
+// ===== 页面容器（对齐Web第964行: bg-surface-container-low）=====
+.sr-page {
+  min-height: 100vh;
+  background: #F5F5F5;           // bg-surface-container-low
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+// ===== Header（对齐Web第966-1021行: sticky + backdrop-blur）=====
+.sr-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #FFFFFF;           // bg-white
+  border-bottom: 2rpx solid rgba(0, 0, 0, 0.06);  // border-outline-variant/10
+  padding: 20rpx 32rpx 16rpx;
+}
+
+.sr-header-top {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 12rpx;
+}
+
+.sr-back-btn {
+  width: 72rpx;                   // w-9
+  height: 72rpx;
+  border-radius: 24rpx;           // rounded-xl
+  background: #F5F5F5;            // bg-surface-container-low
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:active { transform: scale(0.9); }
+}
+
+.sr-header-center {
+  flex: 1;
+}
+
+.sr-header-title {
+  font-size: 34rpx;               // text-lg
+  font-weight: 900;              // font-black
+  color: #1a1a1a;                // on-surface;
+  display: block;
+  letter-spacing: -0.5rpx;
+}
+
+.sr-header-desc {
+  font-size: 20rpx;               // text-[10px]
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.18);    // on-surface-variant/40
+  margin-top: 2rpx;
+  display: block;
+}
+
+// 步骤点指示器（对齐Web第989-998行）
+.sr-steps-dots {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: #F5F5F5;
+  border-radius: 80rpx;           // rounded-full
+  padding: 10rpx 20rpx;
+}
+
+.sr-step-dot {
+  width: 12rpx;                   // w-1.5
+  height: 12rpx;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08); // outline-variant/30
+  transition: all 0.25s;
+
+  &.active {
+    width: 28rpx;                 // 扩宽到 w-3
+    border-radius: 7rpx;
+    background: #006e1c;          // bg-primary
+  }
+
+  &.done { background: rgba(0, 110, 28, 0.4); } // primary/50
+
+  &:active { transform: scale(1.3); }
+}
+
+// 步骤进度条（对齐Web第1004-1020行: 横线段）
+.sr-progress-bar {
+  display: flex;
+  gap: 6rpx;
+  margin-top: 8rpx;
+}
+
+.sr-progress-segment {
+  flex: 1;
+  height: 6rpx;
+  border-radius: 999rpx;
+  background: rgba(0, 0, 0, 0.06); // outline-variant/10
+  transition: background 0.3s;
+
+  &.current { background: #006e1c; }
+  &.completed { background: rgba(0, 110, 28, 0.35); } // primary/40
+}
+
+// ===== 错误提示 =====
+.sr-error-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 14rpx;
+  margin: 16rpx 32rpx 0;
+  background: #FEF2F2;            // red-50
+  border: 2rpx solid rgba(239, 68, 68, 0.15);
+  border-radius: 24rpx;           // rounded-2xl
+  padding: 24rpx;
+}
+.sr-error-content { flex: 1; }
+.sr-error-title { font-size: 24rpx; font-weight: 800; color: #DC2626; display: block; }
+.sr-error-msg { font-size: 22rpx; font-weight: 600; color: rgba(220, 38, 38, 0.7); margin-top: 4rpx; }
+
+// ===== 内容区域 =====
+.sr-content {
+  flex: 1;
+  padding: 24rpx 32rpx;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+// ===== 表单步骤区块 =====
+.sr-step-section {
+  display: flex;
+  flex-direction: column;
+  gap: 36rpx;
+}
+
+// 字段组
+.sr-field { display: flex; flex-direction: column; gap: 14rpx; }
+.sr-mt-sm { margin-top: 12rpx !important; }
+
+// 标签（对齐Web: text-sm font-black text-on-surface）
+.sr-label {
+  font-size: 26rpx;              // text-sm
+  font-weight: 900;             // font-black
+  color: #1a1a1a;                // on-surface
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+
+  // 带icon的标签变体
+  &.sr-label-icon {
+    gap: 10rpx;
+  }
+}
+
+.sr-required {
+  color: #EF4444;               // red-500
+  font-weight: 700;
+}
+
+// ============================================================
+// ChipSelect 组件 — 核心视觉差异修复！
+// 对齐Web第108-138行:
+//   未选: bg-white, border-2 border-outline-variant/10,
+//         text-on-surface-variant/60 hover:border-primary/30
+//   已选: bg-primary, border-primary, text-white, shadow-sm
+// ============================================================
+
+.chip-select-wrap { width: 100%; }
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+}
+
+.chip-pill {
+  // 对齐Web: px-3 py-1.5 rounded-full text-xs font-black border-2
+  padding: 14rpx 26rpx;
+  border-radius: 999rpx;        // rounded-full
+  border-width: 4rpx;
+  border-style: solid;
+  border-color: transparent;    // 默认无可见边框
+  background: #FFFFFF;          // bg-white
+  transition: all 0.2s ease;
+
+  &:active { transform: scale(0.95); }
+
+  &.active {
+    background: #006e1c;        // bg-primary
+    border-color: #006e1c;
+    box-shadow: 0 4rpx 12rpx rgba(0, 110, 28, 0.15);  // shadow-sm
+  }
+}
+
+.chip-text {
+  font-size: 22rpx;              // text-xs
+  font-weight: 900;             // font-black
+  white-space: nowrap;
+  color: rgba(0, 0, 0, 0.38);  // on-surface-variant/60
+
+  &.text-active {
+    color: #FFFFFF;            // text-white
+  }
+}
+
+.chip-expand {
+  padding: 14rpx 22rpx;
+  border-radius: 999rpx;
+  border: 3rpx dashed rgba(0, 0, 0, 0.08); // border-dashed outline-variant/20
+  background: transparent;
+
+  &:active { background: rgba(0, 0, 0, 0.03); }
+}
+
+.chip-expand-text {
+  font-size: 22rpx;
+  font-weight: 900;
+  color: #006e1c;              // text-primary
+}
+
+.chip-placeholder {
+  font-size: 20rpx;              // text-[10px]
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.18);  // on-surface-variant/40
+  margin-top: 6rpx;
+}
+
+// ============================================================
+// 性别选择卡片 — 对齐Web第291-315行:
+//   flex-1 py-5 rounded-2xl border-2 text-center
+//   active: bg-primary/5 border-primary shadow-sm
+// ============================================================
+
+.sr-gender-row {
+  display: flex;
+  gap: 20rpx;
+}
+
+.sr-gender-card {
+  flex: 1;
+  padding: 40rpx 20rpx;          // py-5
+  border-radius: 32rpx;          // rounded-2xl
+  border-width: 4rpx;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.06); // outline-variant/10
+  background: #FFFFFF;          // bg-white / dark:bg-surface-container-high
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+  transition: all 0.2s;
+
+  &:active { transform: scale(0.97); }
+
+  &.active {
+    background: rgba(0, 110, 28, 0.05); // bg-primary/5
+    border-color: #006e1c;       // border-primary
+    box-shadow: 0 4rpx 16rpx rgba(0, 110, 28, 0.08); // shadow-sm
+  }
+}
+
+.sr-gender-emoji {
+  font-size: 52rpx;              // text-3xl (48rpx+)
+  line-height: 1;
+  margin-bottom: 4rpx;
+}
+
+.sr-gender-name {
+  font-size: 26rpx;              // text-sm
+  font-weight: 900;             // font-black
+  color: rgba(0, 0, 0, 0.38);  // on-surface-variant/60
+
+  &.text-active { color: #006e1c; } // text-primary
+}
+
+// 学校类型按钮（类似性别但更紧凑）
+.sr-type-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.sr-type-btn {
+  flex: 1;
+  padding: 24rpx 16rpx;
+  border-radius: 24rpx;          // rounded-2xl
+  border: 4rpx solid rgba(0, 0, 0, 0.06);
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:active { transform: scale(0.97); }
+
+  &.active {
+    background: rgba(0, 110, 28, 0.05);
+    border-color: #006e1c;
+  }
+}
+
+.sr-type-text {
+  font-size: 26rpx;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.38);
+
+  &.text-active { color: #006e1c; }
+}
+
+// ===== 输入框 — 对齐Web: rounded-2xl bg-surface-container-low border-2 focus:border-primary =====
+
+.sr-input-wrap {
+  position: relative;
+}
+
+.sr-input {
+  width: 100%;
+  padding: 24rpx 28rpx;
+  border-radius: 28rpx;          // rounded-2xl
+  background: #F5F5F5;           // bg-surface-container-low
+  border: 4rpx solid rgba(0, 0, 0, 0.05); // outline-variant/10
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1a1a1a;
+  box-sizing: border-box;
+}
+
+.sr-input-suffix {
+  position: absolute;
+  right: 28rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 24rpx;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.2);   // on-surface-variant/40
+}
+
+.sr-textarea {
+  width: 100%;
+  padding: 24rpx 28rpx;
+  border-radius: 28rpx;
+  background: #F5F5F5;
+  border: 4rpx solid rgba(0, 0, 0, 0.05);
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  box-sizing: border-box;
+  min-height: 120rpx;
+}
+
+// Textarea容器（对齐Web textarea rows=3）
+.sr-textarea-wrap {
+  width: 100%;
+}
+
+// ===== 提示条卡片 — 对齐Web第453-459行 =====
+.sr-tip-card {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 24rpx 28rpx;
+  background: linear-gradient(135deg, rgba(0, 110, 28, 0.04), rgba(0, 110, 28, 0.02));
+  border: 2rpx solid rgba(0, 110, 28, 0.08);
+  border-radius: 24rpx;
+}
+.sr-tip-text {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #006e1c;
+  flex: 1;
+  line-height: 1.4;
+}
+
+// ===== 生成中页面 — 对齐Web第597-625行 =====
+.sr-generating {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 160rpx 48rpx;
+  gap: 24rpx;
+}
+
+.sr-gen-icon-wrap {
+  width: 140rpx;
+  height: 140rpx;
+  animation: genSpin 2s linear infinite;
+}
+@keyframes genSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.sr-gen-title {
+  font-size: 34rpx;
+  font-weight: 900;
+  color: #1a1a1a;
+  text-align: center;
+}
+.sr-gen-desc {
+  font-size: 26rpx;
+  color: rgba(0, 0, 0, 0.38);
+  text-align: center;
+  max-width: 480rpx;
+  line-height: 1.5;
+}
+
+.sr-gen-badges {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+.sr-gen-badge {
+  padding: 14rpx 28rpx;
+  border-radius: 28rpx;           // rounded-full
+  background: rgba(0, 110, 28, 0.07); // primary/10
+  Text { font-size: 22rpx; font-weight: 900; color: #006e1c; }
+}
+
+// ===== 结果展示区域 =====
+.sr-result-scroll { flex: 1; height: 0; overflow-x: hidden; width: 100%; box-sizing: border-box; }
+
+// ---- AI综合摘要卡 — 对齐Web第635-651行 ----
+.sr-summary-card {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 110, 28, 0.04) 0%,
+    rgba(0, 180, 120, 0.02) 50%,
+    rgba(0, 80, 30, 0.03) 100%
+  );
+  border: 2rpx solid rgba(0, 110, 28, 0.08);
+  border-radius: 36rpx;           // rounded-3xl
+  padding: 32rpx;
+  margin-bottom: 28rpx;
+}
+
+.sr-summary-head {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  margin-bottom: 18rpx;
+}
+
+.sr-summary-icon-box {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 24rpx;           // rounded-2xl
+  background: rgba(0, 110, 28, 0.08); // primary/10
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sr-summary-title {
+  font-size: 26rpx;
+  font-weight: 900;
+  color: #1a1a1a;
+  display: block;
+}
+.sr-summary-sub {
+  font-size: 20rpx;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.18);
+  margin-top: 2rpx;
+  display: block;
+}
+
+.sr-summary-body {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.55);   // on-surface-variant/80
+  line-height: 1.7;
+}
+
+// ---- Tab 切换栏 — 对齐Web第654-675行 ----
+.sr-tabs-scroll {
+  white-space: nowrap;
+  padding: 16rpx 0 20rpx;
+  margin-bottom: 8rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sr-tab-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10rpx;
+  padding: 18rpx 28rpx;
+  border-radius: 24rpx;           // rounded-2xl
+  border: 4rpx solid transparent;
+  background: #FFFFFF;
+  margin-right: 14rpx;
+  vertical-align: top;
+
+  &:active { transform: scale(0.96); }
+
+  &.active {
+    background: #006e1c;         // bg-primary
+    border-color: #006e1c;
+    box-shadow: 0 4rpx 12rpx rgba(0, 110, 28, 0.15);
+  }
+}
+
+.sr-tab-label {
+  font-size: 24rpx;
+  font-weight: 900;
+  white-space: nowrap;
+  color: rgba(0, 0, 0, 0.38);
+
+  &.tab-active { color: #FFFFFF; }
+}
+
+// ---- 时间表格 — 对齐Web第795-843行 ----
+.sr-table-card {
+  background: #FFFFFF;           // bg-white
+  border-radius: 36rpx;           // rounded-3xl
+  overflow: hidden;
+  border: 2rpx solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 28rpx;
+}
+
+.sr-table-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 32rpx;
+  border-bottom: 2rpx solid rgba(0, 0, 0, 0.04); // outline-variant/5
+}
+
+.sr-table-title {
+  font-size: 26rpx;
+  font-weight: 900;
+  color: #1a1a1a;
+}
+.sr-table-count {
+  font-size: 20rpx;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.16);
+}
+
+// 时间轴行
+.sr-slot-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+  padding: 24rpx 32rpx;
+  border-bottom: 2rpx solid rgba(0, 0, 0, 0.03);
+
+  &.sleep { background: rgba(99, 102, 241, 0.04); }   // indigo-50/50
+  &.meal { background: rgba(245, 158, 11, 0.05); }     // amber-50/30
+}
+
+.sr-slot-time-col {
+  width: 160rpx;                  // w-28
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.sr-slot-dot {
+  width: 16rpx;                   // w-2
+  height: 16rpx;
+  border-radius: 50%;
+  background: #006e1c;           // primary
+  margin-top: 6rpx;
+  flex-shrink: 0;
+
+  &.dot-sleep { background: #818CF8; }  // indigo-400
+  &.dot-meal { background: #F59E0B; }   // amber-400
+}
+
+.sr-slot-time {
+  font-size: 24rpx;
+  font-weight: 900;
+  color: #1a1a1a;
+  display: block;
+}
+.sr-slot-dur {
+  font-size: 20rpx;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.18);
+}
+
+.sr-slot-act-col { flex: 1; min-width: 0; }
+
+.sr-slot-act {
+  font-size: 26rpx;
+  font-weight: 900;
+  color: #1a1a1a;
+  line-height: 1.4;
+
+  &.act-sleep { color: #4338CA; }  // indigo-600 dark:indigo-300
+}
+
+.sr-slot-notes {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.2);
+  margin-top: 4rpx;
+  display: block;
+}
+
+// ---- 推荐活动 — 对齐Web第847-902行 ----
+.sr-acts-area { display: flex; flex-direction: column; gap: 24rpx; }
+
+.sr-acts-card {
+  background: #FFFFFF;
+  border-radius: 36rpx;
+  overflow: hidden;
+  border: 2rpx solid rgba(0, 0, 0, 0.06);
+}
+
+.sr-act-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 28rpx 32rpx;
+  border-bottom: 2rpx solid rgba(0, 0, 0, 0.03);
+
+  &:last-child { border-bottom: none; }
+}
+
+.sr-act-left { flex: 1; min-width: 0; margin-right: 20rpx; }
+
+.sr-priority-tag {
+  display: inline-block;
+  padding: 6rpx 16rpx;
+  border-radius: 12rpx;
+  font-size: 20rpx;
+  font-weight: 900;
+  margin-right: 10rpx;
+  margin-bottom: 8rpx;
+
+  &.tag-strong { background: #DCFCE7; color: #166534; }    // green-100 green-700
+  &.tag-normal { background: #DBEAFE; color: #2563EB; }    // blue-100 blue-700
+  &.tag-optional { background: #F3F4F6; color: #6B7280; }  // gray-100 gray-500
+}
+
+.sr-cat-tag {
+  display: inline-block;
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(0, 0, 0, 0.04);
+  font-size: 18rpx;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.35);
+  margin-right: 8rpx;
+}
+
+.sr-act-name {
+  font-size: 28rpx;
+  font-weight: 900;
+  color: #1a1a1a;
+  display: block;
+  margin-bottom: 6rpx;
+}
+.sr-act-reason {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.38);
+  line-height: 1.5;
+}
+
+.sr-act-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+.sr-act-hours {
+  font-size: 26rpx;
+  font-weight: 900;
+  color: #006e1c;
+  display: block;
+}
+.sr-act-age {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.18);
+}
+
+// 谨慎考虑警告
+.sr-warn-card {
+  background: #FEF2F2;            // red-50
+  border: 2rpx solid rgba(239, 68, 68, 0.15);
+  border-radius: 36rpx;
+  padding: 28rpx;
+}
+.sr-warn-title {
+  font-size: 24rpx;
+  font-weight: 800;
+  color: #DC2626;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-bottom: 16rpx;
+}
+.sr-warn-tags { display: flex; flex-wrap: wrap; gap: 12rpx; }
+.sr-warn-tag {
+  padding: 10rpx 20rpx;
+  border-radius: 16rpx;
+  background: #FEE2E2;            // red-100
+  Text { font-size: 22rpx; font-weight: 700; color: #DC2626; }
+}
+
+// ---- 学习策略 ----
+.sr-advice-card {
+  background: #FFFFFF;
+  border-radius: 36rpx;
+  overflow: hidden;
+  border: 2rpx solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 28rpx;
+}
+
+.sr-advice-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  padding: 28rpx 32rpx;
+  border-bottom: 2rpx solid rgba(0, 0, 0, 0.03);
+
+  &:last-child { border-bottom: none; }
+}
+
+.sr-advice-left { display: flex; align-items: center; gap: 12rpx; }
+
+.sr-advice-subj {
+  font-size: 26rpx;
+  font-weight: 900;
+  color: #1a1a1a;
+}
+
+.sr-status-tag {
+  padding: 4rpx 14rpx;
+  border-radius: 10rpx;
+  font-size: 18rpx;
+  font-weight: 900;
+
+  &.status-good { background: #DCFCE7; color: #166534; }
+  &.status-bad { background: #FEE2E2; color: #DC2626; }
+  &.status-mid { background: #F3F4F6; color: #6B7280; }
+}
+
+.sr-advice-strategy {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.45);
+  line-height: 1.5;
+}
+
+// ---- 反馈修订区 — 对齐Web第693-719行 ----
+.sr-feedback-card {
+  background: #FFFFFF;
+  border-radius: 36rpx;
+  padding: 28rpx;
+  border: 2rpx solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 28rpx;
+}
+.sr-feedback-label {
+  font-size: 26rpx;
+  font-weight: 900;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-bottom: 16rpx;
+}
+.sr-feedback-row { display: flex; gap: 14rpx; }
+.sr-feedback-input {
+  flex: 1;
+  padding: 22rpx 26rpx;
+  border-radius: 24rpx;
+  background: #F5F5F5;
+  border: 4rpx solid rgba(0, 0, 0, 0.05);
+  font-size: 26rpx;
+  font-weight: 600;
+}
+.sr-send-btn {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 24rpx;
+  background: #006e1c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &:active { transform: scale(0.92); }
+
+  &.disabled {
+    opacity: 0.35;
+  }
+}
+
+// ---- 家长建议卡 — 对齐Web第722-737行 ----
+.sr-tips-card {
+  background: #FFFBEB;            // amber-50
+  border: 2rpx solid rgba(245, 158, 11, 0.2);
+  border-radius: 36rpx;
+  padding: 28rpx;
+  margin-bottom: 28rpx;
+}
+
+.sr-tips-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+.sr-tips-title {
+  font-size: 26rpx;
+  font-weight: 900;
+  color: #92400E;               // amber-800
+}
+
+.sr-tip-row {
+  display: flex;
+  gap: 14rpx;
+  align-items: flex-start;
+  margin-bottom: 14rpx;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.sr-tip-num {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  background: #FCD34D;            // amber-200
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  Text { font-size: 18rpx; font-weight: 900; color: #78350F; }
+}
+.sr-tip-text {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #B45309;               // amber-700
+  line-height: 1.5;
+  flex: 1;
+}
+
+// ===== 底部操作按钮区域 — 对齐Web第1056-1092行 =====
+.sr-bottom-actions {
+  padding: 24rpx 32rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+// 主按钮 — 对齐Web: bg-primary text-white font-black rounded-2xl shadow-lg
+.sr-next-btn {
+  width: 100%;
+  padding: 28rpx 0;
+  border-radius: 28rpx;           // rounded-2xl
+  background: linear-gradient(135deg, #006e1c 0%, #005014 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  box-shadow: 0 16rpx 40rpx rgba(0, 110, 28, 0.2);  // shadow-lg shadow-primary/20
+
+  &:active { transform: scale(0.97); }
+
+  &.disabled {
+    opacity: 0.35;
+  }
+}
+
+.sr-next-text {
+  font-size: 28rpx;
+  font-weight: 900;
+  color: #FFFFFF;
+}
+
+// 跳过/直接生成按钮
+.sr-skip-btn {
+  width: 100%;
+  padding: 22rpx 0;
+  border-radius: 24rpx;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+
+  &:active { background: rgba(0, 0, 0, 0.03); }
+}
+
+.sr-skip-text {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.38);   // on-surface-variant/60
+}
+
+// 结果页操作按钮
+.sr-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  padding: 24rpx 0;
+}
+
+.sr-save-btn {
+  width: 100%;
+  padding: 28rpx 0;
+  border-radius: 28rpx;
+  background: linear-gradient(135deg, #006e1c 0%, #005014 100%);
+  box-shadow: 0 16rpx 40rpx rgba(0, 110, 28, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+
+  &:active { transform: scale(0.97); }
+}
+
+.sr-save-text { font-size: 28rpx; font-weight: 900; color: #FFFFFF; }
+
+.sr-reset-btn {
+  width: 100%;
+  padding: 24rpx 0;
+  border-radius: 24rpx;
+  background: #F5F5F5;            // bg-surface-container-high
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+
+  &:active { transform: scale(0.97); background: #EEEEEE; }
+}
+
+.sr-reset-text { font-size: 26rpx; font-weight: 700; color: #666; }
+
+// ---- 分阶段发展路径 — 对齐Web第740-766行（之前完全缺失！）----
+.sr-dev-card {
+  background: #FFFFFF;
+  border-radius: 36rpx;
+  padding: 32rpx;
+  border: 2rpx solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 28rpx;
+}
+
+.sr-dev-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 28rpx;
+}
+
+.sr-dev-title {
+  font-size: 26rpx;
+  font-weight: 900;
+  color: #1a1a1a;
+}
+
+// 时间轴相位 — 对齐Web第747-765行
+.sr-dev-phase {
+  position: relative;
+  padding-left: 44rpx;
+  margin-bottom: 28rpx;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+// 垂直连接线 — 对齐Web第749-750行
+.sr-dev-line {
+  position: absolute;
+  left: 14rpx;                  // w-[2px]的中心 = 16rpx/2 - 1
+  top: 40rpx;                   // dot顶部偏移 (w-[16px]=32rpx + 8rpx)
+  bottom: -28rpx;               // 延伸到下一个phase
+  width: 4rpx;                   // w-[2px]
+  background: rgba(0, 110, 28, 0.15); // primary/20
+}
+
+// 圆形节点 — 对齐Web第752行: w-[16px] h-[16px] rounded-full border-2 border-primary bg-white
+.sr-dev-dot {
+  position: absolute;
+  left: 0;
+  top: 6rpx;
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  border: 4rpx solid #006e1c;   // border-primary
+  background: #FFFFFF;          // bg-white / dark:bg-surface
+}
+
+.sr-dev-phase-title {
+  font-size: 24rpx;
+  font-weight: 900;
+  color: #006e1c;              // text-primary
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.sr-dev-phase-desc {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.42);   // on-surface-variant/70
+  line-height: 1.5;
+  margin-bottom: 8rpx;
+}
+
+// focus tags — 对齐Web第755-761行: px-2 py-0.5 rounded-full bg-primary/5 text-primary text-[10px]
+.sr-focus-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.sr-focus-tag {
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
+  background: rgba(0, 110, 28, 0.05); // bg-primary/5
+
+  Text {
+    font-size: 20rpx;            // text-[10px]
+    font-weight: 900;
+    color: #006e1c;             // text-primary
+  }
+}
+
+// ---- 资源标签 — 对齐Web第932-940行（之前缺失！）----
+.sr-resources-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 8rpx;
+}
+
+.sr-resource-tag {
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
+  background: rgba(0, 110, 28, 0.05); // bg-primary/5
+
+  Text {
+    font-size: 20rpx;            // text-[10px]
+    font-weight: 900;
+    color: #006e1c;             // text-primary
+  }
+}

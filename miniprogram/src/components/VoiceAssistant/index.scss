@@ -1,0 +1,230 @@
+@import "../../app.scss";
+
+// ===== 遮罩层 =====
+.va-mask {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: vaFadeIn 0.25s ease-out;
+}
+
+@keyframes vaFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+// ===== 面板 =====
+.va-panel {
+  width: 100%;
+  height: 80vh;
+  background: #fbf9f5;
+  border-radius: 36rpx 36rpx 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: vaSlideUp 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes vaSlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+// ===== Header =====
+.va-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 32rpx;
+  border-bottom: 2rpx solid rgba(0,0,0,0.05);
+  flex-shrink: 0;
+}
+
+.va-avatar-area {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.va-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1b1c1a;
+}
+
+.va-close-btn {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:active { background: #ebebeb; }
+}
+
+// ===== 对话消息列表 =====
+.va-messages {
+  flex: 1;
+  padding: 24rpx 28rpx;
+  overflow-y: auto;
+}
+
+.va-msg-row {
+  display: flex;
+  margin-bottom: 20rpx;
+  gap: 10rpx;
+
+  &.user {
+    flex-direction: row-reverse;
+
+    .va-bubble {
+      background: linear-gradient(135deg, #006e1c, #00a86b);
+      border-radius: 18rpx 18rpx 4rpx 18rpx;
+      Text {
+        color: white;
+      }
+    }
+  }
+
+  &.ai {
+    .va-bubble {
+      background: white;
+      border-radius: 18rpx 18rpx 18rpx 4rpx;
+      box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+    }
+  }
+}
+
+.va-ai-avatar {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  background: rgba(0,110,28,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+// 消息气泡
+.va-bubble {
+  max-width: 75%;
+  padding: 18rpx 22rpx;
+  line-height: 1.55;
+
+  Text {
+    font-size: 27rpx;
+    color: #333;
+  }
+}
+
+// "正在输入..." 跳动动画
+.va-typing {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.va-dots {
+  display: flex;
+  gap: 8rpx;
+  align-items: center;
+}
+
+.va-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #ccc;
+}
+
+.va-dot-1 { animation: dotBounce 1s infinite 0s; }
+.va-dot-2 { animation: dotBounce 1s infinite 0.15s; }
+.va-dot-3 { animation: dotBounce 1s infinite 0.3s; }
+
+@keyframes dotBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+  30% { transform: translateY(-10rpx); opacity: 1; }
+}
+
+.va-typing-text {
+  font-size: 24rpx;
+  color: #999;
+}
+
+// ===== 快捷标签 =====
+.va-quick-tags {
+  display: flex;
+  gap: 14rpx;
+  padding: 16rpx 28rpx 0;
+  overflow-x: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &::-webkit-scrollbar { display: none; }
+}
+
+.va-quick-tag {
+  display: inline-flex;
+  padding: 12rpx 24rpx;
+  border-radius: 24rpx;
+  background: rgba(0,110,28,0.06);
+  border: 2rpx solid rgba(0,110,28,0.12);
+  flex-shrink: 0;
+
+  Text {
+    font-size: 24rpx;
+    font-weight: 500;
+    color: $primary-color;
+  }
+
+  &:active {
+    background: rgba(0,110,28,0.12);
+    transform: scale(0.96);
+  }
+}
+
+// ===== 输入区域 =====
+.va-input-area {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 18rpx 24rpx;
+  padding-bottom: calc(18rpx + env(safe-area-inset-bottom));
+  background: white;
+  border-top: 2rpx solid rgba(0,0,0,0.05);
+  flex-shrink: 0;
+}
+
+.va-input {
+  flex: 1;
+  height: 76rpx;
+  border-radius: 38rpx;
+  background: #f5f5f5;
+  padding: 0 28rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.va-send-btn {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #006e1c, #00a86b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &:not(.disabled):active { opacity: 0.85; }
+  &.disabled {
+    background: #ccc;
+    opacity: 0.5;
+  }
+}

@@ -1,0 +1,755 @@
+@import "../../app.scss";
+
+.habits-page {
+  padding: 0 24rpx 32rpx;
+  min-height: 100vh;
+  background-color: $bg-color;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ===== 头部 ===== */
+.hp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0 8rpx;
+  position: sticky;
+  top: 0;
+  background-color: rgba($bg-color, 0.8);
+  backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
+  z-index: 40;
+}
+
+.hp-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.avatar-btn {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  border: 3rpx solid $surface-container;
+  overflow: hidden;
+  .avatar { width: 100%; height: 100%; background-color: $surface-container-high; }
+}
+
+.voice-btn {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 3rpx solid rgba($primary-color, 0.2);
+}
+
+.hp-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.hp-star-badge {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  height: 60rpx;
+  padding: 0 24rpx;
+  border-radius: 100rpx;
+  background-color: $surface-container-low;
+  box-shadow: 0 1rpx 4rpx rgba(0,0,0,0.04);
+  border: 1rpx solid rgba($border-color, 0.1);
+}
+
+.hp-star-text {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: $text-primary;
+}
+
+.hp-notif-btn {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: $surface-container-low;
+  box-shadow: 0 1rpx 4rpx rgba(0,0,0,0.04);
+  border: 1rpx solid rgba($border-color, 0.1);
+}
+
+/* ===== Tab 切换器 ===== */
+.hp-tab-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24rpx;
+  padding: 12rpx 0 8rpx;
+}
+
+.hp-tab-track {
+  display: flex;
+  background-color: $surface-container-low;
+  padding: 4rpx;
+  border-radius: 100rpx;
+  border: 1rpx solid rgba($border-color, 0.1);
+  flex: 1;
+  max-width: 300rpx;
+}
+
+.hp-swtich-tab {
+  flex: 1;
+  text-align: center;
+  padding: 14rpx 0;
+  border-radius: 100rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: $text-secondary-variant;
+  transition: all 0.2s ease;
+}
+
+.hp-swtich-tab.active.reward {
+  background-color: $card-bg;
+  color: $primary-color;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.06);
+}
+
+.hp-swtich-tab.active.penalty {
+  background-color: $card-bg;
+  color: #e53935;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.06);
+}
+
+.hp-add-btn {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background-color: $primary-color;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 16rpx rgba($primary-color, 0.3);
+  flex-shrink: 0;
+}
+
+/* ===== 习惯网格 ===== */
+.hp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+  padding-top: 12rpx;
+}
+
+.hp-habit-card {
+  border-radius: 28rpx;
+  padding: 24rpx;
+  position: relative;
+  overflow: hidden;
+  min-height: 160rpx;
+}
+
+.hp-habit-card.reward {
+  background-color: #f0f9f0;
+  border: 3rpx solid #b8e6b8;
+}
+
+.hp-habit-card.penalty {
+  background-color: #fef0f0;
+  border: 3rpx solid #f5c6c6;
+}
+
+/* 大号装饰图标（背景透明，悬浮在右上角） */
+.hp-habit-deco-icon {
+  position: absolute;
+  right: -8rpx;
+  top: -8rpx;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.hp-habit-deco-icon Text {
+  font-size: 120rpx;
+  line-height: 1;
+}
+
+.hp-habit-info {
+  position: relative;
+  z-index: 2;
+}
+
+.hp-habit-name {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: $text-primary;
+  display: block;
+  margin-bottom: 12rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hp-habit-stars {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.hp-habit-star-value {
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.hp-habit-star-value.reward {
+  color: $primary-color;
+}
+
+.hp-habit-star-value.penalty {
+  color: #e53935;
+}
+
+/* DESIGN.md 3.5.1: 7天打卡状态条 */
+.hp-streak-dots {
+  display: flex;
+  gap: 8rpx;
+  margin-top: 12rpx;
+}
+
+.hp-streak-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background-color: rgba($border-color, 0.25);
+  border: 2rpx solid rgba($border-color, 0.15);
+
+  &.done {
+    background-color: $primary-color;
+    border-color: $primary-color;
+  }
+
+  &.today {
+    transform: scale(1.25);
+    box-shadow: 0 0 0 4rpx rgba($primary-color, 0.2);
+    border-color: $primary-color;
+
+    &.done { box-shadow: 0 0 0 4rpx rgba(129, 199, 132, 0.3); }
+  }
+}
+
+/* ===== 空状态 ===== */
+.hp-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+  padding: 120rpx 0;
+}
+
+.hp-empty-text {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: $text-secondary-variant;
+  text-align: center;
+}
+
+/* ===== 详情弹窗 ===== */
+.hp-mask {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.4);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx;
+}
+
+.hp-detail-sheet {
+  width: 100%;
+  max-width: 600rpx;
+  background-color: $card-bg;
+  border-radius: 48rpx;
+  overflow: hidden;
+  animation: scaleIn 0.25s ease-out;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.hp-detail-icon-area {
+  display: flex;
+  justify-content: center;
+  padding: 48rpx 0 24rpx;
+}
+
+.hp-detail-big-emoji {
+  font-size: 96rpx;
+  width: 144rpx;
+  height: 144rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $surface-container-low;
+  border-radius: 32rpx;
+  border: 6rpx solid $card-bg;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.04);
+}
+
+.hp-detail-body {
+  padding: 0 32rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hp-detail-title {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: $text-primary;
+  margin-bottom: 12rpx;
+  text-align: center;
+}
+
+.hp-detail-desc {
+  font-size: 26rpx;
+  color: $text-secondary;
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 32rpx;
+}
+
+/* 统计卡片 */
+.hp-detail-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+  width: 100%;
+  margin-bottom: 32rpx;
+}
+
+.hp-stat-card {
+  background-color: $surface-container-low;
+  border-radius: 24rpx;
+  padding: 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.hp-stat-label {
+  font-size: 18rpx;
+  font-weight: 800;
+  color: $text-secondary-variant;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.hp-stat-value {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.hp-stat-number {
+  font-size: 36rpx;
+  font-weight: 900;
+}
+
+.hp-stat-number.reward {
+  color: $primary-color;
+}
+
+.hp-stat-number.penalty {
+  color: #e53935;
+}
+
+.hp-stat-count {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: $text-primary;
+}
+
+.hp-stat-card.full-width { flex-basis: 100%; }
+.hp-stat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12rpx; }
+
+/* 进度条 */
+.hp-progress-bar-track {
+  width: 100%; height: 16rpx; border-radius: 8rpx;
+  background-color: rgba($border-color, 0.15); overflow: hidden;
+}
+.hp-progress-bar-fill {
+  height: 100%; border-radius: 8rpx; transition: width 0.4s ease, background-color 0.3s ease;
+}
+
+/* 操作按钮 */
+.hp-detail-actions {
+  display: flex;
+  gap: 16rpx;
+  width: 100%;
+}
+
+.hp-btn-back {
+  flex: 1;
+  padding: 24rpx;
+  border-radius: 24rpx;
+  background-color: $surface-container-low;
+  text-align: center;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: $text-secondary;
+}
+
+.hp-btn-checkin {
+  flex: 2;
+  padding: 24rpx;
+  border-radius: 24rpx;
+  background-color: $primary-color;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 4rpx 16rpx rgba($primary-color, 0.3);
+}
+
+/* ===== 打卡成功动画 ===== */
+.hp-celebration {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0,0,0,0.3);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.hp-confetti-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 40%, rgba(255,213,79,0.3) 0%, transparent 40%),
+              radial-gradient(circle at 70% 60%, rgba(76,175,80,0.3) 0%, transparent 40%);
+}
+
+.hp-celeb-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+  animation: celebrateBounce 0.5s ease-out;
+}
+
+.hp-celeb-emoji {
+  font-size: 120rpx;
+}
+
+.hp-celeb-title {
+  font-size: 44rpx;
+  font-weight: 900;
+  color: white;
+  text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.2);
+}
+
+.hp-celeb-subtitle {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: rgba(255,255,255,0.8);
+}
+
+/* ===== 添加好习惯弹窗 — 对齐Web版第460-513行: 居中圆角卡片 rounded-[3rem] ===== */
+.hp-modal-mask {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.4);
+  backdrop-filter: blur(8rpx);
+  -webkit-backdrop-filter: blur(8rpx);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx;
+}
+
+.hp-add-card {
+  width: 100%;
+  max-width: 600rpx;
+  background-color: $card-bg;
+  border-radius: 48rpx;           // 对齐Web rounded-[3rem]
+  padding: 48rpx 40rpx;            // 对齐Web p-8
+  box-shadow: 0 20rpx 60rpx rgba(0,0,0,0.15);  // 对齐Web shadow-2xl
+  border: 1rpx solid rgba($border-color, 0.08);
+  animation: hpCardScaleIn 0.25s ease-out;
+}
+
+@keyframes hpCardScaleIn {
+  from { transform: scale(0.9) translateY(20rpx); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* 标题 — 对齐Web第468行: text-2xl font-black text-center mb-6 */
+.hp-add-card-title {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: $text-primary;
+  text-align: center;
+  margin-bottom: 40rpx;             // 对齐Web mb-6
+  letter-spacing: -1rpx;
+}
+
+/* 字段区域 — 对齐Web space-y-4 */
+.hp-add-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 28rpx;
+  margin-bottom: 40rpx;             // 对齐Web mt-8
+}
+
+/* 字段容器 — 对齐Web bg-surface-container-low p-4 rounded-2xl */
+.hp-add-card-field {
+  background-color: $surface-container-low;
+  border-radius: 24rpx;              // 对齐Web rounded-2xl
+  padding: 28rpx 32rpx;              // 对齐Web p-4
+  border: 1rpx solid rgba($border-color, 0.05);
+}
+
+/* 标签 — 对齐Web text-[10px] font-black uppercase tracking-widest mb-2 */
+.hp-add-card-label {
+  font-size: 20rpx;
+  font-weight: 900;
+  color: rgba($text-primary, 0.35); // 对齐Web on-surface-variant/40
+  text-transform: uppercase;
+  letter-spacing: 3rpx;
+  margin-bottom: 12rpx;              // 对齐Web mb-2
+  display: block;
+}
+
+/* 输入框 — 对齐Web w-full bg-transparent outline-none font-bold */
+.hp-add-card-input {
+  width: 100%;
+  height: 72rpx;
+  background-color: transparent;
+  border: none;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: $text-primary;
+  padding: 0;
+}
+.hp-add-card-input::placeholder {
+  opacity: 0.2;                     // 对齐Web placeholder:opacity-20
+}
+
+/* 星星行 — 对齐Web flex items gap-4 + Star图标 */
+.hp-add-stars-row {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;                       // 对齐Web gap-4 (16px)
+}
+
+.hp-add-stars-input {
+  flex: 1;
+  height: 80rpx;
+  font-size: 36rpx !important;      // 对齐Web text-xl → 更大
+}
+
+/* 按钮区域 — 对齐Web第496-509行: flex gap-4 mt-8 */
+.hp-add-card-footer {
+  display: flex;
+  gap: 24rpx;                       // 对齐Web gap-4 (16px)
+}
+
+/* 取消按钮 — 对齐Web flex-1 py-4 rounded-2xl bg-surface-container */
+.hp-add-btn-cancel {
+  flex: 1;
+  height: 88rpx;                     // 对齐Web py-4
+  border-radius: 24rpx;              // 对齐Web rounded-2xl
+  background-color: $surface-container-low;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 800;
+  color: $text-secondary;
+}
+.hp-add-btn-cancel:active { opacity: 0.7; }
+
+/* 确认添加按钮 — 对齐Web flex-[2] py-4 rounded-2xl bg-primary shadow-lg */
+.hp-add-btn-confirm {
+  flex: 2;
+  height: 88rpx;
+  border-radius: 24rpx;
+  background-color: $primary-color;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 900;
+  color: white;
+  box-shadow: 0 8rpx 24rpx rgba($primary-color, 0.25);  // 对齐Web shadow-lg shadow-primary/20
+}
+.hp-add-btn-confirm:active { transform: scale(0.97); }
+.hp-add-btn-confirm.disabled { opacity: 0.5; pointer-events: none; }
+
+/* ===== 习惯模板选择弹窗（对齐原版截图：4列简洁网格）===== */
+.hp-tpl-mask {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.hp-tpl-container {
+  width: 100%;
+  height: 88vh;
+  background-color: $card-bg;
+  border-radius: 40rpx 40rpx 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header: 选择模板 + ✕ */
+.hp-tpl-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 32rpx;
+  flex-shrink: 0;
+}
+.hp-tpl-title {
+  font-size: 36rpx; font-weight: 800; color: #1a1a1a;
+  flex: 1; text-align: center; margin-left: -40rpx;
+}
+.hp-tpl-close {
+  width: 72rpx; height: 72rpx;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* 搜索行 */
+.hp-tpl-search-row {
+  display: flex; align-items: center;
+  gap: 16rpx;
+  padding: 8rpx 24rpx 16rpx;
+  flex-shrink: 0;
+}
+.hp-tpl-search-box {
+  flex: 1;
+  display: flex; align-items: center;
+  padding: 16rpx 24rpx;
+  background-color: #f5f5f5;
+  border-radius: 20rpx;
+  gap: 12rpx;
+}
+.hp-tpl-search-input {
+  flex: 1; height: 48rpx; font-size: 28rpx;
+  border: none; background: transparent; color: #333;
+}
+
+/* 自定义添加按钮 — 绿色文字 */
+.hp-tpl-custom-btn {
+  flex-shrink: 0; padding: 14rpx 20rpx;
+}
+.hp-tpl-custom-text {
+  font-size: 26rpx; font-weight: 700;
+  color: #00C853;
+  white-space: nowrap;
+}
+
+/* 分类 Tabs */
+.hp-tpl-tabs-scroll { flex-shrink: 0; white-space: nowrap; width: 100%; box-sizing: border-box; }
+/* 用内嵌 View 替代 scroll-view 的 padding（小程序不支持 scroll-view padding） */
+.hp-tpl-tabs-wrap { padding: 8rpx 24rpx 20rpx; }
+.hp-tpl-tabs { display: inline-flex; gap: 16rpx; }
+
+.hp-tpl-tab {
+  padding: 14rpx 32rpx;
+  border-radius: 28rpx;
+  background-color: #f5f5f5;
+  flex-shrink: 0;
+
+  &.active {
+    background-color: rgba(76, 175, 80, 0.15);
+    .hp-tpl-tab-label { color: #2E7D32; font-weight: 800; }
+  }
+}
+.hp-tpl-tab-label {
+  font-size: 26rpx; color: #888; font-weight: 600;
+}
+
+/* ===== 4列网格（核心）===== */
+.hp-tpl-grid-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; width: 100%; box-sizing: border-box; }
+/* 用内嵌 View 替代 scroll-view 的 padding（小程序不支持 scroll-view padding） */
+.hp-tpl-grid-wrap { padding: 8rpx 24rpx 40rpx; }
+.hp-tpl-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20rpx 16rpx;
+  padding: 8rpx 24rpx 40rpx;
+}
+
+/* 单个卡片 */
+.hp-tpl-card {
+  display: flex; flex-direction: column;
+  align-items: center;
+  padding: 16rpx 8rpx 12rpx;
+  border-radius: 20rpx;
+  background-color: $card-bg;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid rgba(0, 0, 0, 0.04);
+
+  &:active { transform: scale(0.95); background-color: #f9f9f9; }
+}
+
+/* 图标区域 — 圆角方形背景 */
+.hp-tpl-icon-area {
+  width: 96rpx; height: 96rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(145deg, #f0f7f0, #e8f0e8);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 10rpx; overflow: hidden;
+  position: relative;
+}
+.hp-tpl-icon-img { width: 64rpx; height: 64rpx; }
+.hp-tpl-icon-emoji { font-size: 36rpx; }
+/* 图片加载失败时覆盖在图标区域上的 emoji fallback */
+.hp-tpl-icon-emoji-fallback {
+  position: absolute;
+  font-size: 36rpx;
+}
+
+/* 名称 */
+.hp-tpl-name {
+  font-size: 24rpx; font-weight: 700; color: #333;
+  text-align: center; line-height: 1.3;
+  overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; width: 100%; margin-bottom: 4rpx;
+}
+
+/* 星星数 */
+.hp-tpl-stars {
+  display: flex; align-items: center; gap: 4rpx;
+}
+.hp-tpl-stars-num {
+  font-size: 22rpx; font-weight: 800; color: #F9A825;
+}
+
+/* 空状态 */
+.hp-tpl-empty {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 120rpx 0; gap: 20rpx;
+}
+.hp-tpl-empty-text { font-size: 28rpx; color: #999; }

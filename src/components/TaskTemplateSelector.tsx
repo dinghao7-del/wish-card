@@ -48,7 +48,7 @@ export function TaskTemplateSelector({ onSelect, onClose }: TaskTemplateSelector
       animate={{ y: 0 }}
       exit={{ y: '100%' }}
       transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-      className="fixed inset-0 z-50 bg-white flex flex-col pt-safe"
+      className="fixed inset-0 z-[100] bg-surface flex flex-col pt-safe"
     >
       {/* 顶部导航栏 */}
       <header className="flex items-center justify-between px-4 py-2 border-b border-outline-variant/10">
@@ -90,8 +90,8 @@ export function TaskTemplateSelector({ onSelect, onClose }: TaskTemplateSelector
                 className={cn(
                   "px-4 py-2 rounded-full text-xs font-black whitespace-nowrap transition-all border-2 shrink-0",
                   activeTab === cat.id
-                    ? "bg-[#D4E157] border-[#C5D34C] text-[#2E7D32] shadow-md"
-                    : "bg-white border-white text-on-surface-variant/40"
+                    ? "bg-primary-surface border-primary-surface/80 text-primary-text shadow-md"
+                    : "bg-surface border-surface text-on-surface-variant/40"
                 )}
               >
                 {cat.label}
@@ -124,8 +124,8 @@ export function TaskTemplateSelector({ onSelect, onClose }: TaskTemplateSelector
               </span>
               {/* 星星值（正数显示金色，负数显示红色扣分） */}
               <div className="flex items-center gap-0.5 mt-0.5">
-                <Star size={9} className={template.stars >= 0 ? "text-[#FBC02D] fill-current" : "text-red-500 fill-current"} />
-                <span className={`text-[9px] font-bold ${template.stars >= 0 ? 'text-on-surface-variant' : 'text-red-500'}`}>
+                <Star size={9} className={template.stars >= 0 ? "text-secondary fill-current" : "text-danger fill-current"} />
+                <span className={`text-[9px] font-bold ${template.stars >= 0 ? 'text-on-surface-variant' : 'text-danger'}`}>
                   {template.stars > 0 ? `+${template.stars}` : template.stars}
                 </span>
               </div>
@@ -135,10 +135,10 @@ export function TaskTemplateSelector({ onSelect, onClose }: TaskTemplateSelector
       </div>
 
       {/* 底部「自定义添加」按钮 */}
-      <div className="p-6 border-t border-outline-variant/10 bg-white">
+      <div className="p-6 border-t border-outline-variant/10 bg-surface pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]">
         <button 
           onClick={onClose}
-          className="w-full bg-[#98EE99]/20 text-[#2E7D32] font-bold py-4 rounded-2xl active:scale-95 transition-transform"
+          className="w-full bg-primary-surface/20 text-primary-text font-bold py-4 rounded-2xl active:scale-95 transition-transform"
         >
           自定义添加
         </button>

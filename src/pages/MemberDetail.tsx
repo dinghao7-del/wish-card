@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFamily } from '../context/FamilyContext';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Trash2, Star, Shield, Trophy, ClipboardList, Edit3, Plus, Save, Minus, Camera } from 'lucide-react';
+import { Trash2, Star, Shield, Trophy, ClipboardList, Edit3, Plus, Save, Minus, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { AvatarSelector } from '../components/AvatarSelector';
 import { TextAvatar } from '../components/TextAvatar';
 import { showConfirm } from '../components/ConfirmDialog';
+import { TopAppBar } from '../components/navigation/TopAppBar';
+import { getParentVerificationValue } from '../lib/sensitiveActions';
+import { verifyMemberPinOrPassword } from '../lib/memberCredentials';
 
 export function MemberDetail() {
   const navigate = useNavigate();
@@ -37,7 +40,22 @@ export function MemberDetail() {
 
   if (!member) return null;
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
+    const verificationValue = getParentVerificationValue(currentUser);
+    const confirmed = await showConfirm({
+      title: '家长二次确认',
+      message: `删除「${member.name}」会影响成员资料和后续任务归属，请再次确认。`,
+      type: 'danger',
+      confirmText: '删除',
+      verificationValue: verificationValue || undefined,
+      verificationMatcher: currentUser?.role === 'parent'
+        ? (input) => verifyMemberPinOrPassword(currentUser, input) !== null
+        : undefined,
+      verificationLabel: verificationValue ? '输入当前家长 PIN 或密码' : undefined,
+      verificationPlaceholder: verificationValue ? 'PIN 或密码' : undefined,
+    });
+    if (!confirmed) return;
+
     setIsDeleting(true);
     setTimeout(() => {
       deleteMember(member.id);
@@ -66,13 +84,7 @@ export function MemberDetail() {
 
   return (
     <div className="px-6 pb-12 animate-in fade-in slide-in-from-right-4 duration-500">
-      <header className="flex justify-between items-center py-4 sticky top-0 bg-background/80 backdrop-blur-xl z-40 -mx-6 px-6">
-        <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
-          <ArrowLeft size={24} />
-        </button>
-        <h1 className="font-bold text-lg">{t('member_detail.title', { defaultValue: '标题' })}</h1>
-        <div className="w-10" />
-      </header>
+      <TopAppBar title={t('member_detail.title', { defaultValue: '成员详情' })} backTo="/profile" />
 
       {/* Hero Section */}
       <section className="flex flex-col items-center mt-8 mb-10">
@@ -222,12 +234,12 @@ export function MemberDetail() {
       {/* Delete Confirmation Modal */}
       <AnimatePresence>
         {showDeleteConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-sm bg-background rounded-[2.5rem] p-8 shadow-2xl text-center"
+              className="w-full max-w-sm bg-background rounded-[2.5rem] p-8 shadow-2xl text-center max-h-[calc(100svh-2rem)] overflow-y-auto"
             >
               <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Trash2 size={32} />
@@ -280,12 +292,12 @@ export function MemberDetail() {
 
       <AnimatePresence>
         {isEditingStars && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-6 bg-black/30 backdrop-blur-sm">
+              <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-6 bg-black/30 backdrop-blur-sm">
             <motion.div 
               initial={{ y: 100, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 100, opacity: 0 }}
-              className="w-full max-w-sm bg-white rounded-[2.5rem] p-6 shadow-2xl relative"
+              className="w-full max-w-sm bg-white rounded-[2.5rem] p-6 shadow-2xl relative max-h-[calc(100svh-2rem)] overflow-y-auto"
             >
               <h3 className="text-xl font-black text-center mb-6">{t('member_detail.edit_stars_title', { name: member.name })}</h3>
 
@@ -375,12 +387,12 @@ export function MemberDetail() {
       {/* Completed Tasks Modal */}
       <AnimatePresence>
         {isViewingTasks && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-sm bg-background rounded-[2.5rem] p-6 shadow-2xl relative max-h-[80vh] flex flex-col"
+              className="w-full max-w-sm bg-background rounded-[2.5rem] p-6 shadow-2xl relative max-h-[80svh] flex flex-col"
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-bold flex items-center gap-2">

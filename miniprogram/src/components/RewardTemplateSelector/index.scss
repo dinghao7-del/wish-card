@@ -1,0 +1,215 @@
+/* ===== 模板选择器弹窗 — 对齐截图4: 4列简洁网格版 ===== */
+
+.rts-mask {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+/* ===== 容器（全屏弹窗）===== */
+.rts-container {
+  width: 100%;
+  height: 88vh;
+  background-color: #ffffff;
+  border-radius: 40rpx 40rpx 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ===== Header ===== */
+.rts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 32rpx;
+  flex-shrink: 0;
+}
+
+.rts-title {
+  font-size: 36rpx;
+  font-weight: 800;
+  color: #1a1a1a;
+  flex: 1;
+  text-align: center;
+  margin-left: -40rpx; /* 居中偏移，抵消关闭按钮宽度 */
+}
+
+.rts-close-btn {
+  width: 72rpx; height: 72rpx;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ===== 搜索行（搜索框 + 自定义添加按钮）===== */
+.rts-search-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 8rpx 24rpx 16rpx;
+  flex-shrink: 0;
+}
+
+.rts-search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  background-color: #f5f5f5;
+  border-radius: 20rpx;
+  gap: 12rpx;
+}
+
+.rts-search-input {
+  flex: 1;
+  height: 48rpx;
+  font-size: 28rpx;
+  border: none;
+  background: transparent;
+  color: #333;
+}
+
+/* 右侧"自定义添加"文字按钮 — 对齐截图4右上角绿色文字 */
+.rts-custom-add-btn {
+  flex-shrink: 0;
+  padding: 14rpx 20rpx;
+  background-color: transparent;
+}
+
+.rts-custom-add-text {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #00C853; /* 亮绿色，对齐截图4 */
+  white-space: nowrap;
+}
+
+/* ===== 分类 Tabs ===== */
+.rts-tabs-scroll {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.rts-tabs {
+  display: inline-flex;
+  gap: 16rpx;
+  padding: 8rpx 24rpx 20rpx;
+}
+
+.rts-tab {
+  padding: 14rpx 32rpx;
+  border-radius: 28rpx;
+  background-color: #f5f5f5;
+  flex-shrink: 0;
+
+  &.active {
+    background-color: rgba(76, 175, 80, 0.15); /* 浅绿选中态，对齐截图4 */
+    .rts-tab-label { color: #2E7D32; font-weight: 800; }
+  }
+}
+
+.rts-tab-label {
+  font-size: 26rpx;
+  color: #888;
+  font-weight: 600;
+}
+
+/* ===== 4列模板网格（核心：对齐截图4）===== */
+.rts-grid-scroll { flex: 1; overflow-y: auto; }
+
+.rts-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4列！对齐截图4 */
+  gap: 20rpx 16rpx;
+  padding: 8rpx 24rpx 40rpx;
+}
+
+/* ===== 单个模板卡片（简洁紧凑 — 对齐截图4）===== */
+.rts-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16rpx 8rpx 12rpx;
+  border-radius: 20rpx;
+  background-color: #fff;
+  /* 轻微阴影/边框 */
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid rgba(0, 0, 0, 0.04);
+  transition: transform .15s ease;
+
+  &:active {
+    transform: scale(0.95);
+    background-color: #f9f9f9;
+  }
+
+  &.added {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+}
+
+/* 图标区域 — 圆角方形背景 + 居中图标（对齐截图4）*/
+.rts-icon-area {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(145deg, #f0f7f0, #e8f0e8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10rpx;
+  overflow: hidden;
+}
+
+.rts-icon-img {
+  width: 64rpx;
+  height: 64rpx;
+}
+
+.rts-icon-emoji {
+  font-size: 36rpx;
+}
+
+/* 名称（单行居中）— 对齐截图4 */
+.rts-name {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  margin-bottom: 4rpx;
+}
+
+/* 星星数行 — 对齐截图4 ★+N */
+.rts-stars {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.rts-stars-num {
+  font-size: 22rpx;
+  font-weight: 800;
+  color: #F9A825;
+}
+
+/* ===== 空状态 ===== */
+.rts-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+  gap: 20rpx;
+}
+
+.rts-empty-text {
+  font-size: 28rpx;
+  color: #999;
+}

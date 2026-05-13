@@ -23,19 +23,24 @@ export type Database = {
   public: {
     Tables: {
       families: {
-        Row: { id: string; name: string; invite_code: string | null; created_at: string; updated_at: string };
-        Insert: { id?: string; name: string; invite_code?: string | null; created_at?: string; updated_at?: string };
-        Update: { id?: string; name?: string; invite_code?: string | null; created_at?: string; updated_at?: string };
+        Row: { id: string; name: string; invite_code: string | null; owner_account_id: string | null; plan_tier: string; data_region: string; privacy_consent_version: string | null; privacy_consent_at: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; name: string; invite_code?: string | null; owner_account_id?: string | null; plan_tier?: string; data_region?: string; privacy_consent_version?: string | null; privacy_consent_at?: string | null; created_at?: string; updated_at?: string };
+        Update: { id?: string; name?: string; invite_code?: string | null; owner_account_id?: string | null; plan_tier?: string; data_region?: string; privacy_consent_version?: string | null; privacy_consent_at?: string | null; created_at?: string; updated_at?: string };
+      };
+      plans: {
+        Row: { id: string; family_id: string | null; name: string; type: string; metadata: Record<string, unknown>; sort_order: number; is_active: boolean; created_at: string; updated_at: string };
+        Insert: { id?: string; family_id?: string | null; name: string; type?: string; metadata?: Record<string, unknown>; sort_order?: number; is_active?: boolean; created_at?: string; updated_at?: string };
+        Update: { id?: string; family_id?: string | null; name?: string; type?: string; metadata?: Record<string, unknown>; sort_order?: number; is_active?: boolean; created_at?: string; updated_at?: string };
       };
       members: {
-        Row: { id: string; family_id: string | null; name: string; avatar: string | null; role: 'parent' | 'child'; stars: number; color: string | null; pin: string | null; password: string | null; is_active: boolean; created_at: string; updated_at: string };
-        Insert: { id?: string; family_id?: string | null; name: string; avatar?: string | null; role: 'parent' | 'child'; stars?: number; color?: string | null; pin?: string | null; password?: string | null; is_active?: boolean; created_at?: string; updated_at?: string };
-        Update: { id?: string; family_id?: string | null; name?: string; avatar?: string | null; role?: 'parent' | 'child'; stars?: number; color?: string | null; pin?: string | null; password?: string | null; is_active?: boolean; created_at?: string; updated_at?: string };
+        Row: { id: string; family_id: string | null; name: string; avatar: string | null; role: 'parent' | 'child'; stars: number; color: string | null; pin: string | null; password: string | null; credential_hash: string | null; credential_algo: string | null; credential_updated_at: string | null; last_verified_at: string | null; is_active: boolean; created_at: string; updated_at: string };
+        Insert: { id?: string; family_id?: string | null; name: string; avatar?: string | null; role: 'parent' | 'child'; stars?: number; color?: string | null; pin?: string | null; password?: string | null; credential_hash?: string | null; credential_algo?: string | null; credential_updated_at?: string | null; last_verified_at?: string | null; is_active?: boolean; created_at?: string; updated_at?: string };
+        Update: { id?: string; family_id?: string | null; name?: string; avatar?: string | null; role?: 'parent' | 'child'; stars?: number; color?: string | null; pin?: string | null; password?: string | null; credential_hash?: string | null; credential_algo?: string | null; credential_updated_at?: string | null; last_verified_at?: string | null; is_active?: boolean; created_at?: string; updated_at?: string };
       };
       tasks: {
-        Row: { id: string; family_id: string | null; title: string; description: string | null; star_amount: number; assignee_ids: string[]; creator_id: string | null; status: 'pending' | 'in_progress' | 'reviewing' | 'completed'; is_habit: boolean; target_count: number; current_count: number; completed: boolean; completed_at: string | null; icon: string | null; created_at: string; updated_at: string };
-        Insert: { id?: string; family_id?: string | null; title: string; description?: string | null; star_amount?: number; assignee_ids?: string[]; creator_id?: string | null; status?: 'pending' | 'in_progress' | 'reviewing' | 'completed'; is_habit?: boolean; target_count?: number; current_count?: number; completed?: boolean; completed_at?: string | null; icon?: string | null; created_at?: string; updated_at?: string };
-        Update: { id?: string; family_id?: string | null; title?: string; description?: string | null; star_amount?: number; assignee_ids?: string[]; creator_id?: string | null; status?: 'pending' | 'in_progress' | 'reviewing' | 'completed'; is_habit?: boolean; target_count?: number; current_count?: number; completed?: boolean; completed_at?: string | null; icon?: string | null; created_at?: string; updated_at?: string };
+        Row: { id: string; family_id: string | null; plan_id: string | null; title: string; description: string | null; star_amount: number; assignee_ids: string[]; creator_id: string | null; status: 'pending' | 'in_progress' | 'reviewing' | 'completed'; is_habit: boolean; target_count: number; current_count: number; completed: boolean; completed_at: string | null; icon: string | null; start_time: string | null; deadline: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; family_id?: string | null; plan_id?: string | null; title: string; description?: string | null; star_amount?: number; assignee_ids?: string[]; creator_id?: string | null; status?: 'pending' | 'in_progress' | 'reviewing' | 'completed'; is_habit?: boolean; target_count?: number; current_count?: number; completed?: boolean; completed_at?: string | null; icon?: string | null; start_time?: string | null; deadline?: string | null; created_at?: string; updated_at?: string };
+        Update: { id?: string; family_id?: string | null; plan_id?: string | null; title?: string; description?: string | null; star_amount?: number; assignee_ids?: string[]; creator_id?: string | null; status?: 'pending' | 'in_progress' | 'reviewing' | 'completed'; is_habit?: boolean; target_count?: number; current_count?: number; completed?: boolean; completed_at?: string | null; icon?: string | null; start_time?: string | null; deadline?: string | null; created_at?: string; updated_at?: string };
       };
       habits: {
         Row: { id: string; family_id: string | null; title: string; description: string | null; frequency: 'daily' | 'weekly' | 'custom' | null; star_amount: number; assignee_ids: string[]; creator_id: string | null; current_count: number; target_count: number; last_completed_date: string | null; is_active: boolean; created_at: string; updated_at: string };
@@ -43,9 +48,9 @@ export type Database = {
         Update: { id?: string; family_id?: string | null; title?: string; description?: string | null; frequency?: 'daily' | 'weekly' | 'custom' | null; star_amount?: number; assignee_ids?: string[]; creator_id?: string | null; current_count?: number; target_count?: number; last_completed_date?: string | null; is_active?: boolean; created_at?: string; updated_at?: string };
       };
       rewards: {
-        Row: { id: string; family_id: string | null; name: string; description: string | null; star_cost: number; icon: string | null; image_url: string | null; category: string | null; stock: number | null; status: 'available' | 'pending_approval' | 'redeemed'; creator_id: string | null; redeemed_by: string | null; redeemed_at: string | null; created_at: string; updated_at: string };
-        Insert: { id?: string; family_id?: string | null; name: string; description?: string | null; star_cost?: number; icon?: string | null; image_url?: string | null; category?: string | null; stock?: number | null; status?: 'available' | 'pending_approval' | 'redeemed'; creator_id?: string | null; redeemed_by?: string | null; redeemed_at?: string | null; created_at?: string; updated_at?: string };
-        Update: { id?: string; family_id?: string | null; name?: string; description?: string | null; star_cost?: number; icon?: string | null; image_url?: string | null; category?: string | null; stock?: number | null; status?: 'available' | 'pending_approval' | 'redeemed'; creator_id?: string | null; redeemed_by?: string | null; redeemed_at?: string | null; created_at?: string; updated_at?: string };
+        Row: { id: string; family_id: string | null; plan_id: string | null; name: string; description: string | null; star_cost: number; icon: string | null; image_url: string | null; category: string | null; stock: number | null; status: 'available' | 'pending_approval' | 'redeemed'; creator_id: string | null; redeemed_by: string | null; redeemed_at: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; family_id?: string | null; plan_id?: string | null; name: string; description?: string | null; star_cost?: number; icon?: string | null; image_url?: string | null; category?: string | null; stock?: number | null; status?: 'available' | 'pending_approval' | 'redeemed'; creator_id?: string | null; redeemed_by?: string | null; redeemed_at?: string | null; created_at?: string; updated_at?: string };
+        Update: { id?: string; family_id?: string | null; plan_id?: string | null; name?: string; description?: string | null; star_cost?: number; icon?: string | null; image_url?: string | null; category?: string | null; stock?: number | null; status?: 'available' | 'pending_approval' | 'redeemed'; creator_id?: string | null; redeemed_by?: string | null; redeemed_at?: string | null; created_at?: string; updated_at?: string };
       };
       star_transactions: {
         Row: { id: string; family_id: string | null; member_id: string; amount: number; type: 'earn' | 'spend'; reason: string; related_task_id: string | null; related_habit_id: string | null; related_reward_id: string | null; created_at: string };
@@ -76,6 +81,31 @@ export type Database = {
         Row: { id: string; family_id: string; member_id: string | null; token: string; name: string | null; last_accessed_at: string | null; is_active: boolean; created_at: string };
         Insert: { id?: string; family_id: string; member_id?: string | null; token?: string; name?: string | null; last_accessed_at?: string | null; is_active?: boolean; created_at?: string };
         Update: { id?: string; family_id?: string; member_id?: string | null; token?: string; name?: string | null; last_accessed_at?: string | null; is_active?: boolean; created_at?: string };
+      };
+      member_sessions: {
+        Row: { id: string; family_id: string; member_id: string; account_id: string | null; token_hash: string; verification_method: 'pin' | 'password' | 'account'; issued_at: string; expires_at: string; revoked_at: string | null; device_id: string | null; created_at: string };
+        Insert: { id?: string; family_id: string; member_id: string; account_id?: string | null; token_hash: string; verification_method: 'pin' | 'password' | 'account'; issued_at?: string; expires_at: string; revoked_at?: string | null; device_id?: string | null; created_at?: string };
+        Update: { id?: string; family_id?: string; member_id?: string; account_id?: string | null; token_hash?: string; verification_method?: 'pin' | 'password' | 'account'; issued_at?: string; expires_at?: string; revoked_at?: string | null; device_id?: string | null; created_at?: string };
+      };
+      operation_audit_logs: {
+        Row: { id: string; family_id: string; actor_member_id: string | null; account_id: string | null; operation_type: string; target_table: string | null; target_id: string | null; client_operation_id: string | null; payload: Record<string, unknown>; created_at: string };
+        Insert: { id?: string; family_id: string; actor_member_id?: string | null; account_id?: string | null; operation_type: string; target_table?: string | null; target_id?: string | null; client_operation_id?: string | null; payload?: Record<string, unknown>; created_at?: string };
+        Update: { id?: string; family_id?: string; actor_member_id?: string | null; account_id?: string | null; operation_type?: string; target_table?: string | null; target_id?: string | null; client_operation_id?: string | null; payload?: Record<string, unknown>; created_at?: string };
+      };
+      shared_schedule_templates: {
+        Row: { id: string; source_family_id: string | null; source_plan_id: string | null; author_member_id: string | null; title: string; scenario: string; age_range: string | null; grade_band: string | null; city_level: string | null; content: Record<string, unknown>; tips: string[]; visibility: 'public' | 'unlisted' | 'private'; moderation_status: 'pending' | 'approved' | 'rejected'; usage_count: number; created_at: string; updated_at: string };
+        Insert: { id?: string; source_family_id?: string | null; source_plan_id?: string | null; author_member_id?: string | null; title: string; scenario: string; age_range?: string | null; grade_band?: string | null; city_level?: string | null; content?: Record<string, unknown>; tips?: string[]; visibility?: 'public' | 'unlisted' | 'private'; moderation_status?: 'pending' | 'approved' | 'rejected'; usage_count?: number; created_at?: string; updated_at?: string };
+        Update: { id?: string; source_family_id?: string | null; source_plan_id?: string | null; author_member_id?: string | null; title?: string; scenario?: string; age_range?: string | null; grade_band?: string | null; city_level?: string | null; content?: Record<string, unknown>; tips?: string[]; visibility?: 'public' | 'unlisted' | 'private'; moderation_status?: 'pending' | 'approved' | 'rejected'; usage_count?: number; created_at?: string; updated_at?: string };
+      };
+      recommendation_consents: {
+        Row: { id: string; family_id: string; consent_scope: string; enabled: boolean; consent_version: string; decided_by_member_id: string | null; decided_at: string; updated_at: string };
+        Insert: { id?: string; family_id: string; consent_scope: string; enabled?: boolean; consent_version: string; decided_by_member_id?: string | null; decided_at?: string; updated_at?: string };
+        Update: { id?: string; family_id?: string; consent_scope?: string; enabled?: boolean; consent_version?: string; decided_by_member_id?: string | null; decided_at?: string; updated_at?: string };
+      };
+      recommendation_events: {
+        Row: { id: string; family_id: string | null; member_id: string | null; category: string; item_id: string | null; event_type: 'impression' | 'click' | 'dismiss' | 'conversion'; context: Record<string, unknown>; created_at: string };
+        Insert: { id?: string; family_id?: string | null; member_id?: string | null; category: string; item_id?: string | null; event_type: 'impression' | 'click' | 'dismiss' | 'conversion'; context?: Record<string, unknown>; created_at?: string };
+        Update: { id?: string; family_id?: string | null; member_id?: string | null; category?: string; item_id?: string | null; event_type?: 'impression' | 'click' | 'dismiss' | 'conversion'; context?: Record<string, unknown>; created_at?: string };
       };
       app_config: {
         Row: { id: string; key: string; value: string; description: string | null; category: string | null; updated_at: string };

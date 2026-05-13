@@ -1,0 +1,829 @@
+@import "../../../app.scss";
+
+// ===== 页面容器 =====
+.create-page {
+  min-height: 100vh;
+  background-color: $bg-color;
+  padding-bottom: 48rpx;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+// ===== Header — 对齐 Web 第367-425行 =====
+.cp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 32rpx;
+  background-color: rgba($card-bg, 0.95);
+  backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.cp-header-back {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: rgba(0,0,0,0.04);
+}
+
+.cp-mode-toggle {
+  display: flex;
+  align-items: center;
+  background-color: rgba(0,0,0,0.04);
+  padding: 6rpx;
+  border-radius: 999px;
+  border: 1rpx solid rgba(0,0,0,0.06);
+}
+
+.cp-mode-btn {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: rgba($text-primary, 0.35);
+  padding: 12rpx 28rpx;
+  border-radius: 999px;
+  transition: all 0.2s;
+}
+
+.cp-mode-btn.active {
+  color: $text-primary;
+  background-color: #fff;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.08);
+}
+
+.cp-header-title {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: $text-primary;
+}
+
+.cp-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  /* 固定最小宽度，确保中间标题始终居中 */
+  min-width: 80rpx;
+}
+
+.cp-import-btn {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 12rpx 24rpx;
+  border-radius: 999px;
+  background-color: rgba(76, 175, 80, 0.1);
+  font-size: 24rpx;
+  font-weight: 800;
+  color: $primary-color;
+}
+
+.cp-save-btn {
+  padding: 12rpx 24rpx;
+  font-size: 26rpx;
+  font-weight: 800;
+  color: $primary-color;
+}
+
+// ===== 主体内容 =====
+.cp-body {
+  flex: 1;
+  padding: 16rpx 24rpx;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overscroll-behavior: none;
+}
+
+// ===== 卡片通用 =====
+.cp-card {
+  background-color: $card-bg;
+  border-radius: 32rpx;
+  padding: 28rpx 32rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+  border: 1rpx solid rgba(0,0,0,0.04);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.cp-card.clickable {
+  cursor: pointer;
+}
+
+.cp-card.clickable:active {
+  background-color: rgba(0,0,0,0.02);
+}
+
+.cp-card-label {
+  font-size: 22rpx;
+  font-weight: 800;
+  color: rgba($text-primary, 0.3);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 12rpx;
+}
+
+/* 标题行：label + 导入按钮同行 */
+.cp-title-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+
+  .cp-card-label { margin-bottom: 0; }
+}
+
+.cp-title-input {
+  width: 100%;
+  font-size: 32rpx;
+  font-weight: 800;
+  color: $text-primary;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.cp-placeholder {
+  color: rgba(0,0,0,0.08);
+  font-weight: 700;
+}
+
+.cp-divider {
+  height: 2rpx;
+  background-color: rgba(0,0,0,0.04);
+  margin: 20rpx 0;
+}
+
+.cp-category-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cp-add-desc {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 999px;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: rgba($primary-color, 0.7);
+}
+
+.cp-desc-hint {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: rgba($text-primary, 0.2);
+  padding-left: 8rpx;
+}
+
+.cp-cat-pill {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 10rpx 20rpx;
+  background-color: rgba(0,0,0,0.03);
+  border-radius: 999px;
+  border: 1rpx solid rgba(0,0,0,0.04);
+  font-size: 24rpx;
+  font-weight: 700;
+  color: $text-primary;
+}
+
+.cp-textarea {
+  width: 100%;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: $text-primary;
+  border: none;
+  background-color: rgba(0,0,0,0.03);
+  border-radius: 20rpx;
+  padding: 20rpx;
+  margin-top: 16rpx;
+  min-height: 80rpx;
+}
+
+// ===== 设置组 — 对齐 Web 第489-587行 =====
+.cp-settings-group {
+  padding: 0;
+}
+
+.cp-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 32rpx;
+}
+
+.cp-setting-row:active {
+  background-color: rgba(0,0,0,0.02);
+}
+
+.cp-setting-left {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.cp-setting-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0,0,0,0.03);
+}
+
+.cp-setting-icon.active {
+  background-color: rgba(76, 175, 80, 0.08);
+}
+
+.cp-setting-label {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: $text-primary;
+}
+
+.cp-setting-right {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: rgba($text-primary, 0.5);
+}
+
+.cp-setting-right.disabled {
+  opacity: 0.3;
+}
+
+.cp-plan-badge {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background-color: rgba(0,0,0,0.03);
+  padding: 10rpx 20rpx;
+  border-radius: 20rpx;
+}
+
+.cp-plan-tag {
+  background-color: #FFB800;
+  color: white;
+  font-size: 18rpx;
+  font-weight: 800;
+  padding: 4rpx 10rpx;
+  border-radius: 8rpx;
+}
+
+.cp-plan-name {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: $text-primary;
+}
+
+// ===== 星星和成员卡片 — 对齐 Web 第794-882行 =====
+.cp-members-card {
+  padding: 28rpx 32rpx;
+}
+
+.cp-stars-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cp-stars-label {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: $text-primary;
+}
+
+.cp-stars-control {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background-color: rgba(0,0,0,0.03);
+  padding: 6rpx 16rpx;
+  border-radius: 999px;
+}
+
+.cp-star-btn {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: rgba($text-primary, 0.4);
+}
+
+.cp-star-btn:active {
+  color: $primary-color;
+}
+
+.cp-star-count {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: $text-primary;
+  width: 56rpx;
+  text-align: center;
+}
+
+.cp-star-icon-box {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background-color: rgba(255, 184, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cp-section-title {
+  font-size: 20rpx;
+  font-weight: 800;
+  color: rgba($text-primary, 0.25);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 16rpx;
+}
+
+// ===== 发布家长 / 执行小朋友 — 横排2列卡片（对齐Web原版） =====
+.cp-parent-grid,
+.cp-child-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.cp-parent-row-card {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 24rpx;
+  border-width: 4rpx;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.04);
+  background-color: rgba(0, 0, 0, 0.02);
+  transition: all 0.2s;
+}
+
+.cp-parent-row-card.selected {
+  border-color: rgba(76, 175, 80, 0.3);
+  background-color: rgba(76, 175, 80, 0.05);
+  box-shadow: 0 2rpx 8rpx rgba(76, 175, 80, 0.08);
+}
+
+.cp-avatar-sm {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.cp-parent-name {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: rgba($text-primary, 0.5);
+}
+
+.cp-parent-name.selected {
+  color: $primary-color;
+}
+
+// ===== 习惯模式特有 =====
+.cp-row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cp-row-icon-text {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: $text-primary;
+}
+
+.cp-icon-choose {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: rgba($text-primary, 0.5);
+}
+
+.cp-icon-preview {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.cp-number-input {
+  width: 100%;
+  font-size: 28rpx;
+  font-weight: 800;
+  color: $text-primary;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.cp-avatar-grid {
+  display: flex;
+  gap: 20rpx;
+  flex-wrap: wrap;
+  margin-top: 12rpx;
+}
+
+.cp-avatar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.cp-avatar-circle {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0,0,0,0.03);
+  border: 3rpx solid transparent;
+  transition: all 0.2s;
+}
+
+.cp-avatar-circle.selected {
+  border-color: $primary-color;
+  background-color: rgba(76, 175, 80, 0.08);
+}
+
+.cp-avatar-add {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0,0,0,0.03);
+  border: 3rpx dashed rgba(0,0,0,0.1);
+}
+
+.cp-avatar-label {
+  font-size: 20rpx;
+  font-weight: 700;
+  color: rgba($text-primary, 0.5);
+}
+
+.cp-type-toggle {
+  display: flex;
+  padding: 4rpx;
+  background-color: rgba(0,0,0,0.03);
+  border-radius: 16rpx;
+}
+
+.cp-type-btn {
+  flex: 1;
+  padding: 18rpx 0;
+  text-align: center;
+  font-size: 24rpx;
+  font-weight: 800;
+  color: rgba($text-primary, 0.4);
+  border-radius: 12rpx;
+  transition: all 0.2s;
+}
+
+.cp-type-btn.active-reward {
+  background-color: $primary-color;
+  color: white;
+  box-shadow: 0 4rpx 12rpx rgba($primary-color, 0.3);
+}
+
+.cp-type-btn.active-penalty {
+  background-color: #e53935;
+  color: white;
+  box-shadow: 0 4rpx 12rpx rgba(229, 57, 53, 0.3);
+}
+
+// ===== 底部提交栏 =====
+.cp-submit-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24rpx 32rpx 48rpx;
+  background: linear-gradient(to top, $bg-color 60%, transparent);
+  z-index: 60;
+}
+
+.cp-submit-btn {
+  width: 100%;
+  padding: 28rpx 0;
+  background-color: $primary-color;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 32rpx;
+  font-weight: 900;
+  color: white;
+  box-shadow: 0 12rpx 40rpx rgba(76, 175, 80, 0.35);
+  border: 4rpx solid white;
+}
+
+.cp-submit-btn:active {
+  transform: scale(0.98);
+}
+
+// ===== 弹窗遮罩 =====
+.cp-modal-mask {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8rpx);
+  -webkit-backdrop-filter: blur(8rpx);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx;
+}
+
+// 居中弹窗
+.cp-modal-card {
+  width: 100%;
+  max-width: 580rpx;
+  background-color: $card-bg;
+  border-radius: 48rpx;
+  padding: 40rpx 36rpx;
+  box-shadow: 0 20rpx 60rpx rgba(0,0,0,0.2);
+}
+
+.cp-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32rpx;
+}
+
+.cp-modal-close {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba($text-primary, 0.3);
+}
+
+.cp-modal-title {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: $text-primary;
+}
+
+.cp-modal-confirm {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cp-modal-body {
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.cp-cat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 16rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: $text-primary;
+  border-radius: 16rpx;
+}
+
+.cp-cat-item:active {
+  background-color: rgba(0,0,0,0.03);
+}
+
+.cp-cat-item.selected {
+  color: $primary-color;
+  background-color: rgba(76, 175, 80, 0.05);
+}
+
+// 底部弹窗
+.cp-modal-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: $card-bg;
+  border-radius: 48rpx 48rpx 0 0;
+  padding: 16rpx 32rpx 80rpx;
+  max-height: 70vh;
+  overflow-y: auto;
+  animation: cpSheetUp 0.25s ease-out;
+}
+
+@keyframes cpSheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.cp-modal-handle {
+  width: 56rpx;
+  height: 6rpx;
+  border-radius: 3rpx;
+  background-color: rgba(0,0,0,0.1);
+  margin: 0 auto 24rpx;
+}
+
+.cp-modal-header-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.cp-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.cp-modal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 16rpx;
+  border-radius: 16rpx;
+}
+
+.cp-modal-item:active {
+  background-color: rgba(0,0,0,0.03);
+}
+
+.cp-modal-item.selected {
+  background-color: rgba(76, 175, 80, 0.05);
+}
+
+.cp-modal-item-text {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: $text-primary;
+}
+
+.cp-modal-item-text.selected {
+  color: $primary-color;
+}
+
+.cp-modal-item-meta {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: rgba($text-primary, 0.4);
+}
+
+// 重复选项网格
+.cp-repeat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.cp-repeat-item {
+  padding: 24rpx 0;
+  text-align: center;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: rgba($text-primary, 0.5);
+  border-radius: 20rpx;
+  background-color: rgba(0,0,0,0.02);
+  border: 2rpx solid rgba(0,0,0,0.04);
+}
+
+.cp-repeat-item.selected {
+  color: $primary-color;
+  background-color: rgba(76, 175, 80, 0.06);
+  border-color: rgba(76, 175, 80, 0.2);
+}
+
+.cp-repeat-hint {
+  margin-top: 20rpx;
+  padding: 16rpx;
+  text-align: center;
+  font-size: 22rpx;
+  font-weight: 600;
+  color: rgba($text-primary, 0.35);
+}
+
+// ===== 时段选择器 =====
+.cp-time-picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  padding: 16rpx 0;
+}
+
+.cp-time-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  max-height: 320rpx;
+  overflow-y: auto;
+  padding: 8rpx 0;
+}
+
+.cp-time-item {
+  padding: 16rpx 32rpx;
+  text-align: center;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: rgba($text-primary, 0.4);
+  border-radius: 16rpx;
+}
+
+.cp-time-item.selected {
+  color: $primary-color;
+  background-color: rgba(76, 175, 80, 0.08);
+}
+
+.cp-time-sep {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: rgba($text-primary, 0.3);
+}
+
+// 时段弹窗新增
+.cp-time-preview {
+  font-size: 24rpx;
+  font-weight: 800;
+  color: $primary-color;
+}
+
+.cp-time-section-label {
+  font-size: 22rpx;
+  font-weight: 800;
+  color: rgba($text-primary, 0.35);
+  margin-top: 16rpx;
+  margin-bottom: 8rpx;
+  padding-left: 8rpx;
+}
+
+.cp-dur-grid {
+  display: flex;
+  gap: 16rpx;
+  padding-bottom: 24rpx;
+}
+
+// 图标选择网格
+.cp-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16rpx;
+  padding: 16rpx 0;
+}
+
+.cp-icon-option {
+  padding: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20rpx;
+  background-color: rgba(0,0,0,0.02);
+  border: 2rpx solid transparent;
+}
+
+.cp-icon-option.selected {
+  background-color: rgba(76, 175, 80, 0.06);
+  border-color: rgba(76, 175, 80, 0.2);
+}
+
+.cp-icon-option:active {
+  background-color: rgba(0,0,0,0.04);
+}

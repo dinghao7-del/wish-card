@@ -1,0 +1,245 @@
+@import "../../app.scss";
+
+/* ===== Feedback 反馈页 — 对齐Web Feedback.tsx 样式 ===== */
+
+/* ===== 成功页面 — 对齐Web第42-57行 ===== */
+.feedback-success-page {
+  min-height: 100vh;
+  background-color: $bg-color;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx 48rpx;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.success-icon-wrap {
+  width: 192rpx;
+  height: 192rpx;
+  border-radius: 50rpx;
+  background-color: rgba($primary-color, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40rpx;
+  box-shadow: 0 16rpx 40rpx rgba($primary-color, 0.15);
+}
+
+.success-title {
+  font-size: 44rpx;
+  font-weight: 900;
+  color: $text-primary;
+  margin-bottom: 16rpx;
+  letter-spacing: -1rpx;
+}
+
+.success-desc {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: $text-secondary;
+  text-align: center;
+  line-height: 1.6;
+  max-width: 480rpx;
+}
+
+.success-back-btn {
+  margin-top: 64rpx;
+  padding: 28rpx 72rpx;
+  background-color: $primary-color;
+  border-radius: 100rpx;
+  box-shadow: 0 12rpx 32rpx rgba($primary-color, 0.25);
+
+  Text {
+    color: $card-bg;
+    font-size: 32rpx;
+    font-weight: 900;
+  }
+}
+.success-back-btn:active { transform: scale(0.97); transition: transform 0.15s; }
+
+/* ===== 主表单页 — 对齐Web第60-176行 ===== */
+.feedback-page {
+  min-height: 100vh;
+  background-color: $bg-color;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.header-right { padding: 8rpx; }
+.my-feedback-text {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: rgba($text-secondary, 0.72);
+}
+
+/* Body Scroll */
+.feedback-body { flex: 1; padding: 32rpx; overflow-x: hidden; box-sizing: border-box; }
+
+/* Form Section */
+.form-section { margin-bottom: 48rpx; }
+.section-label {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: $text-primary;
+  padding-left: 4rpx;
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+/* 分类选择器 — 对齐Web第77-92行 3列grid */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+}
+.category-chip {
+  padding: 22rpx 0;
+  border-radius: 20rpx;
+  border: 3rpx solid rgba($border-color, 0.45);
+  background-color: $card-bg;
+  text-align: center;
+  transition: all 0.15s;
+}
+.category-chip:active { transform: scale(0.96); }
+.category-chip.active {
+  background-color: rgba($primary-color, 0.08);
+  border-color: rgba($primary-color, 0.25);
+  box-shadow: 0 2rpx 10rpx rgba($primary-color, 0.08);
+}
+.category-text {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: $text-secondary;
+}
+.category-text.active { color: $primary-color; font-weight: 900; }
+
+/* 内容输入框 — 对齐Web第98-105行 */
+.content-input-wrap {
+  background-color: $card-bg;
+  border-radius: 32rpx;
+  padding: 28rpx;
+  box-shadow: 0 6rpx 30rpx rgba($text-primary, 0.02);
+  border: 2rpx solid rgba($border-color, 0.35);
+}
+.content-textarea {
+  width: 100%;
+  min-height: 240rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: $text-primary;
+  line-height: 1.7;
+}
+.char-count {
+  display: block;
+  text-align: right;
+  font-size: 22rpx;
+  color: rgba($text-secondary, 0.6);
+  margin-top: 12rpx;
+}
+
+/* 媒体上传 — 对齐Web第111-146行 */
+.media-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+.media-preview {
+  position: relative;
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 20rpx;
+  overflow: hidden;
+  border: 2rpx solid rgba($border-color, 0.4);
+}
+.media-img { width: 100%; height: 100%; }
+.media-delete {
+  position: absolute;
+  top: 6rpx;
+  right: 6rpx;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background-color: rgba($text-primary, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  Text {
+    color: $card-bg;
+    font-size: 20rpx;
+    font-weight: 700;
+  }
+}
+
+.media-add-btn {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 20rpx;
+  border: 3rpx dashed rgba($border-color, 0.65);
+  background-color: $surface-container-low;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.media-add-btn:active { background-color: $surface-container; transform: scale(0.96); }
+.media-hint {
+  font-size: 22rpx;
+  color: rgba($text-secondary, 0.6);
+  margin-top: 12rpx;
+  display: block;
+}
+
+/* 联系方式输入 — 对齐Web第152-162行 */
+.contact-input-wrap {
+  background-color: $card-bg;
+  border-radius: 32rpx;
+  padding: 24rpx 28rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  box-shadow: 0 6rpx 30rpx rgba($text-primary, 0.02);
+  border: 2rpx solid rgba($border-color, 0.35);
+  transition: all 0.15s;
+}
+.contact-input-wrap:focus-within { border-color: rgba($primary-color, 0.3); }
+.contact-input { flex: 1; font-size: 28rpx; font-weight: 700; color: $text-primary; }
+
+/* 底部固定提交按钮 — 对齐Web第166-175行 */
+.submit-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24rpx 36rpx;
+  background: linear-gradient(to top, $bg-color 70%, transparent);
+  z-index: 10;
+}
+.submit-btn {
+  width: 100%;
+  min-height: 96rpx;
+  padding: 24rpx 0;
+  border-radius: 32rpx;
+  background-color: rgba($primary-color, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba($primary-color, 0.2);
+  transition: all 0.15s;
+}
+.submit-btn:active { transform: scale(0.985); }
+.submit-btn.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.submit-btn-text {
+  color: $card-bg;
+  font-size: 34rpx;
+  font-weight: 900;
+}

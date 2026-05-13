@@ -18,7 +18,13 @@ const config: Config = {
     '@': path.resolve(__dirname, '..', 'src'),
   },
   copy: {
-    patterns: [],
+    patterns: [
+      // static 目录包含大量图片（4.8MB），已迁移到 Supabase Storage，不再复制
+      // { from: 'static', to: 'dist/static' },
+      { from: 'static/skins', to: 'dist/static/skins' },
+      // 仅复制 icons 目录（tabBar 需要），其他图片走 Supabase Storage 云端
+      { from: 'assets/icons', to: 'dist/assets/icons' },
+    ],
     options: {},
   },
   framework: 'react',

@@ -16,7 +16,7 @@ export function Import() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const dataParam = searchParams.get('data', { defaultValue: 'data' });
+    const dataParam = searchParams.get('data');
     if (dataParam) {
       try {
         const decoded = JSON.parse(decodeURIComponent(atob(dataParam)));

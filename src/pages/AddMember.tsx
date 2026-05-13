@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFamily } from '../context/FamilyContext';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, UserPlus, Camera, Lock, Eye, EyeOff, X, Check, User, Shield, Star } from 'lucide-react';
+import { UserPlus, Camera, Lock, Eye, EyeOff, X, Check, User, Shield, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Member } from '../types';
 import { cn } from '../lib/utils';
 import { AvatarSelector } from '../components/AvatarSelector';
 import { TextAvatar } from '../components/TextAvatar';
 import { BOY_AVATARS, PARENT_AVATARS } from '../lib/templates';
+import { TopAppBar } from '../components/navigation/TopAppBar';
 
 // 默认头像（本地 PNG）
 const getDefaultAvatar = (role: 'parent' | 'child') => {
@@ -62,13 +63,10 @@ export function AddMember() {
 
   return (
     <div className="px-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-screen bg-background">
-      <header className="flex justify-between items-center py-4 sticky top-0 bg-background/80 backdrop-blur-xl z-40 -mx-6 px-6">
-        <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
-          <ArrowLeft size={24} />
-        </button>
-        <h1 className="font-black text-xl tracking-tight">{t('add_member.title', { defaultValue: '标题' })}</h1>
-        <div className="w-10" />
-      </header>
+      <TopAppBar
+        title={t('add_member.title', { defaultValue: '添加成员' })}
+        backTo="/profile"
+      />
 
       <form onSubmit={handleSubmit} className="space-y-8 mt-8">
         <div className="flex flex-col items-center">

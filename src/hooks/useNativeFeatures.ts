@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
 import { PushNotifications } from '@capacitor/push-notifications';
-import { isPlatform } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 
 export interface CameraOptions {
   source?: 'camera' | 'gallery';
@@ -16,6 +16,7 @@ export interface LocationData {
 }
 
 export function useNativeFeatures() {
+  const isPlatform = (platform: string) => Capacitor.getPlatform() === platform;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,7 +27,7 @@ export function useNativeFeatures() {
     if (!isPlatform('ios') && !isPlatform('android')) {
       // Web 环境使用原生 input
       return new Promise((resolve) => {
-        const input = document.createElement('input', { defaultValue: 'input' });
+        const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
         input.onchange = (e) => {

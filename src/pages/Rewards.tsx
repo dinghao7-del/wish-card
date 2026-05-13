@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Reward } from '../types';
-import { Star, Settings, Plus, LayoutGrid, X, ChevronRight, Edit3, Mic } from 'lucide-react';
+import { Star, Plus, X, Mic, MoreVertical, Pencil, Trash2, CheckCircle2, Clock3, CalendarCheck } from 'lucide-react';
 import { useFamily } from '../context/FamilyContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -9,9 +9,14 @@ import { useNavigate } from 'react-router-dom';
 import { VoiceAssistant } from '../components/VoiceAssistant';
 import { TextAvatar } from '../components/TextAvatar';
 import { CelebrationAnimation } from '../components/CelebrationAnimation';
+import { showConfirm } from '../components/ConfirmDialog';
+import { getParentVerificationValue, isHighValueReward } from '../lib/sensitiveActions';
+import { getRewardCategoryLabel, normalizeRewardCategoryId, REWARD_CATEGORY_OPTIONS } from '../lib/rewardCategories';
+import { NotificationBell } from '../components/NotificationCenter';
+import { verifyMemberPinOrPassword } from '../lib/memberCredentials';
 
 export function Rewards() {
-  const { rewards, stars, currentUser, redeemReward, setIsUserSelectorOpen } = useFamily();
+  const { rewards, stars, currentUser, redeemReward, approveReward, setIsUserSelectorOpen, deleteReward, guestMode } = useFamily();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
@@ -19,20 +24,18 @@ export function Rewards() {
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
   const [isRedeemSuccess, setIsRedeemSuccess] = useState(false);
   const [redeemedReward, setRedeemedReward] = useState<Reward | null>(null);
+  const [fulfillmentNotice, setFulfillmentNotice] = useState<Reward | null>(null);
+  const [menuRewardId, setMenuRewardId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<Reward | null>(null);
 
-  const categories = [
-    { id: 'all', label: t('rewards.category.all', { defaultValue: '全部' }) },
-    { id: 'common', label: t('rewards.category.common', { defaultValue: '日常' }) },
-    { id: 'experience', label: t('rewards.category.experience', { defaultValue: '体验' }) },
-    { id: 'prize', label: t('rewards.category.prize', { defaultValue: '奖品' }) },
-    { id: 'privilege', label: t('rewards.category.privilege', { defaultValue: '特权' }) },
-    { id: 'growth', label: t('rewards.category.growth', { defaultValue: '成长' }) },
-    { id: 'activity', label: t('rewards.category.activity', { defaultValue: '活动' }) },
-  ];
+  const categories = REWARD_CATEGORY_OPTIONS.map(category => ({
+    id: category.id,
+    label: t(`rewards.category.${category.id}`, { defaultValue: category.label }),
+  }));
 
-  const filteredRewards = activeTab === 'all' 
-    ? (rewards || []) 
-    : (rewards || []).filter(r => r.category === activeTab);
+  const filteredRewards = activeTab === 'all'
+    ? (rewards || [])
+    : (rewards || []).filter(r => normalizeRewardCategoryId(r.category) === activeTab);
 
   const handleRedeem = (reward: Reward) => {
     if (stars >= reward.cost) {
@@ -50,18 +53,49 @@ export function Rewards() {
     setIsRedeemSuccess(false);
   };
 
+  const canApproveReward = (reward: Reward) => currentUser?.role === 'parent' && reward.status === 'pending_approval';
+  const canRedeemReward = (reward: Reward) => (!reward.status || reward.status === 'available') && stars >= reward.cost;
+  const rewardStatusLabel = (reward: Reward) => {
+    if (reward.status === 'pending_approval') return '待确认';
+    if (reward.status === 'redeemed') return '已兑换';
+    return '';
+  };
+
+  const handleApproveReward = async (reward: Reward) => {
+    if (isHighValueReward(reward)) {
+      const verificationValue = getParentVerificationValue(currentUser);
+      const confirmed = await showConfirm({
+        title: '高价值心愿确认',
+        message: `确认兑换「${reward.name}」将消耗 ${reward.cost} 颗星星，请家长再次确认。`,
+        type: 'warning',
+        confirmText: '确认兑换',
+        verificationValue: verificationValue || undefined,
+        verificationMatcher: currentUser?.role === 'parent'
+          ? (input) => verifyMemberPinOrPassword(currentUser, input) !== null
+          : undefined,
+        verificationLabel: verificationValue ? '输入当前家长 PIN 或密码' : undefined,
+        verificationPlaceholder: verificationValue ? 'PIN 或密码' : undefined,
+      });
+      if (!confirmed) return;
+    }
+    const approved = await approveReward(reward.id);
+    if (approved) {
+      setFulfillmentNotice(reward);
+    }
+  };
+
   return (
     <div className="px-4 sm:px-6 pb-32 animate-in fade-in duration-500 bg-background min-h-screen">
-      <header className="flex justify-between items-center py-4 sticky top-0 bg-background/80 backdrop-blur-xl z-40 -mx-4 sm:-mx-6 px-4 sm:px-6">
+      <header className="flex justify-between items-center py-4 sticky top-[var(--app-sticky-top,0px)] bg-background/80 backdrop-blur-xl z-40 -mx-4 sm:-mx-6 px-4 sm:px-6">
         <div className="flex items-center gap-3">
-          <div 
+          <div
             className="flex items-center gap-2 sm:gap-3 cursor-pointer group"
             onClick={() => setIsUserSelectorOpen(true)}
           >
             <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={40} className="border-2 border-surface dark:border-surface shadow-sm group-hover:shadow-md transition-all" />
           </div>
-          
-          <button 
+
+          <button
             onClick={() => setIsAiDialogOpen(true)}
             className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-primary/20 text-primary-text hover:bg-primary/5 active:scale-95 transition-all"
           >
@@ -70,25 +104,21 @@ export function Rewards() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <div 
+          <div
             onClick={() => navigate('/history')}
             className="bg-surface-container-low backdrop-blur-sm py-1 sm:py-1.5 px-3 sm:px-4 rounded-full flex items-center gap-1.5 sm:gap-2 shadow-sm border border-outline-variant/10 cursor-pointer hover:bg-surface-container transition-colors active:scale-95"
           >
-            <Star size={14} className="sm:size-[18px] text-secondary fill-current" />
+            <Star size={14} className="sm:size-[18px] text-reward-display fill-current" />
             <span className="font-black text-on-surface text-sm sm:text-base">{stars.toLocaleString()}</span>
           </div>
-          <button 
-            onClick={() => navigate('/settings/family')}
-            className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-primary hover:bg-surface-container transition-colors"
-          >
-            <Settings size={20} className="sm:w-[22px] sm:h-[22px]" strokeWidth={2.5} />
-          </button>
+          {!guestMode && <NotificationBell />}
         </div>
       </header>
 
-      <VoiceAssistant 
-        isOpen={isAiDialogOpen} 
+      <VoiceAssistant
+        isOpen={isAiDialogOpen}
         onClose={() => setIsAiDialogOpen(false)}
+        onOpenQuadrant={(range = 'today') => navigate(`/quadrant?range=${range}`)}
         onOpenCalendarSync={() => navigate('/calendar-sync')}
       />
 
@@ -98,7 +128,7 @@ export function Rewards() {
             {t('home.title', { defaultValue: '标题' })}
           </h2>
           {currentUser?.role === 'parent' && (
-            <button 
+            <button
               onClick={() => navigate('/rewards/new')}
               className="bg-primary text-white w-12 h-12 rounded-full shadow-lg shadow-primary/20 active:scale-95 transition-all flex items-center justify-center shrink-0"
             >
@@ -108,16 +138,62 @@ export function Rewards() {
         </div>
       </div>
 
+      <AnimatePresence>
+        {fulfillmentNotice && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="mb-4 rounded-2xl p-4 border border-primary/20 bg-primary-container shadow-sm flex items-start gap-3"
+          >
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-primary/10"
+            >
+              <CalendarCheck size={18} className="text-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-black text-on-surface">已加入父母兑现待办</p>
+              <p className="text-xs font-bold text-on-surface-variant leading-relaxed mt-1">
+                「{fulfillmentNotice.name}」会进入父母任务和四象限，提醒家长完成这个约定。
+              </p>
+              <div className="flex gap-2 mt-3">
+                <button
+                  type="button"
+                  onClick={() => navigate('/tasks')}
+                  className="rounded-full px-3 py-1.5 text-[11px] font-black bg-primary text-white active:scale-95 transition-all"
+                >
+                  查看待办
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/quadrant?range=week')}
+                  className="rounded-full px-3 py-1.5 text-[11px] font-black bg-white/80 text-primary border border-primary/20 active:scale-95 transition-all"
+                >
+                  本周四象限
+                </button>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFulfillmentNotice(null)}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant/70 active:scale-95"
+            >
+              <X size={16} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Category Tabs */}
       <div className="flex overflow-x-auto no-scrollbar gap-2 mb-6 -mx-1">
         {categories.map((cat) => (
-          <button 
+          <button
             key={cat.id}
             onClick={() => setActiveTab(cat.id)}
             className={cn(
-              "px-4 py-1.5 rounded-xl text-[13px] font-black whitespace-nowrap transition-all border",
-              activeTab === cat.id 
-                ? "bg-primary border-primary text-white shadow-sm" 
+              "px-4 py-2 rounded-xl text-[13px] font-black whitespace-nowrap transition-all border flex items-center justify-center",
+              activeTab === cat.id
+                ? "bg-primary border-primary text-white shadow-sm"
                 : "bg-surface-container-low border-transparent text-on-surface-variant/50 hover:bg-surface shadow-sm"
             )}
           >
@@ -130,7 +206,7 @@ export function Rewards() {
       <div className="grid grid-cols-2 gap-4">
         <AnimatePresence mode="popLayout">
           {filteredRewards.map((reward, idx) => (
-            <motion.div 
+            <motion.div
               key={reward.id}
               layout
               initial={{ opacity: 0, y: 10 }}
@@ -145,65 +221,125 @@ export function Rewards() {
                 "w-full h-40 relative overflow-hidden flex items-center justify-center",
                 // 根据奖励类型分配不同渐变
                 reward.cost >= 100 ? "bg-gradient-to-br from-purple-200 to-pink-200" :
-                reward.cost >= 50 ? "bg-gradient-to-br from-blue-200 to-cyan-200" :
-                reward.cost >= 20 ? "bg-gradient-to-br from-green-200 to-emerald-200" :
-                "bg-gradient-to-br from-yellow-200 to-orange-200"
+                reward.cost >= 50 ? "bg-gradient-to-br from-primary-container/30 to-primary/10" :
+                reward.cost >= 20 ? "bg-gradient-to-br from-secondary-container/50 to-secondary/10" :
+                "bg-gradient-to-br from-warning-container to-secondary-container/50"
               )}>
-                {(reward.image || reward.icon) ? (
-                  <img 
-                    src={reward.image || reward.icon} 
-                    alt={reward.name} 
-                    className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" 
+                <span className="absolute text-8xl opacity-40 select-none">🎁</span>
+                {(reward.image || reward.icon) && (
+                  <img
+                    src={reward.image || reward.icon}
+                    alt=""
+                    aria-hidden="true"
+                    onError={(event) => {
+                      event.currentTarget.remove();
+                    }}
+                    className="pointer-events-none relative z-10 w-full h-full object-cover transition-transform group-hover:scale-110 duration-500"
                   />
-                ) : (
-                  /* 大号emoji作为装饰，纯文本无需请求 */
-                  <span className="text-8xl opacity-40 select-none">🎁</span>
                 )}
-                
+
                 {/* 渐变遮罩 + 信息悬浮在底部 */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                
-                {/* 编辑按钮 */}
+
+                {/* 更多操作菜单 */}
                 {currentUser?.role === 'parent' && (
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/rewards/edit/${reward.id}`);
-                    }}
-                    className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-primary active:scale-90 transition-all z-10 shadow-sm"
-                  >
-                    <Edit3 size={14} />
-                  </button>
+                  <div className="absolute top-3 right-3 z-20">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuRewardId(menuRewardId === reward.id ? null : reward.id);
+                      }}
+                      className="w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-primary active:scale-90 transition-all shadow-sm"
+                    >
+                      <MoreVertical size={14} />
+                    </button>
+
+                    {/* 下拉菜单 */}
+                    <AnimatePresence>
+                      {menuRewardId === reward.id && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute right-0 top-10 bg-surface rounded-xl shadow-xl border border-outline-variant/20 overflow-hidden min-w-[140px]"
+                        >
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMenuRewardId(null);
+                              navigate(`/rewards/edit/${reward.id}`);
+                            }}
+                            className="w-full px-4 py-2.5 flex items-center gap-2 text-sm font-bold text-on-surface hover:bg-surface-container transition-colors"
+                          >
+                            <Pencil size={14} className="text-primary" />
+                            {t('rewards.action.edit_task', { defaultValue: '编辑任务' })}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMenuRewardId(null);
+                              setShowDeleteConfirm(reward);
+                            }}
+                            className="w-full px-4 py-2.5 flex items-center gap-2 text-sm font-bold text-danger hover:bg-danger-container/40 transition-colors"
+                          >
+                            <Trash2 size={14} />
+                            {t('rewards.action.delete_task', { defaultValue: '删除任务' })}
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 )}
 
                 {/* 标题悬浮在图片底部 */}
                 <div className="absolute bottom-0 left-0 right-0 p-3">
                   <h4 className="text-base font-black text-white truncate drop-shadow-sm">{reward.name}</h4>
                 </div>
+                {reward.status && reward.status !== 'available' && (
+                  <div className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-black text-primary shadow-sm flex items-center gap-1">
+                    {reward.status === 'pending_approval' ? <Clock3 size={11} /> : <CheckCircle2 size={11} />}
+                    {rewardStatusLabel(reward)}
+                  </div>
+                )}
               </div>
-              
+
               {/* 底部操作栏 */}
-              <div className="px-3 py-2.5 flex items-center justify-between">
+              <div className="px-3 py-2.5 flex items-center justify-between gap-2">
                 {/* 成本用大号显示 */}
                 <div className="flex items-center gap-1">
-                  <Star size={16} className="text-secondary fill-current" />
+                  <Star size={16} className="text-reward-display fill-current" />
                   <span className="text-lg font-black text-on-surface">{reward.cost}</span>
                 </div>
 
-                {stars >= reward.cost ? (
-                  <button 
+                {canApproveReward(reward) ? (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleApproveReward(reward);
+                    }}
+                    className="rounded-full min-w-16 px-3 py-1.5 text-xs font-black bg-primary text-white active:scale-95 transition-all shadow-sm whitespace-nowrap"
+                  >
+                    确认
+                  </button>
+                ) : canRedeemReward(reward) ? (
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleRedeem(reward);
                     }}
-                    className="rounded-full px-4 py-1.5 text-xs font-black bg-primary text-white active:scale-95 transition-all shadow-sm"
+                    className="rounded-full min-w-20 px-3 py-1.5 text-xs font-black bg-primary text-white active:scale-95 transition-all shadow-sm whitespace-nowrap text-center"
                   >
                     {t('rewards.action.redeem', { defaultValue: '兑换' })}
                   </button>
+                ) : reward.status && reward.status !== 'available' ? (
+                  <span className="rounded-full px-3 py-1.5 text-[10px] font-black bg-surface-container text-on-surface-variant/60">
+                    {rewardStatusLabel(reward)}
+                  </span>
                 ) : (
                   <div className="flex items-center gap-1.5">
                     <div className="h-2 w-16 bg-surface-container-high rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className="h-full bg-primary rounded-full transition-all duration-500"
                         style={{ width: `${Math.min(100, (stars / reward.cost) * 100)}%` }}
                       />
@@ -220,67 +356,173 @@ export function Rewards() {
       {/* Reward Detail Modal */}
       <AnimatePresence>
         {selectedReward && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/40 backdrop-blur-sm">
-            <motion.div 
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setSelectedReward(null)}>
+            <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-lg bg-background rounded-t-[2.5rem] sm:rounded-[2.5rem] p-6 shadow-2xl overflow-hidden relative max-h-[90vh] overflow-y-auto no-scrollbar border-x border-t border-outline-variant/10 sm:border"
+              className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-background rounded-t-[2.5rem] shadow-2xl max-h-[75svh] overflow-hidden flex flex-col"
+              style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <button 
+              {/* 关闭按钮 */}
+              <button
                 onClick={() => setSelectedReward(null)}
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant z-10"
+                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant z-10"
               >
-                <X size={24} />
+                <X size={20} />
               </button>
 
-              <div className="w-full aspect-[4/3] rounded-3xl overflow-hidden mb-6 shadow-md border-4 border-surface dark:border-surface">
+              {/* 可滚动内容区 */}
+              <div className="flex-1 p-5 overflow-y-auto touch-pan-y" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+                {/* 图片 */}
                 {(selectedReward.image || selectedReward.icon) && (
-                  <img 
-                    src={selectedReward.image || selectedReward.icon} 
-                    alt={selectedReward.name} 
-                    className="w-full h-full object-cover" 
-                  />
+                  <div className="w-full rounded-2xl overflow-hidden mb-4 shadow-md border-2 border-surface dark:border-surface">
+                    <img
+                      src={selectedReward.image || selectedReward.icon}
+                      alt={selectedReward.name}
+                      className="w-full h-auto object-contain max-h-[20vh]"
+                    />
+                  </div>
                 )}
-              </div>
 
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-2xl font-black">{selectedReward.name}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border border-primary/20">
-                       {categories.find(c => c.id === selectedReward.category)?.label}
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1 pr-2">
+                    <h3 className="text-xl font-black">{selectedReward.name}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border border-primary/20">
+                         {getRewardCategoryLabel(selectedReward.category)}
+                      </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-1 bg-secondary-container/30 dark:bg-secondary/20 px-3 py-1 rounded-full text-secondary dark:text-secondary border border-white/50 dark:border-secondary/20 shadow-sm shrink-0">
+                    <Star size={16} className="fill-current text-reward-display" strokeWidth={2.5} />
+                    <span className="font-black text-lg">{selectedReward.cost}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 bg-secondary-container/30 dark:bg-secondary/20 px-4 py-1.5 rounded-full text-secondary dark:text-secondary border border-white/50 dark:border-secondary/20 shadow-sm">
-                  <Star size={20} className="fill-current" strokeWidth={2.5} />
-                  <span className="font-black text-xl">{selectedReward.cost}</span>
+
+                {selectedReward.description && (
+                  <p className="text-on-surface-variant text-xs font-medium mb-4 leading-relaxed line-clamp-2">
+                    {selectedReward.description}
+                  </p>
+                )}
+
+                {/* 兑换进度条 - 紧凑版 */}
+                <div className="bg-surface-container-low rounded-xl px-3 py-2 mb-4">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-bold text-on-surface-variant">
+                      {t('rewards.progress.current_stars', { defaultValue: '当前能量' })}
+                    </span>
+                    <span className="text-[10px] font-black text-primary flex items-center gap-0.5">
+                      <Star size={9} className="fill-current text-reward-display" />
+                      {stars} / {selectedReward.cost}
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all duration-500",
+                        stars >= selectedReward.cost ? "bg-primary" : "bg-gradient-to-r from-primary to-secondary"
+                      )}
+                      style={{ width: `${Math.min(100, (stars / selectedReward.cost) * 100)}%` }}
+                    />
+                  </div>
+                  <p className={cn(
+                    "text-[9px] font-bold text-center mt-1",
+                    canRedeemReward(selectedReward) ? "text-primary" : "text-on-surface-variant/60"
+                  )}>
+                    {selectedReward.status === 'pending_approval'
+                      ? '等待家长确认'
+                      : selectedReward.status === 'redeemed'
+                        ? '这个心愿已兑换'
+                        : stars >= selectedReward.cost
+                      ? t('rewards.progress.ready', { defaultValue: '可以兑换啦！' })
+                      : t('rewards.progress.need_more', { defaultValue: '再攒 {{count}} 颗', count: selectedReward.cost - stars })}
+                  </p>
                 </div>
               </div>
-              <p className="text-on-surface-variant text-sm font-bold mb-8 leading-relaxed">
-                {selectedReward.description || t('rewards.detail.no_description', { defaultValue: 'no description' })}
-              </p>
 
-              <div className="flex gap-4">
-                <button 
-                  onClick={() => setSelectedReward(null)}
-                  className="flex-1 py-4 rounded-2xl bg-surface-container font-black text-on-surface-variant"
-                >
-                  {t('rewards.action.cancel', { defaultValue: '取消' })}
-                </button>
-                <button 
-                  disabled={stars < selectedReward.cost}
-                  onClick={() => handleRedeem(selectedReward)}
+              {/* 固定底部按钮区域 */}
+              <div className="p-4 bg-background border-t border-outline-variant/10 shrink-0 pb-[max(2rem,env(safe-area-inset-bottom,0px))]">
+                <button
+                  disabled={!canApproveReward(selectedReward) && !canRedeemReward(selectedReward)}
+                  onClick={() => {
+                    if (canApproveReward(selectedReward)) {
+                      handleApproveReward(selectedReward);
+                      setSelectedReward(null);
+                    } else {
+                      handleRedeem(selectedReward);
+                    }
+                  }}
                   className={cn(
-                    "flex-[2] py-4 rounded-2xl font-black text-white shadow-xl transition-all border-b-4",
-                    stars >= selectedReward.cost 
-                      ? "bg-primary border-primary-container shadow-primary/20" 
-                      : "bg-surface-container border-transparent text-on-surface-variant/40 cursor-not-allowed"
+                    "w-full py-3.5 rounded-xl font-black text-white shadow-lg transition-all flex items-center justify-center gap-2",
+                    canApproveReward(selectedReward)
+                      ? "bg-emerald-500 shadow-emerald-500/20 active:scale-[0.98] cursor-pointer"
+                      : canRedeemReward(selectedReward)
+                      ? "bg-primary shadow-primary/30 active:scale-[0.98] cursor-pointer"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   )}
                 >
-                  {stars >= selectedReward.cost ? t('rewards.action.confirm', { defaultValue: '确认' }) : t('rewards.action.insufficient', { defaultValue: 'insufficient' })}
+                  {canApproveReward(selectedReward) ? (
+                    <>
+                      <CheckCircle2 size={16} />
+                      确认兑换
+                    </>
+                  ) : canRedeemReward(selectedReward) ? (
+                    <>
+                      <Star size={16} className="fill-current text-reward-display" />
+                      {t('rewards.action.redeem_now', { defaultValue: '立即兑换' })}
+                    </>
+                  ) : selectedReward.status && selectedReward.status !== 'available' ? (
+                    <>
+                      <Clock3 size={16} />
+                      {rewardStatusLabel(selectedReward)}
+                    </>
+                  ) : (
+                    <>
+                      <Star size={16} className="fill-current text-gray-400" />
+                      {t('rewards.action.stars_insufficient', { defaultValue: '星星不足 ({{count}})', count: selectedReward.cost - stars })}
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 删除确认弹窗 */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white dark:bg-surface rounded-2xl p-6 shadow-2xl max-w-sm w-full max-h-[calc(100svh-2rem)] overflow-y-auto"
+            >
+              <h3 className="text-lg font-black text-on-surface mb-2">
+                {t('rewards.action.delete_confirm_title', { defaultValue: '确认删除' })}
+              </h3>
+              <p className="text-sm text-on-surface-variant mb-6">
+                {t('rewards.action.delete_confirm_message', { defaultValue: '确定要删除心愿「{{name}}」吗？此操作无法撤销。', name: showDeleteConfirm.name })}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(null)}
+                  className="flex-1 py-3 rounded-xl bg-surface-container font-bold text-on-surface-variant"
+                >
+                  {t('common.cancel', { defaultValue: '取消' })}
+                </button>
+                <button
+                  onClick={() => {
+                    deleteReward(showDeleteConfirm.id);
+                    setShowDeleteConfirm(null);
+                  }}
+                  className="flex-1 py-3 rounded-xl bg-danger font-bold text-white shadow-sm"
+                >
+                  {t('common.delete', { defaultValue: '删除' })}
                 </button>
               </div>
             </motion.div>

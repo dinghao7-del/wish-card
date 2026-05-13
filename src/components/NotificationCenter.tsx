@@ -102,15 +102,15 @@ export function useNotifications() {
 
 function getNotifIcon(type: NotificationType) {
   switch (type) {
-    case 'task_completed': return <CheckCircle2 size={18} className="text-green-500" />;
-    case 'task_reviewing': return <Clock size={18} className="text-orange-500" />;
-    case 'task_approved': return <CheckCircle2 size={18} className="text-blue-500" />;
-    case 'reward_redeemed': return <Gift size={18} className="text-purple-500" />;
-    case 'reward_approved': return <Star size={18} className="text-yellow-500" />;
-    case 'habit_target': return <AlertCircle size={18} className="text-indigo-500" />;
-    case 'system': return <Bell size={18} className="text-gray-500" />;
-    case 'suggestion': return <AlertCircle size={18} className="text-teal-500" />;
-    default: return <Bell size={18} className="text-gray-500" />;
+    case 'task_completed': return <CheckCircle2 size={18} className="text-primary" />;
+    case 'task_reviewing': return <Clock size={18} className="text-warning" />;
+    case 'task_approved': return <CheckCircle2 size={18} className="text-primary" />;
+    case 'reward_redeemed': return <Gift size={18} className="text-secondary" />;
+    case 'reward_approved': return <Star size={18} className="text-secondary" />;
+    case 'habit_target': return <AlertCircle size={18} className="text-tertiary" />;
+    case 'system': return <Bell size={18} className="text-on-surface-variant" />;
+    case 'suggestion': return <AlertCircle size={18} className="text-primary" />;
+    default: return <Bell size={18} className="text-on-surface-variant" />;
   }
 }
 

@@ -1,0 +1,87 @@
+@import "../../app.scss";
+
+/* ===== ContactUs 联系我们页 — 对齐Web ContactUs.tsx 样式 ===== */
+
+.contact-us-page {
+  min-height: 100vh;
+  background-color: $bg-color;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Body */
+.cu-body { padding: 32rpx; }
+
+/* 卡片 — 对齐Web第30-44行 白底圆角+shadow */
+.cu-card {
+  background-color: $card-bg;
+  border-radius: 32rpx;
+  padding: 32rpx 28rpx;
+  box-shadow: 0 6rpx 30rpx rgba($text-primary, 0.02);
+  border: 2rpx solid rgba($border-color, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+  transition: all 0.15s;
+}
+.cu-card:active { transform: scale(0.985); }
+
+.cu-card-left {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Icon容器 — 对齐Web第35-37行 / 第51-53行 / 第66-68行 */
+.cu-icon-wrap {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &.primary { background-color: rgba($primary-color, 0.08); }
+  &.tertiary { background-color: rgba($status-pending, 0.14); }
+  &.neutral { background-color: $surface-container-low; }
+}
+
+.cu-card-info { flex: 1; min-width: 0; }
+
+.cu-card-name {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: $text-primary;
+  display: block;
+}
+
+.cu-card-desc {
+  font-size: 25rpx;
+  font-weight: 600;
+  color: rgba($text-secondary, 0.72);
+  margin-top: 6rpx;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 复制按钮 — 对齐Web第74-79行 */
+.cu-copy-btn {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 18rpx;
+  background-color: $surface-container-low;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+  transition: all 0.12s;
+}
+.cu-copy-btn:active { background-color: rgba($primary-color, 0.08); transform: scale(0.92); }

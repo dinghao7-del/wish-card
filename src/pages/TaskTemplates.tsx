@@ -144,17 +144,17 @@ export function TaskTemplates() {
           </button>
         </div>
 
-        {/* Categories */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+        {/* Categories — 固定宽度容器 + 左对齐，无滚动条偏移 */}
+        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 snap-x snap-mandatory">
           {categories.map(cat => (
             <button 
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={cn(
-                "px-5 py-2 rounded-full text-xs font-black whitespace-nowrap transition-all border-2",
+                "px-[18px] py-[9px] rounded-full text-xs font-black whitespace-nowrap transition-all border-[1.5px] snap-start shrink-0",
                 activeCategory === cat 
                   ? "bg-primary border-primary text-white shadow-md shadow-primary/20" 
-                  : "bg-white border-white text-on-surface-variant/40"
+                  : "bg-white border-outline-variant/15 text-on-surface-variant/50 hover:border-outline-variant/30"
               )}
             >
               {cat}

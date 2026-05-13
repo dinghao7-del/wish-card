@@ -257,7 +257,9 @@ export function CelebrationAnimation({
                 className="flex items-center justify-center gap-2 mt-4"
               >
                 <Star className="text-yellow-400 fill-current" size={24} />
-                <span className="text-2xl font-black text-yellow-500">+{stars}</span>
+                <span className="text-2xl font-black text-yellow-500">
+                  {isReward ? `消耗 ${stars}` : `+${stars}`}
+                </span>
               </motion.div>
             )}
           </motion.div>

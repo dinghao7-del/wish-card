@@ -1,17 +1,19 @@
 import React, { useState, useMemo } from 'react';
 import { useFamily } from '../context/FamilyContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, Star, Sparkles, Clock } from 'lucide-react';
+import { CheckCircle2, Star, Sparkles, Clock } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { TextAvatar } from '../components/TextAvatar';
 import { useTranslation } from 'react-i18next';
+import { TopAppBar } from '../components/navigation/TopAppBar';
 
 export function CheckIn() {
   const navigate = useNavigate();
   const { taskId: paramTaskId } = useParams();
   const { tasks, currentUser, completeTask, approveTask } = useFamily();
   const [isSuccess, setIsSuccess] = useState(false);
+  const [successMode, setSuccessMode] = useState<'checkin' | 'approve' | null>(null);
   const { t } = useTranslation();
 
   const task = useMemo(() => {
@@ -23,16 +25,21 @@ export function CheckIn() {
 
   const isAdmin = currentUser?.role === 'parent';
   const isApproving = task?.status === 'reviewing';
+  const isSuccessApproving = successMode === 'approve';
+  const displayIsApproving = isSuccess ? isSuccessApproving : isApproving;
 
   const handleCheckIn = () => {
     if (!task) return;
-    
+
+    const actionMode = isApproving && isAdmin ? 'approve' : 'checkin';
+
     setTimeout(() => {
-      if (isApproving && isAdmin) {
+      if (actionMode === 'approve') {
         approveTask(task.id);
       } else {
         completeTask(task.id);
       }
+      setSuccessMode(actionMode);
       setIsSuccess(true);
     }, 300);
   };
@@ -47,7 +54,7 @@ export function CheckIn() {
         <p className="text-on-surface-variant font-medium">{t('checkin.no_tasks', { defaultValue: '暂无任务' })}</p>
         <button 
            onClick={() => navigate('/')}
-           className="mt-10 px-10 py-4 bg-primary text-white rounded-full font-black shadow-[0_15px_30px_rgba(0,110,28,0.2)] active:scale-95 transition-transform"
+	           className="mt-10 px-10 py-4 bg-primary text-white rounded-full font-black shadow-lg shadow-primary/20 active:scale-95 transition-transform"
         >
           {t('checkin.view_home', { defaultValue: '查看首页' })}
         </button>
@@ -61,13 +68,10 @@ export function CheckIn() {
       <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[40%] bg-primary/5 rounded-full blur-[100px] -z-10 animate-pulse" />
       <div className="absolute bottom-[-5%] left-[-10%] w-[40%] h-[30%] bg-secondary/5 rounded-full blur-[100px] -z-10" />
 
-      <header className="flex justify-between items-center py-6 sticky top-0 bg-surface/80 backdrop-blur-xl z-40 -mx-6 px-6 border-b border-outline-variant/30">
-        <button onClick={() => navigate(-1)} className="w-12 h-12 flex items-center justify-center rounded-2xl text-on-surface-variant hover:bg-surface-container transition-all">
-          <ArrowLeft size={24} />
-        </button>
-        <h1 className="font-black text-xl tracking-tight">{isApproving ? t('checkin.approve_title', { defaultValue: '审核任务' }) : t('checkin.execute_title', { defaultValue: '执行打卡' })}</h1>
-        <div className="w-12" />
-      </header>
+      <TopAppBar
+        title={displayIsApproving ? t('checkin.approve_title', { defaultValue: '审核任务' }) : t('checkin.execute_title', { defaultValue: '执行打卡' })}
+        backTo="/tasks"
+      />
 
       <AnimatePresence mode="wait">
         {!isSuccess ? (
@@ -80,7 +84,7 @@ export function CheckIn() {
             className="flex-1 flex flex-col items-center pt-8"
           >
             {/* Task Overview Card */}
-            <div className="w-full bg-white rounded-[2.5rem] p-6 flex items-center shadow-[0_20px_40px_rgba(0,0,0,0.03)] border border-outline-variant relative overflow-hidden mb-12 group transition-all hover:shadow-md">
+            <div className="w-full bg-surface rounded-[2.5rem] p-6 flex items-center shadow-sm border border-outline-variant relative overflow-hidden mb-12 group transition-all hover:shadow-md">
               <div className="absolute -right-4 -bottom-4 w-28 h-28 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors"></div>
               <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-white mr-4 shrink-0 z-10 shadow-lg shadow-primary/20">
                 <Star size={32} className="fill-current" />
@@ -104,8 +108,8 @@ export function CheckIn() {
                     whileTap={{ scale: 0.92 }}
                     className="relative group w-72 h-72 rounded-full flex flex-col items-center justify-center transition-all duration-500 ease-out z-20"
                   >
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-primary-dark overflow-hidden shadow-[0_25px_60px_rgba(0,110,28,0.4)]">
-                       <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.2),transparent_60%)]"></div>
+	                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-primary-container overflow-hidden shadow-2xl shadow-primary/30">
+	                       <div className="absolute top-0 left-0 w-full h-full bg-white/10"></div>
                     </div>
                     
                     {/* Ring animations */}
@@ -147,14 +151,14 @@ export function CheckIn() {
             key="success-screen"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex-1 flex flex-col items-center justify-center text-center space-y-10"
+            className="flex-1 flex flex-col items-center justify-center text-center space-y-6"
           >
             <div className="relative">
               <motion.div 
                 initial={{ scale: 0, rotate: -45 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: "spring", damping: 12, stiffness: 200, delay: 0.2 }}
-                className="w-40 h-40 bg-gradient-to-br from-primary to-primary-container rounded-[3rem] flex items-center justify-center text-white shadow-[0_30px_60px_rgba(0,110,28,0.3)] relative z-10"
+	                className="w-40 h-40 bg-gradient-to-br from-primary to-primary-container rounded-[3rem] flex items-center justify-center text-white shadow-2xl shadow-primary/25 relative z-10"
               >
                 <CheckCircle2 size={96} className="drop-shadow-lg" strokeWidth={3} />
               </motion.div>
@@ -180,31 +184,31 @@ className={cn(
               ))}
             </div>
 
-            <div className="space-y-4">
-              <h1 className="text-5xl font-black text-on-surface tracking-tighter">{isApproving ? t('checkin.approve_complete', { defaultValue: '审核完成' }) : t('checkin.checkin_success', { defaultValue: '打卡成功' })}</h1>
-              <p className="text-on-surface-variant font-bold text-lg">{isApproving ? t('checkin.reward_distributed', { defaultValue: '星星已发放' }) : t('checkin.forest_greener', { defaultValue: '森林更加茂盛了' })}</p>
+            <div className="space-y-1">
+              <h1 className="text-4xl font-black text-on-surface tracking-tighter">{isSuccessApproving ? t('checkin.approve_complete', { defaultValue: '审核完成' }) : t('checkin.checkin_success', { defaultValue: '打卡成功' })}</h1>
+              <p className="text-on-surface-variant font-bold text-base">{isSuccessApproving ? t('checkin.reward_distributed', { defaultValue: '星星已发放' }) : t('checkin.forest_greener', { defaultValue: '森林更加茂盛了' })}</p>
             </div>
 
-            <div className="bg-white rounded-[2.5rem] p-8 w-full shadow-[0_10px_30px_rgba(0,0,0,0.03)] border border-outline-variant relative overflow-hidden">
+            <div className="bg-surface rounded-[2rem] p-5 w-full shadow-sm border border-outline-variant relative overflow-hidden">
                <div className="absolute top-0 right-0 w-24 h-24 bg-secondary/5 rounded-full blur-2xl -mr-10 -mt-10" />
-               <p className="text-xs font-black text-on-surface-variant/40 uppercase tracking-widest mb-6">{isApproving ? t('checkin.star_detail_approve', { defaultValue: '星星详情' }) : t('checkin.star_detail', { defaultValue: '打卡详情' })}</p>
-               <div className="flex items-center justify-center gap-5">
-                 <div className="w-16 h-16 rounded-3xl bg-secondary-container/40 flex items-center justify-center text-secondary shadow-inner">
-                    <Star size={36} className="fill-current" />
+               <p className="text-xs font-black text-on-surface-variant/40 uppercase tracking-widest mb-3">{isSuccessApproving ? t('checkin.star_detail_approve', { defaultValue: '星星详情' }) : t('checkin.star_detail', { defaultValue: '打卡详情' })}</p>
+               <div className="flex items-center justify-center gap-4">
+                 <div className="w-14 h-14 rounded-2xl bg-secondary-container/40 flex items-center justify-center text-secondary shadow-inner">
+                    <Star size={32} className="fill-current" />
                  </div>
                  <div className="text-left">
                    <div className="flex items-center gap-1">
-                      <span className="text-4xl font-black text-on-surface">+{task?.rewardStars}</span>
-                      <span className="text-lg font-black text-on-surface-variant">{t('checkin.stars_reward', { defaultValue: '星星奖励' })}</span>
+                      <span className="text-3xl font-black text-on-surface">+{task?.rewardStars}</span>
+                      <span className="text-base font-black text-on-surface-variant">{t('checkin.stars_reward', { defaultValue: '星星奖励' })}</span>
                    </div>
-                   <p className="text-xs font-bold text-tertiary/60">{isApproving ? t('checkin.reward_credited', { defaultValue: '奖励已到账' }) : t('checkin.waiting_approval', { defaultValue: '待审核确认' })}</p>
+                   <p className="text-xs font-bold text-tertiary/60">{isSuccessApproving ? t('checkin.reward_credited', { defaultValue: '奖励已到账' }) : t('checkin.waiting_approval', { defaultValue: '待审核确认' })}</p>
                  </div>
                </div>
             </div>
 
 <button 
   onClick={() => navigate('/tasks')}
-  className="w-full py-5 bg-primary-dark text-on-primary font-black text-xl rounded-[2rem] shadow-[0_15px_30px_rgba(0,110,28,0.3)] active:scale-95 transition-all hover:bg-primary-dark/80 mt-4"
+	  className="w-full py-4 bg-primary text-white font-black text-lg rounded-[2rem] shadow-lg shadow-primary/20 active:scale-95 transition-all hover:bg-primary/90 mt-3"
 >
               {t('checkin.awesome', { defaultValue: '太棒了' })}
             </button>
