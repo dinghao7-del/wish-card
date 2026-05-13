@@ -54,6 +54,7 @@ describe('canonical UI tokens', () => {
     const webCss = readText('src/index.css');
     expect(readCssVar(webCss, '--color-primary')).toBe(UI_TOKENS.color.light.primary);
     expect(readCssVar(webCss, '--color-primary-container')).toBe(UI_TOKENS.color.light.primaryContainer);
+    expect(readCssVar(webCss, '--color-reward-display')).toBe(UI_TOKENS.color.semantic.rewardDisplay);
     expect(readCssVar(webCss, '--color-background')).toBe(UI_TOKENS.color.light.background);
     expect(readCssVar(webCss, '--color-surface-container-low')).toBe(UI_TOKENS.color.light.surfaceContainerLow);
 

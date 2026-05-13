@@ -14,6 +14,8 @@ const baselinePath = path.join(__dirname, 'ui-token-baseline.json');
 const defaultBaseline = { allowedExistingViolations: [], allowlistedFiles: [] };
 const baseline = loadBaseline();
 const allowedExistingViolations = new Set(baseline.allowedExistingViolations);
+const allowlistedFiles = new Set(baseline.allowlistedFiles);
+const shouldUpdateBaseline = process.argv.includes('--update-baseline');
 
 function loadBaseline() {
   if (!fs.existsSync(baselinePath)) return defaultBaseline;
@@ -83,6 +85,9 @@ function violationKey(violation) {
 }
 
 function scanFile(filePath) {
+  const relPath = normalizePath(filePath);
+  if (allowlistedFiles.has(relPath)) return [];
+
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split('\n');
   const violations = [];
@@ -90,6 +95,9 @@ function scanFile(filePath) {
   lines.forEach((line, index) => {
     // 跳过注释行
     if (line.trim().startsWith('//') || line.trim().startsWith('*')) return;
+
+    // 跳过 CSS/Tailwind token 定义行，例如 --color-primary: #006e1c;
+    if (/^\s*--color-[a-z0-9-]+\s*:/.test(line)) return;
     
     // 跳过已经使用设计令牌的行
     const hasDesignToken = DESIGN_TOKEN_PATTERNS.some(pattern => pattern.test(line));
@@ -111,6 +119,8 @@ function scanFile(filePath) {
       });
     });
   });
+
+  if (shouldUpdateBaseline) return violations;
 
   return violations.filter(violation => !allowedExistingViolations.has(violationKey(violation)));
 }
@@ -169,6 +179,23 @@ function main() {
       allViolations.push(...violations);
     }
   });
+
+  if (shouldUpdateBaseline) {
+    const nextBaseline = {
+      ...baseline,
+      allowedExistingViolations: Array.from(
+        new Set([
+          ...baseline.allowedExistingViolations,
+          ...allViolations.map(violationKey),
+        ])
+      ).sort(),
+    };
+
+    fs.writeFileSync(baselinePath, `${JSON.stringify(nextBaseline, null, 2)}\n`);
+    console.log(`\n✅ 已更新 UI token baseline：${normalizePath(baselinePath)}`);
+    console.log(`   当前允许的历史违规: ${nextBaseline.allowedExistingViolations.length}`);
+    process.exit(0);
+  }
 
   // 输出结果
   if (allViolations.length === 0) {

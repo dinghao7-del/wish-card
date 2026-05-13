@@ -43,6 +43,7 @@ export const UI_TOKENS = {
       completed: '#81C784',
       reward: '#FFD600',
       rewardDeep: '#F9A825',
+      rewardDisplay: '#FBC02D',
       danger: '#E57373',
     },
   },
