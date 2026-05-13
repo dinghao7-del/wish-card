@@ -58,6 +58,17 @@ android {
             ]
         }
     }
+
+    sourceSets {
+        main {
+            java {
+                exclude 'com/forestfamily/app/ForestFamilyApp.kt'
+                exclude 'com/forestfamily/app/data/**'
+                exclude 'com/forestfamily/app/di/**'
+                exclude 'com/forestfamily/app/ui/**'
+            }
+        }
+    }
 }
 
 repositories {
@@ -83,6 +94,13 @@ dependencies {
 }
 
 apply from: 'capacitor.build.gradle'
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    exclude 'com/forestfamily/app/ForestFamilyApp.kt'
+    exclude 'com/forestfamily/app/data/**'
+    exclude 'com/forestfamily/app/di/**'
+    exclude 'com/forestfamily/app/ui/**'
+}
 
 try {
     def servicesJSON = file('google-services.json')
