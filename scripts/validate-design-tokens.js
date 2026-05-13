@@ -9,6 +9,30 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const repoRoot = path.resolve(__dirname, '..');
+const baselinePath = path.join(__dirname, 'ui-token-baseline.json');
+const defaultBaseline = { allowedExistingViolations: [], allowlistedFiles: [] };
+const baseline = loadBaseline();
+const allowedExistingViolations = new Set(baseline.allowedExistingViolations);
+
+function loadBaseline() {
+  if (!fs.existsSync(baselinePath)) return defaultBaseline;
+
+  try {
+    const parsed = JSON.parse(fs.readFileSync(baselinePath, 'utf-8'));
+    const merged = { ...defaultBaseline, ...parsed };
+
+    if (!Array.isArray(merged.allowedExistingViolations) || !Array.isArray(merged.allowlistedFiles)) {
+      throw new Error('Expected allowedExistingViolations and allowlistedFiles arrays.');
+    }
+
+    return merged;
+  } catch (error) {
+    console.error(`❌ 无法读取 UI token baseline: ${baselinePath}`);
+    console.error(`   ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
+  }
+}
 
 // 硬编码颜色正则表达式
 const HARDCODED_COLOR_PATTERNS = [
@@ -50,6 +74,14 @@ const EXCLUDE_PATTERNS = [
   /__snapshots__/,
 ];
 
+function normalizePath(filePath) {
+  return path.relative(repoRoot, filePath).split(path.sep).join('/');
+}
+
+function violationKey(violation) {
+  return `${normalizePath(violation.file)}:${violation.line}:${violation.column}:${violation.matchedText}`;
+}
+
 function scanFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split('\n');
@@ -80,7 +112,7 @@ function scanFile(filePath) {
     });
   });
 
-  return violations;
+  return violations.filter(violation => !allowedExistingViolations.has(violationKey(violation)));
 }
 
 function getSuggestion(matched) {
@@ -130,7 +162,7 @@ function main() {
   const allViolations = [];
 
   SCAN_DIRS.forEach(({ path: dirPath, extensions }) => {
-    const fullPath = path.resolve(__dirname, '../../', dirPath);
+    const fullPath = path.resolve(repoRoot, dirPath);
     if (fs.existsSync(fullPath)) {
       console.log(`📂 扫描目录: ${dirPath}`);
       const violations = scanDirectory(fullPath, extensions);
@@ -146,7 +178,7 @@ function main() {
     console.log(`\n❌ 发现 ${allViolations.length} 处硬编码颜色：\n`);
     
     allViolations.forEach(v => {
-      const relPath = path.relative(process.cwd(), v.file);
+      const relPath = normalizePath(v.file);
       console.log(`  ${relPath}:${v.line}:${v.column}`);
       console.log(`    ❌ ${v.matchedText}`);
       console.log(`    💡 ${v.suggestion}\n`);
