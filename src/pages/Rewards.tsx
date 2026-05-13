@@ -328,10 +328,12 @@ export function Rewards() {
 
               {/* 底部操作栏 */}
               <div className="ui-reward-card-body px-3 py-2.5 flex items-center justify-between gap-2">
-                {/* 成本用大号显示 */}
-                <div className="ui-reward-cost flex items-center gap-1">
-                  <Star size={16} className="text-reward-display fill-current" />
-                  <span className="text-lg font-black text-on-surface">{reward.cost}</span>
+                <div className="ui-reward-info-row flex w-full items-start justify-between gap-3">
+                  <h4 className="min-w-0 flex-1 truncate text-sm font-bold text-on-surface">{reward.name}</h4>
+                  <div className="ui-reward-cost flex items-center gap-1">
+                    <Star size={16} className="text-reward-display fill-current" />
+                    <span className="text-lg font-black text-on-surface">{reward.cost}</span>
+                  </div>
                 </div>
 
                 {canApproveReward(reward) ? (

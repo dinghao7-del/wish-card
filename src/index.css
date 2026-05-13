@@ -557,6 +557,11 @@ input, textarea, select {
   padding: 0.9rem 1rem 1rem;
 }
 
+[data-theme-skin="arcade-comic"] .ui-reward-info-row h4 {
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
 [data-theme-skin="arcade-comic"] .ui-reward-cost {
   justify-content: flex-end;
   color: var(--color-danger);
