@@ -1,0 +1,121 @@
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import ts from 'typescript';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname, '..');
+
+const themeSkinPath = path.join(rootDir, 'src/lib/themeSkins.ts');
+const uiTokensPath = path.join(rootDir, 'src/lib/uiTokens.ts');
+
+const errors = [];
+
+function transpileTsFile(sourcePath, replacements = []) {
+  let source = fs.readFileSync(sourcePath, 'utf8');
+
+  for (const [from, to] of replacements) {
+    source = source.replace(from, to);
+  }
+
+  return ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.ES2022,
+      target: ts.ScriptTarget.ES2022,
+      verbatimModuleSyntax: true,
+    },
+  }).outputText;
+}
+
+function assert(condition, message) {
+  if (!condition) errors.push(message);
+}
+
+function assertSkinContract(skinId, skin) {
+  assert(skin && typeof skin === 'object', `${skinId} must be an object.`);
+  if (!skin || typeof skin !== 'object') return;
+
+  assert(skin.id === skinId, `${skinId} id must match its registry key.`);
+  assert(['active', 'planned'].includes(skin.status), `${skinId} status must be active or planned.`);
+  assert(typeof skin.name === 'string' && skin.name.length > 0, `${skinId} must define a name.`);
+  assert(typeof skin.description === 'string' && skin.description.length > 0, `${skinId} must define a description.`);
+
+  const assetPath = skin.assets?.welcomeIllustration;
+  assert(typeof assetPath === 'string' && assetPath.startsWith('/skins/'), `${skinId} must define a skin welcome illustration.`);
+  if (assetPath) {
+    const diskPath = path.join(rootDir, 'public', assetPath);
+    assert(fs.existsSync(diskPath), `${skinId} asset does not exist: public${assetPath}`);
+  }
+
+  assert(skin.tokens?.color?.primary === '#006e1c', `${skinId} primary token must be #006e1c.`);
+  assert(skin.tokens?.color?.primaryContainer === '#4caf50', `${skinId} primaryContainer token must be #4caf50.`);
+  assert(skin.tokens?.color?.background === '#fbf9f5', `${skinId} background token must be #fbf9f5.`);
+  assert(skin.tokens?.color?.surfaceContainerLow === '#f5f3ef', `${skinId} surfaceContainerLow token must be #f5f3ef.`);
+  assert(skin.tokens?.color?.outlineVariant === '#becab9', `${skinId} outlineVariant token must be #becab9.`);
+  assert(skin.tokens?.radius?.small === 8, `${skinId} radius.small must be 8.`);
+  assert(skin.tokens?.radius?.medium === 16, `${skinId} radius.medium must be 16.`);
+  assert(skin.tokens?.radius?.large === 24, `${skinId} radius.large must be 24.`);
+  assert(skin.tokens?.radius?.full === 9999, `${skinId} radius.full must be 9999.`);
+
+  assert(skin.platformSupport?.web === true, `${skinId} must support web.`);
+  assert(skin.platformSupport?.miniProgram === true, `${skinId} must support miniProgram.`);
+  assert(skin.platformSupport?.android === true, `${skinId} must support android.`);
+  assert(skin.platformSupport?.ios === true, `${skinId} must support ios.`);
+
+  assert(skin.accessibility?.minimumContrast === 'WCAG-AA', `${skinId} must require WCAG-AA contrast.`);
+  assert(skin.accessibility?.reducedMotion === true, `${skinId} must support reduced motion.`);
+}
+
+async function loadThemeSkins() {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'theme-skins-'));
+  const uiTokensModulePath = path.join(tempDir, 'uiTokens.mjs');
+  const themeSkinsModulePath = path.join(tempDir, 'themeSkins.mjs');
+
+  fs.writeFileSync(uiTokensModulePath, transpileTsFile(uiTokensPath));
+  fs.writeFileSync(
+    themeSkinsModulePath,
+    transpileTsFile(themeSkinPath, [["'./uiTokens'", "'./uiTokens.mjs'"]])
+  );
+
+  return import(`file://${themeSkinsModulePath}`);
+}
+
+if (!fs.existsSync(themeSkinPath)) {
+  errors.push('Missing src/lib/themeSkins.ts.');
+}
+
+if (!fs.existsSync(uiTokensPath)) {
+  errors.push('Missing src/lib/uiTokens.ts.');
+}
+
+if (errors.length === 0) {
+  try {
+    const { THEME_SKINS, getThemeSkin, saveActiveThemeSkin } = await loadThemeSkins();
+    const skinIds = Object.keys(THEME_SKINS);
+
+    assert(skinIds.includes('forest-comic'), 'Theme registry must include forest-comic.');
+    assert(skinIds.includes('flat-comic'), 'Theme registry must include flat-comic.');
+    assert(THEME_SKINS['forest-comic']?.status === 'active', 'forest-comic must be active.');
+    assert(THEME_SKINS['flat-comic']?.status === 'planned', 'flat-comic must be planned.');
+    assert(getThemeSkin('__proto__').id === 'forest-comic', 'getThemeSkin must ignore inherited object keys.');
+    assert(saveActiveThemeSkin('flat-comic').id === 'forest-comic', 'planned skins must save as the active default.');
+
+    for (const skinId of skinIds) {
+      assertSkinContract(skinId, THEME_SKINS[skinId]);
+    }
+  } catch (error) {
+    errors.push(`Unable to load theme skin registry: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+if (errors.length > 0) {
+  console.error('Theme skin validation failed:');
+  for (const error of errors) {
+    console.error(`- ${error}`);
+  }
+  process.exit(1);
+}
+
+console.log('Theme skin validation passed.');
