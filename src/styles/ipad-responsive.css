@@ -170,11 +170,11 @@
 /* 深色模式 */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-primary: #000000;
-    --bg-secondary: #1c1c1e;
-    --text-primary: #ffffff;
-    --text-secondary: #8e8e93;
-    --border-color: #38383a;
+    --bg-primary: var(--color-background);
+    --bg-secondary: var(--color-surface-container);
+    --text-primary: var(--color-on-surface);
+    --text-secondary: var(--color-on-surface-variant);
+    --border-color: var(--color-outline-variant);
   }
 }
 
