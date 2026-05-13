@@ -33,7 +33,7 @@ describe('theme skins', () => {
     expect(skin.id).toBe('forest-comic');
     expect(skin.status).toBe('active');
     expect(skin.assets.welcomeIllustration).toBe('/skins/forest-comic/welcome-comic.svg');
-    expect(THEME_SKINS['forest-comic'].tokens.color.primary).toBe('#006e1c');
+    expect(THEME_SKINS['forest-comic'].tokens.color.primary).toBe(UI_TOKENS.color.light.primary);
     expect(THEME_SKINS['forest-comic'].tokens.color.rewardDisplay).toBe(UI_TOKENS.color.semantic.rewardDisplay);
     expect(THEME_SKINS['forest-comic'].platformSupport).toEqual({
       web: true,
