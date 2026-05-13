@@ -1,4 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#4CAF50</color>
+
+    <!-- Primary colors -->
+    <color name="primary">#FF006E1C</color>
+    <color name="primary_container">#FF4CAF50</color>
+    <color name="on_primary">#FFFFFFFF</color>
+    <color name="on_primary_container">#FF002106</color>
+
+    <!-- Surface colors -->
+    <color name="surface">#FFFBF9F5</color>
+    <color name="surface_container_low">#FFF5F3EF</color>
+    <color name="surface_container">#FFEFEEEA</color>
+    <color name="surface_container_high">#FFEAE8E4</color>
+    <color name="surface_variant">#FFDEE5D9</color>
+    <color name="on_surface">#FF1B1C1A</color>
+    <color name="on_surface_variant">#FF3F4A3C</color>
+
+    <!-- Background -->
+    <color name="background">#FFFBF9F5</color>
+
+    <!-- Error colors -->
+    <color name="error">#FFE57373</color>
+    <color name="error_container">#FFFFDAD6</color>
+
+    <!-- Outline -->
+    <color name="outline">#FF6F7A6B</color>
+    <color name="outline_variant">#FFBECAB9</color>
 </resources>

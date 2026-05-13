@@ -186,3 +186,28 @@ page {
     font-size: 28rpx;
   }
 }
+
+@mixin ui-card($padding: 24rpx) {
+  background-color: $card-bg;
+  border: 2rpx solid $border-color;
+  border-radius: 32rpx;
+  padding: $padding;
+}
+
+@mixin ui-primary-button {
+  min-height: 88rpx;
+  background-color: $primary-color;
+  color: #ffffff;
+  border-radius: 32rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+@mixin ui-input {
+  min-height: 88rpx;
+  border: 2rpx solid $border-color;
+  border-radius: 32rpx;
+  padding: 0 24rpx;
+  background-color: $card-bg;
+  color: $text-primary;
+}

@@ -127,7 +127,12 @@ extension Color {
     static let secondaryContainerToken = Color(UIColor.secondaryContainer)
     static let backgroundToken = Color(UIColor.background)
     static let surfaceToken = Color(UIColor.surface)
-    
+    static let surfaceContainerLowToken = Color(UIColor.surfaceContainerLow)
+    static let surfaceContainerToken = Color(UIColor.surfaceContainer)
+    static let surfaceContainerHighToken = Color(UIColor.surfaceContainerHigh)
+    static let outlineToken = Color(UIColor.outline)
+    static let outlineVariantToken = Color(UIColor.outlineVariant)
+
     // 建议添加更多 Token
     static let textPrimaryToken = Color(UIColor.textPrimary)
     static let textSecondaryToken = Color(UIColor.textSecondary)
