@@ -208,7 +208,7 @@ export function Tasks() {
               <button
                 onClick={() => setFilter('all')}
                 className={cn(
-                  "px-5 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap",
+                  "ui-filter-chip px-5 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap",
                   filter === 'all' ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-surface text-on-surface-variant shadow-sm"
                 )}
               >
@@ -217,7 +217,7 @@ export function Tasks() {
               <button
                 onClick={() => setFilter('pending')}
                 className={cn(
-                  "px-5 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap",
+                  "ui-filter-chip px-5 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap",
                   filter === 'pending' ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-surface text-on-surface-variant shadow-sm"
                 )}
               >
@@ -226,7 +226,7 @@ export function Tasks() {
               <button
                 onClick={() => setFilter('promise')}
                 className={cn(
-                  "px-5 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap",
+                  "ui-filter-chip px-5 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap",
                   filter === 'promise' ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-surface text-on-surface-variant shadow-sm"
                 )}
               >
@@ -235,7 +235,7 @@ export function Tasks() {
               <button
                 onClick={() => setFilter('completed')}
                 className={cn(
-                  "px-5 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap",
+                  "ui-filter-chip px-5 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap",
                   filter === 'completed' ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-surface text-on-surface-variant shadow-sm"
                 )}
               >
@@ -246,7 +246,7 @@ export function Tasks() {
             <div className="space-y-6">
                 {(filter === 'all' || filter === 'promise') && promiseTasks.length > 0 && (
                   <div>
-                    <div className="rounded-3xl p-4 mb-3 bg-primary-container border border-primary/10 shadow-sm">
+                    <div className="ui-promise-panel rounded-3xl p-4 mb-3 bg-primary-container border border-primary/10 shadow-sm">
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <h2 className="text-lg font-black flex items-center gap-2 text-on-primary-container">

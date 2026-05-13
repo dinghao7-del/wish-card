@@ -134,7 +134,7 @@ export function Layout() {
       )}
 
       <main className={cn(
-        "max-w-md mx-auto",
+        "ui-app-content max-w-md mx-auto",
         !isFullPage && "pb-32",
         !isFullPage && guestMode && showGuestBanner && "pt-12",
         showSyncBanner && "pt-10"
