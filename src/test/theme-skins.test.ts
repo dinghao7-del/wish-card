@@ -11,8 +11,19 @@ import {
 import { UI_TOKENS } from '../lib/uiTokens';
 
 describe('theme skins', () => {
+  const storage = () => window.localStorage;
+
   beforeEach(() => {
-    localStorage.removeItem(THEME_SKIN_STORAGE_KEY);
+    const values = new Map<string, string>();
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      value: {
+        getItem: (key: string) => values.get(key) ?? null,
+        setItem: (key: string, value: string) => values.set(key, value),
+        removeItem: (key: string) => values.delete(key),
+      },
+    });
+    storage().removeItem(THEME_SKIN_STORAGE_KEY);
     delete document.documentElement.dataset.themeSkin;
   });
 
@@ -34,7 +45,7 @@ describe('theme skins', () => {
   });
 
   it('falls back to default when a stored skin is not available', () => {
-    localStorage.setItem(THEME_SKIN_STORAGE_KEY, 'missing-skin');
+    storage().setItem(THEME_SKIN_STORAGE_KEY, 'missing-skin');
 
     expect(getActiveThemeSkin().id).toBe('forest-comic');
   });
@@ -62,13 +73,13 @@ describe('theme skins', () => {
 
     expect(selectedSkin.id).toBe('forest-comic');
     expect(saveActiveThemeSkin('flat-comic').id).toBe('forest-comic');
-    expect(localStorage.getItem(THEME_SKIN_STORAGE_KEY)).toBe('forest-comic');
+    expect(storage().getItem(THEME_SKIN_STORAGE_KEY)).toBe('forest-comic');
     expect(document.documentElement.dataset.themeSkin).toBe('forest-comic');
 
     const arcadeSkin = saveActiveThemeSkin('arcade-comic');
 
     expect(arcadeSkin.id).toBe('arcade-comic');
-    expect(localStorage.getItem(THEME_SKIN_STORAGE_KEY)).toBe('arcade-comic');
+    expect(storage().getItem(THEME_SKIN_STORAGE_KEY)).toBe('arcade-comic');
     expect(document.documentElement.dataset.themeSkin).toBe('arcade-comic');
   });
 
@@ -80,7 +91,7 @@ describe('theme skins', () => {
   });
 
   it('applies the saved skin when no explicit skin id is provided', () => {
-    localStorage.setItem(THEME_SKIN_STORAGE_KEY, 'arcade-comic');
+    storage().setItem(THEME_SKIN_STORAGE_KEY, 'arcade-comic');
 
     const appliedSkin = applyThemeSkin();
 
