@@ -135,7 +135,7 @@ export function getSelectableThemeSkins(): ThemeSkin[] {
 }
 
 export function applyThemeSkin(skinId?: string | null): ThemeSkin {
-  const skin = getThemeSkin(skinId);
+  const skin = skinId === undefined ? getActiveThemeSkin() : getThemeSkin(skinId);
   if (typeof document !== 'undefined') {
     document.documentElement.dataset.themeSkin = skin.id;
   }

@@ -78,4 +78,13 @@ describe('theme skins', () => {
     expect(appliedSkin.id).toBe('forest-comic');
     expect(document.documentElement.dataset.themeSkin).toBe('forest-comic');
   });
+
+  it('applies the saved skin when no explicit skin id is provided', () => {
+    localStorage.setItem(THEME_SKIN_STORAGE_KEY, 'arcade-comic');
+
+    const appliedSkin = applyThemeSkin();
+
+    expect(appliedSkin.id).toBe('arcade-comic');
+    expect(document.documentElement.dataset.themeSkin).toBe('arcade-comic');
+  });
 });

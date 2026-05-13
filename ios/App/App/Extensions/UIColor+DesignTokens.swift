@@ -93,6 +93,17 @@ extension UIColor {
     // MARK: - Reward Colors
     static let rewardDisplay = UIColor(hex: "#FBC02D")
     static let rewardDeep = UIColor(hex: "#F9A825")
+
+    // MARK: - Arcade Comic Skin Tokens
+    static let arcadePrimary = UIColor(hex: "#FFE100")
+    static let arcadePrimaryContainer = UIColor(hex: "#FFF06A")
+    static let arcadeSecondary = UIColor(hex: "#00C8E8")
+    static let arcadeBackground = UIColor(hex: "#F4F4F4")
+    static let arcadeSurface = UIColor(hex: "#FFFFFF")
+    static let arcadeOnSurface = UIColor(hex: "#050505")
+    static let arcadeOutline = UIColor(hex: "#050505")
+    static let arcadeDanger = UIColor(hex: "#FF6B6B")
+    static let arcadeSuccess = UIColor(hex: "#63DC83")
 }
 
 // MARK: - Hex Color Initializer
@@ -141,4 +152,7 @@ extension Color {
     static let textPrimaryToken = Color(UIColor.textPrimary)
     static let textSecondaryToken = Color(UIColor.textSecondary)
     static let rewardDisplayToken = Color(UIColor.rewardDisplay)
+    static let arcadePrimaryToken = Color(UIColor.arcadePrimary)
+    static let arcadeSurfaceToken = Color(UIColor.arcadeSurface)
+    static let arcadeOutlineToken = Color(UIColor.arcadeOutline)
 }

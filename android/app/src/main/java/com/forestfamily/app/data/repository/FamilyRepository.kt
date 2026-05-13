@@ -50,7 +50,7 @@ class FamilyRepository @Inject constructor() {
         name: String,
         role: MemberRole,
         avatar: String = "👶",
-        color: String = "#4CAF50",
+        color: String = "primary",
         userId: String? = null
     ): Member {
         val member = Member(
