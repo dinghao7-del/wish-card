@@ -39,4 +39,15 @@
     <!-- Outline -->
     <color name="outline">#FF6F7A6B</color>
     <color name="outline_variant">#FFBECAB9</color>
+
+    <!-- Arcade comic skin tokens -->
+    <color name="arcade_primary">#FFFFE100</color>
+    <color name="arcade_primary_container">#FFFFF06A</color>
+    <color name="arcade_secondary">#FF00C8E8</color>
+    <color name="arcade_background">#FFF4F4F4</color>
+    <color name="arcade_surface">#FFFFFFFF</color>
+    <color name="arcade_on_surface">#FF050505</color>
+    <color name="arcade_outline">#FF050505</color>
+    <color name="arcade_danger">#FFFF6B6B</color>
+    <color name="arcade_success">#FF63DC83</color>
 </resources>

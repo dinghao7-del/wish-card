@@ -20,6 +20,21 @@ $surface-container: #efeeea;
 $surface-container-high: #eae8e4;
 $surface-container-highest: #e4e2de;
 
+// 电玩漫画风皮肤模板 token
+// 与 Web `arcade-comic`、Android、iOS 语义保持一致；页面接入时只切换变量来源，不复制业务页面。
+$arcade-primary: #FFE100;
+$arcade-primary-container: #FFF06A;
+$arcade-secondary: #00C8E8;
+$arcade-secondary-container: #B9F4FF;
+$arcade-bg: #F4F4F4;
+$arcade-card-bg: #FFFFFF;
+$arcade-text-primary: #050505;
+$arcade-text-secondary: #565656;
+$arcade-border: #050505;
+$arcade-danger: #FF6B6B;
+$arcade-success: #63DC83;
+$arcade-purple: #B76CFF;
+
 // 象限颜色 (从 DESIGN_TOKENS.md)
 $quadrant-q1: #E57373; // 重要且紧急 - 红色
 $quadrant-q2: #64B5F6; // 重要不紧急 - 蓝色
@@ -216,6 +231,26 @@ page {
   padding: 0 24rpx;
   background-color: $card-bg;
   color: $text-primary;
+}
+
+@mixin ui-arcade-card($padding: 24rpx) {
+  background-color: $arcade-card-bg;
+  border: 6rpx solid $arcade-border;
+  border-radius: 28rpx;
+  padding: $padding;
+  box-shadow: 10rpx 12rpx 0 $arcade-border;
+  color: $arcade-text-primary;
+}
+
+@mixin ui-arcade-primary-button {
+  min-height: 88rpx;
+  background-color: $arcade-primary;
+  color: $arcade-text-primary;
+  border: 6rpx solid $arcade-border;
+  border-radius: 24rpx;
+  font-size: 32rpx;
+  font-weight: 900;
+  box-shadow: 8rpx 10rpx 0 $arcade-border;
 }
 
 @mixin ui-bottom-action-bar {

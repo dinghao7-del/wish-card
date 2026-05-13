@@ -445,7 +445,7 @@ className={cn(
         </div>
 
         <div className="bg-surface dark:bg-surface-container-low rounded-[2.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-2">
-          <MenuLink icon={Palette} label="主题皮肤" desc="绿色漫画风 · 新皮肤规划中" onClick={() => navigate('/settings/appearance')} />
+          <MenuLink icon={Palette} label="主题皮肤" desc="绿色漫画风 · 电玩漫画风可切换" onClick={() => navigate('/settings/appearance')} />
           <MenuLink icon={Moon} label={t('profile.menu.dark_mode', { defaultValue: '深色模式' })} isToggle active={isDarkMode} onToggle={toggleDarkMode} />
           <MenuLink icon={Settings} label={t('profile.menu.basic_settings', { defaultValue: '基础设置' })} onClick={() => navigate('/settings/basic')} />
         </div>

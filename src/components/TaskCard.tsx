@@ -62,7 +62,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, idx, onClick, onCheckI
       transition={{ delay: idx * 0.05 }}
       onClick={onClick}
       className={cn(
-        "rounded-3xl p-4 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer border border-outline-variant/10 hover:border-primary/20 transition-all",
+        "ui-task-card rounded-3xl p-4 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer border border-outline-variant/10 hover:border-primary/20 transition-all",
         task.status === 'completed' && !isHabit ? "bg-surface-container-low" : "bg-surface"
       )}
     >

@@ -1,6 +1,6 @@
 import { UI_TOKENS } from './uiTokens';
 
-export type ThemeSkinId = 'forest-comic' | 'flat-comic';
+export type ThemeSkinId = 'forest-comic' | 'flat-comic' | 'arcade-comic';
 
 export interface ThemeSkin {
   id: ThemeSkinId;
@@ -45,6 +45,15 @@ const LIGHT_COLOR_TOKENS = {
   rewardDisplay: UI_TOKENS.color.semantic.rewardDisplay,
 };
 
+const ARCADE_COMIC_COLOR_TOKENS = {
+  primary: UI_TOKENS.color.arcadeComic.primary,
+  primaryContainer: UI_TOKENS.color.arcadeComic.primaryContainer,
+  background: UI_TOKENS.color.arcadeComic.background,
+  surfaceContainerLow: UI_TOKENS.color.arcadeComic.surfaceContainerLow,
+  outlineVariant: UI_TOKENS.color.arcadeComic.outlineVariant,
+  rewardDisplay: UI_TOKENS.color.arcadeComic.rewardDisplay,
+};
+
 const CROSS_PLATFORM_SUPPORT = {
   web: true,
   miniProgram: true,
@@ -83,6 +92,21 @@ export const THEME_SKINS: Record<ThemeSkinId, ThemeSkin> = {
     },
     tokens: {
       color: LIGHT_COLOR_TOKENS,
+      radius: UI_TOKENS.radius,
+    },
+    platformSupport: CROSS_PLATFORM_SUPPORT,
+    accessibility: DEFAULT_ACCESSIBILITY,
+  },
+  'arcade-comic': {
+    id: 'arcade-comic',
+    name: '电玩漫画风',
+    description: '黄黑厚描边、积分任务感强的游戏化 UI 模板。',
+    status: 'active',
+    assets: {
+      welcomeIllustration: '/skins/arcade-comic/welcome-comic.svg',
+    },
+    tokens: {
+      color: ARCADE_COMIC_COLOR_TOKENS,
       radius: UI_TOKENS.radius,
     },
     platformSupport: CROSS_PLATFORM_SUPPORT,

@@ -53,7 +53,7 @@ export function TopAppBar({
   return (
     <header
       className={cn(
-        'sticky top-[var(--app-sticky-top,0px)] z-40 flex items-end justify-between',
+        'ui-top-app-bar sticky top-[var(--app-sticky-top,0px)] z-40 flex items-end justify-between',
         'min-h-14 px-4 pb-1 pt-[max(0.5rem,env(safe-area-inset-top,0px))]',
         'bg-surface/90 backdrop-blur-xl',
         'border-b border-outline-variant/30',

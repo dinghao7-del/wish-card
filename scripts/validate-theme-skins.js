@@ -49,12 +49,26 @@ function assertSkinContract(skinId, skin) {
     assert(fs.existsSync(diskPath), `${skinId} asset does not exist: public${assetPath}`);
   }
 
-  assert(skin.tokens?.color?.primary === '#006e1c', `${skinId} primary token must be #006e1c.`);
-  assert(skin.tokens?.color?.primaryContainer === '#4caf50', `${skinId} primaryContainer token must be #4caf50.`);
-  assert(skin.tokens?.color?.background === '#fbf9f5', `${skinId} background token must be #fbf9f5.`);
-  assert(skin.tokens?.color?.surfaceContainerLow === '#f5f3ef', `${skinId} surfaceContainerLow token must be #f5f3ef.`);
-  assert(skin.tokens?.color?.outlineVariant === '#becab9', `${skinId} outlineVariant token must be #becab9.`);
-  assert(skin.tokens?.color?.rewardDisplay === '#FBC02D', `${skinId} rewardDisplay token must be #FBC02D.`);
+  for (const tokenName of [
+    'primary',
+    'primaryContainer',
+    'background',
+    'surfaceContainerLow',
+    'outlineVariant',
+    'rewardDisplay',
+  ]) {
+    const tokenValue = skin.tokens?.color?.[tokenName];
+    assert(typeof tokenValue === 'string' && /^#[0-9a-fA-F]{6}$/.test(tokenValue), `${skinId} ${tokenName} must be a 6-digit hex token.`);
+  }
+
+  if (skinId === 'forest-comic') {
+    assert(skin.tokens?.color?.primary === '#006e1c', `${skinId} primary token must be #006e1c.`);
+    assert(skin.tokens?.color?.primaryContainer === '#4caf50', `${skinId} primaryContainer token must be #4caf50.`);
+    assert(skin.tokens?.color?.background === '#fbf9f5', `${skinId} background token must be #fbf9f5.`);
+    assert(skin.tokens?.color?.surfaceContainerLow === '#f5f3ef', `${skinId} surfaceContainerLow token must be #f5f3ef.`);
+    assert(skin.tokens?.color?.outlineVariant === '#becab9', `${skinId} outlineVariant token must be #becab9.`);
+    assert(skin.tokens?.color?.rewardDisplay === '#FBC02D', `${skinId} rewardDisplay token must be #FBC02D.`);
+  }
   assert(skin.tokens?.radius?.small === 8, `${skinId} radius.small must be 8.`);
   assert(skin.tokens?.radius?.medium === 16, `${skinId} radius.medium must be 16.`);
   assert(skin.tokens?.radius?.large === 24, `${skinId} radius.large must be 24.`);
@@ -98,10 +112,13 @@ if (errors.length === 0) {
 
     assert(skinIds.includes('forest-comic'), 'Theme registry must include forest-comic.');
     assert(skinIds.includes('flat-comic'), 'Theme registry must include flat-comic.');
+    assert(skinIds.includes('arcade-comic'), 'Theme registry must include arcade-comic.');
     assert(THEME_SKINS['forest-comic']?.status === 'active', 'forest-comic must be active.');
     assert(THEME_SKINS['flat-comic']?.status === 'planned', 'flat-comic must be planned.');
+    assert(THEME_SKINS['arcade-comic']?.status === 'active', 'arcade-comic must be active.');
     assert(getThemeSkin('__proto__').id === 'forest-comic', 'getThemeSkin must ignore inherited object keys.');
     assert(saveActiveThemeSkin('flat-comic').id === 'forest-comic', 'planned skins must save as the active default.');
+    assert(saveActiveThemeSkin('arcade-comic').id === 'arcade-comic', 'active arcade-comic skin must be selectable.');
 
     for (const skinId of skinIds) {
       assertSkinContract(skinId, THEME_SKINS[skinId]);

@@ -78,7 +78,7 @@ export function EnergyCard({
 
     return (
         <motion.div
-            className="relative bg-gradient-to-br from-primary-surface via-primary-container to-primary-text rounded-[2.5rem] py-5 sm:py-6 px-6 sm:px-8 text-white shadow-xl shadow-primary/20 overflow-hidden"
+            className="ui-energy-card relative bg-gradient-to-br from-primary-surface via-primary-container to-primary-text rounded-[2.5rem] py-5 sm:py-6 px-6 sm:px-8 text-white shadow-xl shadow-primary/20 overflow-hidden"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}

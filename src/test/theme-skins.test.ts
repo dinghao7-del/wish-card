@@ -45,8 +45,18 @@ describe('theme skins', () => {
     expect(getThemeSkin('flat-comic').id).toBe('flat-comic');
   });
 
+  it('exposes arcade comic as an active standardized template', () => {
+    const skin = THEME_SKINS['arcade-comic'];
+
+    expect(skin.status).toBe('active');
+    expect(skin.name).toBe('电玩漫画风');
+    expect(skin.assets.welcomeIllustration).toBe('/skins/arcade-comic/welcome-comic.svg');
+    expect(skin.tokens.color.primary).toBe(UI_TOKENS.color.arcadeComic.primary);
+    expect(skin.tokens.color.outlineVariant).toBe(UI_TOKENS.color.arcadeComic.outlineVariant);
+  });
+
   it('exposes all skins for settings while only saving active skins', () => {
-    expect(getSelectableThemeSkins().map(skin => skin.id)).toEqual(['forest-comic', 'flat-comic']);
+    expect(getSelectableThemeSkins().map(skin => skin.id)).toEqual(['forest-comic', 'flat-comic', 'arcade-comic']);
 
     const selectedSkin = saveActiveThemeSkin('flat-comic');
 
@@ -54,6 +64,12 @@ describe('theme skins', () => {
     expect(saveActiveThemeSkin('flat-comic').id).toBe('forest-comic');
     expect(localStorage.getItem(THEME_SKIN_STORAGE_KEY)).toBe('forest-comic');
     expect(document.documentElement.dataset.themeSkin).toBe('forest-comic');
+
+    const arcadeSkin = saveActiveThemeSkin('arcade-comic');
+
+    expect(arcadeSkin.id).toBe('arcade-comic');
+    expect(localStorage.getItem(THEME_SKIN_STORAGE_KEY)).toBe('arcade-comic');
+    expect(document.documentElement.dataset.themeSkin).toBe('arcade-comic');
   });
 
   it('applies the selected skin id to the document for future CSS hooks', () => {

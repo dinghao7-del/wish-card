@@ -21,7 +21,7 @@ export function BottomNav() {
   const { t } = useTranslation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-outline-variant/10 bg-background/95 px-2 pt-2 backdrop-blur-lg sm:px-4 dark:bg-surface/95" style={{ paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom, 0px))' }}>
+    <nav className="ui-bottom-nav fixed bottom-0 left-0 right-0 z-40 border-t border-outline-variant/10 bg-background/95 px-2 pt-2 backdrop-blur-lg sm:px-4 dark:bg-surface/95" style={{ paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom, 0px))' }}>
       <div className="grid grid-cols-5 items-center max-w-lg mx-auto h-16">
         {navItems.map(({ to, icon, labelKey, defaultLabel, variant }) => (
           <NavItem
@@ -43,6 +43,7 @@ function NavItem({ to, icon: Icon, label, variant = 'default' }: { to: string; i
       to={to}
       className={({ isActive }) => cn(
         "flex min-w-0 flex-col items-center justify-end h-full px-1 sm:px-3 pb-2.5 rounded-2xl transition-all duration-300",
+        isActive && "ui-bottom-nav-item-active",
         isActive && variant === 'default'
           ? "bg-primary/10 text-primary" 
           : isActive && variant === 'highlight'
