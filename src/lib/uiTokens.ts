@@ -45,6 +45,10 @@ export const UI_TOKENS = {
       rewardDeep: '#F9A825',
       rewardDisplay: '#FBC02D',
       danger: '#E57373',
+      avatarPalette: ['#FF6B6B', '#FFA726', '#66BB6A', '#42A5F5', '#AB47BC', '#EC407A', '#26C6DA', '#8D6E63'],
+      avatarReadableLightBackgrounds: ['#FFEE58', '#FFF176', '#66BB6A'],
+      avatarTextOnLight: '#333333',
+      avatarTextOnDark: '#FFFFFF',
     },
   },
   radius: {

@@ -40,6 +40,12 @@ describe('canonical UI tokens', () => {
     });
   });
 
+  it('defines the shared avatar color contract', () => {
+    expect(UI_TOKENS.color.semantic.avatarPalette).toHaveLength(8);
+    expect(UI_TOKENS.color.semantic.avatarTextOnLight).toBe('#333333');
+    expect(UI_TOKENS.color.semantic.avatarTextOnDark).toBe('#FFFFFF');
+  });
+
   it('defines the navigation tab labels contract', () => {
     expect(UI_TOKENS.navigation.tabs.map((tab) => tab.label)).toEqual([
       '首页',

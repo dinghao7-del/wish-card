@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '../lib/utils';
+import { UI_TOKENS } from '../lib/uiTokens';
 
 interface TextAvatarProps {
   name?: string;        // 名字（用于文字头像或 alt）
@@ -28,13 +29,16 @@ export function TextAvatar({ name = '?', src, size = 56, className }: TextAvatar
 
   // 否则显示文字头像（向后兼容）
   const char = name.charAt(0).toUpperCase();
-  const COLORS = ['#FF6B6B','#FFA726','#66BB6A','#42A5F5','#AB47BC','#EC407A','#26C6DA','#8D6E63'];
+  const colors = UI_TOKENS.color.semantic.avatarPalette;
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const bgColor = COLORS[Math.abs(hash) % COLORS.length];
-  const textColor = ['#FFEE58','#FFF176','#66BB6A'].includes(bgColor) ? '#333' : '#FFF';
+  const bgColor = colors[Math.abs(hash) % colors.length];
+  const lightBackgrounds: readonly string[] = UI_TOKENS.color.semantic.avatarReadableLightBackgrounds;
+  const textColor = lightBackgrounds.includes(bgColor)
+    ? UI_TOKENS.color.semantic.avatarTextOnLight
+    : UI_TOKENS.color.semantic.avatarTextOnDark;
   const fontSize = Math.round(size * 0.45);
 
   return (

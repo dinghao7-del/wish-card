@@ -4,6 +4,7 @@
  */
 import React, { useState } from 'react';
 import { cn } from '../lib/utils';
+import { UI_TOKENS } from '../lib/uiTokens';
 
 interface AvatarProps {
   src?: string;
@@ -32,7 +33,7 @@ function parseSpec(src: string): { char: string; bgColor: string; textColor: str
 
 // 根据名字生成稳定颜色
 function getColorFromName(name: string): string {
-  const colors = ['#FF6B6B','#FFA726','#66BB6A','#42A5F5','#AB47BC','#EC407A','#26C6DA','#8D6E63'];
+  const colors = UI_TOKENS.color.semantic.avatarPalette;
   if (!name) return colors[0];
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
@@ -75,8 +76,11 @@ export function Avatar({ src, name, size = 'md', className }: AvatarProps) {
 
   // 降级：显示文字头像
   const char = name ? name.charAt(0).toUpperCase() : '?';
-  const bgColor = name ? getColorFromName(name) : '#42A5F5';
-  const textColor = ['#FFEE58','#FFF176','#66BB6A'].includes(bgColor) ? '#333' : '#FFF';
+  const bgColor = name ? getColorFromName(name) : UI_TOKENS.color.semantic.avatarPalette[3];
+  const lightBackgrounds: readonly string[] = UI_TOKENS.color.semantic.avatarReadableLightBackgrounds;
+  const textColor = lightBackgrounds.includes(bgColor)
+    ? UI_TOKENS.color.semantic.avatarTextOnLight
+    : UI_TOKENS.color.semantic.avatarTextOnDark;
 
   return (
     <div
