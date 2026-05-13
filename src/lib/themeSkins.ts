@@ -20,6 +20,7 @@ export interface ThemeSkin {
       background: string;
       surfaceContainerLow: string;
       outlineVariant: string;
+      rewardDisplay: string;
     };
     radius: typeof UI_TOKENS.radius;
   };
@@ -41,6 +42,7 @@ const LIGHT_COLOR_TOKENS = {
   background: UI_TOKENS.color.light.background,
   surfaceContainerLow: UI_TOKENS.color.light.surfaceContainerLow,
   outlineVariant: UI_TOKENS.color.light.outlineVariant,
+  rewardDisplay: UI_TOKENS.color.semantic.rewardDisplay,
 };
 
 const CROSS_PLATFORM_SUPPORT = {

@@ -54,6 +54,7 @@ function assertSkinContract(skinId, skin) {
   assert(skin.tokens?.color?.background === '#fbf9f5', `${skinId} background token must be #fbf9f5.`);
   assert(skin.tokens?.color?.surfaceContainerLow === '#f5f3ef', `${skinId} surfaceContainerLow token must be #f5f3ef.`);
   assert(skin.tokens?.color?.outlineVariant === '#becab9', `${skinId} outlineVariant token must be #becab9.`);
+  assert(skin.tokens?.color?.rewardDisplay === '#FBC02D', `${skinId} rewardDisplay token must be #FBC02D.`);
   assert(skin.tokens?.radius?.small === 8, `${skinId} radius.small must be 8.`);
   assert(skin.tokens?.radius?.medium === 16, `${skinId} radius.medium must be 16.`);
   assert(skin.tokens?.radius?.large === 24, `${skinId} radius.large must be 24.`);

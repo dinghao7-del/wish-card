@@ -8,6 +8,7 @@ import {
   THEME_SKIN_STORAGE_KEY,
   THEME_SKINS,
 } from '../lib/themeSkins';
+import { UI_TOKENS } from '../lib/uiTokens';
 
 describe('theme skins', () => {
   beforeEach(() => {
@@ -22,6 +23,7 @@ describe('theme skins', () => {
     expect(skin.status).toBe('active');
     expect(skin.assets.welcomeIllustration).toBe('/skins/forest-comic/welcome-comic.svg');
     expect(THEME_SKINS['forest-comic'].tokens.color.primary).toBe('#006e1c');
+    expect(THEME_SKINS['forest-comic'].tokens.color.rewardDisplay).toBe(UI_TOKENS.color.semantic.rewardDisplay);
     expect(THEME_SKINS['forest-comic'].platformSupport).toEqual({
       web: true,
       miniProgram: true,
