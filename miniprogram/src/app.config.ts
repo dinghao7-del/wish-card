@@ -2,7 +2,7 @@ export default defineAppConfig({
   pages: [
     'pages/home/index',
     'pages/tasks/index',
-    'pages/check-in/index',
+    'pages/habits/index',
     'pages/rewards/index',
     'pages/profile/index',
   ],
@@ -32,14 +32,14 @@ export default defineAppConfig({
         selectedIconPath: 'assets/icons/task-active.png',
       },
       {
-        pagePath: 'pages/check-in/index',
-        text: '打卡',
+        pagePath: 'pages/habits/index',
+        text: '奖惩',
         iconPath: 'assets/icons/check.png',
         selectedIconPath: 'assets/icons/check-active.png',
       },
       {
         pagePath: 'pages/rewards/index',
-        text: '奖励',
+        text: '心愿',
         iconPath: 'assets/icons/reward.png',
         selectedIconPath: 'assets/icons/reward-active.png',
       },
