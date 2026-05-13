@@ -349,6 +349,23 @@ input, textarea, select {
   border-color: var(--color-comic-ink);
 }
 
+[data-theme-skin="arcade-comic"] .ui-home-brand,
+[data-theme-skin="arcade-comic"] .ui-rewards-brand {
+  display: inline;
+  color: var(--color-on-surface);
+  font-size: 1.55rem;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+[data-theme-skin="arcade-comic"] .ui-home-stars-pill {
+  border: 3px solid var(--color-comic-ink);
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  box-shadow: 3px 4px 0 var(--color-comic-ink);
+  min-height: 44px;
+}
+
 [data-theme-skin="arcade-comic"] .ui-guest-banner span,
 [data-theme-skin="arcade-comic"] .ui-guest-banner svg,
 [data-theme-skin="arcade-comic"] .ui-guest-banner button {
@@ -414,6 +431,29 @@ input, textarea, select {
   border-radius: 18px;
 }
 
+[data-theme-skin="arcade-comic"] .ui-energy-stat {
+  border: 3px solid var(--color-comic-ink);
+  border-radius: 14px;
+  background: var(--color-surface);
+  box-shadow: 5px 6px 0 var(--color-comic-ink);
+}
+
+[data-theme-skin="arcade-comic"] .ui-energy-progress {
+  height: 13px;
+  border: 3px solid var(--color-comic-ink);
+  background: var(--color-surface-container);
+}
+
+[data-theme-skin="arcade-comic"] .ui-energy-progress-fill {
+  background: var(--color-comic-ink);
+}
+
+[data-theme-skin="arcade-comic"] .ui-count-badge {
+  border: 2px solid var(--color-comic-ink);
+  background: var(--color-secondary-container);
+  color: var(--color-on-surface);
+}
+
 [data-theme-skin="arcade-comic"] .ui-filter-chip {
   border: 3px solid var(--color-comic-ink);
   border-radius: 999px;
@@ -453,4 +493,103 @@ input, textarea, select {
 
 [data-theme-skin="arcade-comic"] .ui-task-card [class*="absolute left-0"] {
   width: 8px;
+}
+
+[data-theme-skin="arcade-comic"] .ui-task-card [class*="rounded-full"]:has(svg[class*="fill-current"]) {
+  border: 2px solid var(--color-comic-ink);
+  background: var(--color-primary);
+  color: var(--color-on-surface);
+  box-shadow: 3px 4px 0 var(--color-comic-ink);
+}
+
+[data-theme-skin="arcade-comic"] .ui-reward-promo {
+  position: relative;
+  border: 4px solid var(--color-comic-ink);
+  background: var(--color-primary);
+  box-shadow: 8px 10px 0 var(--color-comic-ink);
+}
+
+[data-theme-skin="arcade-comic"] .ui-reward-promo button {
+  border: 3px solid var(--color-comic-ink);
+  box-shadow: 3px 4px 0 var(--color-comic-ink);
+}
+
+[data-theme-skin="arcade-comic"] .ui-reward-promo-icon {
+  position: absolute;
+  right: -1.5rem;
+  bottom: -1.9rem;
+  width: 8.5rem;
+  height: 8.5rem;
+  display: grid;
+  place-items: center;
+  border: 4px solid var(--color-comic-ink);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  transform: rotate(8deg);
+}
+
+[data-theme-skin="arcade-comic"] .ui-reward-tabs {
+  padding-bottom: 0.35rem;
+}
+
+[data-theme-skin="arcade-comic"] .ui-rewards-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+}
+
+[data-theme-skin="arcade-comic"] .ui-reward-card {
+  border: 4px solid var(--color-comic-ink);
+  border-radius: 18px;
+  background: var(--color-surface);
+  box-shadow: 6px 8px 0 var(--color-comic-ink);
+}
+
+[data-theme-skin="arcade-comic"] .ui-reward-card-media {
+  height: 13.5rem;
+  border-bottom: 3px solid var(--color-comic-ink);
+  background: var(--color-primary);
+}
+
+[data-theme-skin="arcade-comic"] .ui-reward-card-body {
+  align-items: stretch;
+  flex-direction: column;
+  padding: 0.9rem 1rem 1rem;
+}
+
+[data-theme-skin="arcade-comic"] .ui-reward-cost {
+  justify-content: flex-end;
+  color: var(--color-danger);
+}
+
+[data-theme-skin="arcade-comic"] .ui-reward-cost span {
+  font-size: 1.25rem;
+}
+
+[data-theme-skin="arcade-comic"] .ui-reward-action {
+  width: 100%;
+  min-height: 48px;
+  border: 3px solid var(--color-comic-ink);
+  border-radius: 12px;
+  background: var(--color-comic-ink);
+  color: var(--color-surface);
+  box-shadow: none;
+}
+
+[data-theme-skin="arcade-comic"] .ui-reward-progress {
+  width: 100%;
+  height: 13px;
+  border: 2px solid var(--color-comic-ink);
+  background: var(--color-surface-container);
+}
+
+[data-theme-skin="arcade-comic"] .ui-reward-progress > div {
+  background: var(--color-primary);
+}
+
+[data-theme-skin="arcade-comic"] .ui-reward-status {
+  border: 2px solid var(--color-comic-ink);
+  border-radius: 4px;
+  background: var(--color-danger);
+  color: var(--color-surface);
 }

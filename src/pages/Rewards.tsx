@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Reward } from '../types';
-import { Star, Plus, X, Mic, MoreVertical, Pencil, Trash2, CheckCircle2, Clock3, CalendarCheck } from 'lucide-react';
+import { Star, Plus, X, Mic, MoreVertical, Pencil, Trash2, CheckCircle2, Clock3, CalendarCheck, Gift } from 'lucide-react';
 import { useFamily } from '../context/FamilyContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -86,13 +86,16 @@ export function Rewards() {
 
   return (
     <div className="px-4 sm:px-6 pb-32 animate-in fade-in duration-500 bg-background min-h-screen">
-      <header className="flex justify-between items-center py-4 sticky top-[var(--app-sticky-top,0px)] bg-background/80 backdrop-blur-xl z-40 -mx-4 sm:-mx-6 px-4 sm:px-6">
+      <header className="ui-rewards-header flex justify-between items-center py-4 sticky top-[var(--app-sticky-top,0px)] bg-background/80 backdrop-blur-xl z-40 -mx-4 sm:-mx-6 px-4 sm:px-6">
         <div className="flex items-center gap-3">
           <div
             className="flex items-center gap-2 sm:gap-3 cursor-pointer group"
             onClick={() => setIsUserSelectorOpen(true)}
           >
             <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={40} className="border-2 border-surface dark:border-surface shadow-sm group-hover:shadow-md transition-all" />
+            <span className="ui-rewards-brand hidden text-xl font-black italic text-on-surface sm:inline">
+              WISHLIST
+            </span>
           </div>
 
           <button
@@ -106,7 +109,7 @@ export function Rewards() {
         <div className="flex items-center gap-2 sm:gap-3">
           <div
             onClick={() => navigate('/history')}
-            className="bg-surface-container-low backdrop-blur-sm py-1 sm:py-1.5 px-3 sm:px-4 rounded-full flex items-center gap-1.5 sm:gap-2 shadow-sm border border-outline-variant/10 cursor-pointer hover:bg-surface-container transition-colors active:scale-95"
+            className="ui-home-stars-pill bg-surface-container-low backdrop-blur-sm py-1 sm:py-1.5 px-3 sm:px-4 rounded-full flex items-center gap-1.5 sm:gap-2 shadow-sm border border-outline-variant/10 cursor-pointer hover:bg-surface-container transition-colors active:scale-95"
           >
             <Star size={14} className="sm:size-[18px] text-reward-display fill-current" />
             <span className="font-black text-on-surface text-sm sm:text-base">{stars.toLocaleString()}</span>
@@ -137,6 +140,25 @@ export function Rewards() {
           )}
         </div>
       </div>
+
+      <section className="ui-reward-promo mb-6 overflow-hidden rounded-3xl bg-primary p-5 text-on-surface">
+        <div className="relative z-10 max-w-[68%]">
+          <p className="text-xs font-black uppercase tracking-wide">LIMITED DROP!</p>
+          <p className="mt-2 text-sm font-bold leading-relaxed">
+            攒够星星兑换心愿卡，精选奖励随时上新。
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/rewards/new')}
+            className="mt-4 rounded-xl bg-on-surface px-5 py-2 text-xs font-black text-surface"
+          >
+            VIEW SHOP
+          </button>
+        </div>
+        <div className="ui-reward-promo-icon">
+          <Gift size={50} strokeWidth={3} />
+        </div>
+      </section>
 
       <AnimatePresence>
         {fulfillmentNotice && (
@@ -185,13 +207,13 @@ export function Rewards() {
       </AnimatePresence>
 
       {/* Category Tabs */}
-      <div className="flex overflow-x-auto no-scrollbar gap-2 mb-6 -mx-1">
+      <div className="ui-reward-tabs flex overflow-x-auto no-scrollbar gap-2 mb-6 -mx-1">
         {categories.map((cat) => (
           <button
             key={cat.id}
             onClick={() => setActiveTab(cat.id)}
             className={cn(
-              "px-4 py-2 rounded-xl text-[13px] font-black whitespace-nowrap transition-all border flex items-center justify-center",
+              "ui-filter-chip px-4 py-2 rounded-xl text-[13px] font-black whitespace-nowrap transition-all border flex items-center justify-center",
               activeTab === cat.id
                 ? "bg-primary border-primary text-white shadow-sm"
                 : "bg-surface-container-low border-transparent text-on-surface-variant/50 hover:bg-surface shadow-sm"
@@ -203,7 +225,7 @@ export function Rewards() {
       </div>
 
       {/* Rewards Grid - 两列大卡片 */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="ui-rewards-grid grid grid-cols-2 gap-4">
         <AnimatePresence mode="popLayout">
           {filteredRewards.map((reward, idx) => (
             <motion.div
@@ -214,11 +236,11 @@ export function Rewards() {
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.3, delay: idx * 0.03 }}
               onClick={() => setSelectedReward(reward)}
-              className="rounded-3xl overflow-hidden shadow-md border-2 border-outline-variant/10 hover:shadow-xl transition-all group cursor-pointer active:scale-[0.97] bg-surface-container-low relative"
+              className="ui-reward-card rounded-3xl overflow-hidden shadow-md border-2 border-outline-variant/10 hover:shadow-xl transition-all group cursor-pointer active:scale-[0.97] bg-surface-container-low relative"
             >
               {/* 图片区域 - 纯CSS渐变背景 */}
               <div className={cn(
-                "w-full h-40 relative overflow-hidden flex items-center justify-center",
+                "ui-reward-card-media w-full h-40 relative overflow-hidden flex items-center justify-center",
                 // 根据奖励类型分配不同渐变
                 reward.cost >= 100 ? "bg-gradient-to-br from-purple-200 to-pink-200" :
                 reward.cost >= 50 ? "bg-gradient-to-br from-primary-container/30 to-primary/10" :
@@ -297,7 +319,7 @@ export function Rewards() {
                   <h4 className="text-base font-black text-white truncate drop-shadow-sm">{reward.name}</h4>
                 </div>
                 {reward.status && reward.status !== 'available' && (
-                  <div className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-black text-primary shadow-sm flex items-center gap-1">
+                  <div className="ui-reward-status absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-black text-primary shadow-sm flex items-center gap-1">
                     {reward.status === 'pending_approval' ? <Clock3 size={11} /> : <CheckCircle2 size={11} />}
                     {rewardStatusLabel(reward)}
                   </div>
@@ -305,9 +327,9 @@ export function Rewards() {
               </div>
 
               {/* 底部操作栏 */}
-              <div className="px-3 py-2.5 flex items-center justify-between gap-2">
+              <div className="ui-reward-card-body px-3 py-2.5 flex items-center justify-between gap-2">
                 {/* 成本用大号显示 */}
-                <div className="flex items-center gap-1">
+                <div className="ui-reward-cost flex items-center gap-1">
                   <Star size={16} className="text-reward-display fill-current" />
                   <span className="text-lg font-black text-on-surface">{reward.cost}</span>
                 </div>
@@ -318,7 +340,7 @@ export function Rewards() {
                       e.stopPropagation();
                       handleApproveReward(reward);
                     }}
-                    className="rounded-full min-w-16 px-3 py-1.5 text-xs font-black bg-primary text-white active:scale-95 transition-all shadow-sm whitespace-nowrap"
+                    className="ui-reward-action rounded-full min-w-16 px-3 py-1.5 text-xs font-black bg-primary text-white active:scale-95 transition-all shadow-sm whitespace-nowrap"
                   >
                     确认
                   </button>
@@ -328,7 +350,7 @@ export function Rewards() {
                       e.stopPropagation();
                       handleRedeem(reward);
                     }}
-                    className="rounded-full min-w-20 px-3 py-1.5 text-xs font-black bg-primary text-white active:scale-95 transition-all shadow-sm whitespace-nowrap text-center"
+                    className="ui-reward-action rounded-full min-w-20 px-3 py-1.5 text-xs font-black bg-primary text-white active:scale-95 transition-all shadow-sm whitespace-nowrap text-center"
                   >
                     {t('rewards.action.redeem', { defaultValue: '兑换' })}
                   </button>
@@ -338,7 +360,7 @@ export function Rewards() {
                   </span>
                 ) : (
                   <div className="flex items-center gap-1.5">
-                    <div className="h-2 w-16 bg-surface-container-high rounded-full overflow-hidden">
+                    <div className="ui-reward-progress h-2 w-16 bg-surface-container-high rounded-full overflow-hidden">
                       <div
                         className="h-full bg-primary rounded-full transition-all duration-500"
                         style={{ width: `${Math.min(100, (stars / reward.cost) * 100)}%` }}

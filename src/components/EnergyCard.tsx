@@ -163,7 +163,7 @@ export function EnergyCard({
                 <div className="grid grid-cols-3 gap-3 mb-4">
                     {/* 星星 */}
                     <motion.div
-                        className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center"
+                        className="ui-energy-stat bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center"
                         whileHover={{ scale: 1.03 }}
                     >
                         <div className="flex items-center justify-center gap-1">
@@ -174,7 +174,7 @@ export function EnergyCard({
                     </motion.div>
 
                     {/* 任务进度 */}
-                    <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
+                    <div className="ui-energy-stat bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
                         <p className="text-lg font-bold tabular-nums">
                             {tasksCompleted}/{tasksTotal}
                         </p>
@@ -183,7 +183,7 @@ export function EnergyCard({
 
                     {/* 连续打卡 */}
                     <motion.div
-                        className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center"
+                        className="ui-energy-stat bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center"
                         whileHover={{ scale: 1.03 }}
                     >
                         <div className="flex items-center justify-center gap-0.5">
@@ -201,9 +201,9 @@ export function EnergyCard({
                             <span>今日进度</span>
                             <span className="font-medium">{Math.round(taskProgress)}%</span>
                         </div>
-                        <div className="h-2 bg-white/15 rounded-full overflow-hidden">
+                        <div className="ui-energy-progress h-2 bg-white/15 rounded-full overflow-hidden">
                             <motion.div
-                                className="h-full bg-gradient-to-r from-reward-display to-warning-container rounded-full"
+                                className="ui-energy-progress-fill h-full bg-gradient-to-r from-reward-display to-warning-container rounded-full"
                                 initial={{ width: 0 }}
                                 animate={{ width: `${taskProgress}%` }}
                                 transition={{ duration: 0.8, ease: 'easeOut' }}

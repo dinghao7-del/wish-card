@@ -51,7 +51,7 @@ export function Home() {
 
   return (
     <div className="px-4 sm:px-6 pb-8 space-y-4 sm:space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-background/50 min-h-screen">
-      <header className="flex justify-between items-center py-4 sticky top-[var(--app-sticky-top,0px)] bg-background/80 backdrop-blur-xl z-40 -mx-4 sm:-mx-6 px-4 sm:px-6">
+      <header className="ui-home-header flex justify-between items-center py-4 sticky top-[var(--app-sticky-top,0px)] bg-background/80 backdrop-blur-xl z-40 -mx-4 sm:-mx-6 px-4 sm:px-6">
         <div className="flex items-center gap-3">
           <div
             className="flex items-center gap-2 sm:gap-3 cursor-pointer group"
@@ -60,7 +60,9 @@ export function Home() {
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-surface dark:border-surface shadow-sm group-hover:shadow-md transition-all">
               <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={typeof window !== 'undefined' ? (window.innerWidth >= 640 ? 40 : 32) : 32} />
             </div>
-            {/* Removed "愿望卡" text as per request */}
+            <span className="ui-home-brand hidden text-xl font-black italic text-on-surface sm:inline">
+              WISHCARD
+            </span>
           </div>
 
           {/* AI Microphone Button - Newly added */}
@@ -75,7 +77,7 @@ export function Home() {
         <div className="flex items-center gap-2 sm:gap-3">
           <div
             onClick={() => navigate('/history')}
-            className="bg-surface-container-low backdrop-blur-sm py-1 sm:py-1.5 px-3 sm:px-4 rounded-full flex items-center gap-1.5 sm:gap-2 shadow-sm border border-outline-variant/10 cursor-pointer hover:bg-surface-container transition-colors active:scale-95"
+            className="ui-home-stars-pill bg-surface-container-low backdrop-blur-sm py-1 sm:py-1.5 px-3 sm:px-4 rounded-full flex items-center gap-1.5 sm:gap-2 shadow-sm border border-outline-variant/10 cursor-pointer hover:bg-surface-container transition-colors active:scale-95"
           >
             <Star size={14} className="sm:size-[18px] text-reward-display fill-current" />
             <span className="font-black text-on-surface text-sm sm:text-base">{stars.toLocaleString()}</span>
@@ -141,7 +143,7 @@ export function Home() {
         <div className="flex items-center justify-between">
           <h3 className="font-black text-xl sm:text-2xl flex items-center gap-2 sm:gap-2.5 text-on-surface">
             {t('home.today_tasks', { defaultValue: '今日任务' })}
-            <span className="bg-secondary-container text-secondary text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-black">
+            <span className="ui-count-badge bg-secondary-container text-secondary text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-black">
               {todayTasks.length}
             </span>
           </h3>
