@@ -17,7 +17,7 @@ export function History() {
     }
   }, [currentUser, navigate]);
 
-  const userHistory = currentUser ? history.filter(h => h.userId === currentUser.id) : [];
+  const userHistory = currentUser ? history.filter(h => h.userId === currentUser.id && Number(h.stars) !== 0) : [];
 
   const getRecordIcon = (iconName: string, size = 20) => {
     const IconComponent = getRegisteredTaskIcon(iconName);

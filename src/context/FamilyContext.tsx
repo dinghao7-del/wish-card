@@ -238,6 +238,10 @@ function toHistory(db: DbStarTransaction): HistoryRecord {
   };
 }
 
+function normalizeHistoryRecords(records: HistoryRecord[]): HistoryRecord[] {
+  return records.filter(record => Number(record.stars) !== 0);
+}
+
 type GuestLocalState = {
   guestMode: true;
   familyId: string;
@@ -253,11 +257,17 @@ const storageAdapter = getStorageAdapter();
 function readStoredGuestLocalState(): GuestLocalState | null {
   const stored = storageGetSync<GuestLocalState | null>(storageAdapter, STORAGE_KEYS.GUEST_LOCAL_STATE, null);
   if (!stored?.guestMode || !stored.currentUser || !stored.familyId) return null;
-  return stored;
+  return {
+    ...stored,
+    history: normalizeHistoryRecords(stored.history || []),
+  };
 }
 
 function persistGuestLocalState(state: GuestLocalState) {
-  storageSetSync(storageAdapter, STORAGE_KEYS.GUEST_LOCAL_STATE, state);
+  storageSetSync(storageAdapter, STORAGE_KEYS.GUEST_LOCAL_STATE, {
+    ...state,
+    history: normalizeHistoryRecords(state.history || []),
+  });
 }
 
 function clearGuestLocalState() {
@@ -303,7 +313,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   const [members, setMembers] = useState<Member[]>(() => storedGuestLocalStateRef.current?.members ?? []);
   const [tasks, setTasks] = useState<Task[]>(() => storedGuestLocalStateRef.current?.tasks ?? []);
   const [rewards, setRewards] = useState<Reward[]>(() => storedGuestLocalStateRef.current?.rewards ?? []);
-  const [history, setHistory] = useState<HistoryRecord[]>(() => storedGuestLocalStateRef.current?.history ?? []);
+  const [history, setHistory] = useState<HistoryRecord[]>(() => normalizeHistoryRecords(storedGuestLocalStateRef.current?.history ?? []));
   const [auditLogs, setAuditLogs] = useState<DataOperationAuditLog[]>([]);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -523,7 +533,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       setTasks(dataTasks.map(toTaskFromDataLayer));
       setRewards(dataRewards.map(toRewardFromDataLayer));
       setAuditLogs(auditLogRes);
-      setHistory(historyRes.map(toHistory));
+      setHistory(normalizeHistoryRecords(historyRes.map(toHistory)));
     } catch (err) {
       console.error('加载用户数据失败:', err);
     } finally {
@@ -544,7 +554,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       setMembers(membersRes.map(toMember));
       setTasks(tasksRes.map(toTask));
       setRewards(rewardsRes.map(toReward));
-      setHistory(historyRes.map(toHistory));
+      setHistory(normalizeHistoryRecords(historyRes.map(toHistory)));
       setAuditLogs([]);
     } catch (err) {
       console.error('加载访客数据失败:', err);
@@ -562,7 +572,8 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     setMembers(data.members);
     setTasks(data.tasks);
     setRewards(data.rewards);
-    setHistory(data.history);
+    const cleanHistory = normalizeHistoryRecords(data.history);
+    setHistory(cleanHistory);
     setAuditLogs([]);
     updateFamilyId('guest-family');
     setLoading(false);
@@ -576,7 +587,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
         members: data.members,
         tasks: data.tasks,
         rewards: data.rewards,
-        history: data.history,
+        history: cleanHistory,
       });
     }
     return guestUser;
@@ -588,7 +599,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       if (data.members) setMembers(prev => [...prev, ...data.members!]);
       if (data.tasks) setTasks(prev => [...prev, ...data.tasks!]);
       if (data.rewards) setRewards(prev => [...prev, ...data.rewards!]);
-      if (data.history) setHistory(prev => [...data.history!, ...prev]);
+      if (data.history) setHistory(prev => normalizeHistoryRecords([...data.history!, ...prev]));
       return;
     }
 
@@ -622,7 +633,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     if (data.members) setMembers(prev => mergeMembers(prev, data.members!));
     if (data.tasks) setTasks(prev => mergeTasks(prev, data.tasks!));
     if (data.rewards) setRewards(prev => mergeRewards(prev, data.rewards!));
-    if (data.history) setHistory(prev => [...data.history!, ...prev]);
+    if (data.history) setHistory(prev => normalizeHistoryRecords([...data.history!, ...prev]));
   }
 
   // ==================== 任务 Mutations ====================
@@ -746,8 +757,8 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
           setCurrentUser({ ...currentUser, stars: newStars });
           setMembers(prev => prev.map(m => m.id === currentUser.id ? { ...m, stars: newStars } : m));
         }
-        // 添加历史记录
-        setHistory(prev => [{
+        // 星星足迹只记录真实星星变化，0 星任务不进入账本。
+        setHistory(prev => normalizeHistoryRecords([{
           id: `guest-hist-${Date.now()}`,
           userId: currentUser.id,
           title: `完成任务: ${task.title}`,
@@ -755,7 +766,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
           stars: task.rewardStars,
           timestamp: completedAt,
           icon: 'CheckCircle',
-        }, ...prev]);
+        }, ...prev]));
       }
       return;
     }
@@ -793,7 +804,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
         timestamp: completedAt,
         icon: 'CheckCircle',
       }));
-      setHistory(prev => [...newHistoryRecords, ...prev]);
+      setHistory(prev => normalizeHistoryRecords([...newHistoryRecords, ...prev]));
     } catch (err: any) {
       showToastGlobal(`审批任务失败: ${err.message}`, 'error');
     }
@@ -884,15 +895,6 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
           ? { ...r, status: 'pending_approval', redeemedBy: currentUser.id, redeemedAt: undefined }
           : r
         ));
-        setHistory(prev => [{
-          id: `guest-hist-${Date.now()}`,
-          userId: currentUser.id,
-          title: `申请兑换心愿: ${reward.name}`,
-          type: 'redeem',
-          stars: 0,
-          timestamp: new Date().toISOString(),
-          icon: 'Gift',
-        }, ...prev]);
       }
       return;
     }
@@ -915,15 +917,6 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
         redeemedAt: null,
       });
       setRewards(prev => prev.map(r => r.id === rewardId ? toRewardFromDataLayer(updatedReward) : r));
-      setHistory(prev => [{
-        id: `local-redeem-${rewardId}-${Date.now()}`,
-        userId: currentUser.id,
-        title: `申请兑换心愿: ${reward.name}`,
-        type: 'redeem',
-        stars: 0,
-        timestamp: new Date().toISOString(),
-        icon: 'Gift',
-      }, ...prev]);
     } catch (err: any) {
       showToastGlobal(`兑换奖励失败: ${err.message}`, 'error');
     }
@@ -959,7 +952,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       }
       setMembers(prev => prev.map(member => member.id === redeemerId ? { ...member, stars: member.stars - reward.cost } : member));
       if (currentUser.id === redeemerId) setCurrentUser({ ...currentUser, stars: currentUser.stars - reward.cost });
-      setHistory(prev => [{
+      setHistory(prev => normalizeHistoryRecords([{
         id: `guest-redeem-approved-${Date.now()}`,
         userId: redeemerId,
         title: `兑换心愿: ${reward.name}`,
@@ -967,7 +960,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
         stars: -reward.cost,
         timestamp: redeemedAt,
         icon: 'Gift',
-      }, ...prev]);
+      }, ...prev]));
       return true;
     }
 
@@ -1004,7 +997,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       setRewards(prev => prev.map(r => r.id === rewardId ? toRewardFromDataLayer(updatedReward) : r));
       setMembers(prev => prev.map(member => member.id === redeemerId ? { ...member, stars: member.stars - reward.cost } : member));
       if (currentUser.id === redeemerId) setCurrentUser({ ...currentUser, stars: currentUser.stars - reward.cost });
-      setHistory(prev => [{
+      setHistory(prev => normalizeHistoryRecords([{
         id: `local-redeem-approved-${rewardId}-${Date.now()}`,
         userId: redeemerId,
         title: `兑换心愿: ${reward.name}`,
@@ -1012,7 +1005,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
         stars: -reward.cost,
         timestamp: redeemedAt,
         icon: 'Gift',
-      }, ...prev]);
+      }, ...prev]));
       return true;
     } catch (err: any) {
       showToastGlobal(`确认兑换失败: ${err.message}`, 'error');
