@@ -256,7 +256,7 @@ export default function Login() {
             <View className="login-logo-glow" />
             <Image
               className="login-logo-img"
-              src="/static/skins/forest-comic/welcome-comic.svg"
+              src="/static/skins/forest-comic/app-icon.png"
               mode="aspectFit"
             />
           </View>
