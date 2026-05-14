@@ -9,6 +9,7 @@ import VoiceAssistant from '@/components/VoiceAssistant';
 import './index.scss';
 
 const STORAGE_KEY = 'guest_user';
+const MINI_PROGRAM_VERSION = 'v1.0.3';
 
 export default function Home() {
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -38,7 +39,31 @@ export default function Home() {
 
   const initData = async () => {
     try {
-      // ===== 1. 优先检查真实登录状态 =====
+      // ===== 1. 游客模式优先走本地数据，避免小程序调试时触发云端鉴权噪声 =====
+      if (isGuestMode()) {
+        console.log('[Home] Guest mode active, loading local demo data');
+        const guestData = getGuestData();
+        const storedUser = Taro.getStorageSync(STORAGE_KEY);
+        const parsedUser = typeof storedUser === 'string' ? JSON.parse(storedUser) : storedUser;
+
+        const currentGuest = guestData.members.find((m: any) =>
+          parsedUser?.id === m.id || (!parsedUser && m.id === 'guest-son')
+        ) || guestData.members[2];
+
+        setCurrentUser(currentGuest);
+        setMember(currentGuest);
+        setStars(currentGuest.stars || 0);
+        setMembers(guestData.members);
+
+        const normalTasks = (guestData.tasks as any[])
+          .filter((t: any) => !t.is_habit)
+          .slice(0, 4);
+        setTodayTasks(normalTasks);
+        setTodayEarnedStars(3);
+        return;
+      }
+
+      // ===== 2. 非游客模式再检查真实登录状态 =====
       let userData;
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -123,34 +148,6 @@ export default function Home() {
           }
         }
         return; // 真实数据加载完成
-      }
-
-      // ===== 2. 无真实用户 → 检查游客模式 =====
-      if (isGuestMode()) {
-        console.log('[Home] No real user, guest mode active, loading demo data');
-        const guestData = getGuestData();
-        const storedUser = Taro.getStorageSync(STORAGE_KEY);
-        const parsedUser = typeof storedUser === 'string' ? JSON.parse(storedUser) : storedUser;
-
-        // 找到当前游客用户
-        const currentGuest = guestData.members.find((m: any) =>
-          parsedUser?.id === m.id || (!parsedUser && m.id === 'guest-son')
-        ) || guestData.members[2]; // default to 小明
-
-        setCurrentUser(currentGuest);
-        setMember(currentGuest);
-        setStars(currentGuest.stars || 0);
-        setMembers(guestData.members);
-
-        // 过滤今日任务（普通任务，最多4条）
-        const normalTasks = (guestData.tasks as any[])
-          .filter((t: any) => !t.is_habit)
-          .slice(0, 4);
-        setTodayTasks(normalTasks);
-
-        // 今日获得的星星
-        setTodayEarnedStars(3); // 模拟数据
-        return;
       }
 
       // ===== 3. 既无真实用户也无游客模式 → 跳转登录页 =====
@@ -247,8 +244,11 @@ export default function Home() {
     return posA - posB;
   });
 
+  const pendingTasks = todayTasks.filter((task: any) => task.status === 'pending').length;
+  const reviewingTasks = todayTasks.filter((task: any) => task.status === 'reviewing').length;
+
   return (
-    <ScrollView scrollY className="home-page" style={{ paddingLeft: '4rpx', paddingRight: '4rpx' }}>
+    <ScrollView scrollY className="home-page">
       {/* ========== Header 固定顶部栏 ========== */}
       <View className="header">
         {/* 左侧：头像 + AI麦克风 */}
@@ -270,6 +270,11 @@ export default function Home() {
           </View>
         </View>
 
+        <View className="header-center">
+          <Text className="home-brand-title">WishCard 家庭管家</Text>
+          <Text className="home-version-text">小程序新版 {MINI_PROGRAM_VERSION}</Text>
+        </View>
+
         {/* 右侧：星星余额胶囊 + 设置按钮 */}
         <View className="header-right">
           {/* 星星余额胶囊（可点击查看历史） */}
@@ -282,6 +287,36 @@ export default function Home() {
           <View className="settings-btn" onClick={handleSettingsClick}>
             <Icon name="settings" size={40} color="#006e1c" />
           </View>
+        </View>
+      </View>
+
+      <View className="latest-banner" onClick={handleAiAnalysis}>
+        <View className="latest-banner-copy">
+          <Text className="latest-kicker">新版已生效</Text>
+          <Text className="latest-title">AI分析、复盘和日程方案已集中到家庭管家</Text>
+          <Text className="latest-desc">今日待办 {pendingTasks} 项 · 待确认 {reviewingTasks} 项 · 家庭星星 {stars.toLocaleString()}</Text>
+        </View>
+        <View className="latest-banner-action">
+          <Icon name="sparkles" size={46} color="#ffffff" />
+          <Text>进入</Text>
+        </View>
+      </View>
+
+      <View className="smart-cards-row">
+        <View className="smart-card" onClick={handleAiAnalysis}>
+          <Icon name="barChart" size={36} color="#006e1c" />
+          <Text className="smart-card-title">家庭复盘</Text>
+          <Text className="smart-card-desc">周报/月报</Text>
+        </View>
+        <View className="smart-card" onClick={() => Taro.navigateTo({ url: '/pages/schedule-recommend/index' })}>
+          <Icon name="calendar" size={36} color="#1976D2" />
+          <Text className="smart-card-title">日程建议</Text>
+          <Text className="smart-card-desc">假期/课外班</Text>
+        </View>
+        <View className="smart-card" onClick={handleQuadrantClick}>
+          <Icon name="target" size={36} color="#F57C00" />
+          <Text className="smart-card-title">四象限</Text>
+          <Text className="smart-card-desc">轻重缓急</Text>
         </View>
       </View>
 

@@ -3,11 +3,10 @@
 // ==================== 页面布局 ====================
 .home-page {
   height: 100vh;
-  padding-top: 20rpx;
-  padding-bottom: 20rpx;
-  padding-left: 4rpx;    // 几乎贴边
-  padding-right: 4rpx;   // 几乎贴边
-  background-color: $bg-color;
+  padding: 20rpx 24rpx 28rpx;
+  background:
+    linear-gradient(180deg, rgba(0, 110, 28, 0.08) 0%, rgba(251, 249, 245, 0) 280rpx),
+    #fbf9f5;
   box-sizing: border-box;
   overflow-x: hidden;
   width: 100%;
@@ -18,10 +17,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20rpx 0;
+  padding: 20rpx 0 18rpx;
   position: sticky;
   top: 0;
   z-index: 100;
+  background: rgba(251, 249, 245, 0.92);
+  backdrop-filter: blur(18px);
 }
 
 .header-left {
@@ -71,6 +72,29 @@
   background-color: transparent;
 }
 
+.header-center {
+  flex: 1;
+  min-width: 0;
+  padding: 0 18rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.home-brand-title {
+  font-size: 28rpx;
+  font-weight: 900;
+  color: #25352a;
+  line-height: 1.2;
+}
+
+.home-version-text {
+  margin-top: 4rpx;
+  font-size: 20rpx;
+  font-weight: 800;
+  color: #006e1c;
+}
+
 .header-right {
   display: flex;
   align-items: center;
@@ -102,6 +126,104 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.latest-banner {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 18rpx;
+  margin: 10rpx 0 20rpx;
+  padding: 28rpx;
+  border-radius: 30rpx;
+  background: #ffffff;
+  border: 2rpx solid rgba(0, 110, 28, 0.12);
+  box-shadow: 0 12rpx 32rpx rgba(37, 53, 42, 0.08);
+}
+
+.latest-banner-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.latest-kicker {
+  width: fit-content;
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(0, 110, 28, 0.1);
+  color: #006e1c;
+  font-size: 20rpx;
+  font-weight: 900;
+}
+
+.latest-title {
+  margin-top: 14rpx;
+  font-size: 34rpx;
+  line-height: 1.24;
+  font-weight: 900;
+  color: #25352a;
+}
+
+.latest-desc {
+  margin-top: 12rpx;
+  font-size: 23rpx;
+  line-height: 1.45;
+  color: #6f7d70;
+  font-weight: 700;
+}
+
+.latest-banner-action {
+  width: 118rpx;
+  border-radius: 26rpx;
+  background: linear-gradient(135deg, #006e1c 0%, #16a34a 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  flex-shrink: 0;
+
+  text {
+    font-size: 22rpx;
+    font-weight: 900;
+    color: #ffffff;
+  }
+}
+
+.smart-cards-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14rpx;
+  margin-bottom: 22rpx;
+}
+
+.smart-card {
+  min-height: 132rpx;
+  padding: 18rpx 10rpx;
+  border-radius: 24rpx;
+  background: #ffffff;
+  border: 1rpx solid rgba(190, 202, 185, 0.42);
+  box-shadow: 0 6rpx 18rpx rgba(37, 53, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.smart-card-title {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  font-weight: 900;
+  color: #25352a;
+}
+
+.smart-card-desc {
+  margin-top: 3rpx;
+  font-size: 19rpx;
+  font-weight: 700;
+  color: #7a887b;
 }
 
 // ==================== 能量卡（今日成长能量） ====================
