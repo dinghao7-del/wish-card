@@ -3,22 +3,35 @@ import {
   AlertTriangle,
   ArrowDown,
   ArrowUp,
+  BarChart3,
   CheckCircle2,
   Eye,
   EyeOff,
   Filter,
   Megaphone,
+  MousePointerClick,
   RefreshCw,
   Search,
   Sparkles,
+  ThumbsDown,
 } from 'lucide-react';
 import { supabaseAdmin, type Database } from '../lib/supabase';
 import { useToast } from '../components/Toast';
 
 type CommercialResourceRow = Database['public']['Tables']['commercial_resources']['Row'];
 type CommercialResourceInsert = Database['public']['Tables']['commercial_resources']['Insert'];
+type RecommendationEventRow = Database['public']['Tables']['recommendation_events']['Row'];
 type RecommendationCategory = CommercialResourceRow['category'];
 type ActiveFilter = 'all' | 'active' | 'inactive';
+
+interface FunnelStats {
+  impressions: number;
+  clicks: number;
+  dismisses: number;
+  conversions: number;
+  ctr: number;
+  conversionRate: number;
+}
 
 const CATEGORY_LABELS: Record<RecommendationCategory, string> = {
   education: '教育成长',
@@ -178,6 +191,7 @@ function tagPreview(tags: string[] | null | undefined, fallback = '未配置') {
 export default function CommercialResources() {
   const { showToast } = useToast();
   const [resources, setResources] = useState<CommercialResourceRow[]>([]);
+  const [events, setEvents] = useState<RecommendationEventRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [category, setCategory] = useState<RecommendationCategory | 'all'>('all');
@@ -186,17 +200,31 @@ export default function CommercialResources() {
 
   const loadResources = async () => {
     setLoading(true);
-    const { data, error } = await supabaseAdmin
-      .from('commercial_resources')
-      .select('*')
-      .order('priority_boost', { ascending: false })
-      .order('updated_at', { ascending: false });
+    const [resourceResult, eventResult] = await Promise.all([
+      supabaseAdmin
+        .from('commercial_resources')
+        .select('*')
+        .order('priority_boost', { ascending: false })
+        .order('updated_at', { ascending: false }),
+      supabaseAdmin
+        .from('recommendation_events')
+        .select('*')
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .order('created_at', { ascending: false })
+        .limit(2000),
+    ]);
 
-    if (error) {
-      showToast(`读取推荐资源失败：${error.message}`, 'error');
+    if (resourceResult.error) {
+      showToast(`读取推荐资源失败：${resourceResult.error.message}`, 'error');
       setResources([]);
     } else {
-      setResources(data || []);
+      setResources(resourceResult.data || []);
+    }
+    if (eventResult.error) {
+      showToast(`读取推荐漏斗失败：${eventResult.error.message}`, 'warning');
+      setEvents([]);
+    } else {
+      setEvents(eventResult.data || []);
     }
     setLoading(false);
   };
@@ -207,18 +235,44 @@ export default function CommercialResources() {
 
   const summary = useMemo(() => {
     const needsReview = resources.filter(item => validateResource(item).length > 0);
+    const funnel = buildFunnelStats(events);
     return {
       total: resources.length,
       active: resources.filter(item => item.active).length,
       inactive: resources.filter(item => !item.active).length,
       needsReview: needsReview.length,
+      funnel,
       byCategory: {
         education: resources.filter(item => item.category === 'education').length,
         travel: resources.filter(item => item.category === 'travel').length,
         healthcare: resources.filter(item => item.category === 'healthcare').length,
       },
     };
-  }, [resources]);
+  }, [events, resources]);
+
+  const funnelByResource = useMemo(() => {
+    const index = new Map<string, FunnelStats>();
+    for (const resource of resources) {
+      index.set(resource.id, buildFunnelStats(events.filter(event => event.item_id === resource.id)));
+    }
+    return index;
+  }, [events, resources]);
+
+  const topPerformers = useMemo(() => {
+    return resources
+      .map(resource => ({
+        resource,
+        stats: funnelByResource.get(resource.id) || emptyFunnelStats(),
+      }))
+      .filter(item => item.stats.impressions > 0 || item.stats.clicks > 0 || item.stats.conversions > 0)
+      .sort((a, b) =>
+        b.stats.conversions - a.stats.conversions
+        || b.stats.clicks - a.stats.clicks
+        || b.stats.ctr - a.stats.ctr
+        || b.resource.priority_boost - a.resource.priority_boost
+      )
+      .slice(0, 5);
+  }, [funnelByResource, resources]);
 
   const filteredResources = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -322,6 +376,59 @@ export default function CommercialResources() {
         <SummaryCard label="待补全" value={summary.needsReview} tone={summary.needsReview ? 'amber' : 'green'} />
       </div>
 
+      <div className="grid gap-4 lg:grid-cols-[1.25fr_1fr]">
+        <div className="rounded-xl border border-gray-200 bg-white p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-gray-900">近 30 天推荐漏斗</h2>
+              <p className="mt-1 text-sm text-gray-500">只统计安全脱敏后的行为事件，用于判断推荐是否有效。</p>
+            </div>
+            <BarChart3 className="h-5 w-5 text-blue-500" />
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-4">
+            <FunnelMetric label="曝光" value={summary.funnel.impressions} />
+            <FunnelMetric label="点击" value={summary.funnel.clicks} />
+            <FunnelMetric label="感兴趣" value={summary.funnel.conversions} />
+            <FunnelMetric label="关闭" value={summary.funnel.dismisses} />
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <RateMetric label="点击率" value={summary.funnel.ctr} icon={MousePointerClick} />
+            <RateMetric label="兴趣转化率" value={summary.funnel.conversionRate} icon={Sparkles} />
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-gray-200 bg-white p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-gray-900">资源表现排行</h2>
+              <p className="mt-1 text-sm text-gray-500">优先看点击和兴趣转化。</p>
+            </div>
+            <Megaphone className="h-5 w-5 text-green-500" />
+          </div>
+          <div className="mt-4 space-y-3">
+            {topPerformers.length === 0 ? (
+              <div className="rounded-lg bg-gray-50 px-3 py-6 text-center text-sm text-gray-500">
+                暂无漏斗数据，前台产生曝光和点击后会自动汇总。
+              </div>
+            ) : topPerformers.map(item => (
+              <div key={item.resource.id} className="rounded-lg bg-gray-50 px-3 py-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-gray-900">{item.resource.title}</div>
+                    <div className="mt-0.5 text-xs text-gray-500">
+                      {CATEGORY_LABELS[item.resource.category]} · 点击 {item.stats.clicks} · 感兴趣 {item.stats.conversions}
+                    </div>
+                  </div>
+                  <div className="shrink-0 rounded-full bg-white px-2 py-1 text-xs font-semibold text-gray-600">
+                    CTR {formatPercent(item.stats.ctr)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-3">
         {(['education', 'travel', 'healthcare'] as RecommendationCategory[]).map(item => (
           <button
@@ -396,6 +503,7 @@ export default function CommercialResources() {
             {filteredResources.map(resource => {
               const errors = validateResource(resource);
               const isSaving = savingId === resource.id;
+              const stats = funnelByResource.get(resource.id) || emptyFunnelStats();
               return (
                 <div key={resource.id} className="p-5">
                   <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -436,6 +544,13 @@ export default function CommercialResources() {
                         <InfoBlock label="场景标签" value={tagPreview(resource.scenario_tags)} />
                         <InfoBlock label="画像标签" value={tagPreview(resource.family_stage_tags)} />
                         <InfoBlock label="匹配标签" value={tagPreview(resource.category_tags)} />
+                      </div>
+
+                      <div className="mt-4 grid gap-2 text-sm sm:grid-cols-4">
+                        <MiniMetric label="曝光" value={stats.impressions} />
+                        <MiniMetric label="点击" value={stats.clicks} />
+                        <MiniMetric label="兴趣" value={stats.conversions} />
+                        <MiniMetric label="关闭" value={stats.dismisses} icon={ThumbsDown} />
                       </div>
 
                       {errors.length > 0 && (
@@ -522,4 +637,67 @@ function InfoBlock({ label, value }: { label: string; value: string }) {
       <div className="mt-1 truncate font-medium text-gray-700">{value}</div>
     </div>
   );
+}
+
+function FunnelMetric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg bg-gray-50 p-3">
+      <div className="text-xs text-gray-400">{label}</div>
+      <div className="mt-1 text-2xl font-bold text-gray-900">{value}</div>
+    </div>
+  );
+}
+
+function RateMetric({ label, value, icon: Icon }: { label: string; value: number; icon: typeof MousePointerClick }) {
+  return (
+    <div className="flex items-center justify-between rounded-lg bg-blue-50 px-3 py-2">
+      <div>
+        <div className="text-xs text-blue-500">{label}</div>
+        <div className="mt-0.5 text-lg font-bold text-blue-900">{formatPercent(value)}</div>
+      </div>
+      <Icon className="h-5 w-5 text-blue-500" />
+    </div>
+  );
+}
+
+function MiniMetric({ label, value, icon: Icon }: { label: string; value: number; icon?: typeof ThumbsDown }) {
+  return (
+    <div className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
+      <span className="text-xs text-gray-500">{label}</span>
+      <span className="inline-flex items-center gap-1 text-sm font-bold text-gray-900">
+        {Icon && <Icon className="h-3.5 w-3.5 text-gray-400" />}
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function buildFunnelStats(events: RecommendationEventRow[]): FunnelStats {
+  const impressions = events.filter(event => event.event_type === 'impression').length;
+  const clicks = events.filter(event => event.event_type === 'click').length;
+  const dismisses = events.filter(event => event.event_type === 'dismiss').length;
+  const conversions = events.filter(event => event.event_type === 'conversion').length;
+  return {
+    impressions,
+    clicks,
+    dismisses,
+    conversions,
+    ctr: impressions > 0 ? clicks / impressions : 0,
+    conversionRate: clicks > 0 ? conversions / clicks : 0,
+  };
+}
+
+function emptyFunnelStats(): FunnelStats {
+  return {
+    impressions: 0,
+    clicks: 0,
+    dismisses: 0,
+    conversions: 0,
+    ctr: 0,
+    conversionRate: 0,
+  };
+}
+
+function formatPercent(value: number) {
+  return `${Math.round(value * 100)}%`;
 }

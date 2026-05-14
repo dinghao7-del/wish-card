@@ -144,6 +144,38 @@ export type Database = {
           updated_at?: string;
         };
       };
+      recommendation_events: {
+        Row: {
+          id: string;
+          family_id: string | null;
+          member_id: string | null;
+          category: 'education' | 'travel' | 'healthcare' | string;
+          item_id: string | null;
+          event_type: 'impression' | 'click' | 'dismiss' | 'conversion';
+          context: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          family_id?: string | null;
+          member_id?: string | null;
+          category: 'education' | 'travel' | 'healthcare' | string;
+          item_id?: string | null;
+          event_type: 'impression' | 'click' | 'dismiss' | 'conversion';
+          context?: Record<string, unknown>;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          family_id?: string | null;
+          member_id?: string | null;
+          category?: 'education' | 'travel' | 'healthcare' | string;
+          item_id?: string | null;
+          event_type?: 'impression' | 'click' | 'dismiss' | 'conversion';
+          context?: Record<string, unknown>;
+          created_at?: string;
+        };
+      };
     };
   };
 };
