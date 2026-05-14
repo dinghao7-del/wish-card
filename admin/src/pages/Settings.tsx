@@ -3,11 +3,10 @@ import { getAppConfigs, updateAppConfig, getAIConfigs, updateAIConfig } from '..
 import { supabaseAdmin } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
 import type { Database } from '../lib/supabase';
-import { Settings, RefreshCw, Save, Shield, Smartphone, QrCode, Trash2, KeyRound, Lock, Sparkles, Eye, EyeOff, TestTube } from 'lucide-react';
+import { Settings, RefreshCw, Save, Shield, Smartphone, QrCode, Trash2, KeyRound, Lock, Sparkles, TestTube, CheckCircle2, AlertTriangle, Server } from 'lucide-react';
 import { generateSecret, generateOtpAuthUri, generateQRCode, verifyToken } from '../lib/totp';
 import { useToast } from '../components/Toast';
 import { useConfirm } from '../components/ConfirmDialog';
-import { GoogleGenAI } from '@google/genai';
 
 type AppConfig = Database['public']['Tables']['app_config']['Row'];
 
@@ -31,17 +30,15 @@ export default function SettingsPage() {
   // AI助手配置状态
   const [aiConfigs, setAiConfigs] = useState<AIConfig[]>([]);
   const [aiEditValues, setAiEditValues] = useState<Record<string, string>>({});
-  const [showApiKey, setShowApiKey] = useState(false);
   const [testingApi, setTestingApi] = useState(false);
   const [apiTestResult, setApiTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
   // AI配置项定义
   const AI_CONFIG_DEFINITIONS = [
     { key: 'ai_enabled', label: '启用AI助手', description: '是否启用AI语音助手功能', type: 'boolean' },
-    { key: 'ai_provider', label: 'AI服务商', description: '选择AI服务提供商', type: 'select', options: ['gemini', 'openai', 'claude', 'minimax', 'custom'] },
+    { key: 'ai_provider', label: 'AI服务商', description: '前端只保存服务商类型，真实密钥保存在 Supabase Edge Function Secret', type: 'select', options: ['minimax', 'openai', 'custom'] },
     { key: 'ai_model', label: 'AI模型', description: '使用的AI模型名称', type: 'text' },
-    { key: 'ai_api_key', label: 'API密钥', description: 'AI服务的API密钥', type: 'password' },
-    { key: 'ai_api_endpoint', label: 'API端点', description: 'API端点（MiniMax填: https://api.minimax.chat)', type: 'text' },
+    { key: 'ai_api_endpoint', label: 'API端点', description: '仅用于后台展示和配置记录，真实调用以 Edge Function Secret 为准', type: 'text' },
     { key: 'ai_temperature', label: '温度参数', description: 'AI回复的随机性（0-1）', type: 'number' },
     { key: 'ai_max_tokens', label: '最大Token数', description: 'AI回复的最大Token数量', type: 'number' },
   ];
@@ -95,43 +92,46 @@ export default function SettingsPage() {
   };
 
   const handleTestAIConfig = async () => {
-    const apiKey = aiEditValues['ai_api_key'];
-    const provider = aiEditValues['ai_provider'] || 'gemini';
-    const model = aiEditValues['ai_model'] || 'gemini-2.0-flash';
-    const endpoint = aiEditValues['ai_api_endpoint'];
-
-    if (!apiKey) {
-      showToast('请先填写API密钥', 'error');
-      return;
-    }
+    const provider = aiEditValues['ai_provider'] || 'minimax';
+    const model = aiEditValues['ai_model'] || 'MiniMax-M2.7';
 
     setTestingApi(true);
     setApiTestResult(null);
 
     try {
-      if (provider === 'gemini') {
-        const ai = new GoogleGenAI({ apiKey });
-        const response = await ai.models.generateContent({
-          model: model || 'gemini-2.0-flash',
-          contents: 'Hello',
-          config: { responseMimeType: 'text/plain' }
-        });
-        if (response.text) {
-          setApiTestResult({ success: true, message: '连接成功！AI回复正常。' });
-          showToast('API测试成功', 'success');
-        }
-      } else {
-        // 其他提供商使用自定义端点测试
-        if (!endpoint) {
-          setApiTestResult({ success: false, message: `${provider} 需要配置API端点` });
-          showToast(`${provider} 需要配置API端点`, 'error');
-        } else {
-          setApiTestResult({ success: true, message: `${provider} 配置已保存，端点: ${endpoint}` });
-          showToast('配置已保存', 'success');
-        }
+      const { data, error } = await supabaseAdmin.functions.invoke('ai-chat', {
+        body: {
+          provider,
+          model,
+          max_tokens: 512,
+          temperature: 0.2,
+          messages: [
+            { role: 'system', content: '你是愿望卡后台的 AI 健康检查助手。请只回复一句简短中文。' },
+            { role: 'user', content: '请回复：AI服务连接正常' },
+          ],
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Edge Function 调用失败');
       }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      const content = typeof data === 'string' ? data : data?.content;
+      if (!content) {
+        throw new Error('AI服务已响应，但返回内容为空');
+      }
+
+      setApiTestResult({ success: true, message: `连接成功：${content}` });
+      showToast('AI服务连接成功', 'success');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : '测试失败';
+      const rawMsg = err instanceof Error ? err.message : '测试失败';
+      const msg = rawMsg.includes('Missing server AI secret')
+        ? 'Edge Function 已部署，但还缺少服务端密钥 MINIMAX_API_KEY 或 AI_API_KEY。'
+        : rawMsg;
       setApiTestResult({ success: false, message: msg });
       showToast(msg, 'error');
     } finally {
@@ -185,29 +185,6 @@ export default function SettingsPage() {
           min="0"
           max="2"
         />
-      );
-    }
-
-    if (def.type === 'password') {
-      return (
-        <div className="flex items-center gap-2">
-          <input
-            type={showApiKey && def.key === 'ai_api_key' ? 'text' : 'password'}
-            value={value}
-            onChange={(e) => setAiEditValues({ ...aiEditValues, [def.key]: e.target.value })}
-            className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-            placeholder={def.key === 'ai_api_key' ? 'sk-...' : ''}
-          />
-          {def.key === 'ai_api_key' && (
-            <button
-              onClick={() => setShowApiKey(!showApiKey)}
-              className="px-3 py-2 text-gray-500 hover:text-gray-700"
-              title={showApiKey ? '隐藏密钥' : '显示密钥'}
-            >
-              {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          )}
-        </div>
       );
     }
 
@@ -599,14 +576,46 @@ export default function SettingsPage() {
 
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
           <div className="flex items-start gap-3">
-            <div className="text-amber-600 mt-0.5">⚠️</div>
+            <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
             <div>
-              <p className="text-sm text-amber-800 font-medium">安全提示</p>
+              <p className="text-sm text-amber-800 font-medium">服务端密钥托管</p>
               <p className="text-xs text-amber-700 mt-1">
-                API密钥属于敏感信息，请妥善保管。配置后仅管理员可见，不会暴露给普通用户。
-                支持 Gemini、OpenAI、Claude 及自定义端点。
+                API 密钥不再保存在前端配置表，也不会暴露给 Web、小程序或安卓端。
+                真实 AI 调用统一走 Supabase Edge Function，并读取服务端 Secret。
               </p>
             </div>
+          </div>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-3 mb-5">
+          <div className="rounded-lg border border-purple-100 bg-purple-50 p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-purple-900">
+              <Server className="w-4 h-4" />
+              当前通道
+            </div>
+            <div className="mt-2 text-lg font-bold text-purple-950">{aiEditValues.ai_provider || 'minimax'}</div>
+            <p className="text-xs text-purple-700 mt-1">{aiEditValues.ai_model || 'MiniMax-M2.7'}</p>
+          </div>
+          <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+            <div className="text-sm font-semibold text-blue-900">调用入口</div>
+            <div className="mt-2 text-lg font-bold text-blue-950">ai-chat</div>
+            <p className="text-xs text-blue-700 mt-1">Supabase Edge Function</p>
+          </div>
+          <div className={`rounded-lg border p-4 ${
+            apiTestResult?.success
+              ? 'border-green-100 bg-green-50'
+              : apiTestResult
+                ? 'border-red-100 bg-red-50'
+                : 'border-gray-100 bg-gray-50'
+          }`}>
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+              {apiTestResult?.success ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <TestTube className="w-4 h-4 text-gray-500" />}
+              健康状态
+            </div>
+            <div className="mt-2 text-lg font-bold text-gray-950">
+              {apiTestResult?.success ? '正常' : apiTestResult ? '需处理' : '待检测'}
+            </div>
+            <p className="text-xs text-gray-600 mt-1">点击下方按钮实时检测</p>
           </div>
         </div>
 
@@ -647,7 +656,7 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-700">API连接测试</p>
-              <p className="text-xs text-gray-500">保存配置后点击测试按钮验证API是否可用</p>
+              <p className="text-xs text-gray-500">实时调用 ai-chat Edge Function，检测服务端密钥、模型和返回内容是否正常</p>
             </div>
             <button
               onClick={handleTestAIConfig}

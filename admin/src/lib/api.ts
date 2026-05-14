@@ -482,10 +482,9 @@ export async function updateAIConfig(key: string, value: string): Promise<void> 
 function getAIConfigDescription(key: string): string {
   const descriptions: Record<string, string> = {
     'ai_enabled': '是否启用AI语音助手功能',
-    'ai_provider': 'AI服务提供商: gemini/openai/claude/custom',
+    'ai_provider': 'AI服务提供商: minimax/openai/custom',
     'ai_model': '使用的AI模型名称',
-    'ai_api_key': 'AI服务的API密钥（敏感信息）',
-    'ai_api_endpoint': '自定义API端点（可选，用于代理或自建服务）',
+    'ai_api_endpoint': 'AI API端点展示值，真实调用以 Edge Function Secret 为准',
     'ai_temperature': 'AI回复的随机性参数（0-1）',
     'ai_max_tokens': 'AI回复的最大Token数量',
   };
