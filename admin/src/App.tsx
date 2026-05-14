@@ -11,6 +11,7 @@ import Families from './pages/Families';
 import Settings from './pages/Settings';
 import Analytics from './pages/Analytics';
 import TemplatesEnhanced from './pages/TemplatesEnhanced';
+import CommercialResources from './pages/CommercialResources';
 import type { ReactNode } from 'react';
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -50,6 +51,7 @@ function AppRoutes() {
         <Route path="families" element={<Families />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="templates" element={<TemplatesEnhanced />} />
+        <Route path="commercial-resources" element={<CommercialResources />} />
         <Route path="settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

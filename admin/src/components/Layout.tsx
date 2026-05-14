@@ -12,6 +12,7 @@ import {
   X,
   BarChart3,
   Database,
+  Megaphone,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -19,6 +20,7 @@ const navItems = [
   { to: '/', icon: LayoutDashboard, label: '仪表盘' },
   { to: '/analytics', icon: BarChart3, label: '行为分析' },
   { to: '/templates', icon: Database, label: '模板库管理' },
+  { to: '/commercial-resources', icon: Megaphone, label: '推荐资源池' },
   { to: '/invite-codes', icon: KeyRound, label: '邀请码管理' },
   { to: '/users', icon: Users, label: '用户管理' },
   { to: '/families', icon: Home, label: '家庭管理' },
