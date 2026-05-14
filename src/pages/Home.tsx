@@ -11,6 +11,8 @@ import { NotificationBell } from '../components/NotificationCenter';
 import { TextAvatar } from '../components/TextAvatar';
 import { EnergyCard } from '../components/EnergyCard';
 import { EmptyState } from '../components/EmptyState';
+import { getActiveThemeSkin } from '../lib/themeSkins';
+import { getCreationTemplateRoute } from '../lib/createFlowRoutes';
 
 function AnimatedNumber({ value }: { value: number }) {
   // Simply display the formatted number - animation is handled by parent's motion.div
@@ -36,6 +38,7 @@ export function Home() {
   }, [stars]);
 
   const isAdmin = currentUser?.role === 'parent';
+  const isArcadeSkin = getActiveThemeSkin().id === 'arcade-comic';
   const [bottomTab, setBottomTab] = useState<'leaderboard' | 'quadrant'>('leaderboard');
   const todayTasks = tasks.filter(t => !t.isHabit && (t.status === 'pending' || t.status === 'reviewing')).slice(0, 4);
 
@@ -60,9 +63,11 @@ export function Home() {
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-surface dark:border-surface shadow-sm group-hover:shadow-md transition-all">
               <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={typeof window !== 'undefined' ? (window.innerWidth >= 640 ? 40 : 32) : 32} />
             </div>
-            <span className="ui-home-brand hidden text-xl font-black italic text-on-surface sm:inline">
-              WISHCARD
-            </span>
+            {isArcadeSkin && (
+              <span className="ui-home-brand hidden text-xl font-black italic text-on-surface sm:inline">
+                WISHCARD
+              </span>
+            )}
           </div>
 
           {/* AI Microphone Button - Newly added */}
@@ -82,7 +87,7 @@ export function Home() {
             <Star size={14} className="sm:size-[18px] text-reward-display fill-current" />
             <span className="font-black text-on-surface text-sm sm:text-base">{stars.toLocaleString()}</span>
           </div>
-          {!guestMode && <NotificationBell />}
+          <NotificationBell />
 
         </div>
       </header>
@@ -112,7 +117,7 @@ export function Home() {
           <QuickActionButton
             icon={PlusCircle}
             label={t('home.actions.create_task', { defaultValue: '创建任务' })}
-            onClick={() => navigate('/tasks/new')}
+            onClick={() => navigate(getCreationTemplateRoute('task'))}
           />
           <QuickActionButton
             icon={Brain}
@@ -163,7 +168,7 @@ export function Home() {
           )) : (
             <EmptyState
               scenario="empty_state"
-              onAction={() => navigate('/tasks/new')}
+              onAction={() => navigate(getCreationTemplateRoute('task'))}
               actionText="创建第一个任务"
             />
           )}
@@ -171,15 +176,15 @@ export function Home() {
       </section>
 
       {/* Leaderboard / Quadrant Tabs */}
-      <section className="bg-surface-container-low/50 rounded-[1.5rem] sm:rounded-[2rem] p-3 sm:p-5 pb-2 relative overflow-hidden">
+      <section className="ui-home-bottom-panel bg-surface-container-low/50 rounded-[1.5rem] sm:rounded-[2rem] p-3 sm:p-5 pb-2 relative overflow-hidden">
         {/* Tab Switcher */}
         <div className="flex items-center justify-between mb-2 sm:mb-3">
-          <div className="flex bg-surface-container rounded-full p-0.5">
+          <div className="ui-home-tab-switcher flex bg-surface-container rounded-full p-0.5">
             <button
               onClick={() => setBottomTab('leaderboard')}
               className={cn(
                 "px-4 py-1.5 rounded-full text-xs font-black transition-all",
-                bottomTab === 'leaderboard' ? "bg-primary text-white shadow-sm" : "text-on-surface-variant/50"
+                bottomTab === 'leaderboard' ? "ui-home-tab-active bg-primary text-white shadow-sm" : "text-on-surface-variant/50"
               )}
             >
               {t('home_tabs.leaderboard', { defaultValue: '排行榜' })}
@@ -188,7 +193,7 @@ export function Home() {
               onClick={() => setBottomTab('quadrant')}
               className={cn(
                 "px-4 py-1.5 rounded-full text-xs font-black transition-all",
-                bottomTab === 'quadrant' ? "bg-primary text-white shadow-sm" : "text-on-surface-variant/50"
+                bottomTab === 'quadrant' ? "ui-home-tab-active bg-primary text-white shadow-sm" : "text-on-surface-variant/50"
               )}
             >
               {t('home_tabs.quadrant', { defaultValue: '四象限' })}
@@ -251,7 +256,7 @@ function QuickActionButton({ icon: Icon, label, onClick, highlight = false }: { 
   return (
     <button
       onClick={onClick}
-      className="ui-quick-action min-h-[5.75rem] rounded-2xl bg-surface-container-low p-2.5 flex flex-col items-center justify-center gap-1.5 active:scale-95 transition-all group"
+      className="ui-quick-action aspect-square min-h-0 rounded-2xl bg-surface-container-low p-2.5 flex flex-col items-center justify-center gap-1.5 active:scale-95 transition-all group"
     >
       <div className={cn(
         "w-12 h-12 min-w-12 min-h-12 rounded-full flex items-center justify-center transition-colors",
@@ -303,7 +308,7 @@ function PodiumItem({ member, rank, onMemberClick }: { member: any; rank: number
       {/* Pedestal 柱子 */}
       <div
         className={cn(
-          "w-full rounded-t-xl flex flex-col items-center justify-end shadow-sm transition-all duration-500",
+          "ui-podium-block w-full rounded-t-xl flex flex-col items-center justify-end shadow-sm transition-all duration-500",
           isFirst ? "bg-primary" : "bg-surface-container-high"
         )}
         style={{ height: pedestalHeight }}

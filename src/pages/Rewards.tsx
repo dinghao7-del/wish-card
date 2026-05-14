@@ -14,6 +14,8 @@ import { getParentVerificationValue, isHighValueReward } from '../lib/sensitiveA
 import { getRewardCategoryLabel, normalizeRewardCategoryId, REWARD_CATEGORY_OPTIONS } from '../lib/rewardCategories';
 import { NotificationBell } from '../components/NotificationCenter';
 import { verifyMemberPinOrPassword } from '../lib/memberCredentials';
+import { getActiveThemeSkin } from '../lib/themeSkins';
+import { getCreationTemplateRoute } from '../lib/createFlowRoutes';
 
 export function Rewards() {
   const { rewards, stars, currentUser, redeemReward, approveReward, setIsUserSelectorOpen, deleteReward, guestMode } = useFamily();
@@ -27,6 +29,7 @@ export function Rewards() {
   const [fulfillmentNotice, setFulfillmentNotice] = useState<Reward | null>(null);
   const [menuRewardId, setMenuRewardId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<Reward | null>(null);
+  const isArcadeSkin = getActiveThemeSkin().id === 'arcade-comic';
 
   const categories = REWARD_CATEGORY_OPTIONS.map(category => ({
     id: category.id,
@@ -93,9 +96,11 @@ export function Rewards() {
             onClick={() => setIsUserSelectorOpen(true)}
           >
             <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={40} className="border-2 border-surface dark:border-surface shadow-sm group-hover:shadow-md transition-all" />
-            <span className="ui-rewards-brand hidden text-xl font-black italic text-on-surface sm:inline">
-              WISHLIST
-            </span>
+            {isArcadeSkin && (
+              <span className="ui-rewards-brand hidden text-xl font-black italic text-on-surface sm:inline">
+                WISHLIST
+              </span>
+            )}
           </div>
 
           <button
@@ -114,7 +119,7 @@ export function Rewards() {
             <Star size={14} className="sm:size-[18px] text-reward-display fill-current" />
             <span className="font-black text-on-surface text-sm sm:text-base">{stars.toLocaleString()}</span>
           </div>
-          {!guestMode && <NotificationBell />}
+          <NotificationBell />
         </div>
       </header>
 
@@ -132,7 +137,7 @@ export function Rewards() {
           </h2>
           {currentUser?.role === 'parent' && (
             <button
-              onClick={() => navigate('/rewards/new')}
+              onClick={() => navigate(getCreationTemplateRoute('reward'))}
               className="bg-primary text-white w-12 h-12 rounded-full shadow-lg shadow-primary/20 active:scale-95 transition-all flex items-center justify-center shrink-0"
             >
               <Plus size={28} strokeWidth={3} />
@@ -141,24 +146,26 @@ export function Rewards() {
         </div>
       </div>
 
-      <section className="ui-reward-promo mb-6 overflow-hidden rounded-3xl bg-primary p-5 text-on-surface">
-        <div className="relative z-10 max-w-[68%]">
-          <p className="text-xs font-black uppercase tracking-wide">LIMITED DROP!</p>
-          <p className="mt-2 text-sm font-bold leading-relaxed">
-            攒够星星兑换心愿卡，精选奖励随时上新。
-          </p>
-          <button
-            type="button"
-            onClick={() => navigate('/rewards/new')}
-            className="mt-4 rounded-xl bg-on-surface px-5 py-2 text-xs font-black text-surface"
-          >
-            VIEW SHOP
-          </button>
-        </div>
-        <div className="ui-reward-promo-icon">
-          <Gift size={50} strokeWidth={3} />
-        </div>
-      </section>
+      {isArcadeSkin && (
+        <section className="ui-reward-promo mb-6 overflow-hidden rounded-3xl bg-primary p-5 text-on-surface">
+          <div className="relative z-10 max-w-[68%]">
+            <p className="text-xs font-black uppercase tracking-wide">LIMITED DROP!</p>
+            <p className="mt-2 text-sm font-bold leading-relaxed">
+              攒够星星兑换心愿卡，精选奖励随时上新。
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate(getCreationTemplateRoute('reward'))}
+              className="mt-4 rounded-xl bg-on-surface px-5 py-2 text-xs font-black text-surface"
+            >
+              VIEW SHOP
+            </button>
+          </div>
+          <div className="ui-reward-promo-icon">
+            <Gift size={50} strokeWidth={3} />
+          </div>
+        </section>
+      )}
 
       <AnimatePresence>
         {fulfillmentNotice && (
@@ -327,7 +334,7 @@ export function Rewards() {
               </div>
 
               {/* 底部操作栏 */}
-              <div className="ui-reward-card-body px-3 py-2.5 flex items-center justify-between gap-2">
+              <div className="ui-reward-card-body px-3 py-2.5 flex flex-col items-stretch gap-2">
                 <div className="ui-reward-info-row flex w-full items-start justify-between gap-3">
                   <h4 className="min-w-0 flex-1 truncate text-sm font-bold text-on-surface">{reward.name}</h4>
                   <div className="ui-reward-cost flex items-center gap-1">
@@ -342,7 +349,10 @@ export function Rewards() {
                       e.stopPropagation();
                       handleApproveReward(reward);
                     }}
-                    className="ui-reward-action rounded-full min-w-16 px-3 py-1.5 text-xs font-black bg-primary text-white active:scale-95 transition-all shadow-sm whitespace-nowrap"
+                    className={cn(
+                      "ui-reward-action min-h-9 w-full px-3 py-1.5 text-xs font-black bg-primary text-white active:scale-95 transition-all shadow-sm whitespace-nowrap",
+                      isArcadeSkin ? "rounded-full" : "rounded-xl"
+                    )}
                   >
                     确认
                   </button>
@@ -352,17 +362,20 @@ export function Rewards() {
                       e.stopPropagation();
                       handleRedeem(reward);
                     }}
-                    className="ui-reward-action rounded-full min-w-20 px-3 py-1.5 text-xs font-black bg-primary text-white active:scale-95 transition-all shadow-sm whitespace-nowrap text-center"
+                    className={cn(
+                      "ui-reward-action min-h-9 w-full px-3 py-1.5 text-xs font-black bg-primary text-white active:scale-95 transition-all shadow-sm whitespace-nowrap text-center",
+                      isArcadeSkin ? "rounded-full" : "rounded-xl"
+                    )}
                   >
                     {t('rewards.action.redeem', { defaultValue: '兑换' })}
                   </button>
                 ) : reward.status && reward.status !== 'available' ? (
-                  <span className="rounded-full px-3 py-1.5 text-[10px] font-black bg-surface-container text-on-surface-variant/60">
+                  <span className="w-full rounded-xl px-3 py-2 text-center text-[10px] font-black bg-surface-container text-on-surface-variant/60">
                     {rewardStatusLabel(reward)}
                   </span>
                 ) : (
-                  <div className="flex items-center gap-1.5">
-                    <div className="ui-reward-progress h-2 w-16 bg-surface-container-high rounded-full overflow-hidden">
+                  <div className="flex w-full items-center gap-2">
+                    <div className="ui-reward-progress h-2 min-w-0 flex-1 bg-surface-container-high rounded-full overflow-hidden">
                       <div
                         className="h-full bg-primary rounded-full transition-all duration-500"
                         style={{ width: `${Math.min(100, (stars / reward.cost) * 100)}%` }}
@@ -386,17 +399,21 @@ export function Rewards() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-background rounded-t-[2.5rem] shadow-2xl max-h-[75svh] overflow-hidden flex flex-col"
+              className="ui-detail-sheet fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-background rounded-t-[2rem] shadow-2xl max-h-[88svh] overflow-hidden flex flex-col"
               style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* 关闭按钮 */}
-              <button
-                onClick={() => setSelectedReward(null)}
-                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant z-10"
-              >
-                <X size={20} />
-              </button>
+              <header className="ui-detail-sheet-header flex items-center px-6 py-4 bg-background/80 backdrop-blur-xl shrink-0 z-20 border-b border-outline-variant/10">
+                <button
+                  onClick={() => setSelectedReward(null)}
+                  className="ui-detail-sheet-close w-10 h-10 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container/50 transition-colors"
+                  aria-label={t('common.close', { defaultValue: '关闭' })}
+                >
+                  <Plus size={24} className="rotate-45" />
+                </button>
+                <h2 className="flex-1 text-center text-lg font-bold text-on-surface">心愿详情</h2>
+                <div className="w-10" />
+              </header>
 
               {/* 可滚动内容区 */}
               <div className="flex-1 p-5 overflow-y-auto touch-pan-y" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
@@ -560,7 +577,7 @@ export function Rewards() {
         onComplete={handleCelebrationComplete}
         type="reward"
         title={t('rewards.redeem_success', { defaultValue: '兑换成功' })}
-        subtitle={redeemedReward ? t('rewards.redeem_detail', { name: redeemedReward.name }) : t('checkin.awesome', { defaultValue: 'awesome' })}
+        subtitle={redeemedReward ? t('rewards.redeem_detail', { defaultValue: `心愿「${redeemedReward.name}」已提交成功`, name: redeemedReward.name }) : t('checkin.awesome', { defaultValue: '太棒了！' })}
         stars={redeemedReward?.cost || 0}
       />
     </div>

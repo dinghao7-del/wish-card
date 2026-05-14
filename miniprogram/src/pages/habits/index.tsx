@@ -4,6 +4,7 @@ import Taro, { useDidShow } from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
 import { resolveAvatarPath, TASK_CATEGORIES, getTaskTemplatesByCategory } from '@/lib/templates';
 import type { TaskTemplate } from '@/lib/templates';
+import { getHabitSelectableChildIds, resolveHabitTargetChildId } from '@/lib/habitTargeting';
 import Icon from '@/components/Icon';
 import './index.scss';
 
@@ -191,6 +192,11 @@ export default function Habits() {
     if (firstParent) setSelectedParentId(firstParent.id);
   }, [parentMembers, selectedParentId, userRole]);
 
+  useEffect(() => {
+    if (!selectedHabit || userRole !== 'parent') return;
+    setSelectedChildId(resolveHabitTargetChildId(selectedHabit, childMembers, selectedChildId));
+  }, [childMembers, selectedChildId, selectedHabit, userRole]);
+
   const pendingReviewsForHabit = (habitId: string) =>
     habits.filter(h => h.status === 'reviewing' && h.description?.includes(habitReviewMarker(habitId)));
 
@@ -221,7 +227,7 @@ export default function Habits() {
   // ========== 打卡 ==========
   const handleCheckIn = async (habit: Habit) => {
     const targetMemberId = userRole === 'parent'
-      ? selectedChildId || childMembers.find(child => habit.assignee_ids?.includes(child.id))?.id
+      ? resolveHabitTargetChildId(habit, childMembers, selectedChildId)
       : userId || '';
     if (!targetMemberId) {
       Taro.showToast({ title: '请选择孩子', icon: 'none' });
@@ -685,7 +691,7 @@ export default function Habits() {
                   <Text style={{ fontSize: 12, fontWeight: 800, color: '#64715f' }}>指定孩子</Text>
                   <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
                     {childMembers
-                      .filter(child => !selectedHabit.assignee_ids?.length || selectedHabit.assignee_ids.includes(child.id))
+                      .filter(child => getHabitSelectableChildIds(selectedHabit, childMembers).includes(child.id))
                       .map(child => (
                         <View
                           key={child.id}

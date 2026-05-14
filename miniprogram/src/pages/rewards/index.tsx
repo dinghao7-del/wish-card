@@ -70,6 +70,13 @@ export default function Rewards() {
   const [showRewardTemplates, setShowRewardTemplates] = useState(false);
   const [familyId, setFamilyId] = useState('');
 
+  const openBlankRewardForm = () => {
+    setCreateForm({ name: '', description: '', cost: 10, category: 'common', quantity: 1, image: '', icon: '🐷', exchangeLimit: false });
+    setShowDescInput(false);
+    setShowRewardTemplates(false);
+    setShowCreateDialog(true);
+  };
+
   useEffect(() => {
     initPageData();
   }, []);
@@ -283,11 +290,9 @@ export default function Rewards() {
     }
   };
 
-  // 新建奖励（家长权限）— 对齐Web /rewards/new
+  // 新建心愿（家长权限）— 先进入模板库，没有合适模板再自定义
   const handleCreateReward = () => {
-    setCreateForm({ name: '', description: '', cost: 10, category: 'common', quantity: 1, image: '', icon: '🐷', exchangeLimit: false });
-    setShowDescInput(false);
-    setShowCreateDialog(true);
+    setShowRewardTemplates(true);
   };
 
   // 提交新建奖励
@@ -497,12 +502,12 @@ export default function Rewards() {
                   backgroundColor: '#E8F5E9', borderRadius: '16rpx',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12rpx',
                 }}
-                onClick={() => setShowRewardTemplates(true)}
+                onClick={handleCreateReward}
               >
                 <Icon name="grid" size={28} color="#006e1c" />
-                <Text style={{ fontSize: '26rpx', fontWeight: 600, color: '#006e1c' }}>从模板库导入心愿</Text>
+                <Text style={{ fontSize: '26rpx', fontWeight: 600, color: '#006e1c' }}>从模板库添加心愿</Text>
               </View>
-              <Text className="rw-empty-hint">或点击右上角 + 手动创建</Text>
+              <Text className="rw-empty-hint">没有合适模板时可自定义添加</Text>
             </>
           )}
         </View>
@@ -804,26 +809,22 @@ export default function Rewards() {
       {/* ===== 模板库导入弹窗 ===== */}
       <RewardTemplateSelector
         visible={showRewardTemplates}
-        onSelect={async (tpl) => {
-          // 将选中的模板作为奖励导入
-          try {
-            const { error } = await supabase.from('rewards').insert({
-              name: tpl.title,
-              description: `从模板库导入：${tpl.title}`,
-              cost: (tpl.defaultStars || 1) * 10,
-              category: 'common',
-              icon: tpl.icon || '',
-              ...(familyId && familyId !== 'guest-family' && familyId !== 'demo-family'
-                ? { family_id: familyId }
-                : {}),
-              is_template: true,
-            });
-            if (error) throw error;
-            Taro.showToast({ title: `已添加「${tpl.title}」`, icon: 'success' });
-            fetchRewards();
-          } catch {
-            Taro.showToast({ title: '添加失败', icon: 'none' });
-          }
+        customAddText="自定义添加"
+        onCustomAdd={openBlankRewardForm}
+        onSelect={(tpl) => {
+          setCreateForm({
+            name: tpl.title,
+            description: `从模板库导入：${tpl.title}`,
+            cost: Math.max(1, (tpl.defaultStars || 1) * 10),
+            category: 'common',
+            quantity: 1,
+            image: tpl.icon || '',
+            icon: tpl.icon || '🎁',
+            exchangeLimit: false,
+          });
+          setShowDescInput(true);
+          setShowRewardTemplates(false);
+          setShowCreateDialog(true);
         }}
         onClose={() => setShowRewardTemplates(false)}
       />

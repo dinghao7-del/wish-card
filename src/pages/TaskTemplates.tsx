@@ -4,82 +4,36 @@ import { useTranslation } from 'react-i18next';
 import { 
   ArrowLeft, 
   Search, 
-  Utensils, 
-  Brush, 
-  Shirt, 
-  ShoppingBag, 
-  Users, 
-  Wallet, 
-  BookOpen, 
-  Sparkles, 
-  Smile, 
-  Angry, 
-  Heart, 
-  TrendingUp, 
-  Trees, 
-  Tv, 
-  Activity, 
-  Eye, 
-  Trash2, 
-  Box, 
-  DoorOpen,
   Star,
-  Check,
-  Zap,
   Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
+import { ALL_TASK_TEMPLATES, type HabitTemplate } from '../lib/templates';
+import { getCustomCreationRoute } from '../lib/createFlowRoutes';
 
-interface TaskTemplate {
-  title: string;
+type TaskTemplate = HabitTemplate & {
   description: string;
-  category: string;
   frequency: 'daily' | 'weekly';
-  stars: number;
-  icon: any;
-}
+};
 
-const TEMPLATE_DATA: TaskTemplate[] = [
-  // 家务责任
-  { title: '洗衣服', description: '学会使用洗衣机洗自己的简单衣物', category: '家务责任', frequency: 'daily', stars: 2, icon: Shirt },
-  { title: '学会做饭', description: '学习做一道简单的菜/准备简单早餐', category: '家务责任', frequency: 'weekly', stars: 2, icon: Utensils },
-  { title: '打扫卫生', description: '负责一项固定的家庭公共区域清洁(如扫地、擦桌子、吸尘)', category: '家务责任', frequency: 'weekly', stars: 5, icon: Brush },
-  { title: '参与采购', description: '参与家庭采购清单制作/帮忙提东西', category: '家务责任', frequency: 'weekly', stars: 5, icon: ShoppingBag },
-  { title: '家庭决策', description: '积极参与家庭决策讨论', category: '家务责任', frequency: 'weekly', stars: 5, icon: Users },
-  { title: '整理玩具', description: '把玩具收拾到指定位置且分类', category: '家务责任', frequency: 'daily', stars: 2, icon: Box },
-  { title: '整理书架', description: '把图书放回书架上', category: '家务责任', frequency: 'daily', stars: 2, icon: BookOpen },
-  { title: '照顾宠物', description: '给宠物添食/水/铲屎', category: '家务责任', frequency: 'daily', stars: 2, icon: Heart },
-  { title: '照顾植物', description: '照顾一盆小植物', category: '家务责任', frequency: 'daily', stars: 2, icon: Trees },
-  { title: '餐具整理', description: '帮忙摆碗筷/饭后收拾餐桌', category: '家务责任', frequency: 'daily', stars: 2, icon: Utensils },
-  { title: '倒垃圾', description: '负责倒自己房间/客厅的垃圾桶', category: '家务责任', frequency: 'daily', stars: 1, icon: Trash2 },
-  { title: '整理脏衣服', description: '把脏衣服放进洗衣篮', category: '家务责任', frequency: 'daily', stars: 1, icon: Shirt },
-  { title: '叠衣服', description: '折叠衣物并分类收纳', category: '家务责任', frequency: 'daily', stars: 2, icon: Shirt },
-  { title: '照顾弟妹', description: '帮忙照看年幼的兄弟姐妹', category: '家务责任', frequency: 'daily', stars: 5, icon: Users },
-  { title: '整理房间', description: '独立整理自己的房间（扫地、擦灰、物品归位）', category: '家务责任', frequency: 'daily', stars: 5, icon: DoorOpen },
-  
-  // 自我管理
-  { title: '管理个人财务', description: '管理预算、储蓄、消费记录', category: '自我管理', frequency: 'daily', stars: 2, icon: Wallet },
-  { title: '写日记/周记', description: '记录每日的想法、感受', category: '自我管理', frequency: 'daily', stars: 2, icon: BookOpen },
-  { title: '本周反思', description: '我做的最棒的一件事/需要改进的地方', category: '自我管理', frequency: 'weekly', stars: 5, icon: Sparkles },
-  
-  // 性格养成
-  { title: '讲礼貌', description: '尊敬长辈，主动和认识的人打招呼', category: '性格养成', frequency: 'daily', stars: 2, icon: Smile },
-  { title: '情绪管理', description: '如：公共场合不大声喧哗，一天不发脾气', category: '性格养成', frequency: 'daily', stars: 2, icon: Angry },
-  { title: '主动认错', description: '做错事主动承认错误，自我反思', category: '性格养成', frequency: 'daily', stars: 5, icon: Smile },
-  { title: '迎难而上', description: '遇到困难主要想办法解决，不半途而废', category: '性格养成', frequency: 'daily', stars: 5, icon: TrendingUp },
-  { title: '压力管理', description: '练习放松技巧、寻求支持', category: '性格养成', frequency: 'daily', stars: 5, icon: Heart },
-  
-  // 运动健康
-  { title: '户外散步', description: '去户外看看花/摸摸树叶', category: '运动健康', frequency: 'daily', stars: 2, icon: Trees },
-  { title: '遵守屏幕时间规则', description: '按照约定时间玩游戏/看电视', category: '运动健康', frequency: 'daily', stars: 2, icon: Tv },
-  { title: '运动锻炼', description: '户外活动/运动30分钟', category: '运动健康', frequency: 'daily', stars: 2, icon: Activity },
-  { title: '保护视力', description: '如：做眼保健操、眺望远方10分钟', category: '运动健康', frequency: 'daily', stars: 2, icon: Eye },
-];
+const TEMPLATE_DATA: TaskTemplate[] = ALL_TASK_TEMPLATES.map(template => ({
+  ...template,
+  description: template.description || `${template.title}打卡任务`,
+  frequency: template.frequency || 'daily',
+}));
+
+function TemplateIcon({ template }: { template: TaskTemplate }) {
+  if (template.icon.startsWith('/')) {
+    return <img src={template.icon} alt="" className="w-8 h-8 object-contain" loading="lazy" />;
+  }
+  return <span className="text-xl leading-none">{template.icon}</span>;
+}
 
 export function TaskTemplates() {
   const navigate = useNavigate();
   const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>(t('task_templates.all', '全部'));
@@ -99,22 +53,26 @@ export function TaskTemplates() {
       description: template.description,
       category: template.category,
       frequency: template.frequency,
-      stars: template.stars
+      stars: template.stars,
+      icon: template.icon,
     };
     
     // Use sessionStorage as a temporary bridge for template data passing
     sessionStorage.setItem('pending_template_selection', JSON.stringify({
       template: serializableTemplate,
-      fromMode: location.state?.fromMode 
+      fromMode: searchParams.get('fromMode') || location.state?.fromMode,
     }));
     
     // Navigate back to publish task
-    navigate('/tasks/new');
+    navigate(getCustomCreationRoute('task', {
+      planId: searchParams.get('planId'),
+      planName: searchParams.get('planName'),
+    }));
   };
 
   return (
-    <div className="min-h-screen bg-surface pb-24">
-      <header className="sticky top-0 z-50 bg-surface/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
+    <div className="ui-template-page min-h-screen bg-surface pb-24">
+      <header className="ui-create-header sticky top-0 z-50 bg-surface/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
         <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container/50 text-on-surface-variant transition-colors">
           <ArrowLeft size={20} />
         </button>
@@ -136,8 +94,11 @@ export function TaskTemplates() {
             />
           </div>
           <button 
-            onClick={() => navigate('/tasks/new', { state: { fromMode: location.state?.fromMode || 'target' } })}
-            className="px-4 py-3.5 bg-white rounded-2xl shadow-sm border border-outline-variant/10 flex items-center gap-2 active:scale-95 transition-all shrink-0"
+            onClick={() => navigate(getCustomCreationRoute('task', {
+              planId: searchParams.get('planId'),
+              planName: searchParams.get('planName'),
+            }), { state: { fromMode: searchParams.get('fromMode') || location.state?.fromMode || 'target' } })}
+            className="ui-create-add-button px-4 py-3.5 bg-white rounded-2xl shadow-sm border border-outline-variant/10 flex items-center gap-2 active:scale-95 transition-all shrink-0"
           >
              <Plus size={18} className="text-primary" />
              <span className="text-sm font-black text-on-surface">{t('task_templates.add_custom', '添加自定义')}</span>
@@ -170,12 +131,12 @@ export function TaskTemplates() {
                 key={`${template.title}-${idx}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
+                transition={{ delay: Math.min(idx, 8) * 0.025 }}
                 onClick={() => handleSelect(template)}
-                className="bg-white rounded-[1.5rem] p-4 shadow-sm border border-outline-variant/10 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all group"
+                className="ui-template-card bg-white rounded-[1.5rem] p-4 shadow-sm border border-outline-variant/10 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all group"
               >
                 <div className="w-12 h-12 rounded-2xl bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-                  <template.icon size={24} />
+                  <TemplateIcon template={template} />
                 </div>
                 
                 <div className="flex-1 min-w-0">

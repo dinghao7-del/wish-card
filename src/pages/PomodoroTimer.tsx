@@ -7,6 +7,7 @@ import { cn } from '../lib/utils';
 import { useTranslation } from 'react-i18next';
 import { TopAppBar } from '../components/navigation/TopAppBar';
 import { BottomNav } from '../components/BottomNav';
+import { getCreationTemplateRoute } from '../lib/createFlowRoutes';
 
 // ===== 线上正确版本精确参数 =====
 const RING_RADIUS = 149;          // 圆环半径
@@ -406,7 +407,7 @@ export function PomodoroTimer() {
         onClose={() => setIsTaskSelectorOpen(false)}
         onSelect={(taskName: string) => setSelectedTask(taskName)}
         tasks={tasks}
-        onNewTask={() => { setIsTaskSelectorOpen(false); navigate('/tasks/new'); }}
+        onNewTask={() => { setIsTaskSelectorOpen(false); navigate(getCreationTemplateRoute('task')); }}
       />
 
       {/* ===== Bottom Navigation ===== */}

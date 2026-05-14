@@ -125,7 +125,7 @@ export const GUEST_TASKS: Task[] = [
     type: 'daily',
     frequency: 'daily',
     startTime: today + 'T17:00:00.000Z',
-    assigneeIds: ['guest-son'],
+    assigneeIds: ['guest-son', 'guest-daughter'],
     creatorId: 'guest-dad',
     rewardStars: 10,
     status: 'pending',

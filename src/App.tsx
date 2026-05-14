@@ -33,6 +33,7 @@ const SettingsSubPage = lazy(() => import('./pages/SettingsSubPage').then(module
 const ContactUs = lazy(() => import('./pages/ContactUs').then(module => ({ default: module.ContactUs })));
 const Feedback = lazy(() => import('./pages/Feedback').then(module => ({ default: module.Feedback })));
 const TaskTemplates = lazy(() => import('./pages/TaskTemplates').then(module => ({ default: module.TaskTemplates })));
+const RewardTemplates = lazy(() => import('./pages/RewardTemplates').then(module => ({ default: module.RewardTemplates })));
 const History = lazy(() => import('./pages/History').then(module => ({ default: module.History })));
 const Import = lazy(() => import('./pages/Import').then(module => ({ default: module.Import })));
 const ClerkSignIn = lazy(() => import('./components/auth/ClerkAuth').then(module => ({ default: module.ClerkSignIn })));
@@ -144,6 +145,7 @@ export default function App() {
                     <Route path="/history" element={<History />} />
                     <Route path="/reports" element={<FamilyReports />} />
                     <Route path="/rewards" element={<Rewards />} />
+                    <Route path="/rewards/templates" element={<RewardTemplates />} />
                     <Route path="/rewards/new" element={<EditReward />} />
                     <Route path="/rewards/edit/:id" element={<EditReward />} />
                     <Route path="/profile" element={<Profile />} />

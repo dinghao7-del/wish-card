@@ -4,12 +4,12 @@ import { useFamily } from '../context/FamilyContext';
 import { showToastGlobal } from '../components/Toast';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
-import { 
+import {
   ArrowLeft,
-  Star, 
-  Clock, 
-  Calendar, 
-  ChevronRight, 
+  Star,
+  Clock,
+  Calendar,
+  ChevronRight,
   HelpCircle,
   Check,
   Plus,
@@ -33,14 +33,15 @@ import { Task, TaskStatus } from '../types';
 import { cn } from '../lib/utils';
 import { TextAvatar } from '../components/TextAvatar';
 import { TaskTemplateSelector } from '../components/TaskTemplateSelector';
+import { AppModal } from '../components/AppModal';
 import { getRegisteredTaskIcon } from '../lib/lucideIconRegistry';
-import { 
-  format, 
-  addMonths, 
-  subMonths, 
-  startOfMonth, 
-  endOfMonth, 
-  eachDayOfInterval, 
+import {
+  format,
+  addMonths,
+  subMonths,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
   isSameDay,
   startOfWeek,
   endOfWeek,
@@ -82,7 +83,7 @@ export function PublishTask() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [showDescInput, setShowDescInput] = useState(false);
-  
+
   // Tag Management State
   const [pickerCategories, setPickerCategories] = useState(['劳动', '学习', '生活', '兴趣', '独立', '表扬', '批评']);
   const [tempCategory, setTempCategory] = useState('生活');
@@ -163,7 +164,7 @@ export function PublishTask() {
         setHabitType((taskToEdit.rewardStars || 0) < 0 ? 'penalty' : 'reward');
       }
       if (taskToEdit.description) setShowDescInput(true);
-      
+
       // Initialize toggles from existing task
       setIsRepeatEnabled(taskToEdit.frequency !== 'once');
       setIsTimeEnabled(!!taskToEdit.reminderTime);
@@ -205,13 +206,14 @@ export function PublishTask() {
       if (templateData && typeof templateData === 'object' && templateData.title) {
         // Mark as applied IMMEDIATELY
         hasAppliedStateRef.current = true;
-        
+
         const safeTemplate = {
           title: String(templateData.title || ''),
           description: String(templateData.description || ''),
           stars: Number(templateData.stars ?? 5),
           category: String(templateData.category || '生活'),
-          frequency: templateData.frequency || (mode === 'habit' ? 'daily' : 'once')
+          frequency: templateData.frequency || (mode === 'habit' ? 'daily' : 'once'),
+          icon: typeof templateData.icon === 'string' ? templateData.icon : 'ListTodo',
         };
 
         // Add category if missing from safe picker
@@ -226,7 +228,7 @@ export function PublishTask() {
           rewardStars: safeTemplate.stars,
           frequency: safeTemplate.frequency,
           type: safeTemplate.category as any,
-          icon: 'ListTodo'
+          icon: safeTemplate.icon,
         }));
 
         if (safeTemplate.description) setShowDescInput(true);
@@ -422,15 +424,15 @@ export function PublishTask() {
   };
 
   return (
-    <div className="min-h-screen bg-surface pb-32">
-      <header className="flex justify-between items-center px-4 sm:px-6 py-4 bg-surface/80 backdrop-blur-xl sticky top-[var(--app-sticky-top,0px)] z-50">
+    <div className="ui-create-page min-h-screen bg-surface pb-32">
+      <header className="ui-create-header flex justify-between items-center px-4 sm:px-6 py-4 bg-surface/80 backdrop-blur-xl sticky top-[var(--app-sticky-top,0px)] z-50">
         <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container/50 text-on-surface-variant transition-colors hover:bg-surface-container active:scale-95">
           <ArrowLeft size={20} />
         </button>
-        
+
         {!isEdit && !isModeLocked ? (
           <div className="flex items-center bg-surface-container-low p-1 rounded-full border border-outline-variant/10">
-            <button 
+            <button
               type="button"
               onClick={() => setViewMode('target')}
               className={cn(
@@ -441,7 +443,7 @@ export function PublishTask() {
               {t('publish_task.create_target', '创建目标')}
             </button>
             <div className="w-[1px] h-3 bg-outline-variant/20 mx-0.5" />
-            <button 
+            <button
               type="button"
               onClick={() => setViewMode('habit')}
               className={cn(
@@ -454,8 +456,8 @@ export function PublishTask() {
           </div>
         ) : (
           <h1 className="text-lg font-black text-on-surface">
-            {isEdit 
-              ? (viewMode === 'target' ? t('publish_task.edit_target', '编辑目标') : t('publish_task.edit_habit', '编辑好习惯')) 
+            {isEdit
+              ? (viewMode === 'target' ? t('publish_task.edit_target', '编辑目标') : t('publish_task.edit_habit', '编辑好习惯'))
               : (viewMode === 'target' ? t('publish_task.create_target', '创建目标') : t('publish_task.create_habit', '好习惯'))
             }
           </h1>
@@ -463,8 +465,8 @@ export function PublishTask() {
 
         <div className="flex items-center gap-2">
           {!isEdit && viewMode === 'target' && (
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => navigate('/tasks/templates', { state: { fromMode: viewMode } })}
               className="flex items-center gap-1 px-3 sm:px-4 py-2 bg-primary-surface/20 rounded-full text-primary-text text-xs sm:text-sm font-black transition-all active:scale-95 shrink-0"
             >
@@ -475,11 +477,11 @@ export function PublishTask() {
         </div>
       </header>
 
-      <form onSubmit={handleSave} className="px-4 sm:px-6 space-y-3 mt-2 pb-safe">
+      <form onSubmit={handleSave} className="ui-create-form px-4 sm:px-6 space-y-3 mt-2 pb-safe">
         {viewMode === 'target' ? (
           <>
             {/* Title and Category Card */}
-            <div className="bg-white rounded-[2rem] p-4 sm:p-5 shadow-sm border border-outline-variant/5">
+            <div className="ui-create-card bg-white rounded-[2rem] p-4 sm:p-5 shadow-sm border border-outline-variant/5">
               <div className="flex flex-col gap-0.5 mb-2">
                 <label className="text-[10px] font-black text-on-surface-variant/30 pl-1 uppercase tracking-widest">
                   {t('publish_task.title_label', '请输入 {{mode}} 名称', { mode: viewMode === 'target' ? '目标' : '习惯' })}
@@ -495,13 +497,13 @@ export function PublishTask() {
                   />
                 </div>
               </div>
-              
+
               <div className="h-[1px] bg-outline-variant/5 -mx-4 sm:-mx-5 mb-2" />
-              
+
               <div className="flex items-center justify-between">
                 {!showDescInput ? (
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => setShowDescInput(true)}
                     className="text-sm font-black text-primary/60 flex items-center gap-1.5 py-1 px-2 hover:bg-primary/5 rounded-full transition-all"
                   >
@@ -512,7 +514,7 @@ export function PublishTask() {
                   <span className="text-xs font-black text-on-surface-variant/20 pl-2">{t('publish_task.description_hint', '描述内容')}</span>
                 )}
 
-                <button 
+                <button
                   type="button"
                   onClick={() => {
                     setTempCategory(formData.type || '生活');
@@ -526,7 +528,7 @@ export function PublishTask() {
               </div>
 
               {showDescInput && (
-                <textarea 
+                <textarea
                   rows={2}
                   value={formData.description}
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -537,7 +539,7 @@ export function PublishTask() {
             </div>
 
             {/* Combined Settings Group Card */}
-            <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm border border-outline-variant/5">
+            <div className="ui-create-card bg-white rounded-[2rem] overflow-hidden shadow-sm border border-outline-variant/5">
               {/* Repeat Row */}
               <div className="flex items-center justify-between p-3.5 px-4 sm:p-4 sm:px-5 border-b border-outline-variant/5 active:bg-surface-container/30 transition-all">
                 <div className="flex items-center gap-3">
@@ -552,8 +554,8 @@ export function PublishTask() {
                       {renderSwitch(isRepeatEnabled, () => setIsRepeatEnabled(!isRepeatEnabled), t('publish_task.repeat', '重复'))}
                     </div>
                 </div>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => isRepeatEnabled && setShowRepeatModal(true)}
                   disabled={!isRepeatEnabled}
                   className={cn("flex items-center gap-1 transition-all max-w-[50%]", !isRepeatEnabled && "opacity-20")}
@@ -579,8 +581,8 @@ export function PublishTask() {
                     {renderSwitch(isTimeEnabled, () => setIsTimeEnabled(!isTimeEnabled), t('publish_task.time_slot', '时段'))}
                   </div>
                 </div>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => isTimeEnabled && setShowTimeModal(true)}
                   disabled={!isTimeEnabled}
                   className={cn("flex items-center gap-1 transition-all max-w-[50%]", !isTimeEnabled && "opacity-20")}
@@ -593,7 +595,7 @@ export function PublishTask() {
               </div>
 
               {/* Plan Row */}
-              <div 
+              <div
                 onClick={() => setShowPlanModal(true)}
                 className="flex items-center justify-between p-3.5 px-4 sm:p-4 sm:px-5 active:bg-surface-container/30 transition-all cursor-pointer"
               >
@@ -627,14 +629,14 @@ export function PublishTask() {
           /* Habit Mode Layout (Screenshot Inspired) */
           <div className="space-y-3">
             {/* Title Card */}
-             <div className="bg-white rounded-2xl p-4 shadow-sm border border-outline-variant/5">
+             <div className="ui-create-card bg-white rounded-2xl p-4 shadow-sm border border-outline-variant/5">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1">
                    <span className="text-sm font-black text-on-surface-variant/40">{t('publish_task.habit_title', '标题')}</span>
                 </div>
                 {!isEdit && (
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => navigate('/tasks/templates', { state: { fromMode: viewMode } })}
                     className="flex items-center gap-1 px-3 py-1 bg-primary-surface/10 rounded-full text-primary-text text-xs font-black transition-all active:scale-95"
                   >
@@ -653,9 +655,9 @@ export function PublishTask() {
             </div>
 
             {/* Image Selection Card (Local File Picker) */}
-            <div 
+            <div
               onClick={() => fileInputRef.current?.click()}
-              className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-outline-variant/5 cursor-pointer active:bg-surface-container transition-colors ring-offset-2 focus:ring-2 focus:ring-primary/20"
+              className="ui-create-card bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-outline-variant/5 cursor-pointer active:bg-surface-container transition-colors ring-offset-2 focus:ring-2 focus:ring-primary/20"
             >
               <input
                 ref={fileInputRef}
@@ -688,7 +690,7 @@ export function PublishTask() {
             </div>
 
             {/* Reset Toggle Card */}
-            <div className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-outline-variant/5">
+            <div className="ui-create-card bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-outline-variant/5">
               <div className="flex items-center gap-3">
                 <RefreshCw size={20} className="text-on-surface-variant/30" />
                 <span className="text-sm font-bold text-on-surface">{t('publish_task.multi_checkin', '日内可以多次打卡')}</span>
@@ -697,16 +699,16 @@ export function PublishTask() {
             </div>
 
             {/* Stars Card */}
-            <div className="bg-white rounded-2xl p-4 flex items-center gap-3 shadow-sm border border-outline-variant/5">
+            <div className="ui-create-card bg-white rounded-2xl p-4 flex items-center gap-3 shadow-sm border border-outline-variant/5">
               <Star size={20} className="text-on-surface-variant/30" />
               <div className="flex-1">
                 <div className="flex items-center gap-1">
                    <span className="text-red-500 text-sm">*</span>
                    <span className="text-sm font-bold text-on-surface-variant/40">{t('publish_task.stars', '星星')}</span>
                 </div>
-                <input 
+                <input
                   required
-                  type="number" 
+                  type="number"
                   value={formData.rewardStars}
                   onChange={e => setFormData({ ...formData, rewardStars: parseInt(e.target.value) || 0 })}
                   placeholder="0"
@@ -716,16 +718,16 @@ export function PublishTask() {
             </div>
 
             {/* Target Count Card (Screenshot Inspired) */}
-            <div className="bg-white rounded-2xl p-4 flex items-center gap-3 shadow-sm border border-outline-variant/5">
+            <div className="ui-create-card bg-white rounded-2xl p-4 flex items-center gap-3 shadow-sm border border-outline-variant/5">
               <RefreshCw size={20} className="text-on-surface-variant/30" />
               <div className="flex-1">
                 <div className="flex items-center gap-1">
                    <span className="text-red-500 text-sm">*</span>
                    <span className="text-sm font-bold text-on-surface-variant/40">{t('publish_task.count_limit', '次数限制')}</span>
                 </div>
-                <input 
+                <input
                   required
-                  type="number" 
+                  type="number"
                   value={formData.targetCount}
                   onChange={e => setFormData({ ...formData, targetCount: parseInt(e.target.value) || 1 })}
                   placeholder="10"
@@ -735,7 +737,7 @@ export function PublishTask() {
             </div>
 
             {/* Select Members Card */}
-            <div className="bg-white rounded-2xl p-4 space-y-4 shadow-sm border border-outline-variant/5">
+            <div className="ui-create-card bg-white rounded-2xl p-4 space-y-4 shadow-sm border border-outline-variant/5">
               <div className="flex items-center gap-3">
                 <UserIcon size={20} className="text-on-surface-variant/30" />
                 <div className="flex items-center gap-1">
@@ -746,7 +748,7 @@ export function PublishTask() {
               <div className="flex flex-wrap gap-4 px-1">
                 {children.map(kid => (
                   <div key={kid.id} className="flex flex-col items-center gap-1">
-                    <button 
+                    <button
                       type="button"
                       onClick={() => {
                         const current = formData.assigneeIds || [];
@@ -792,8 +794,8 @@ export function PublishTask() {
                 <HelpCircle size={18} className="text-on-surface-variant/20" />
               </div>
               <div className="flex p-1 bg-surface-container-low rounded-xl">
-                 <button 
-                  type="button" 
+                 <button
+                  type="button"
                   onClick={() => setHabitType('reward')}
                   className={cn(
                     "flex-1 py-2.5 rounded-lg text-sm font-black transition-all",
@@ -820,7 +822,7 @@ export function PublishTask() {
               <TextIcon size={20} className="text-on-surface-variant/30 mt-1" />
               <div className="flex-1">
                 <span className="text-sm font-bold text-on-surface-variant/40">{t('publish_task.description', '描述')}</span>
-                <textarea 
+                <textarea
                   value={formData.description}
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
                   placeholder={t('publish_task.description_placeholder', '请输入描述内容')}
@@ -837,20 +839,20 @@ export function PublishTask() {
              <div className="flex items-center justify-between">
                 <label className="text-sm sm:text-base font-black text-on-surface">{t('publish_task.star_reward', '星星积分奖励')}</label>
                 <div className="flex items-center bg-surface-container-low/50 p-1 px-3 rounded-full border border-outline-variant/5">
-                   <button 
+                   <button
                      type="button"
                      onClick={() => setFormData(prev => ({ ...prev, rewardStars: Math.max(0, (prev.rewardStars || 0) - 1) }))}
                      className="w-8 h-8 flex items-center justify-center text-on-surface-variant/40 hover:text-primary transition-colors text-xl font-bold"
                    >
                      -
                    </button>
-                   <input 
+                   <input
                      type="number"
                      value={formData.rewardStars}
                      onChange={e => setFormData({ ...formData, rewardStars: parseInt(e.target.value) || 0 })}
                      className="h-11 min-h-11 w-11 min-w-11 bg-transparent border-none text-center font-black text-base sm:text-lg text-on-surface focus:ring-0 p-0"
                    />
-                   <button 
+                   <button
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, rewardStars: (prev.rewardStars || 0) + 1 }))}
                       className="w-8 h-8 flex items-center justify-center text-on-surface-variant/40 hover:text-primary transition-colors text-xl font-bold"
@@ -862,14 +864,14 @@ export function PublishTask() {
                    </div>
                 </div>
              </div>
-             
+
              <div className="h-[1px] bg-outline-variant/5 -mx-4 sm:-mx-5" />
 
              <div className="min-w-0 overflow-hidden">
                 <label className="text-safe text-[10px] font-black text-on-surface-variant/30 pl-1 uppercase tracking-normal sm:tracking-widest block mb-3">{t('publish_task.parent_publisher', '发布家长 (家长选项)')}</label>
                 <div className="flex flex-wrap gap-4 mb-5">
                   {safeMembers.filter(m => m.role === 'parent').map(parent => (
-                    <button 
+                    <button
                       key={parent.id}
                       type="button"
                       onClick={() => setFormData({ ...formData, creatorId: parent.id })}
@@ -892,19 +894,19 @@ export function PublishTask() {
                     </button>
                   ))}
                 </div>
-                
+
                 <div className="h-[1px] bg-outline-variant/5 mb-4" />
 
                 <label className="text-safe text-[10px] font-black text-on-surface-variant/30 pl-1 uppercase tracking-normal sm:tracking-widest block mb-3">{t('publish_task.child_executor', '执行的小朋友')}</label>
                 <div className="flex flex-wrap gap-4">
                   {children.map(kid => (
-                    <button 
+                    <button
                       key={kid.id}
                       type="button"
                       onClick={() => {
                         const current = formData.assigneeIds || [];
-                        const updated = current.includes(kid.id) 
-                          ? current.filter(id => id !== kid.id) 
+                        const updated = current.includes(kid.id)
+                          ? current.filter(id => id !== kid.id)
                           : [...current, kid.id];
                         setFormData({
                           ...formData,
@@ -939,9 +941,10 @@ export function PublishTask() {
           <button
             type="submit"
             disabled={isSaving}
-            className="w-full min-h-14 bg-primary text-white font-black text-base sm:text-lg rounded-2xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-all relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+            className="ui-create-submit w-full min-h-14 bg-primary text-white font-black text-base sm:text-lg rounded-2xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-all relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-40 pointer-events-none" />
+            {!isSaving && !isEdit && <Plus size={20} strokeWidth={3} className="inline-block mr-2 align-[-3px]" />}
             {isSaving
               ? t('publish_task.saving', '保存中...')
               : isEdit
@@ -956,22 +959,14 @@ export function PublishTask() {
 
       {/* Category Modal */}
       {showCategoryModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowCategoryModal(false)}
-          />
-          <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 shadow-2xl w-full max-w-sm max-h-[calc(100svh-2rem)] overflow-hidden relative z-10 animate-in fade-in zoom-in duration-300">
-            <header className="flex justify-between items-center mb-8">
-              <button 
-                type="button"
-                onClick={() => setShowCategoryModal(false)}
-                className="w-10 h-10 flex items-center justify-center text-on-surface-variant/40"
-              >
-                <Plus size={28} className="rotate-45" />
-              </button>
-              <h3 className="text-xl font-black">{t('publish_task.select_category', '请选择')}</h3>
-              <button 
+        <AppModal
+          open={showCategoryModal}
+          onClose={() => setShowCategoryModal(false)}
+          title={t('publish_task.select_category', '请选择')}
+          surface="sheet"
+          zIndexClass="z-[100]"
+          headerAction={
+            <button
                 type="button"
                 onClick={() => {
                   setFormData({ ...formData, type: tempCategory as any });
@@ -981,11 +976,11 @@ export function PublishTask() {
               >
                 <Check size={28} strokeWidth={3} />
               </button>
-            </header>
-
+          }
+        >
             <div className="space-y-1 mb-8 max-h-[40vh] overflow-y-auto no-scrollbar py-2">
               {pickerCategories.map((cat) => (
-                <button 
+                <button
                   key={cat}
                   type="button"
                   onClick={() => setTempCategory(cat)}
@@ -1000,7 +995,7 @@ export function PublishTask() {
             </div>
 
             <div className="pt-6 border-t border-dashed border-outline-variant/10 text-center">
-              <button 
+              <button
                 type="button"
                 onClick={() => {
                   setShowCategoryModal(false);
@@ -1011,54 +1006,38 @@ export function PublishTask() {
                 {t('publish_task.tag_management', '标签管理')}
               </button>
             </div>
-          </div>
-        </div>
+        </AppModal>
       )}
 
       {/* Time Selector Modal */}
       <AnimatePresence>
         {showTimeModal && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => setShowTimeModal(false)}
-            />
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-[2.5rem] p-6 sm:p-8 shadow-2xl w-full max-w-sm max-h-[calc(100svh-2rem)] overflow-hidden relative z-10"
-            >
-              <header className="flex justify-between items-center mb-10">
-                <button 
-                  type="button"
-                  onClick={() => setShowTimeModal(false)}
-                  className="w-10 h-10 flex items-center justify-center text-on-surface-variant/40"
-                >
-                  <Plus size={28} className="rotate-45" />
-                </button>
-                <h3 className="text-xl font-black">{t('publish_task.time_period', '时段')}</h3>
-                <button 
+          <AppModal
+          open={showTimeModal}
+          onClose={() => setShowTimeModal(false)}
+          title={t('publish_task.time_period', '时段')}
+            surface="sheet"
+            zIndexClass="z-[120]"
+            bodyClassName="px-6 py-6"
+            headerAction={
+              <button
                   type="button"
                   onClick={() => setShowTimeModal(false)}
                   className="w-10 h-10 flex items-center justify-center text-primary-surface"
                 >
                   <Check size={28} strokeWidth={3} />
                 </button>
-              </header>
-
+            }
+          >
               <div className="relative flex justify-between h-48 mb-6">
                 {/* Column Selection Highlights */}
                 <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 h-12 bg-surface-container-low rounded-2xl z-0 pointer-events-none" />
-                
+
                 {/* Hours */}
                 <div className="flex-1 overflow-y-auto no-scrollbar snap-y snap-mandatory z-10 py-16">
                   {[...Array(24)].map((_, i) => (
-                    <button 
-                      key={i} 
+                    <button
+                      key={i}
                       onClick={() => setSelectedHour(i)}
                       className={cn(
                         "w-full h-12 flex items-center justify-center snap-center text-lg font-bold transition-all",
@@ -1073,8 +1052,8 @@ export function PublishTask() {
                 {/* Minutes */}
                 <div className="flex-1 overflow-y-auto no-scrollbar snap-y snap-mandatory z-10 py-16">
                   {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m) => (
-                    <button 
-                      key={m} 
+                    <button
+                      key={m}
                       onClick={() => setSelectedMinute(m)}
                       className={cn(
                         "w-full h-12 flex items-center justify-center snap-center text-lg font-bold transition-all",
@@ -1089,8 +1068,8 @@ export function PublishTask() {
                 {/* Durations */}
                 <div className="flex-1 overflow-y-auto no-scrollbar snap-y snap-mandatory z-10 py-16">
                   {durations.map((d, i) => (
-                    <button 
-                      key={d} 
+                    <button
+                      key={d}
                       onClick={() => setDurationIdx(i)}
                       className={cn(
                         "w-full h-12 flex items-center justify-center snap-center text-sm font-bold transition-all",
@@ -1117,7 +1096,7 @@ export function PublishTask() {
                     </div>
                     <span className="text-lg font-bold">{t('publish_task.reminder', '提醒')}</span>
                   </div>
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setIsReminderOn(!isReminderOn)}
                     className={cn(
@@ -1125,7 +1104,7 @@ export function PublishTask() {
                       isReminderOn ? "bg-primary-surface" : "bg-outline-variant/30"
                     )}
                   >
-                    <motion.div 
+                    <motion.div
                       layout
                       className="w-4 h-4 bg-white rounded-full shadow-sm"
                       style={{ marginLeft: isReminderOn ? 'auto' : '0' }}
@@ -1136,57 +1115,55 @@ export function PublishTask() {
                   {t('publish_task.reminder_hint', '开启后在任务开始前5分钟响铃（App需后台运行）')}
                 </p>
               </div>
-            </motion.div>
-          </div>
+          </AppModal>
         )}
       </AnimatePresence>
 
       {/* Tag Management Modal */}
       <AnimatePresence>
         {showTagManagementModal && (
-          <motion.div 
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed inset-0 z-[120] bg-white flex flex-col"
-          >
-            <header className="flex justify-between items-center px-6 py-4 border-b border-outline-variant/5">
-              <button 
-                onClick={() => setShowTagManagementModal(false)} 
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container/50 text-on-surface-variant"
-              >
-                <ArrowLeft size={20} />
-              </button>
-              <h2 className="text-xl font-black text-on-surface">{t('publish_task.tag_management', '标签管理')}</h2>
-              <button 
+          <AppModal
+            open={showTagManagementModal}
+            onClose={() => setShowTagManagementModal(false)}
+            title={t('publish_task.tag_management', '标签管理')}
+            surface="fullscreen"
+            zIndexClass="z-[140]"
+            bodyClassName="px-0 py-0"
+            headerAction={
+              <button
                 onClick={() => setIsAddingTag(true)}
-                className="w-10 h-10 flex items-center justify-center text-on-surface"
+                className="ui-task-add-button w-10 h-10 flex items-center justify-center rounded-xl text-on-surface"
+                aria-label={t('publish_task.add_tag', '添加')}
               >
                 <Plus size={24} />
               </button>
-            </header>
-
-            <div className="flex-1 overflow-y-auto">
+            }
+            footer={
+              <p className="text-center text-xs font-bold text-on-surface-variant/60 leading-relaxed italic">
+                {t('publish_task.tag_hint', '提示：你可以随心所欲增删属于你的探险标签 🍃')}
+              </p>
+            }
+          >
+            <div className="min-h-full bg-background">
               {isAddingTag && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="px-6 py-6 bg-surface-container/30 border-b border-outline-variant/5"
+                  className="px-6 py-6 bg-surface-container/30 border-b border-outline-variant/10"
                 >
                   <div className="flex gap-4">
-                    <input 
+                    <input
                       autoFocus
                       type="text"
                       value={newTagName}
                       onChange={e => setNewTagName(e.target.value)}
                       placeholder={t('publish_task.tag_name_placeholder', '输入标签名称')}
-                      className="flex-1 bg-white border-none rounded-xl px-4 py-3 font-bold focus:ring-2 focus:ring-primary/20 shadow-sm"
+                      className="flex-1 bg-surface border border-outline-variant/10 rounded-xl px-4 py-3 font-bold text-on-surface focus:ring-2 focus:ring-primary/20 shadow-sm"
                       onKeyDown={e => e.key === 'Enter' && handleAddTag()}
                     />
-                    <button 
+                    <button
                       onClick={handleAddTag}
-                      className="px-6 py-3 bg-primary-surface text-primary-text rounded-xl font-black text-sm shadow-sm"
+                      className="px-6 py-3 bg-primary text-on-primary rounded-xl font-black text-sm shadow-sm"
                     >
                       {t('publish_task.add_tag', '添加')}
                     </button>
@@ -1199,17 +1176,17 @@ export function PublishTask() {
                   </div>
                 </motion.div>
               )}
-              
-              <div className="divide-y divide-outline-variant/5">
+
+              <div className="divide-y divide-outline-variant/10">
                 {pickerCategories.map((cat) => (
-                  <div key={cat} className="flex items-center px-6 py-6 group bg-white active:bg-surface-container/50 transition-colors">
+                  <div key={cat} className="flex items-center px-6 py-6 group bg-surface active:bg-surface-container/50 transition-colors">
                     <div className="w-8 flex items-center justify-center text-on-surface-variant/10 mr-4">
                        <div className="grid grid-cols-2 gap-1 px-1">
                           {[...Array(6)].map((_, i) => <div key={i} className="w-1 h-1 rounded-full bg-current" />)}
                        </div>
                     </div>
                     <span className="flex-1 font-bold text-lg">{cat}</span>
-                    <button 
+                    <button
                        onClick={() => handleDeleteTag(cat)}
                        className="w-10 h-10 flex items-center justify-center text-red-500 opacity-20 hover:opacity-100 transition-opacity"
                     >
@@ -1219,38 +1196,34 @@ export function PublishTask() {
                 ))}
               </div>
             </div>
-            
-            <div className="p-8 pb-12 bg-surface-container-lowest border-t border-outline-variant/5 text-center">
-               <p className="text-xs font-bold text-on-surface-variant/40 leading-relaxed italic">
-                 {t('publish_task.tag_hint', '提示：你可以随心所欲增删属于你的探险标签 🍃')}
-               </p>
-            </div>
-          </motion.div>
+          </AppModal>
         )}
       </AnimatePresence>
 
       {/* Repeat Selector Modal */}
       <AnimatePresence>
         {showRepeatModal && (
-          <div className="fixed inset-0 z-[120] flex items-end justify-center">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => setShowRepeatModal(false)}
-            />
-            <motion.div 
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="bg-white rounded-t-[2.5rem] sm:rounded-t-[3.5rem] p-6 sm:p-8 pb-[max(4rem,env(safe-area-inset-bottom,0px))] shadow-2xl w-full max-w-lg max-h-[90svh] overflow-y-auto no-scrollbar relative z-10"
-            >
-              <div className="flex justify-between items-center mb-8">
-                 <div className="flex gap-8">
+          <AppModal
+            open={showRepeatModal}
+            onClose={() => setShowRepeatModal(false)}
+            title={t('publish_task.repeat_rule', '重复规则')}
+            surface="sheet"
+            zIndexClass="z-[120]"
+            className="max-h-[90svh]"
+            bodyClassName="px-6 py-5"
+            headerAction={
+              <button
+                onClick={() => setShowRepeatModal(false)}
+                className="w-10 h-10 flex items-center justify-center rounded-full text-primary-surface"
+              >
+                <Check size={30} strokeWidth={3} />
+              </button>
+            }
+          >
+              <div className="mb-8 flex justify-center">
+                 <div className="flex gap-8 overflow-x-auto no-scrollbar">
                     {['weekly', 'monthly', 'calendar'].map((tab) => (
-                      <button 
+                      <button
                          key={tab}
                          onClick={() => setRepeatTab(tab as any)}
                          className="relative py-2"
@@ -1262,7 +1235,7 @@ export function PublishTask() {
                             {tab === 'weekly' ? t('publish_task.weekly', '每周') : tab === 'monthly' ? t('publish_task.monthly', '每月') : t('publish_task.calendar', '日历')}
                          </span>
                          {repeatTab === tab && (
-                           <motion.div 
+                           <motion.div
                               layoutId="tab-underline"
                               className="absolute bottom-0 left-0 right-0 h-1 bg-primary-surface rounded-full"
                            />
@@ -1270,30 +1243,24 @@ export function PublishTask() {
                       </button>
                     ))}
                  </div>
-                 <button 
-                    onClick={() => setShowRepeatModal(false)}
-                    className="w-12 h-12 flex items-center justify-center rounded-full text-primary-surface"
-                 >
-                    <Check size={32} strokeWidth={3} />
-                 </button>
               </div>
 
               {repeatTab === 'weekly' && (
                 <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-300">
                    <div className="grid grid-cols-5 gap-3">
                       {dayNames.map((name, i) => (
-                        <button 
+                        <button
                           key={name}
                           onClick={() => {
                              const val = dayValues[i];
-                             setSelectedDays(prev => 
+                             setSelectedDays(prev =>
                                prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]
                              );
                           }}
                           className={cn(
                             "aspect-square rounded-full flex items-center justify-center text-sm font-black transition-all border-2",
-                            selectedDays.includes(dayValues[i]) 
-                              ? "bg-primary-surface/10 border-primary-surface text-primary-text" 
+                            selectedDays.includes(dayValues[i])
+                              ? "bg-primary-surface/10 border-primary-surface text-primary-text"
                               : "bg-surface-container-low border-transparent text-on-surface-variant/40"
                           )}
                         >
@@ -1308,11 +1275,11 @@ export function PublishTask() {
                 <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-300">
                    <div className="grid grid-cols-7 gap-y-4 gap-x-2">
                       {[...Array(31)].map((_, i) => (
-                        <button 
+                        <button
                           key={i+1}
                           onClick={() => {
                             const day = i + 1;
-                            setSelectedMonthDays(prev => 
+                            setSelectedMonthDays(prev =>
                               prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
                             );
                           }}
@@ -1354,14 +1321,14 @@ export function PublishTask() {
                       {getCalendarDays().map((day, i) => {
                         const isSelected = selectedCalendarDates.some(d => isSameDay(d, day));
                         const isCurrentMonth = format(day, 'MM') === format(calendarViewDate, 'MM');
-                        
+
                         return (
-                          <button 
+                          <button
                             key={i}
                             onClick={() => {
-                              setSelectedCalendarDates(prev => 
-                                prev.some(d => isSameDay(d, day)) 
-                                  ? prev.filter(d => !isSameDay(d, day)) 
+                              setSelectedCalendarDates(prev =>
+                                prev.some(d => isSameDay(d, day))
+                                  ? prev.filter(d => !isSameDay(d, day))
                                   : [...prev, day]
                               );
                             }}
@@ -1391,7 +1358,7 @@ export function PublishTask() {
                   { label: t('publish_task.quick_weekend', '周末'), action: () => { setRepeatTab('weekly'); setSelectedDays([6, 0]); } },
                   { label: t('publish_task.quick_odd_days', '每月单日'), action: () => { setRepeatTab('monthly'); setSelectedMonthDays([...Array(31)].map((_,i)=>i+1).filter(d => d % 2 !== 0)); } },
                   { label: t('publish_task.quick_even_days', '每月双日'), action: () => { setRepeatTab('monthly'); setSelectedMonthDays([...Array(31)].map((_,i)=>i+1).filter(d => d % 2 === 0)); } },
-                  { label: t('publish_task.quick_ebbinghaus', '艾宾浩斯'), action: () => { 
+                  { label: t('publish_task.quick_ebbinghaus', '艾宾浩斯'), action: () => {
                     // Ebbinghaus pattern: Day 1, 2, 4, 7, 15, 30 from today
                     const today = new Date();
                     const dates = [1, 2, 4, 7, 15, 30].map(offset => {
@@ -1413,7 +1380,7 @@ export function PublishTask() {
                     setSelectedCalendarDates(dates);
                   }},
                 ].map(btn => (
-                  <button 
+                  <button
                     key={btn.label}
                     onClick={btn.action}
                     className="py-3 px-2 bg-surface-container-low/60 rounded-full text-[10px] font-black text-on-surface-variant transition-all hover:bg-surface-container active:scale-95"
@@ -1428,8 +1395,7 @@ export function PublishTask() {
                    {repeatTab === 'weekly' ? t('publish_task.weekly_score', '每周可评分') : repeatTab === 'monthly' ? t('publish_task.monthly_score', '每月固定日期可评分') : t('publish_task.calendar_score', '指定日期可评分')}
                 </p>
               </div>
-            </motion.div>
-          </div>
+          </AppModal>
         )}
       </AnimatePresence>
 
@@ -1437,7 +1403,7 @@ export function PublishTask() {
       <AnimatePresence>
         {(showTemplateSelector || showIconPicker) && (
           <div className="fixed inset-0 z-[200]">
-            <TaskTemplateSelector 
+            <TaskTemplateSelector
               onSelect={handleSelectTemplate}
               onClose={() => {
                 setShowTemplateSelector(false);
@@ -1451,23 +1417,13 @@ export function PublishTask() {
       {/* Plan Selection Modal */}
       <AnimatePresence>
         {showPlanModal && (
-          <div className="fixed inset-0 z-[120] flex items-end justify-center">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-              onClick={() => setShowPlanModal(false)}
-            />
-            <motion.div 
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="relative z-10 w-full max-w-lg bg-white rounded-t-[2.5rem] p-6 pb-[max(4rem,env(safe-area-inset-bottom,0px))] shadow-2xl max-h-[85svh] overflow-y-auto"
-            >
-              <h3 className="text-xl font-black mb-5">{t('publish_task.plan_selector_title', '选择计划')}</h3>
-
+          <AppModal
+            open={showPlanModal}
+            onClose={() => setShowPlanModal(false)}
+            title={t('publish_task.plan_selector_title', '选择计划')}
+            surface="sheet"
+            zIndexClass="z-[120]"
+          >
               <div className="space-y-2.5 mb-8">
                 {/* 不选择计划 option */}
                 <button
@@ -1512,18 +1468,17 @@ export function PublishTask() {
                   ))
                 )}
               </div>
-            </motion.div>
-          </div>
+          </AppModal>
         )}
       </AnimatePresence>
     </div>
   );
 }
 
-function SettingItem({ icon, label, value, onClick }: { 
-  icon?: React.ReactNode, 
-  label: string, 
-  value: string, 
+function SettingItem({ icon, label, value, onClick }: {
+  icon?: React.ReactNode,
+  label: string,
+  value: string,
   onClick?: () => void
 }) {
   return (

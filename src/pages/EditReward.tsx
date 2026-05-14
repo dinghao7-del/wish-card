@@ -9,6 +9,7 @@ import { Reward } from '../types';
 import { REWARD_CATEGORIES, type RewardTemplate } from '../lib/templates';
 import { useTranslation } from 'react-i18next';
 import { TopAppBar } from '../components/navigation/TopAppBar';
+import { AppModal, TemplatePickerShell } from '../components/AppModal';
 
 export function EditReward() {
   const navigate = useNavigate();
@@ -57,6 +58,31 @@ export function EditReward() {
       });
     }
   }, [isEdit, rewardToEdit]);
+
+  useEffect(() => {
+    if (isEdit) return;
+    const saved = sessionStorage.getItem('pending_reward_template_selection');
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved);
+      const template = parsed?.template;
+      if (template?.name) {
+        setFormData(prev => ({
+          ...prev,
+          name: String(template.name || ''),
+          description: String(template.description || ''),
+          cost: Number(template.cost || 300),
+          category: String(template.category || '常用'),
+          image: String(template.image || prev.image),
+          icon: String(template.icon || prev.icon),
+        }));
+      }
+    } catch (error) {
+      console.error('Reward template parse error:', error);
+    } finally {
+      sessionStorage.removeItem('pending_reward_template_selection');
+    }
+  }, [isEdit]);
 
   const selectTemplate = (template: RewardTemplate) => {
     setFormData({
@@ -120,15 +146,15 @@ export function EditReward() {
   };
 
   return (
-    <div className="min-h-screen bg-surface pb-40 animate-in fade-in duration-500">
+    <div className="ui-create-page min-h-screen bg-surface pb-40 animate-in fade-in duration-500">
       <TopAppBar
         title={isEdit ? t('edit_reward.edit_title', '编辑心愿') : t('edit_reward.add_title', '添加心愿')}
         backTo="/rewards"
       />
 
-      <form onSubmit={handleSubmit} className="px-4 mt-3 space-y-3">
+      <form onSubmit={handleSubmit} className="ui-create-form px-4 mt-3 space-y-3">
         {/* Top Section: Image Selector & Library Button */}
-        <div className="flex items-center justify-between bg-white p-3 rounded-[1.5rem] shadow-sm border border-outline-variant/5">
+        <div className="ui-create-card flex items-center justify-between bg-white p-3 rounded-[1.5rem] shadow-sm border border-outline-variant/5">
           <div className="relative group">
             {/* 隐藏的文件输入框 */}
             <input
@@ -167,7 +193,7 @@ export function EditReward() {
         </div>
 
 {/* Section 1: Basic Info */}
-<div className="bg-surface-container rounded-[1.5rem] p-3 space-y-3 border border-white/50">
+<div className="ui-create-card bg-surface-container rounded-[1.5rem] p-3 space-y-3 border border-white/50">
           <div className="flex gap-2">
             <div className="flex-[3] bg-white rounded-2xl p-3 flex items-center shadow-sm">
               <input 
@@ -204,7 +230,7 @@ export function EditReward() {
         </div>
 
         {/* Section 2: Pricing & Stock */}
-        <div className="bg-surface-container rounded-[1.5rem] p-3 space-y-3 border border-white/50">
+        <div className="ui-create-card bg-surface-container rounded-[1.5rem] p-3 space-y-3 border border-white/50">
           {/* Unit Price */}
           <div className="bg-white rounded-2xl p-3 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3 font-black text-on-surface">
@@ -261,7 +287,7 @@ export function EditReward() {
         </div>
 
         {/* Section 3: Limits */}
-        <div className="bg-surface-container rounded-[2rem] p-4 pb-6 border border-white/50">
+        <div className="ui-create-card bg-surface-container rounded-[2rem] p-4 pb-6 border border-white/50">
           <div className="bg-white rounded-2xl p-4 mb-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3 font-black text-on-surface">
 <div className="w-10 h-10 bg-tertiary-container rounded-xl flex items-center justify-center shadow-sm border border-outline-variant/10">
@@ -340,8 +366,9 @@ export function EditReward() {
 <button 
   type="submit"
   disabled={isSubmitting}
-  className="w-full py-3.5 rounded-[1.5rem] bg-primary-surface text-primary-text font-black text-lg shadow-xl shadow-primary-surface/20 border-b-4 border-primary-surface/80 active:border-b-0 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+  className="ui-create-submit w-full py-3.5 rounded-[1.5rem] bg-primary-surface text-primary-text font-black text-lg shadow-xl shadow-primary-surface/20 border-b-4 border-primary-surface/80 active:border-b-0 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 >
+  {!isSubmitting && !isEdit && <Plus size={20} strokeWidth={3} className="inline-block mr-2 align-[-3px]" />}
   {isSubmitting ? t('edit_reward.submitting', '提交中...') : t('edit_reward.submit', '完成并提交心愿 🌿')}
 </button>
           <p className="text-center text-on-surface-variant/20 text-[10px] font-bold mt-4">
@@ -354,19 +381,13 @@ export function EditReward() {
       <AnimatePresence>
         {/* Unit Selector */}
         {isUnitSelectorOpen && (
-          <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 bg-black/40 backdrop-blur-sm">
-            <motion.div 
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              className="w-full max-w-lg bg-white rounded-t-[2.5rem] p-6 pb-[max(3rem,env(safe-area-inset-bottom,0px))] shadow-2xl max-h-[85svh] overflow-y-auto"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-black text-on-surface">{t('edit_reward.select_unit', '选择单位')}</h3>
-                <button onClick={() => setIsUnitSelectorOpen(false)} className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
-                  <Plus className="rotate-45" size={24} />
-                </button>
-              </div>
+          <AppModal
+            open={isUnitSelectorOpen}
+            onClose={() => setIsUnitSelectorOpen(false)}
+            title={t('edit_reward.select_unit', '选择单位')}
+            surface="sheet"
+            zIndexClass="z-[100]"
+          >
               <div className="grid grid-cols-3 gap-3">
                 {units.map(u => (
                   <button 
@@ -381,25 +402,18 @@ className={cn(
                   </button>
                 ))}
               </div>
-            </motion.div>
-          </div>
+          </AppModal>
         )}
 
         {/* Period Selector - Annotation 2 */}
         {isPeriodSelectorOpen && (
-          <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 bg-black/40 backdrop-blur-sm">
-            <motion.div 
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              className="w-full max-w-lg bg-white rounded-t-[2.5rem] p-6 pb-[max(3rem,env(safe-area-inset-bottom,0px))] shadow-2xl max-h-[85svh] overflow-y-auto"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-black text-on-surface">{t('edit_reward.select_period', '选择周期')}</h3>
-                <button onClick={() => setIsPeriodSelectorOpen(false)} className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
-                  <Plus className="rotate-45" size={24} />
-                </button>
-              </div>
+          <AppModal
+            open={isPeriodSelectorOpen}
+            onClose={() => setIsPeriodSelectorOpen(false)}
+            title={t('edit_reward.select_period', '选择周期')}
+            surface="sheet"
+            zIndexClass="z-[100]"
+          >
               <div className="flex flex-col gap-3">
                 {periods.map(p => (
                   <button 
@@ -414,55 +428,41 @@ className={cn(
                   </button>
                 ))}
               </div>
-            </motion.div>
-          </div>
+          </AppModal>
         )}
       </AnimatePresence>
 
       {/* Library Modal - 心愿库（6大分类，49个条目，扁平化本地图标） */}
       <AnimatePresence>
         {isLibraryOpen && (
-          <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 bg-black/60 backdrop-blur-sm">
-            <motion.div 
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-lg bg-surface rounded-t-[2.5rem] p-6 pb-[max(3rem,env(safe-area-inset-bottom,0px))] shadow-2xl relative max-h-[85svh] flex flex-col"
-            >
-              <div className="flex justify-between items-center mb-3 px-2">
-                <h3 className="text-2xl font-black text-on-surface">{t('edit_reward.library_title', '心愿库')}</h3>
-                <button 
-                  onClick={() => setIsLibraryOpen(false)}
-                  className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant"
-                >
-                  <Plus className="rotate-45" size={24} />
-                </button>
-              </div>
-
-              {/* 分类 Tab 切换栏（常用 | 体验 | 奖品 | 特权 | 成长 | 活动） */}
-              <div className="flex gap-2 overflow-x-auto no-scrollbar mb-3 pb-1 px-1">
+          <TemplatePickerShell
+            title={t('edit_reward.library_title', '心愿库')}
+            onClose={() => setIsLibraryOpen(false)}
+            zIndexClass="z-[100]"
+            tabs={
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 px-1">
                 {REWARD_CATEGORIES.map(cat => (
                   <button
                     key={cat.id}
                     onClick={() => setLibraryCategory(cat.id)}
-className={cn(
-  "px-4 py-2 rounded-full text-xs font-black whitespace-nowrap transition-all border-2 shrink-0",
-  libraryCategory === cat.id
-    ? "bg-primary-surface border-primary-surface/80 text-primary-text shadow-md"
-    : "bg-white border-white text-on-surface-variant/40"
-)}
+                    className={cn(
+                      "px-4 py-2 rounded-full text-xs font-black whitespace-nowrap transition-all border-2 shrink-0",
+                      libraryCategory === cat.id
+                        ? "bg-primary-surface border-primary-surface/80 text-primary-text shadow-md"
+                        : "bg-white border-white text-on-surface-variant/40"
+                    )}
                   >
                     {cat.label}
                   </button>
                 ))}
               </div>
-
+            }
+          >
               {/* 当前分类的模板网格（4列，类似截图布局） */}
               {(() => {
                 const currentTemplates = REWARD_CATEGORIES.find(c => c.id === libraryCategory)?.templates || [];
                 return (
-                  <div className="grid grid-cols-4 gap-y-3 gap-x-2 overflow-y-auto no-scrollbar pb-8 px-1">
+                  <div className="grid grid-cols-4 gap-y-3 gap-x-2 overflow-y-auto no-scrollbar pb-4 px-1">
                     {currentTemplates.map((template) => (
                       <motion.div
                         key={template.id}
@@ -493,8 +493,7 @@ className={cn(
                   </div>
                 );
               })()}
-            </motion.div>
-          </div>
+          </TemplatePickerShell>
         )}
       </AnimatePresence>
     </div>

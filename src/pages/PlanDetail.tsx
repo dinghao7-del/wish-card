@@ -13,6 +13,7 @@ import { createSharedScheduleTemplateDraft, saveCommunityShareDraft } from '../l
 import { buildUiTaskFromDraft } from '../lib/planExecutionTasks';
 import type { ChildProfile, ScheduleRecommendation } from '../lib/scheduleRecommendAI';
 import { getGuestPlan, getGuestPlans, saveGuestPlan } from '../lib/guestPlans';
+import { getCreationTemplateRoute } from '../lib/createFlowRoutes';
 
 interface PlanData {
   id: string;
@@ -828,7 +829,7 @@ export function PlanDetail() {
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-black text-sm text-on-surface">{t('plan_detail.targets_list', '目标列表')}</h3>
             <button
-              onClick={() => navigate(`/tasks/new?planId=${id}&planName=${encodeURIComponent(plan?.name || '')}`)}
+              onClick={() => navigate(getCreationTemplateRoute('task', { planId: id, planName: plan?.name || '' }))}
               className="flex items-center gap-1 text-primary text-xs font-black"
             >
               <Plus size={14} strokeWidth={3} />
@@ -884,7 +885,7 @@ export function PlanDetail() {
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-black text-sm text-on-surface">{t('plan_detail.wishes_list', '心愿列表')}</h3>
             <button
-              onClick={() => navigate(`/rewards/new?planId=${id}&planName=${encodeURIComponent(plan?.name || '')}`)}
+              onClick={() => navigate(getCreationTemplateRoute('reward', { planId: id, planName: plan?.name || '' }))}
               className="flex items-center gap-1 text-warning text-xs font-black"
             >
               <Sparkles size={14} />

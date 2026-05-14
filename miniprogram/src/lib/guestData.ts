@@ -130,6 +130,7 @@ export const GUEST_TASKS = [
     frequency: 'daily',
     start_time: today + 'T17:00:00.000Z',
     assignee_id: 'guest-son',
+    assignee_ids: ['guest-son', 'guest-daughter'],
     creator_id: 'guest-dad',
     reward_stars: 10,
     status: 'pending' as const,

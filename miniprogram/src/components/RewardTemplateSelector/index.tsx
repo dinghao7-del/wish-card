@@ -15,10 +15,19 @@ interface Props {
   existingIds?: Set<string>;
   /** 点击模板卡片的回调 */
   onSelect?: (template: TaskTemplate) => void;
+  onCustomAdd?: () => void;
+  customAddText?: string;
   onClose: () => void;
 }
 
-export default function TemplatePicker({ visible, existingIds = new Set(), onSelect, onClose }: Props) {
+export default function TemplatePicker({
+  visible,
+  existingIds = new Set(),
+  onSelect,
+  onCustomAdd,
+  customAddText = '自定义添加',
+  onClose,
+}: Props) {
   const [activeTab, setActiveTab] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -71,10 +80,14 @@ export default function TemplatePicker({ visible, existingIds = new Set(), onSel
             />
           </View>
           <View className="rts-custom-add-btn" onClick={() => {
+            if (onCustomAdd) {
+              onCustomAdd();
+              return;
+            }
             Taro.showModal({
-              title: '自定义习惯',
+              title: '自定义添加',
               editable: true,
-              placeholderText: '请输入习惯名称...',
+              placeholderText: '请输入名称...',
               success: (res: Taro.showModal.SuccessCallbackResult & { content?: string }) => {
                 if (res.confirm && res.content?.trim() && onSelect) {
                   onSelect({
@@ -88,7 +101,7 @@ export default function TemplatePicker({ visible, existingIds = new Set(), onSel
               },
             } as Taro.showModal.Option & { editable: boolean; placeholderText: string });
           }}>
-            <Text className="rts-custom-add-text">自定义添加</Text>
+            <Text className="rts-custom-add-text">{customAddText}</Text>
           </View>
         </View>
 

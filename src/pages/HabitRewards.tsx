@@ -12,6 +12,10 @@ import { TextAvatar } from '../components/TextAvatar';
 import { CelebrationAnimation } from '../components/CelebrationAnimation';
 import { NotificationBell } from '../components/NotificationCenter';
 import { getRegisteredTaskIcon } from '../lib/lucideIconRegistry';
+import { TASK_CATEGORIES, type HabitTemplate } from '../lib/templates';
+import { AppModal, TemplatePickerShell } from '../components/AppModal';
+import { getHabitSelectableChildIds, resolveHabitTargetChildId } from '../lib/habitTargeting';
+import { getCustomCreationRoute } from '../lib/createFlowRoutes';
 
 const HabitIconImage: React.FC<{ src: string; size: number }> = ({ src, size }) => {
   const [hasError, setHasError] = useState(false);
@@ -52,57 +56,27 @@ export function HabitRewards() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [activeTplCategory, setActiveTplCategory] = useState('生活');
+  const [habitTemplateSearch, setHabitTemplateSearch] = useState('');
 
-  // 习惯模板数据 - 使用本地 public/task-icons/ 下 kawaii 风格 PNG 图标
-  const habitTemplates: { id: string; title: string; iconPath: string; stars: number; category: string }[] = [
-    // 生活 life/
-    { id: 'water', title: '多喝水', iconPath: '/task-icons/life/Cute_flat_kawaii_drinking_wate_2026-04-27T20-19-03.png', stars: 10, category: '生活' },
-    { id: 'fruit', title: '吃水果', iconPath: '/task-icons/life/Cute_flat_kawaii_eating_fresh__2026-04-27T20-19-50.png', stars: 10, category: '生活' },
-    { id: 'vegetable', title: '吃蔬菜', iconPath: '/task-icons/life/Cute_flat_kawaii_eating_vegeta_2026-04-27T20-19-51.png', stars: 10, category: '生活' },
-    { id: 'milk', title: '喝牛奶', iconPath: '/task-icons/life/Cute_flat_kawaii_drinking_milk_2026-04-27T20-19-53.png', stars: 10, category: '生活' },
-    { id: 'egg', title: '吃鸡蛋', iconPath: '/task-icons/life/Cute_flat_kawaii_eating_eggs_p_2026-04-27T20-19-59.png', stars: 10, category: '生活' },
-    { id: 'brush', title: '刷牙', iconPath: '/task-icons/life/Cute_flat_kawaii_brushing_teet_2026-04-27T20-20-31.png', stars: 10, category: '生活' },
-    { id: 'washface', title: '洗脸', iconPath: '/task-icons/life/Cute_flat_kawaii_washing_face__2026-04-27T20-20-33.png', stars: 10, category: '生活' },
-    { id: 'early', title: '每日早起', iconPath: '/task-icons/life/Cute_flat_kawaii_waking_up_ear_2026-04-27T20-20-31.png', stars: 20, category: '生活' },
-    { id: 'nap', title: '睡午觉', iconPath: '/task-icons/life/Cute_flat_kawaii_taking_aftern_2026-04-27T20-20-39.png', stars: 20, category: '生活' },
-    // 独立 independent/
-    { id: 'homework', title: '检查作业', iconPath: '/task-icons/independent/Cute_flat_kawai_checking_homew_2026-04-27T20-23-21.png', stars: 20, category: '独立' },
-    { id: 'tidytoys', title: '整理玩具', iconPath: '/task-icons/independent/Cute_flat_kawai_organizing_toy_2026-04-27T20-22-27.png', stars: 15, category: '独立' },
-    { id: 'eatmeal', title: '自己吃饭', iconPath: '/task-icons/independent/Cute_flat_kawaii_eating_meals__2026-04-27T20-22-48.png', stars: 15, category: '独立' },
-    { id: 'dress', title: '自己穿衣', iconPath: '/task-icons/independent/Cute_flat_kawaii_getting_dress_2026-04-27T20-23-19.png', stars: 15, category: '独立' },
-    { id: 'school', title: '自己上学', iconPath: '/task-icons/independent/Cute_flat_kawaii_going_to_scho_2026-04-27T20-22-35.png', stars: 20, category: '独立' },
-    { id: 'packbag', title: '收拾书包', iconPath: '/task-icons/independent/Cute_flat_kawaii_packing_schoo_2026-04-27T20-22-27.png', stars: 15, category: '独立' },
-    // 表扬 praise/
-    { id: 'greet', title: '主动问好', iconPath: '/task-icons/praise/Cute_flat_kawaii_icon_of_greet_2026-04-27T20-14-08.png', stars: 15, category: '表扬' },
-    { id: 'share', title: '懂得分享', iconPath: '/task-icons/praise/Cute_flat_kawaii_icon_of_shari_2026-04-27T20-11-36.png', stars: 15, category: '表扬' },
-    { id: 'help', title: '帮助他人', iconPath: '/task-icons/praise/Cute_flat_kawaii_icon_of_helpi_2026-04-27T20-12-41.png', stars: 20, category: '表扬' },
-    { id: 'honest', title: '诚实守信', iconPath: '/task-icons/praise/Cute_flat_kawaii_icon_of_admit_2026-04-27T20-13-36.png', stars: 20, category: '表扬' },
-    { id: 'clean', title: '爱整洁', iconPath: '/task-icons/praise/Cute_flat_kawaii_icon_of_clean_2026-04-27T20-14-05.png', stars: 15, category: '表扬' },
-    { id: 'learn', title: '热爱学习', iconPath: '/task-icons/praise/Cute_flat_kawaii_icon_of_learn_2026-04-27T20-13-21.png', stars: 20, category: '表扬' },
-    { id: 'persist', title: '坚持不懈', iconPath: '/task-icons/praise/Cute_flat_kawaii_icon_of_persi_2026-04-27T20-13-32.png', stars: 25, category: '表扬' },
-    { id: 'polite', title: '有礼貌', iconPath: '/task-icons/praise/Cute_flat_kawaii_icon_of_refus_2026-04-27T20-15-30.png', stars: 15, category: '表扬' },
-    // 批评 critique/
-    { id: 'lazy', title: '偷懒', iconPath: '/task-icons/critique/Cute_flat_kawaii_icon_of_procr_2026-04-27T20-07-43.png', stars: -15, category: '批评' },
-    { id: 'waste', title: '浪费', iconPath: '/task-icons/critique/Cute_flat_kawaii_icon_of_wasti_2026-04-27T20-09-02.png', stars: -15, category: '批评' },
-    { id: 'quarrel', title: '吵架', iconPath: '/task-icons/critique/Cute_flat_kawaii_icon_of_quarr_2026-04-27T20-09-39.png', stars: -20, category: '批评' },
-    { id: 'lie', title: '说谎', iconPath: '/task-icons/critique/Cute_flat_kawaii_icon_of_secre_2026-04-27T20-08-37.png', stars: -20, category: '批评' },
-    { id: 'rude', title: '没礼貌', iconPath: '/task-icons/critique/Cute_flat_kawaii_icon_of_unciv_2026-04-27T20-07-48.png', stars: -15, category: '批评' },
-    { id: 'picky', title: '挑食', iconPath: '/task-icons/critique/Cute_flat_kawaii_icon_of_picky_2026-04-27T20-09-54.png', stars: -10, category: '批评' },
-    { id: 'bedwet', title: '尿床', iconPath: '/task-icons/critique/Cute_flat_kawaii_icon_of_bedwe_2026-04-27T20-10-35.png', stars: -20, category: '批评' },
-    { id: 'zoneout', title: '发呆走神', iconPath: '/task-icons/critique/Cute_flat_kawaii_icon_of_zonin_2026-04-27T20-10-36.png', stars: -10, category: '批评' },
-  ];
-
-  const tplCategories = ['生活', '独立', '表扬', '批评'];
-  const filteredTemplates = habitTemplates.filter(t => t.category === activeTplCategory);
+  const tplCategories = TASK_CATEGORIES;
+  const allHabitTemplates = TASK_CATEGORIES.flatMap(category => category.templates);
+  const filteredTemplates = habitTemplateSearch.trim()
+    ? allHabitTemplates.filter(template => {
+        const keyword = habitTemplateSearch.trim().toLowerCase();
+        return `${template.title} ${template.description || ''} ${template.category} ${template.ageGroup || ''} ${(template.tags || []).join(' ')}`
+          .toLowerCase()
+          .includes(keyword);
+      })
+    : (TASK_CATEGORIES.find(category => category.id === activeTplCategory)?.templates || []);
 
   // 点击模板直接创建习惯
-  const handleSelectTemplate = (tpl: typeof habitTemplates[0]) => {
+  const handleSelectTemplate = (tpl: HabitTemplate) => {
     const newHabit: Task = {
       id: `habit_${Date.now()}`,
       title: tpl.title,
-      description: '',
+      description: tpl.description || '',
       type: tpl.category,
-      icon: 'Trophy',
+      icon: tpl.icon,
       rewardStars: activeTab === 'penalty' || tpl.stars < 0 ? -Math.abs(tpl.stars) : Math.abs(tpl.stars),
       isHabit: true,
       creatorId: currentUser?.id || '',
@@ -157,9 +131,8 @@ export function HabitRewards() {
 
   useEffect(() => {
     if (!selectedHabit || currentUser?.role !== 'parent') return;
-    const firstAssignedChild = childMembers.find(child => selectedHabit.assigneeIds.includes(child.id));
-    setSelectedChildId(firstAssignedChild?.id || childMembers[0]?.id || '');
-  }, [childMembers, currentUser?.role, selectedHabit]);
+    setSelectedChildId(resolveHabitTargetChildId(selectedHabit, childMembers, selectedChildId));
+  }, [childMembers, currentUser?.role, selectedChildId, selectedHabit]);
 
   const getTaskIcon = (iconName: string, size = 32) => {
     if (!iconName) return <Trophy size={size} />;
@@ -222,7 +195,7 @@ export function HabitRewards() {
   const handleHabitAction = async (habit: Task) => {
     if (!currentUser) return;
     if (currentUser.role === 'parent') {
-      const targetMemberId = selectedChildId || childMembers.find(child => habit.assigneeIds.includes(child.id))?.id;
+      const targetMemberId = resolveHabitTargetChildId(habit, childMembers, selectedChildId);
       if (!targetMemberId) return;
       await approveHabitCheckIn(habit.id, targetMemberId);
       setIsCheckInSuccess(true);
@@ -564,63 +537,76 @@ export function HabitRewards() {
       {/* Habit Detail Modal */}
       <AnimatePresence>
         {selectedHabit && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 backdrop-blur-sm" onClick={() => setSelectedHabit(null)}>
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-sm max-h-[calc(100svh-2rem)] overflow-y-auto bg-background border border-outline-variant/10 rounded-[2.5rem] sm:rounded-[3rem] p-6 sm:p-8 shadow-2xl relative"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+              className="ui-detail-sheet w-full max-w-lg max-h-[88svh] overflow-hidden bg-background rounded-t-[2rem] shadow-2xl relative flex flex-col"
+              onClick={(event) => event.stopPropagation()}
             >
-              <div className="absolute top-6 right-6 z-20">
+              <header className="ui-detail-sheet-header flex items-center px-6 py-4 bg-background/80 backdrop-blur-xl shrink-0 z-20 border-b border-outline-variant/10">
                 <button
-                  onClick={() => setIsDetailSettingsOpen(!isDetailSettingsOpen)}
-                  className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors"
+                  onClick={() => setSelectedHabit(null)}
+                  className="ui-detail-sheet-close w-10 h-10 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container/50 transition-colors"
+                  aria-label="关闭"
                 >
-                  <MoreHorizontal size={20} />
+                  <Plus size={24} className="rotate-45" />
                 </button>
+                <h2 className="flex-1 text-center text-lg font-bold text-on-surface">奖惩详情</h2>
+                <div className="relative">
+                  <button
+                    onClick={() => setIsDetailSettingsOpen(!isDetailSettingsOpen)}
+                    className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors"
+                    aria-label="更多操作"
+                  >
+                    <MoreHorizontal size={20} />
+                  </button>
 
-                <AnimatePresence>
-                  {isDetailSettingsOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-30"
-                        onClick={() => setIsDetailSettingsOpen(false)}
-                      />
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                        className="absolute right-0 mt-2 w-48 bg-surface rounded-2xl shadow-xl border border-outline-variant z-40 py-1.5 overflow-hidden"
-                      >
-                        <button
-                          onClick={() => {
-                            setIsDetailSettingsOpen(false);
-                            navigate(`/tasks/edit/${selectedHabit.id}`);
-                          }}
-                          className="w-full px-5 py-3.5 flex items-center gap-3 hover:bg-surface-container/50 transition-colors text-on-surface font-black text-sm text-left"
+                  <AnimatePresence>
+                    {isDetailSettingsOpen && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-30"
+                          onClick={() => setIsDetailSettingsOpen(false)}
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                          className="absolute right-0 mt-2 w-48 bg-surface rounded-2xl shadow-xl border border-outline-variant z-40 py-1.5 overflow-hidden"
                         >
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                            <Edit size={16} />
-                          </div>
-                          编辑任务
-                        </button>
-                        <button
-                          onClick={() => {
-                            setIsDeleteConfirmOpen(true);
-                            setIsDetailSettingsOpen(false);
-                          }}
-                          className="w-full px-5 py-3.5 flex items-center gap-3 hover:bg-danger-container/40 transition-colors text-danger font-black text-sm text-left"
-                        >
-                          <div className="w-8 h-8 rounded-full bg-danger-container flex items-center justify-center text-danger">
-                            <Trash2 size={16} />
-                          </div>
-                          删除任务
-                        </button>
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
-              </div>
+                          <button
+                            onClick={() => {
+                              setIsDetailSettingsOpen(false);
+                              navigate(`/tasks/edit/${selectedHabit.id}`);
+                            }}
+                            className="w-full px-5 py-3.5 flex items-center gap-3 hover:bg-surface-container/50 transition-colors text-on-surface font-black text-sm text-left"
+                          >
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                              <Edit size={16} />
+                            </div>
+                            编辑任务
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsDeleteConfirmOpen(true);
+                              setIsDetailSettingsOpen(false);
+                            }}
+                            className="w-full px-5 py-3.5 flex items-center gap-3 hover:bg-danger-container/40 transition-colors text-danger font-black text-sm text-left"
+                          >
+                            <div className="w-8 h-8 rounded-full bg-danger-container flex items-center justify-center text-danger">
+                              <Trash2 size={16} />
+                            </div>
+                            删除任务
+                          </button>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </header>
 
               {/* Delete Confirmation Modal */}
               <AnimatePresence>
@@ -665,7 +651,8 @@ export function HabitRewards() {
               </AnimatePresence>
 
               {/* Main Content with Animation */}
-              <div className="flex flex-col items-center text-center mt-4">
+              <div className="flex-1 overflow-y-auto px-6 py-6 sm:px-8 sm:py-8">
+              <div className="flex flex-col items-center text-center">
                 <AnimatePresence mode="wait">
                   {!isCheckInSuccess && selectedHabit ? (
                     (() => {
@@ -676,7 +663,8 @@ export function HabitRewards() {
                         && task.description.includes(`奖惩来源ID:${habit.id}`)
                       );
                       const currentUserPending = pendingReviews.some(task => task.assigneeIds.includes(currentUser?.id || ''));
-                      const targetChild = childMembers.find(child => child.id === selectedChildId);
+                      const targetMemberId = resolveHabitTargetChildId(habit, childMembers, selectedChildId);
+                      const targetChild = childMembers.find(child => child.id === targetMemberId);
                       return (
                         <motion.div
                           key="detail-content"
@@ -719,7 +707,7 @@ export function HabitRewards() {
                               <p className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest mb-2">指定孩子</p>
                               <div className="grid grid-cols-2 gap-2">
                                 {childMembers
-                                  .filter(child => habit.assigneeIds.includes(child.id))
+                                  .filter(child => getHabitSelectableChildIds(habit, childMembers).includes(child.id))
                                   .map(child => (
                                     <button
                                       key={child.id}
@@ -800,6 +788,7 @@ export function HabitRewards() {
                   )}
                 </AnimatePresence>
               </div>
+              </div>
             </motion.div>
           </div>
         )}
@@ -808,15 +797,30 @@ export function HabitRewards() {
       {/* Add Habit Modal */}
       <AnimatePresence>
         {isAddingHabit && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="w-full max-w-sm max-h-[calc(100svh-2rem)] overflow-y-auto bg-background border border-outline-variant/10 rounded-[2.5rem] sm:rounded-[3rem] p-6 sm:p-8 shadow-2xl"
-            >
-              <h2 className="text-2xl font-black text-on-surface mb-6 text-center">添加好习惯</h2>
-
+          <AppModal
+            open={isAddingHabit}
+            onClose={() => setIsAddingHabit(false)}
+            title="添加好习惯"
+            surface="sheet"
+            zIndexClass="z-[120]"
+            bodyClassName="px-6 py-5"
+            footer={
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsAddingHabit(false)}
+                  className="flex-1 py-4 px-5 rounded-2xl bg-surface-container font-black text-on-surface-variant"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleAddHabit}
+                  className="flex-[2] py-4 px-5 rounded-2xl bg-primary text-on-primary font-black shadow-lg"
+                >
+                  确认添加
+                </button>
+              </div>
+            }
+          >
               <div className="space-y-4">
                 <div className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/5">
                   <p className="text-[10px] font-black text-on-surface-variant/40 uppercase mb-2">习惯名称</p>
@@ -842,121 +846,86 @@ export function HabitRewards() {
                   </div>
                 </div>
               </div>
-
-              <div className="flex gap-4 mt-8">
-                <button
-                  onClick={() => setIsAddingHabit(false)}
-                  className="flex-1 py-4 px-6 rounded-2xl bg-surface-container font-black text-on-surface-variant"
-                >
-                  取消
-                </button>
-                <button
-                  onClick={handleAddHabit}
-                  className="flex-[2] py-4 px-6 rounded-2xl bg-primary text-on-primary font-black shadow-lg"
-                >
-                  确认添加
-                </button>
-              </div>
-            </motion.div>
-          </div>
+          </AppModal>
         )}
       </AnimatePresence>
 
       {/* 习惯模板选择器 - 全屏弹窗 */}
       <AnimatePresence>
         {showTemplatePicker && (
-          <div className="fixed inset-0 z-[100] flex flex-col bg-white">
-            {/* Header */}
-            <motion.div
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -20, opacity: 0 }}
-              className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/5"
-            >
-              <button
-                onClick={() => setShowTemplatePicker(false)}
-                className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant transition-colors"
-              >
-                <X size={24} />
-              </button>
-              <h1 className="text-lg font-black tracking-tight">选择模板</h1>
-              <div className="w-10" />
-            </motion.div>
-
-            {/* 搜索 + 自定义添加 */}
-            <div className="px-6 pt-4">
+          <TemplatePickerShell
+            title="选择模板"
+            onClose={() => setShowTemplatePicker(false)}
+            search={
               <div className="flex items-center gap-3">
                 <div className="relative flex-1">
                   <span className="absolute left-4 top-1/2 -translate-y-1/5 text-base">🔍</span>
                   <input
                     type="text"
                     placeholder="搜索模板"
+                    value={habitTemplateSearch}
+                    onChange={(event) => setHabitTemplateSearch(event.target.value)}
                     className="w-full bg-surface-container-low border-none rounded-2xl pl-11 pr-4 py-3.5 shadow-sm font-bold text-sm placeholder:text-on-surface-variant/30"
                   />
                 </div>
                 <button
-                  onClick={() => { setShowTemplatePicker(false); navigate('/tasks/new', { state: { fromMode: 'habit' } }); }}
+                  onClick={() => { setShowTemplatePicker(false); navigate(getCustomCreationRoute('habit'), { state: { fromMode: 'habit' } }); }}
                   className="px-4 py-3.5 bg-primary text-white rounded-2xl shadow-sm font-bold text-sm active:scale-95 transition-all shrink-0"
                 >
                   自定义添加
                 </button>
               </div>
-            </div>
-
-            {/* 分类标签 */}
-            <div className="px-6 py-3">
-              <div className="flex gap-3">
+            }
+            tabs={
+              <div className="flex gap-3 overflow-x-auto no-scrollbar">
                 {tplCategories.map(cat => (
                   <button
-                    key={cat}
-                    onClick={() => setActiveTplCategory(cat)}
+                    key={cat.id}
+                    onClick={() => {
+                      setActiveTplCategory(cat.id);
+                      setHabitTemplateSearch('');
+                    }}
                     className={cn(
-                      "px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all",
-                      activeTplCategory === cat
+                      "px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all shrink-0",
+                      activeTplCategory === cat.id
                         ? "bg-primary text-white"
                         : "bg-surface-container-low text-on-surface-variant"
                     )}
                   >
-                    {cat}
+                    {cat.label}
                   </button>
                 ))}
               </div>
-            </div>
-
-            {/* Popsy 图标网格 */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex-1 overflow-y-auto px-6 pt-2 pb-8"
-            >
+            }
+          >
               <div className="grid grid-cols-4 gap-x-4 gap-y-5">
                 {filteredTemplates.map((tpl, idx) => (
                   <motion.button
                     key={tpl.id}
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.04 }}
+                    transition={{ delay: Math.min(idx, 8) * 0.025 }}
                     whileTap={{ scale: 0.92 }}
                     onClick={() => handleSelectTemplate(tpl)}
                     className="flex flex-col items-center gap-1 p-1 rounded-2xl active:bg-surface-container transition-colors"
                   >
                     {/* 本地 kawaii 风格 PNG 图标 */}
                     <img
-                      src={tpl.iconPath}
+                      src={tpl.icon}
                       alt=""
                       className="w-[56px] h-[56px] object-contain rounded-xl"
                     />
                     <span className="text-xs font-bold text-on-surface text-center leading-tight">{tpl.title}</span>
                     <div className="flex items-center gap-0.5">
                       <Star size={11} className="text-reward-display fill-current" />
-                      <span className="text-xs font-bold text-secondary">+{tpl.stars}</span>
+                      <span className={cn("text-xs font-bold", tpl.stars >= 0 ? "text-secondary" : "text-danger")}>
+                        {tpl.stars > 0 ? `+${tpl.stars}` : tpl.stars}
+                      </span>
                     </div>
                   </motion.button>
                 ))}
               </div>
-            </motion.div>
-          </div>
+          </TemplatePickerShell>
         )}
       </AnimatePresence>
 
