@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
 import { getLocalUser } from '@/utils/localUser';
+import { getGuestData, isGuestMode } from '@/lib/guestData';
 import Icon from '@/components/Icon';
 import './index.scss';
 
@@ -13,6 +14,12 @@ interface StarRecord {
   reason: string;
   created_at: string;
   type: 'earn' | 'spend' | 'reward' | 'penalty';
+}
+
+const GUEST_STAR_HISTORY_KEY = 'wishcard_guest_star_history';
+
+function normalizeRecords(records: StarRecord[]) {
+  return records.filter(record => Number(record.amount) !== 0);
 }
 
 export default function History() {
@@ -26,6 +33,29 @@ export default function History() {
     setLoading(true);
     try {
       const user = getLocalUser();
+      if (!user) {
+        setRecords([]);
+        setStarBalance(0);
+        return;
+      }
+
+      if (isGuestMode() || user.family_id === 'guest-family' || user.family_id === 'demo-family') {
+        const stored = Taro.getStorageSync(GUEST_STAR_HISTORY_KEY);
+        const storedRecords = typeof stored === 'string' ? JSON.parse(stored || '[]') : (stored || []);
+        const demoRecords = getGuestData().history
+          .filter((item: any) => item.user_id === user.id || item.userId === user.id)
+          .map((item: any) => ({
+            id: item.id,
+            amount: item.stars || item.amount || 0,
+            reason: item.title || item.reason || '',
+            created_at: item.timestamp || item.created_at || new Date().toISOString(),
+            type: (item.stars || item.amount || 0) > 0 ? 'earn' : 'spend',
+          }));
+        setRecords(normalizeRecords([...storedRecords, ...demoRecords]));
+        setStarBalance(user.stars || 0);
+        return;
+      }
+
       if (user?.family_id && user.family_id !== 'guest-family' && user.family_id !== 'demo-family') {
         // 查询星星交易记录
         const { data: transactions } = await supabase
@@ -36,13 +66,13 @@ export default function History() {
           .limit(50);
 
         if (transactions) {
-          setRecords(transactions.map((t: any) => ({
+          setRecords(normalizeRecords(transactions.map((t: any) => ({
             id: t.id,
             amount: t.amount || 0,
             reason: t.reason || (t.amount > 0 ? '获得奖励' : '兑换消费'),
             created_at: t.created_at,
             type: t.amount > 0 ? 'earn' : 'spend',
-          })));
+          }))));
         }
 
         // 查询当前余额

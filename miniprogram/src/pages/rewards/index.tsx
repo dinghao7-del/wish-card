@@ -16,6 +16,7 @@ import Taro from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
 import { isGuestMode, getGuestData } from '@/lib/guestData';
 import { resolveAvatarPath } from '@/lib/templates';
+import { setLocalUser } from '@/utils/localUser';
 import Icon from '@/components/Icon';
 import CelebrationAnimation from '@/components/CelebrationAnimation';
 import RewardTemplateSelector from '@/components/RewardTemplateSelector';
@@ -37,6 +38,8 @@ const CATEGORIES = [
   { key: 'growth', label: '成长' },
   { key: 'activity', label: '活动' },
 ];
+
+const GUEST_STAR_HISTORY_KEY = 'wishcard_guest_star_history';
 
 export default function Rewards() {
   // ===== 状态 =====
@@ -194,6 +197,27 @@ export default function Rewards() {
       console.log('[Rewards] Guest mode: simulating exchange');
       await new Promise(resolve => setTimeout(resolve, 800));
       const newBalance = starBalance - cost;
+      const exchangedAt = new Date().toISOString();
+      const updatedUser = { ...user, stars: newBalance };
+      const historyRecord = {
+        id: `guest-reward-${Date.now()}`,
+        amount: -cost,
+        reason: `兑换心愿: ${selectedReward.name}`,
+        created_at: exchangedAt,
+        type: 'spend',
+      };
+      try {
+        const stored = Taro.getStorageSync(GUEST_STAR_HISTORY_KEY);
+        const records = typeof stored === 'string' ? JSON.parse(stored || '[]') : (stored || []);
+        Taro.setStorageSync(
+          GUEST_STAR_HISTORY_KEY,
+          [historyRecord, ...records].filter((record: any) => Number(record.amount) !== 0),
+        );
+        setLocalUser(updatedUser);
+      } catch (err) {
+        console.warn('[Rewards] persist guest exchange failed:', err);
+      }
+      setUser(updatedUser);
       setStarBalance(newBalance);
       setShowDetailModal(false);
       setShowCelebration(true);
