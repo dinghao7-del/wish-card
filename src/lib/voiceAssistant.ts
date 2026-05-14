@@ -1,11 +1,10 @@
 /**
  * AI 语音助手引擎
  * 支持 40+ 意图，覆盖 App 全部功能
- * 使用 Gemini AI 进行自然语言理解和指令执行
- * 支持从数据库读取配置，优先使用数据库配置，其次使用环境变量
+ * 通过 Supabase Edge Function 统一调用真实 AI
+ * API 密钥只保存在服务端 Secret，不进入前端包
  */
 
-import { GoogleGenAI, Type } from "@google/genai";
 import supabase from './supabase';
 import { recognizeScheduleArrangementSkill } from './scheduleArrangementSkill';
 import {
@@ -41,6 +40,17 @@ let configCache: AIAssistantConfig | null = null;
 let configCacheTime = 0;
 const CONFIG_CACHE_TTL = 5 * 60 * 1000; // 5分钟缓存
 
+function normalizeAIProvider(provider?: string): string {
+  return ['minimax', 'openai', 'custom'].includes(provider || '') ? provider! : 'minimax';
+}
+
+function normalizeAIModel(provider: string, model?: string): string {
+  if (provider === 'minimax') {
+    return model && model.startsWith('MiniMax-') ? model : 'MiniMax-M2.7';
+  }
+  return model || 'gpt-4o-mini';
+}
+
 /**
  * 获取AI助手配置
  * 优先从数据库读取，其次使用环境变量
@@ -66,25 +76,26 @@ export async function getAIConfig(): Promise<AIAssistantConfig> {
         configMap[item.key] = item.value;
       });
 
+      const provider = normalizeAIProvider(configMap['ai_provider']);
       configCache = {
         enabled: configMap['ai_enabled'] !== 'false',
-        provider: configMap['ai_provider'] || 'gemini',
-        model: configMap['ai_model'] || 'gemini-2.0-flash',
-        apiKey: configMap['ai_api_key'] || import.meta.env.VITE_GEMINI_API_KEY || '',
+        provider,
+        model: normalizeAIModel(provider, configMap['ai_model']),
+        apiKey: '',
         apiEndpoint: configMap['ai_api_endpoint'] || '',
         temperature: parseFloat(configMap['ai_temperature']) || 0.9,
-        maxTokens: parseInt(configMap['ai_max_tokens']) || 2048,
+        maxTokens: Math.max(parseInt(configMap['ai_max_tokens']) || 8192, 8192),
       };
     } else {
       // 使用环境变量作为后备
       configCache = {
         enabled: true,
-        provider: 'gemini',
-        model: 'gemini-2.0-flash',
-        apiKey: import.meta.env.VITE_GEMINI_API_KEY || '',
+        provider: 'minimax',
+        model: 'MiniMax-M2.7',
+        apiKey: '',
         apiEndpoint: '',
         temperature: 0.9,
-        maxTokens: 2048,
+        maxTokens: 8192,
       };
     }
   } catch (err) {
@@ -92,12 +103,12 @@ export async function getAIConfig(): Promise<AIAssistantConfig> {
     // 使用环境变量作为后备
     configCache = {
       enabled: true,
-      provider: 'gemini',
-      model: 'gemini-2.0-flash',
-      apiKey: import.meta.env.VITE_GEMINI_API_KEY || '',
+      provider: 'minimax',
+      model: 'MiniMax-M2.7',
+      apiKey: '',
       apiEndpoint: '',
       temperature: 0.9,
-      maxTokens: 2048,
+      maxTokens: 8192,
     };
   }
 
@@ -119,6 +130,74 @@ interface AIResponse {
   text: string;
 }
 
+type AIMessage = {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+};
+
+function buildMessages(prompt: string, systemInstruction?: string): AIMessage[] {
+  return [
+    ...(systemInstruction ? [{ role: 'system' as const, content: systemInstruction }] : []),
+    { role: 'user' as const, content: prompt },
+  ];
+}
+
+async function invokeAIChat(messages: AIMessage[], responseFormat: 'text' | 'json' = 'text'): Promise<AIResponse> {
+  const config = await getAIConfig();
+
+  if (!config.enabled) {
+    throw new Error('AI助手未启用');
+  }
+
+  const { data, error } = await supabase.functions.invoke('ai-chat', {
+    body: {
+      messages,
+      provider: config.provider || 'minimax',
+      model: config.model || 'MiniMax-M2.7',
+      temperature: config.temperature,
+      max_tokens: config.maxTokens,
+      response_format: responseFormat,
+    },
+  });
+
+  if (error) {
+    throw new Error(error.message || 'AI服务调用失败');
+  }
+
+  if (data?.error) {
+    throw new Error(data.error);
+  }
+
+  const text = typeof data === 'string'
+    ? data
+    : data?.content || data?.choices?.[0]?.message?.content || data?.choices?.[0]?.text || '';
+
+  if (!text) {
+    throw new Error('AI返回为空');
+  }
+
+  return { text };
+}
+
+function parseAIJson<T>(text: string): T {
+  const trimmed = text
+    .trim()
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/```$/i, '')
+    .trim();
+
+  try {
+    return JSON.parse(trimmed) as T;
+  } catch {
+    const objectMatch = trimmed.match(/\{[\s\S]*\}/);
+    const arrayMatch = trimmed.match(/\[[\s\S]*\]/);
+    const candidate = objectMatch?.[0] || arrayMatch?.[0];
+    if (candidate) return JSON.parse(candidate) as T;
+    throw new Error('AI返回的不是有效的JSON格式');
+  }
+}
+
 /**
  * 通用AI调用函数，支持多种服务商
  * @param prompt 提示词
@@ -126,155 +205,15 @@ interface AIResponse {
  * @returns AI响应文本
  */
 export async function callAI(prompt: string, systemInstruction?: string): Promise<AIResponse> {
-  const config = await getAIConfig();
-  
-  if (!config.apiKey) {
-    throw new Error('AI助手未配置API密钥');
-  }
-
-  // MiniMax 使用 OpenAI 兼容格式
-  if (config.provider === 'minimax') {
-    const endpoint = config.apiEndpoint || 'https://api.minimax.chat';
-    const model = config.model || 'MiniMax-M2.7';
-    
-    const response = await fetch(`${endpoint}/v1/text/chatcompletion_v2`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          ...(systemInstruction ? [{ role: 'system', content: systemInstruction }] : []),
-          { role: 'user', content: prompt }
-        ],
-        temperature: config.temperature,
-        max_tokens: config.maxTokens,
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`MiniMax API错误: ${response.status} ${error}`);
-    }
-
-    const data = await response.json();
-    return { text: data.choices?.[0]?.message?.content || '' };
-  }
-
-  // OpenAI 兼容格式 (包括自定义端点)
-  if (config.provider === 'openai' || config.provider === 'custom' || config.apiEndpoint) {
-    const endpoint = config.apiEndpoint || 'https://api.openai.com/v1';
-    const model = config.model || 'gpt-4o-mini';
-    
-    const response = await fetch(`${endpoint}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          ...(systemInstruction ? [{ role: 'system', content: systemInstruction }] : []),
-          { role: 'user', content: prompt }
-        ],
-        temperature: config.temperature,
-        max_tokens: config.maxTokens,
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`OpenAI API错误: ${response.status} ${error}`);
-    }
-
-    const data = await response.json();
-    return { text: data.choices?.[0]?.message?.content || '' };
-  }
-
-  // Claude (如果未来需要支持)
-  if (config.provider === 'claude') {
-    throw new Error('Claude暂未支持，请使用其他服务商');
-  }
-
-  // 默认使用 Gemini
-  const ai = new GoogleGenAI({ apiKey: config.apiKey });
-  const model = config.model || 'gemini-2.0-flash';
-  
-  const result = await ai.models.generateContent({
-    model: model,
-    contents: prompt,
-    config: {
-      systemInstruction: systemInstruction,
-      responseMimeType: 'text/plain',
-    },
-  });
-
-  return { text: result.text || '' };
+  return invokeAIChat(buildMessages(prompt, systemInstruction), 'text');
 }
 
 /**
  * 通用JSON AI调用 (带结构化输出)
  */
 export async function callAIJson<T = any>(prompt: string, systemInstruction?: string): Promise<T> {
-  const config = await getAIConfig();
-  
-  if (!config.apiKey) {
-    throw new Error('AI助手未配置API密钥');
-  }
-
-  // MiniMax
-  if (config.provider === 'minimax') {
-    const endpoint = config.apiEndpoint || 'https://api.minimax.chat';
-    const model = config.model || 'MiniMax-M2.7';
-    
-    const response = await fetch(`${endpoint}/v1/text/chatcompletion_v2`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          ...(systemInstruction ? [{ role: 'system', content: systemInstruction }] : []),
-          { role: 'user', content: prompt + '\n\n请以JSON格式回复，不要包含其他文字。' }
-        ],
-        temperature: config.temperature,
-        max_tokens: config.maxTokens,
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`MiniMax API错误: ${response.status} ${error}`);
-    }
-
-    const data = await response.json();
-    const text = data.choices?.[0]?.message?.content || '{}';
-    return JSON.parse(text);
-  }
-
-  // OpenAI / Custom / Gemini (使用GoogleGenAI)
-  const ai = new GoogleGenAI({ apiKey: config.apiKey });
-  const model = config.model || 'gemini-2.0-flash';
-  
-  const result = await ai.models.generateContent({
-    model: model,
-    contents: prompt,
-    config: {
-      systemInstruction: systemInstruction,
-      responseMimeType: 'application/json',
-    },
-  });
-
-  try {
-    return JSON.parse(result.text || '{}');
-  } catch {
-    throw new Error('AI返回的不是有效的JSON格式');
-  }
+  const response = await invokeAIChat(buildMessages(prompt, systemInstruction), 'json');
+  return parseAIJson<T>(response.text);
 }
 
 export type VoiceIntent =
@@ -338,14 +277,13 @@ export async function recognizeIntent(userInput: string, context: AppContext, la
   if (localButlerIntent) return localButlerIntent;
 
   const config = await getAIConfig();
-  
-  if (!config.apiKey) {
+  if (!config.enabled) {
     return {
       intent: 'unknown',
       params: {},
       confidence: 0,
       needsConfirmation: false,
-      confirmationMessage: 'AI助手未配置API密钥，请联系管理员在后台设置。',
+      confirmationMessage: 'AI助手暂未启用，请稍后再试。',
     };
   }
 
@@ -424,7 +362,19 @@ IMPORTANT: Respond to the user in the same language they used for input. If unce
 
 When intent is 'chat', provide a helpful response in the user's language in the chatResponse field.`;
 
-  const result = await callAIJson(userInput, systemInstruction);
+  let result: any;
+  try {
+    result = await callAIJson(userInput, systemInstruction);
+  } catch (error) {
+    console.warn('AI意图识别失败:', error);
+    return {
+      intent: 'unknown',
+      params: {},
+      confidence: 0,
+      needsConfirmation: false,
+      confirmationMessage: 'AI助手暂时没有连上，我先保留您的输入。您可以稍后再试。',
+    };
+  }
 
   if (result.missingInfo) {
     return {
@@ -678,13 +628,7 @@ export async function analyzeQuadrant(context: AppContext, dateRange: QuadrantDa
 
   // 获取AI配置
   const config = await getAIConfig();
-  const hasApiKey = config.apiKey && config.apiKey !== '';
-  
-  if (!hasApiKey) {
-    console.log('AI助手未配置API密钥，使用本地规则分析');
-  }
-  
-  if (hasApiKey) {
+  if (config.enabled) {
     try {
       const taskList = targetTasks.map(t => ({
         id: t.id,
@@ -954,42 +898,42 @@ function getTaskReferenceDate(task: any): number | null {
 // ==================== 今日总结 ====================
 
 export async function generateTodaySummary(context: AppContext): Promise<string> {
-  const config = await getAIConfig();
-  if (!config.apiKey) {
-    return 'AI助手未配置API密钥，无法生成总结。';
-  }
-
   const today = new Date().toDateString();
   const todayTasks = context.tasks.filter(t => new Date(t.startTime).toDateString() === today);
   const completed = todayTasks.filter(t => t.status === 'completed');
   const pending = todayTasks.filter(t => t.status === 'pending' || t.status === 'in_progress');
   const reviewing = todayTasks.filter(t => t.status === 'reviewing');
 
-  const response = await callAI(
-    `生成今日总结。用户: ${context.currentUser?.name}，今日任务: ${todayTasks.length}个(已完成${completed.length}, 进行中${pending.length}, 待审核${reviewing.length})，当前星星: ${context.currentUser?.stars || 0}`,
-    `你是温暖的家庭助手，用简短温馨的语言总结今日表现。包括：完成的任务、获得的星星、待完成的事项、鼓励语。不超过200字。用中文回答。`
-  );
+  try {
+    const response = await callAI(
+      `生成今日总结。用户: ${context.currentUser?.name}，今日任务: ${todayTasks.length}个(已完成${completed.length}, 进行中${pending.length}, 待审核${reviewing.length})，当前星星: ${context.currentUser?.stars || 0}`,
+      `你是温暖的家庭助手，用简短温馨的语言总结今日表现。包括：完成的任务、获得的星星、待完成的事项、鼓励语。不超过200字。用中文回答。`
+    );
 
-  return response.text || '今天又是充满活力的一天！继续加油 🌱';
+    return response.text || '今天又是充满活力的一天！继续加油 🌱';
+  } catch (error) {
+    console.warn('今日总结AI调用失败，使用本地总结:', error);
+    return `今天共有 ${todayTasks.length} 个任务，已完成 ${completed.length} 个，待处理 ${pending.length + reviewing.length} 个。先看见已经做到的，再稳稳推进下一件事。`;
+  }
 }
 
 // ==================== 智能建议 ====================
 
 export async function getSmartSuggestions(context: AppContext): Promise<string[]> {
-  const config = await getAIConfig();
-  if (!config.apiKey) {
-    return ['AI助手未配置API密钥，无法获取智能建议'];
-  }
-
   const pendingTasks = context.tasks.filter(t => t.status === 'pending' || t.status === 'in_progress');
   const reviewingTasks = context.tasks.filter(t => t.status === 'reviewing');
 
-  const response = await callAIJson<string[]>(
-    `给出智能建议。待办任务${pendingTasks.length}个，待审核${reviewingTasks.length}个，用户星星${context.currentUser?.stars}，可用心愿${context.rewards.length}个。返回JSON数组格式。`,
-    `根据用户当前状态，给出3-5条简短实用的建议。例如：优先完成高奖励任务、审核待确认的打卡、兑换某个心愿等。每条建议不超过30字。用中文回答。返回JSON数组。`
-  );
+  try {
+    const response = await callAIJson<string[]>(
+      `给出智能建议。待办任务${pendingTasks.length}个，待审核${reviewingTasks.length}个，用户星星${context.currentUser?.stars}，可用心愿${context.rewards.length}个。返回JSON数组格式。`,
+      `根据用户当前状态，给出3-5条简短实用的建议。例如：优先完成高奖励任务、审核待确认的打卡、兑换某个心愿等。每条建议不超过30字。用中文回答。返回JSON数组。`
+    );
 
-  return Array.isArray(response) ? response : [];
+    return Array.isArray(response) ? response : [];
+  } catch (error) {
+    console.warn('智能建议AI调用失败，使用本地建议:', error);
+    return buildFamilyButlerSuggestions(context).slice(0, 5);
+  }
 }
 
 // ==================== 语音合成（TTS）====================

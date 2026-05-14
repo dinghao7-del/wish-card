@@ -1,6 +1,6 @@
 /**
  * AI 助手引擎 - 小程序版
- * 连接 Supabase Edge Function 调用 Gemini/OpenAI API
+ * 连接 Supabase Edge Function 调用真实 AI
  * 本地规则引擎作为 fallback（离线或API失败时）
  */
 import Taro from '@tarojs/taro';
@@ -28,13 +28,31 @@ interface AIContext {
 
 // ==================== 配置管理 ====================
 const DEFAULT_CONFIG: AIConfig = {
-  provider: 'gemini',
-  model: 'gemini-2.0-flash',
+  provider: 'minimax',
+  model: 'MiniMax-M2.7',
   apiKey: '',
   apiEndpoint: '',
 };
 
 let cachedConfig: AIConfig | null = null;
+
+function normalizeConfig(config: Partial<AIConfig> = {}): AIConfig {
+  const provider = ['minimax', 'openai', 'custom'].includes(config.provider || '')
+    ? config.provider!
+    : DEFAULT_CONFIG.provider;
+  const model = provider === 'minimax' && config.model?.startsWith('MiniMax-')
+    ? config.model
+    : provider === 'minimax'
+      ? DEFAULT_CONFIG.model
+      : config.model || 'gpt-4o-mini';
+
+  return {
+    provider,
+    model,
+    apiKey: '',
+    apiEndpoint: config.apiEndpoint || '',
+  };
+}
 
 /** 从本地存储或环境获取配置 (exported for AISettings page) */
 export async function getAIConfig(): Promise<AIConfig> {
@@ -44,7 +62,7 @@ export async function getAIConfig(): Promise<AIConfig> {
     // 尝试从本地存储读取
     const stored = Taro.getStorageSync('ai_config');
     if (stored) {
-      cachedConfig = JSON.parse(stored) as AIConfig;
+      cachedConfig = normalizeConfig(JSON.parse(stored) as AIConfig);
       return cachedConfig!;
     }
   } catch {}
@@ -60,12 +78,11 @@ export async function getAIConfig(): Promise<AIConfig> {
     if (data && data.length > 0) {
       const map: Record<string, string> = {};
       data.forEach((item: any) => { map[item.key] = item.value; });
-      cachedConfig = {
-        provider: map['ai_provider'] || 'gemini',
-        model: map['ai_model'] || 'gemini-2.0-flash',
-        apiKey: map['ai_api_key'] || '',
+      cachedConfig = normalizeConfig({
+        provider: map['ai_provider'] || 'minimax',
+        model: map['ai_model'] || 'MiniMax-M2.7',
         apiEndpoint: map['ai_api_endpoint'] || '',
-      };
+      });
       return cachedConfig!;
     }
   } catch {}
@@ -115,11 +132,6 @@ export async function sendToAI(
 ): Promise<string> {
   const config = await getAIConfig();
 
-  // 如果没有 API Key，走本地规则引擎 fallback
-  if (!config.apiKey) {
-    return localFallback(userMessage, context);
-  }
-
   try {
     // 构建 context 信息注入到 prompt 中
     const contextInfo = buildContextString(context);
@@ -158,7 +170,7 @@ async function callEdgeFunction(
         provider: config.provider,
         model: config.model,
         temperature: 0.9,
-        max_tokens: 2048,
+        max_tokens: 8192,
       },
     });
 

@@ -13,21 +13,30 @@ interface AIConfigState {
 }
 
 const PROVIDERS = [
-  { value: 'gemini', label: 'Google Gemini' },
+  { value: 'minimax', label: 'MiniMax' },
   { value: 'openai', label: 'OpenAI' },
-  { value: 'deepseek', label: 'DeepSeek' },
 ];
 
 const MODEL_MAP: Record<string, string[]> = {
-  gemini: ['gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'],
+  minimax: ['MiniMax-M2.7', 'MiniMax-M2.7-highspeed', 'MiniMax-M2.5'],
   openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'],
-  deepseek: ['deepseek-chat', 'deepseek-coder'],
 };
+
+function normalizeConfig(config: Partial<AIConfigState>): Partial<AIConfigState> {
+  const provider = MODEL_MAP[config.provider || ''] ? config.provider! : 'minimax';
+  const model = MODEL_MAP[provider].includes(config.model || '') ? config.model! : MODEL_MAP[provider][0];
+  return {
+    ...config,
+    provider,
+    model,
+    apiKey: '',
+  };
+}
 
 export default function AISettingsPage() {
   const [config, setConfig] = useState<AIConfigState>({
-    provider: 'gemini',
-    model: 'gemini-2.0-flash',
+    provider: 'minimax',
+    model: 'MiniMax-M2.7',
     apiKey: '',
     apiEndpoint: '',
     enabled: true,
@@ -45,11 +54,11 @@ export default function AISettingsPage() {
       const stored = Taro.getStorageSync('ai_config');
       if (stored) {
         const parsed = JSON.parse(stored);
-        setConfig(prev => ({ ...prev, ...parsed }));
+        setConfig(prev => ({ ...prev, ...normalizeConfig(parsed) }));
       } else {
         const remote = await getAIConfig();
         if (remote) {
-          setConfig(prev => ({ ...prev, ...remote }));
+          setConfig(prev => ({ ...prev, ...normalizeConfig(remote) }));
         }
       }
     } catch (e) {
@@ -59,7 +68,7 @@ export default function AISettingsPage() {
 
   const saveConfig = () => {
     try {
-      const toSave = { ...config };
+      const toSave = normalizeConfig(config);
       Taro.setStorageSync('ai_config', JSON.stringify(toSave));
       setSaved(true);
       Taro.showToast({ title: '设置已保存', icon: 'success' });
@@ -94,8 +103,8 @@ export default function AISettingsPage() {
         if (res.confirm) {
           Taro.removeStorageSync('ai_config');
           setConfig({
-            provider: 'gemini',
-            model: 'gemini-2.0-flash',
+            provider: 'minimax',
+            model: 'MiniMax-M2.7',
             apiKey: '',
             apiEndpoint: '',
             enabled: true,
@@ -106,7 +115,7 @@ export default function AISettingsPage() {
     });
   };
 
-  const models = MODEL_MAP[config.provider] || MODEL_MAP.gemini;
+  const models = MODEL_MAP[config.provider] || MODEL_MAP.minimax;
 
   return (
     <View className="ai-settings-page">
@@ -150,7 +159,7 @@ export default function AISettingsPage() {
                   onClick={() => setConfig(c => ({
                     ...c,
                     provider: p.value,
-                    model: MODEL_MAP[p.value]?.[0] || 'gemini-2.0-flash',
+                    model: MODEL_MAP[p.value]?.[0] || 'MiniMax-M2.7',
                   }))}
                 >{p.label}</Text>
               ))}
@@ -170,17 +179,6 @@ export default function AISettingsPage() {
                 <Icon name="chevronDown" size={14} color="#999" />
               </View>
             </Picker>
-          </View>
-
-          <View className="as-form-group">
-            <Text className="as-form-label">API Key</Text>
-            <Input
-              className="as-input"
-              password
-              value={config.apiKey}
-              placeholder="输入 API Key"
-              onInput={(e) => setConfig(c => ({ ...c, apiKey: e.detail.value }))}
-            />
           </View>
 
           <View className="as-form-group">
@@ -243,7 +241,7 @@ export default function AISettingsPage() {
           <Icon name="info" size={16} color="#8b5cf6" />
           <Text className="as-info-text">
             AI 助手通过 Supabase Edge Function 调用模型 API。
-            未配置 API Key 时，会使用本地规则引擎提供基础问答能力。
+            密钥保存在服务端，本地只保留服务商和模型偏好；离线或接口异常时会使用本地规则引擎提供基础问答能力。
           </Text>
         </View>
       </ScrollView>

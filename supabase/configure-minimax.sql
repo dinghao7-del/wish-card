@@ -23,13 +23,14 @@ ON CONFLICT (key) DO UPDATE SET value = 'MiniMax-M2.7';
 
 -- 设置API端点
 INSERT INTO app_config (key, value, description, category) 
-VALUES ('ai_api_endpoint', 'https://api.minimax.chat', 'API端点', 'ai')
-ON CONFLICT (key) DO UPDATE SET value = 'https://api.minimax.chat';
+VALUES ('ai_api_endpoint', 'https://api.minimax.chat/v1/text/chatcompletion_v2', 'API端点，仅作后台展示；真实调用以Edge Function Secret为准', 'ai')
+ON CONFLICT (key) DO UPDATE SET value = 'https://api.minimax.chat/v1/text/chatcompletion_v2';
 
--- 设置API密钥
+-- API密钥不再写入数据库，统一放在 Supabase Edge Function Secret 中：
+-- supabase secrets set MINIMAX_API_KEY=你的密钥
 INSERT INTO app_config (key, value, description, category) 
-VALUES ('ai_api_key', 'sk-cp-2cbl5k2srpadY_kjZDOEdWiOfq9ejdBNNGHiJWWy06rpob1m4Qe0gkDt95ga4--_0fWbJWWdN7pLNs--wvEZFRfFRWtY9tA59pTOTEpMaTByTWLgmwoLH2A', 'API密钥（敏感）', 'ai')
-ON CONFLICT (key) DO UPDATE SET value = 'sk-cp-2cbl5k2srpadY_kjZDOEdWiOfq9ejdBNNGHiJWWy06rpob1m4Qe0gkDt95ga4--_0fWbJWWdN7pLNs--wvEZFRfFRWtY9tA59pTOTEpMaTByTWLgmwoLH2A';
+VALUES ('ai_api_key', '', '已废弃：API密钥存放在Edge Function Secret，不进入数据库和前端', 'ai')
+ON CONFLICT (key) DO UPDATE SET value = '';
 
 -- 设置温度参数
 INSERT INTO app_config (key, value, description, category) 
@@ -38,8 +39,8 @@ ON CONFLICT (key) DO UPDATE SET value = '0.9';
 
 -- 设置最大Token
 INSERT INTO app_config (key, value, description, category) 
-VALUES ('ai_max_tokens', '2048', '最大Token数', 'ai')
-ON CONFLICT (key) DO UPDATE SET value = '2048';
+VALUES ('ai_max_tokens', '8192', '最大Token数', 'ai')
+ON CONFLICT (key) DO UPDATE SET value = '8192';
 
 -- ==================== 3. 验证配置 ====================
 SELECT key, value FROM app_config WHERE category = 'ai' OR key LIKE 'ai_%';

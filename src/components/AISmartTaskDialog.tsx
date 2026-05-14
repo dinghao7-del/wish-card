@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Sparkles, Mic, Loader2, CheckCircle2 } from 'lucide-react';
-import { GoogleGenAI, Type } from "@google/genai";
 import { useFamily } from '../context/FamilyContext';
 import { cn } from '../lib/utils';
+import { callAIJson } from '../lib/voiceAssistant';
 import { Task } from '../types';
 
 interface AISmartTaskDialogProps {
@@ -37,14 +37,10 @@ export function AISmartTaskDialog({ isOpen, onClose }: AISmartTaskDialogProps) {
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
       const memberNames = members.map(m => m.name).join('、');
-      
-      const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash", // Using flash for tasks like this
-        contents: userMessage,
-        config: {
-          systemInstruction: `你是一个家庭管理助手的后端。你的任务是解析用户的自然语言，将其转化为任务JSON。
+      const result = await callAIJson<any>(
+        userMessage,
+        `你是一个家庭管理助手的后端。你的任务是解析用户的自然语言，将其转化为任务JSON。
           
           当前家庭成员有: ${memberNames}。
           
@@ -63,26 +59,9 @@ export function AISmartTaskDialog({ isOpen, onClose }: AISmartTaskDialogProps) {
           如果信息不完整（比如没有说谁执行，或者没说奖值），请在JSON中包含一个 'missingInfo' 字段说明欠缺什么。
           否则，直接返回合法的任务对象JSON。
           
-          如果你认为这是一句闲聊或无法解析为任务，请返回 {"error": "无法解析为任务，请尝试更具体的描述"}。`,
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              title: { type: Type.STRING },
-              description: { type: Type.STRING },
-              assigneeIds: { type: Type.ARRAY, items: { type: Type.STRING } },
-              rewardStars: { type: Type.NUMBER },
-              type: { type: Type.STRING },
-              startTime: { type: Type.STRING },
-              icon: { type: Type.STRING },
-              missingInfo: { type: Type.STRING },
-              error: { type: Type.STRING }
-            }
-          }
-        }
-      });
-
-      const result = JSON.parse(response.text || '{}');
+          如果你认为这是一句闲聊或无法解析为任务，请返回 {"error": "无法解析为任务，请尝试更具体的描述"}。
+          只返回合法JSON，不要包含Markdown或解释文字。`
+      );
 
       if (result.error) {
         setMessages(prev => [...prev, { role: 'assistant', content: result.error }]);
