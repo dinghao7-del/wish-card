@@ -9,7 +9,7 @@ import VoiceAssistant from '@/components/VoiceAssistant';
 import './index.scss';
 
 const STORAGE_KEY = 'guest_user';
-const MINI_PROGRAM_VERSION = 'v1.0.3';
+const MINI_PROGRAM_VERSION = 'v1.0.6';
 
 export default function Home() {
   const [currentUser, setCurrentUser] = useState<any>(null);
