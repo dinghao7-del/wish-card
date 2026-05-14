@@ -43,6 +43,8 @@ interface FamilyContextType {
   approveTask: (taskId: string) => Promise<void>;
   requestHabitCheckIn: (habitId: string, memberId?: string) => Promise<void>;
   approveHabitCheckIn: (habitId: string, memberId: string) => Promise<void>;
+  submitParentFeedback: (parentId: string, title: string, detail?: string) => Promise<void>;
+  respondParentFeedback: (feedbackTaskId: string, mode: 'acknowledge' | 'promise') => Promise<void>;
   addReward: (reward: Reward) => Promise<void>;
   updateReward: (reward: Reward) => Promise<void>;
   deleteReward: (rewardId: string) => Promise<void>;
@@ -78,6 +80,7 @@ function deny(message: string): false {
 }
 
 const HABIT_REVIEW_MARKER = '奖惩来源ID:';
+const PARENT_FEEDBACK_MARKER = '亲子反馈卡';
 
 function habitReviewMarker(habitId: string): string {
   return `${HABIT_REVIEW_MARKER}${habitId}`;
@@ -109,6 +112,64 @@ function buildHabitReviewTask(params: {
     rewardStars: params.habit.rewardStars,
     status: 'reviewing',
     icon: params.habit.icon,
+    isHabit: false,
+    targetCount: 1,
+    currentCount: 0,
+    createdAt: now,
+  };
+}
+
+function isParentFeedbackTask(task: Pick<Task, 'description' | 'type'>): boolean {
+  return task.type === 'parent_feedback' || task.description?.includes(PARENT_FEEDBACK_MARKER);
+}
+
+function buildParentFeedbackTask(params: {
+  parentId: string;
+  childId: string;
+  childName?: string;
+  title: string;
+  detail?: string;
+}): Task {
+  const now = new Date().toISOString();
+  return {
+    id: `parent-feedback-${params.childId}-${params.parentId}-${Date.now()}`,
+    title: `亲子反馈：${params.title}`,
+    description: [
+      PARENT_FEEDBACK_MARKER,
+      `孩子:${params.childName || '孩子'}`,
+      params.detail || '',
+    ].filter(Boolean).join('\n'),
+    type: 'parent_feedback',
+    startTime: now,
+    assigneeIds: [params.parentId],
+    creatorId: params.childId,
+    rewardStars: 0,
+    status: 'reviewing',
+    icon: 'Heart',
+    isHabit: false,
+    targetCount: 1,
+    currentCount: 0,
+    createdAt: now,
+  };
+}
+
+function buildParentPromiseTask(feedbackTask: Task, parentId: string): Task {
+  const now = new Date().toISOString();
+  const cleanTitle = feedbackTask.title.replace(/^亲子反馈：/, '');
+  return {
+    id: `parent-promise-${feedbackTask.id}-${Date.now()}`,
+    title: `家长承诺：回应「${cleanTitle}」`,
+    description: [
+      '这是一条由孩子反馈生成的家长承诺任务。',
+      feedbackTask.description || '',
+    ].filter(Boolean).join('\n'),
+    type: 'parent_promise',
+    startTime: now,
+    assigneeIds: [parentId],
+    creatorId: feedbackTask.creatorId,
+    rewardStars: 0,
+    status: 'pending',
+    icon: 'HeartHandshake',
     isHabit: false,
     targetCount: 1,
     currentCount: 0,
@@ -975,6 +1036,89 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     }
   }, [currentUser, familyId, tasks]);
 
+  const submitParentFeedback = useCallback(async (parentId: string, title: string, detail = '') => {
+    if (!currentUser) return;
+    if (currentUser.role !== 'child') {
+      deny('亲子反馈需要由孩子提交');
+      return;
+    }
+    if (!parentId || !title.trim()) {
+      showToastGlobal('请选择家长并填写反馈', 'warning');
+      return;
+    }
+    const feedbackTask = buildParentFeedbackTask({
+      parentId,
+      childId: currentUser.id,
+      childName: currentUser.name,
+      title: title.trim(),
+      detail: detail.trim(),
+    });
+
+    if (guestModeRef.current) {
+      setTasks(prev => [feedbackTask, ...prev]);
+      showToastGlobal('反馈已发送给家长', 'success');
+      return;
+    }
+    if (!familyId) return;
+    try {
+      await ensureDataLayer(familyId, currentUser.id);
+      const dataTask = await dataLayerRef.current.addTask(toDataLayerTask(feedbackTask, currentUser.id));
+      setTasks(prev => [toTaskFromDataLayer(dataTask), ...prev]);
+      showToastGlobal('反馈已发送给家长', 'success');
+    } catch (err: any) {
+      showToastGlobal(`发送反馈失败: ${err.message}`, 'error');
+    }
+  }, [currentUser, familyId]);
+
+  const respondParentFeedback = useCallback(async (feedbackTaskId: string, mode: 'acknowledge' | 'promise') => {
+    if (!currentUser) return;
+    if (currentUser.role !== 'parent') {
+      deny('只有家长可以回应反馈');
+      return;
+    }
+    const feedbackTask = tasks.find(task => task.id === feedbackTaskId && isParentFeedbackTask(task));
+    if (!feedbackTask) return;
+    if (!feedbackTask.assigneeIds.includes(currentUser.id)) {
+      deny('只能回应发给自己的反馈');
+      return;
+    }
+    const completedAt = new Date().toISOString();
+    const promiseTask = mode === 'promise' ? buildParentPromiseTask(feedbackTask, currentUser.id) : null;
+
+    if (guestModeRef.current) {
+      setTasks(prev => [
+        ...(promiseTask ? [promiseTask] : []),
+        ...prev.map(task => task.id === feedbackTaskId
+          ? { ...task, status: 'completed' as const, completedAt }
+          : task),
+      ]);
+      showToastGlobal(mode === 'promise' ? '已生成家长承诺任务' : '已回应孩子反馈', 'success');
+      return;
+    }
+    if (!familyId) return;
+    try {
+      await ensureDataLayer(familyId, currentUser.id);
+      const updatedFeedback = await dataLayerRef.current.updateTask(feedbackTaskId, {
+        ...toDataLayerTask(feedbackTask, currentUser.id),
+        status: 'completed',
+        completed: true,
+        completedAt,
+      });
+      let createdPromise: Task | null = null;
+      if (promiseTask) {
+        const dataTask = await dataLayerRef.current.addTask(toDataLayerTask(promiseTask, currentUser.id));
+        createdPromise = toTaskFromDataLayer(dataTask);
+      }
+      setTasks(prev => [
+        ...(createdPromise ? [createdPromise] : []),
+        ...prev.map(task => task.id === feedbackTaskId ? toTaskFromDataLayer(updatedFeedback) : task),
+      ]);
+      showToastGlobal(mode === 'promise' ? '已生成家长承诺任务' : '已回应孩子反馈', 'success');
+    } catch (err: any) {
+      showToastGlobal(`回应反馈失败: ${err.message}`, 'error');
+    }
+  }, [currentUser, familyId, tasks]);
+
   // ==================== 奖励 Mutations ====================
   const addReward = useCallback(async (reward: Reward) => {
     if (!currentUser) {
@@ -1297,6 +1441,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
         stars: currentUser?.stars || 0,
         addStars, addTask, updateTask, deleteTask,
         completeTask, approveTask, requestHabitCheckIn, approveHabitCheckIn,
+        submitParentFeedback, respondParentFeedback,
         addReward, updateReward, deleteReward, redeemReward, approveReward,
         isDarkMode, toggleDarkMode,
         addMember, deleteMember, updateMember,

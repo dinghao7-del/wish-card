@@ -1,4 +1,4 @@
-import { View, Text, Image, Input, ScrollView } from '@tarojs/components';
+import { View, Text, Image, Input, ScrollView, Textarea } from '@tarojs/components';
 import { useState, useEffect, useMemo } from 'react';
 import Taro, { useDidShow } from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
@@ -11,6 +11,7 @@ interface Habit {
   id: string;
   title: string;
   description?: string;
+  type?: string;
   reward_stars: number;
   star_amount?: number;
   icon?: string;
@@ -19,6 +20,7 @@ interface Habit {
   status?: string;
   is_habit?: boolean;
   assignee_ids?: string[];
+  creator_id?: string;
 }
 
 interface Member {
@@ -29,6 +31,7 @@ interface Member {
 }
 
 const HABIT_REVIEW_MARKER = '奖惩来源ID:';
+const PARENT_FEEDBACK_MARKER = '亲子反馈卡';
 
 function habitReviewMarker(habitId: string) {
   return `${HABIT_REVIEW_MARKER}${habitId}`;
@@ -38,7 +41,7 @@ export default function Habits() {
   useDidShow(() => {
     Taro.eventCenter.trigger('tabBarUpdate');
   });
-  const [activeTab, setActiveTab] = useState<'reward' | 'penalty'>('reward');
+  const [activeTab, setActiveTab] = useState<'reward' | 'penalty' | 'feedback'>('reward');
   const [habits, setHabits] = useState<Habit[]>([]);
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -47,6 +50,9 @@ export default function Habits() {
   const [familyId, setFamilyId] = useState<string>('');
   const [members, setMembers] = useState<Member[]>([]);
   const [selectedChildId, setSelectedChildId] = useState('');
+  const [selectedParentId, setSelectedParentId] = useState('');
+  const [feedbackTitle, setFeedbackTitle] = useState('希望你多听我说');
+  const [feedbackDetail, setFeedbackDetail] = useState('');
   const [starBalance, setStarBalance] = useState(0);
   const [showDetail, setShowDetail] = useState(false);
   const [isCheckInSuccess, setIsCheckInSuccess] = useState(false);
@@ -168,6 +174,22 @@ export default function Habits() {
     activeTab === 'reward' ? (h.reward_stars || h.star_amount || 0) > 0 : (h.reward_stars || h.star_amount || 0) < 0
   );
   const childMembers = members.filter(m => m.role === 'child');
+  const parentMembers = members.filter(m => m.role === 'parent');
+  const feedbackTasks = habits.filter(h =>
+    h.type === 'parent_feedback'
+    || h.description?.includes(PARENT_FEEDBACK_MARKER)
+  );
+  const visibleFeedbackTasks = feedbackTasks.filter(task =>
+    userRole === 'parent'
+      ? task.assignee_ids?.includes(userId || '') && task.status !== 'completed'
+      : task.creator_id === userId
+  );
+
+  useEffect(() => {
+    if (selectedParentId || userRole !== 'child') return;
+    const firstParent = parentMembers[0];
+    if (firstParent) setSelectedParentId(firstParent.id);
+  }, [parentMembers, selectedParentId, userRole]);
 
   const pendingReviewsForHabit = (habitId: string) =>
     habits.filter(h => h.status === 'reviewing' && h.description?.includes(habitReviewMarker(habitId)));
@@ -297,6 +319,128 @@ export default function Habits() {
     }
   };
 
+  const buildParentFeedbackTask = (): Habit | null => {
+    if (!selectedParentId || !feedbackTitle.trim() || !userId) return null;
+    return {
+      id: `parent-feedback-${userId}-${selectedParentId}-${Date.now()}`,
+      title: `亲子反馈：${feedbackTitle.trim()}`,
+      description: [
+        PARENT_FEEDBACK_MARKER,
+        `孩子:${user?.name || '孩子'}`,
+        feedbackDetail.trim(),
+      ].filter(Boolean).join('\n'),
+      type: 'parent_feedback',
+      reward_stars: 0,
+      star_amount: 0,
+      icon: 'Heart',
+      current_count: 0,
+      target_count: 1,
+      status: 'reviewing',
+      is_habit: false,
+      assignee_ids: [selectedParentId],
+      creator_id: userId,
+    };
+  };
+
+  const submitParentFeedback = async () => {
+    if (userRole !== 'child') return;
+    const feedbackTask = buildParentFeedbackTask();
+    if (!feedbackTask) {
+      Taro.showToast({ title: '请选择家长并填写反馈', icon: 'none' });
+      return;
+    }
+    const now = new Date().toISOString();
+    if (!familyId || familyId === 'guest-family' || familyId === 'demo-family') {
+      setHabits(prev => [feedbackTask, ...prev]);
+      setFeedbackTitle('希望你多听我说');
+      setFeedbackDetail('');
+      Taro.showToast({ title: '反馈卡已发送', icon: 'success' });
+      return;
+    }
+    try {
+      const { error } = await supabase.from('tasks').insert({
+        family_id: familyId,
+        title: feedbackTask.title,
+        description: feedbackTask.description || '',
+        type: feedbackTask.type,
+        star_amount: 0,
+        assignee_ids: feedbackTask.assignee_ids,
+        creator_id: feedbackTask.creator_id,
+        status: 'reviewing',
+        is_habit: false,
+        target_count: 1,
+        current_count: 0,
+        icon: 'Heart',
+        created_at: now,
+        updated_at: now,
+      });
+      if (error) throw error;
+      setFeedbackTitle('希望你多听我说');
+      setFeedbackDetail('');
+      Taro.showToast({ title: '反馈卡已发送', icon: 'success' });
+      fetchHabits(familyId, userId || '', userRole);
+    } catch (err: any) {
+      Taro.showToast({ title: err.message || '发送失败', icon: 'none' });
+    }
+  };
+
+  const respondParentFeedback = async (feedbackTask: Habit, mode: 'acknowledge' | 'promise') => {
+    if (userRole !== 'parent' || !userId) return;
+    const cleanTitle = feedbackTask.title.replace(/^亲子反馈：/, '');
+    const now = new Date().toISOString();
+    const promiseTask: Habit = {
+      id: `parent-promise-${feedbackTask.id}-${Date.now()}`,
+      title: `家长承诺：回应「${cleanTitle}」`,
+      description: ['这是一条由孩子反馈生成的家长承诺任务。', feedbackTask.description || ''].join('\n'),
+      type: 'parent_promise',
+      reward_stars: 0,
+      star_amount: 0,
+      icon: 'HeartHandshake',
+      current_count: 0,
+      target_count: 1,
+      status: 'pending',
+      is_habit: false,
+      assignee_ids: [userId],
+      creator_id: feedbackTask.creator_id || userId,
+    };
+
+    if (!familyId || familyId === 'guest-family' || familyId === 'demo-family') {
+      setHabits(prev => [
+        ...(mode === 'promise' ? [promiseTask] : []),
+        ...prev.map(task => task.id === feedbackTask.id ? { ...task, status: 'completed' } : task),
+      ]);
+      Taro.showToast({ title: mode === 'promise' ? '已生成承诺任务' : '已回应反馈', icon: 'success' });
+      return;
+    }
+
+    try {
+      await supabase.from('tasks').update({ status: 'completed', updated_at: now }).eq('id', feedbackTask.id);
+      if (mode === 'promise') {
+        const { error } = await supabase.from('tasks').insert({
+          family_id: familyId,
+          title: promiseTask.title,
+          description: promiseTask.description || '',
+          type: promiseTask.type,
+          star_amount: 0,
+          assignee_ids: promiseTask.assignee_ids,
+          creator_id: promiseTask.creator_id,
+          status: 'pending',
+          is_habit: false,
+          target_count: 1,
+          current_count: 0,
+          icon: 'HeartHandshake',
+          created_at: now,
+          updated_at: now,
+        });
+        if (error) throw error;
+      }
+      Taro.showToast({ title: mode === 'promise' ? '已生成承诺任务' : '已回应反馈', icon: 'success' });
+      fetchHabits(familyId, userId || '', userRole);
+    } catch (err: any) {
+      Taro.showToast({ title: err.message || '回应失败', icon: 'none' });
+    }
+  };
+
   // 简单表情映射
   const habitEmoji = (icon?: string): string => {
     const map: Record<string, string> = {
@@ -349,13 +493,100 @@ export default function Habits() {
           >
             <Text>惩罚</Text>
           </View>
+          <View
+            className={`hp-swtich-tab ${activeTab === 'feedback' ? 'active feedback' : ''}`}
+            onClick={() => setActiveTab('feedback')}
+          >
+            <Text>反馈</Text>
+          </View>
         </View>
-        <View className="hp-add-btn" onClick={handleAddHabit}>
-          <Icon name="plusCircle" size={40} color="#ffffff" />
-        </View>
+        {activeTab !== 'feedback' && (
+          <View className="hp-add-btn" onClick={handleAddHabit}>
+            <Icon name="plusCircle" size={40} color="#ffffff" />
+          </View>
+        )}
       </View>
 
       {/* ===== 习惯列表 - 双列网格 ===== */}
+      {activeTab === 'feedback' ? (
+        <View className="hp-feedback-list">
+          {userRole === 'child' && (
+            <View className="hp-feedback-card">
+              <View className="hp-feedback-head">
+                <View className="hp-feedback-icon">
+                  <Text>💬</Text>
+                </View>
+                <View>
+                  <Text className="hp-feedback-title">给爸爸妈妈一张反馈卡</Text>
+                  <Text className="hp-feedback-subtitle">说出感受，让家人更懂你</Text>
+                </View>
+              </View>
+              <View className="hp-parent-chips">
+                {parentMembers.map(parent => (
+                  <View
+                    key={parent.id}
+                    className={`hp-parent-chip ${selectedParentId === parent.id ? 'active' : ''}`}
+                    onClick={() => setSelectedParentId(parent.id)}
+                  >
+                    <Text>{parent.name}</Text>
+                  </View>
+                ))}
+              </View>
+              <View className="hp-feedback-options">
+                {['希望你多听我说', '答应我的事没有兑现', '今天我觉得被忽视了', '谢谢你陪我完成一件事'].map(item => (
+                  <View
+                    key={item}
+                    className={`hp-feedback-option ${feedbackTitle === item ? 'active' : ''}`}
+                    onClick={() => setFeedbackTitle(item)}
+                  >
+                    <Text>{item}</Text>
+                  </View>
+                ))}
+              </View>
+              <Textarea
+                className="hp-feedback-textarea"
+                value={feedbackDetail}
+                placeholder="也可以补充一句你真正想说的话"
+                onInput={(event) => setFeedbackDetail(event.detail.value)}
+              />
+              <View className="hp-feedback-submit" onClick={submitParentFeedback}>
+                <Text>发送给家长</Text>
+              </View>
+            </View>
+          )}
+
+          {visibleFeedbackTasks.length > 0 ? visibleFeedbackTasks.map(task => {
+            const child = members.find(member => member.id === task.creator_id);
+            return (
+              <View key={task.id} className="hp-feedback-item">
+                <View className="hp-feedback-item-head">
+                  <Text className="hp-feedback-item-icon">🤝</Text>
+                  <View className="hp-feedback-item-copy">
+                    <Text className="hp-feedback-item-title">{task.title.replace('亲子反馈：', '')}</Text>
+                    <Text className="hp-feedback-item-desc">{(task.description || '').replace('亲子反馈卡\n', '')}</Text>
+                    <Text className="hp-feedback-item-meta">{child?.name || '孩子'} 的反馈 · {task.status === 'completed' ? '已回应' : '待回应'}</Text>
+                  </View>
+                </View>
+                {userRole === 'parent' && task.status !== 'completed' && (
+                  <View className="hp-feedback-actions">
+                    <View className="hp-feedback-secondary" onClick={() => respondParentFeedback(task, 'acknowledge')}>
+                      <Text>已认真看见</Text>
+                    </View>
+                    <View className="hp-feedback-primary" onClick={() => respondParentFeedback(task, 'promise')}>
+                      <Text>生成承诺任务</Text>
+                    </View>
+                  </View>
+                )}
+              </View>
+            );
+          }) : (
+            <View className="hp-empty">
+              <Icon name="heart" size={80} color="#becab9" />
+              <Text className="hp-empty-text">{userRole === 'parent' ? '还没有待回应的亲子反馈' : '还没有发出反馈卡'}</Text>
+            </View>
+          )}
+        </View>
+      ) : (
       <View className="hp-grid">
         {filteredHabits.length > 0 ? (
           filteredHabits.map(habit => (
@@ -403,6 +634,7 @@ export default function Habits() {
           </View>
         )}
       </View>
+      )}
 
       {/* ===== 详情弹窗 ===== */}
       {showDetail && selectedHabit && (

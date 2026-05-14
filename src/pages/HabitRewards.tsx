@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Star, ChevronLeft, MoreHorizontal, Plus, ChevronRight, Trophy, Ban, Globe, Edit, Trash2, CheckCircle2, Clock, AlertCircle, XCircle, Mic, X, Zap } from 'lucide-react';
+import { Star, ChevronLeft, MoreHorizontal, Plus, ChevronRight, Trophy, Ban, Globe, Edit, Trash2, CheckCircle2, Clock, AlertCircle, XCircle, Mic, X, Zap, MessageCircle, HeartHandshake } from 'lucide-react';
 import { useFamily } from '../context/FamilyContext';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -34,16 +34,19 @@ const HabitIconImage: React.FC<{ src: string; size: number }> = ({ src, size }) 
 
 export function HabitRewards() {
   const { t } = useTranslation();
-  const { tasks, currentUser, members, addTask, deleteTask, approveTask, requestHabitCheckIn, approveHabitCheckIn, stars, setIsUserSelectorOpen, guestMode } = useFamily();
+  const { tasks, currentUser, members, addTask, deleteTask, approveTask, requestHabitCheckIn, approveHabitCheckIn, submitParentFeedback, respondParentFeedback, stars, setIsUserSelectorOpen, guestMode } = useFamily();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<'reward' | 'penalty'>('reward');
+  const [activeTab, setActiveTab] = useState<'reward' | 'penalty' | 'feedback'>('reward');
   const [selectedHabit, setSelectedHabit] = useState<Task | null>(null);
   const [isAddingHabit, setIsAddingHabit] = useState(false);
   const [newHabitTitle, setNewHabitTitle] = useState('');
   const [newHabitStars, setNewHabitStars] = useState(10);
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
   const [selectedChildId, setSelectedChildId] = useState('');
+  const [selectedParentId, setSelectedParentId] = useState('');
+  const [feedbackTitle, setFeedbackTitle] = useState('希望你多听我说');
+  const [feedbackDetail, setFeedbackDetail] = useState('');
 
   const [isDetailSettingsOpen, setIsDetailSettingsOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -133,8 +136,24 @@ export function HabitRewards() {
   const rewardHabits = habits.filter(h => h.rewardStars >= 0);
   const penaltyHabits = habits.filter(h => h.rewardStars < 0);
   const childMembers = members.filter(m => m.role === 'child');
+  const parentMembers = members.filter(m => m.role === 'parent');
+  const feedbackTasks = tasks.filter(task =>
+    task.type === 'parent_feedback'
+    || task.description.includes('亲子反馈卡')
+  );
+  const visibleFeedbackTasks = feedbackTasks.filter(task =>
+    currentUser?.role === 'parent'
+      ? task.assigneeIds.includes(currentUser.id) && task.status !== 'completed'
+      : task.creatorId === currentUser?.id
+  );
   const streakDays = Math.max(0, ...habits.map(h => h.currentCount || 0));
   const nextRewardHabit = rewardHabits.find(h => (h.currentCount || 0) < (h.targetCount || 5)) || rewardHabits[0];
+
+  useEffect(() => {
+    if (selectedParentId || currentUser?.role !== 'child') return;
+    const firstParent = parentMembers[0];
+    if (firstParent) setSelectedParentId(firstParent.id);
+  }, [currentUser?.role, parentMembers, selectedParentId]);
 
   useEffect(() => {
     if (!selectedHabit || currentUser?.role !== 'parent') return;
@@ -243,6 +262,12 @@ export function HabitRewards() {
     setNewHabitStars(10);
   };
 
+  const handleSubmitFeedback = async () => {
+    await submitParentFeedback(selectedParentId, feedbackTitle, feedbackDetail);
+    setFeedbackDetail('');
+    setFeedbackTitle('希望你多听我说');
+  };
+
   return (
     <div className="min-h-screen bg-background pb-40 animate-in fade-in duration-500 text-on-surface px-6">
       {/* Header */}
@@ -297,7 +322,7 @@ export function HabitRewards() {
 
       {/* Tab Switcher and Add Button */}
       <div className="py-5 flex items-center justify-center gap-4">
-          <div className="ui-habit-tabs flex items-center bg-surface-container-low p-1 rounded-full border border-outline-variant/10 w-full max-w-[240px]">
+          <div className="ui-habit-tabs flex items-center bg-surface-container-low p-1 rounded-full border border-outline-variant/10 w-full max-w-[320px]">
             <button
               onClick={() => setActiveTab('reward')}
               className={cn(
@@ -318,20 +343,134 @@ export function HabitRewards() {
               惩罚
               <span className="ml-1 text-[10px]">{penaltyHabits.length}</span>
             </button>
+            <button
+              onClick={() => setActiveTab('feedback')}
+              className={cn(
+                "flex-1 py-1.5 rounded-full text-xs font-black transition-all",
+                activeTab === 'feedback' ? "bg-surface text-primary shadow-sm" : "text-on-surface-variant/40"
+              )}
+            >
+              反馈
+              <span className="ml-1 text-[10px]">{visibleFeedbackTasks.length}</span>
+            </button>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setShowTemplatePicker(true)}
-            aria-label="添加奖惩"
-            className="ui-habit-add-button w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all flex-shrink-0"
-          >
-            <Plus size={24} strokeWidth={3} className="text-white" />
-          </motion.button>
+          {activeTab !== 'feedback' && (
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setShowTemplatePicker(true)}
+              aria-label="添加奖惩"
+              className="ui-habit-add-button w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all flex-shrink-0"
+            >
+              <Plus size={24} strokeWidth={3} className="text-white" />
+            </motion.button>
+          )}
         </div>
 
       {/* Habit List - 双列网格新设计 */}
+      {activeTab === 'feedback' ? (
+        <section className="px-2 space-y-4 pb-4">
+          {currentUser?.role === 'child' && (
+            <div className="rounded-[2rem] bg-surface p-5 border border-outline-variant/10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-11 h-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                  <MessageCircle size={22} />
+                </div>
+                <div>
+                  <h3 className="font-black text-on-surface">给爸爸妈妈一张反馈卡</h3>
+                  <p className="text-xs font-bold text-on-surface-variant/60">表达感受，不是扣分，是让家人更懂你。</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                {parentMembers.map(parent => (
+                  <button
+                    key={parent.id}
+                    onClick={() => setSelectedParentId(parent.id)}
+                    className={cn(
+                      "rounded-2xl px-3 py-2 text-left text-sm font-black border",
+                      selectedParentId === parent.id
+                        ? "bg-primary text-white border-primary"
+                        : "bg-surface-container-low text-on-surface border-outline-variant/10"
+                    )}
+                  >
+                    {parent.name}
+                  </button>
+                ))}
+              </div>
+              <div className="grid grid-cols-1 gap-2 mb-3">
+                {['希望你多听我说', '答应我的事没有兑现', '今天我觉得被忽视了', '谢谢你陪我完成一件事'].map(item => (
+                  <button
+                    key={item}
+                    onClick={() => setFeedbackTitle(item)}
+                    className={cn(
+                      "rounded-2xl px-4 py-3 text-left text-sm font-black border",
+                      feedbackTitle === item
+                        ? "bg-primary-container text-primary-text border-primary/30"
+                        : "bg-surface-container-low text-on-surface border-outline-variant/10"
+                    )}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={feedbackDetail}
+                onChange={(event) => setFeedbackDetail(event.target.value)}
+                placeholder="也可以补充一句你真正想说的话"
+                className="w-full min-h-[5rem] rounded-2xl bg-surface-container-low border border-outline-variant/10 p-3 text-sm font-bold outline-none"
+              />
+              <button
+                onClick={handleSubmitFeedback}
+                className="mt-3 w-full rounded-2xl bg-primary text-white py-4 font-black active:scale-95 transition-transform"
+              >
+                发送给家长
+              </button>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            {visibleFeedbackTasks.length > 0 ? visibleFeedbackTasks.map(task => {
+              const child = members.find(member => member.id === task.creatorId);
+              return (
+                <div key={task.id} className="rounded-[1.5rem] bg-surface p-4 border border-outline-variant/10 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <HeartHandshake size={20} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-black text-on-surface">{task.title.replace('亲子反馈：', '')}</p>
+                      <p className="mt-1 text-xs font-bold text-on-surface-variant/60 whitespace-pre-line">{task.description.replace('亲子反馈卡\n', '')}</p>
+                      <p className="mt-2 text-[10px] font-black text-on-surface-variant/40">{child ? `${child.name} 的反馈` : '家庭反馈'} · {task.status === 'completed' ? '已回应' : '待回应'}</p>
+                    </div>
+                  </div>
+                  {currentUser?.role === 'parent' && task.status !== 'completed' && (
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => respondParentFeedback(task.id, 'acknowledge')}
+                        className="rounded-2xl bg-surface-container-low py-3 text-sm font-black text-on-surface"
+                      >
+                        已认真看见
+                      </button>
+                      <button
+                        onClick={() => respondParentFeedback(task.id, 'promise')}
+                        className="rounded-2xl bg-primary py-3 text-sm font-black text-white"
+                      >
+                        生成承诺任务
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            }) : (
+              <div className="flex flex-col items-center justify-center py-16 text-on-surface-variant font-bold text-center">
+                <MessageCircle size={56} className="mb-4 opacity-20" />
+                <p className="text-on-surface/40">{currentUser?.role === 'parent' ? '还没有待回应的亲子反馈' : '还没有发出反馈卡'}</p>
+              </div>
+            )}
+          </div>
+        </section>
+      ) : (
       <div className="ui-habit-grid px-2 grid grid-cols-2 gap-3 mt-1 pb-4">
         {filteredHabits.length > 0 ? (
           <>
@@ -395,8 +534,9 @@ export function HabitRewards() {
           </div>
         )}
       </div>
+      )}
 
-      {nextRewardHabit && (
+      {activeTab !== 'feedback' && nextRewardHabit && (
         <section className="ui-habit-next-reward mt-6 rounded-[2rem] bg-primary p-5">
           <div className="flex items-center gap-4">
             <div className="ui-habit-next-icon flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface">
