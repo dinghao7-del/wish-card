@@ -12,11 +12,26 @@ interface Habit {
   title: string;
   description?: string;
   reward_stars: number;
+  star_amount?: number;
   icon?: string;
   current_count?: number;
   target_count?: number;
   status?: string;
+  is_habit?: boolean;
   assignee_ids?: string[];
+}
+
+interface Member {
+  id: string;
+  name: string;
+  role: 'parent' | 'child';
+  stars: number;
+}
+
+const HABIT_REVIEW_MARKER = '奖惩来源ID:';
+
+function habitReviewMarker(habitId: string) {
+  return `${HABIT_REVIEW_MARKER}${habitId}`;
 }
 
 export default function Habits() {
@@ -30,6 +45,8 @@ export default function Habits() {
   const [user, setUser] = useState<any>(null);
   const [userRole, setUserRole] = useState('');
   const [familyId, setFamilyId] = useState<string>('');
+  const [members, setMembers] = useState<Member[]>([]);
+  const [selectedChildId, setSelectedChildId] = useState('');
   const [starBalance, setStarBalance] = useState(0);
   const [showDetail, setShowDetail] = useState(false);
   const [isCheckInSuccess, setIsCheckInSuccess] = useState(false);
@@ -76,6 +93,7 @@ export default function Habits() {
           setStarBalance(localUser.stars || 0);
           setUserRole(localUser.role || '');
           setFamilyId(localUser.family_id || '');
+          if (localUser.family_id) await fetchMembers(localUser.family_id);
           // 尝试从云端获取真实数据，失败时才用本地兜底
           if (localUser.family_id && localUser.family_id !== 'guest-family' && localUser.family_id !== 'demo-family') {
             await fetchHabits(localUser.family_id, localUser.id, localUser.role || '');
@@ -102,6 +120,7 @@ export default function Habits() {
           setStarBalance(data?.stars || 0);
           setUserRole(data?.role || '');
           setFamilyId(data?.family_id || '');
+          fetchMembers(data?.family_id || '');
           fetchHabits(data?.family_id || '', authUser.id, data?.role || '');
         }
       }
@@ -115,20 +134,43 @@ export default function Habits() {
       let query = supabase
         .from('tasks')
         .select('*')
-        .eq('family_id', familyId)
-        .eq('is_habit', true);
+        .eq('family_id', familyId);
 
       const { data } = await query;
-      setHabits(Array.isArray(data) ? data : []);
+      setHabits(Array.isArray(data) ? data.map((item: any) => ({
+        ...item,
+        reward_stars: item.reward_stars ?? item.star_amount ?? 0,
+      })) : []);
     } catch (err) {
       console.error('fetchHabits error:', err);
       setHabits([]);
     }
   };
 
-  const filteredHabits = (habits || []).filter(h =>
-    activeTab === 'reward' ? (h.reward_stars || 0) > 0 : (h.reward_stars || 0) < 0
+  const fetchMembers = async (fid: string) => {
+    try {
+      const { data } = await supabase
+        .from('members')
+        .select('id,name,role,stars')
+        .eq('family_id', fid)
+        .eq('is_active', true);
+      const nextMembers = Array.isArray(data) ? data as Member[] : [];
+      setMembers(nextMembers);
+      const firstChild = nextMembers.find(m => m.role === 'child');
+      if (firstChild && !selectedChildId) setSelectedChildId(firstChild.id);
+    } catch (err) {
+      console.error('fetchMembers error:', err);
+    }
+  };
+
+  const visibleHabits = (habits || []).filter(h => h.is_habit !== false);
+  const filteredHabits = visibleHabits.filter(h =>
+    activeTab === 'reward' ? (h.reward_stars || h.star_amount || 0) > 0 : (h.reward_stars || h.star_amount || 0) < 0
   );
+  const childMembers = members.filter(m => m.role === 'child');
+
+  const pendingReviewsForHabit = (habitId: string) =>
+    habits.filter(h => h.status === 'reviewing' && h.description?.includes(habitReviewMarker(habitId)));
 
   // ========== 添加/编辑/删除习惯 ==========
 
@@ -156,22 +198,23 @@ export default function Habits() {
 
   // ========== 打卡 ==========
   const handleCheckIn = async (habit: Habit) => {
+    const targetMemberId = userRole === 'parent'
+      ? selectedChildId || childMembers.find(child => habit.assignee_ids?.includes(child.id))?.id
+      : userId || '';
+    if (!targetMemberId) {
+      Taro.showToast({ title: '请选择孩子', icon: 'none' });
+      return;
+    }
     if (userRole !== 'parent') {
-      Taro.showToast({ title: '仅家长可打卡', icon: 'none' });
+      await submitHabitReview(habit, targetMemberId);
       return;
     }
     setIsCheckInSuccess(true);
     setTimeout(async () => {
       try {
-        const newCount = (habit.current_count || 0) + 1;
-        await supabase
-          .from('tasks')
-          .update({
-            current_count: newCount,
-            status: newCount >= (habit.target_count || 1) ? 'completed' : (habit.status || 'pending'),
-          })
-          .eq('id', habit.id);
+        await applyHabitStars(habit, targetMemberId);
         fetchHabits(familyId, userId || '', userRole);
+        fetchMembers(familyId);
         setShowDetail(false);
       } catch (err) {
         console.error('checkIn error:', err);
@@ -179,6 +222,79 @@ export default function Habits() {
       }
       setIsCheckInSuccess(false);
     }, 1500);
+  };
+
+  const submitHabitReview = async (habit: Habit, targetMemberId: string) => {
+    const hasPending = pendingReviewsForHabit(habit.id).some(task => task.assignee_ids?.includes(targetMemberId));
+    if (hasPending) {
+      Taro.showToast({ title: '已提交，等待家长审核', icon: 'none' });
+      return;
+    }
+    try {
+      const now = new Date().toISOString();
+      const { error } = await supabase.from('tasks').insert({
+        family_id: familyId,
+        title: `${(habit.reward_stars || 0) < 0 ? '扣分待审核' : '打卡待审核'}：${habit.title}`,
+        description: [habit.description || '', habitReviewMarker(habit.id)].filter(Boolean).join('\n'),
+        star_amount: habit.reward_stars || 0,
+        assignee_ids: [targetMemberId],
+        creator_id: userId,
+        status: 'reviewing',
+        is_habit: false,
+        target_count: 1,
+        current_count: 0,
+        icon: habit.icon || 'Star',
+        created_at: now,
+        updated_at: now,
+      });
+      if (error) throw error;
+      Taro.showToast({ title: '已提交给家长审核', icon: 'success' });
+      setShowDetail(false);
+      fetchHabits(familyId, userId || '', userRole);
+    } catch (err: any) {
+      Taro.showToast({ title: err.message || '提交失败', icon: 'none' });
+    }
+  };
+
+  const applyHabitStars = async (habit: Habit, targetMemberId: string) => {
+    const newCount = (habit.current_count || 0) + 1;
+    const nextStatus = newCount >= (habit.target_count || 1) ? 'completed' : (habit.status || 'pending');
+    const member = members.find(m => m.id === targetMemberId);
+    const amount = habit.reward_stars || 0;
+    await supabase
+      .from('tasks')
+      .update({ current_count: newCount, status: nextStatus })
+      .eq('id', habit.id);
+    if (member) {
+      await supabase
+        .from('members')
+        .update({ stars: (member.stars || 0) + amount })
+        .eq('id', targetMemberId);
+    }
+    await supabase.from('star_transactions').insert({
+      family_id: familyId,
+      member_id: targetMemberId,
+      amount,
+      type: amount > 0 ? 'earn' : 'spend',
+      reason: `${amount < 0 ? '奖惩扣分' : '奖惩打卡'}: ${habit.title}`,
+      related_habit_id: habit.id,
+    });
+  };
+
+  const approveHabitReview = async (reviewTask: Habit) => {
+    const sourceId = reviewTask.description?.match(/奖惩来源ID:([^\s\n]+)/)?.[1];
+    const sourceHabit = habits.find(h => h.id === sourceId);
+    const targetMemberId = reviewTask.assignee_ids?.[0];
+    if (!sourceHabit || !targetMemberId) return;
+    try {
+      await applyHabitStars(sourceHabit, targetMemberId);
+      await supabase.from('tasks').update({ status: 'completed' }).eq('id', reviewTask.id);
+      Taro.showToast({ title: '审核通过', icon: 'success' });
+      fetchHabits(familyId, userId || '', userRole);
+      fetchMembers(familyId);
+    } catch (err: any) {
+      Taro.showToast({ title: err.message || '审核失败', icon: 'none' });
+    }
   };
 
   // 简单表情映射
@@ -332,29 +448,80 @@ export default function Habits() {
                 </View>
               </View>
 
+              {userRole === 'parent' && childMembers.length > 0 && (
+                <View style={{ width: '100%', marginBottom: 16 }}>
+                  <Text style={{ fontSize: 12, fontWeight: 800, color: '#64715f' }}>指定孩子</Text>
+                  <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+                    {childMembers
+                      .filter(child => !selectedHabit.assignee_ids?.length || selectedHabit.assignee_ids.includes(child.id))
+                      .map(child => (
+                        <View
+                          key={child.id}
+                          onClick={() => setSelectedChildId(child.id)}
+                          style={{
+                            padding: '8px 12px',
+                            borderRadius: 14,
+                            background: selectedChildId === child.id ? '#006e1c' : '#eef3eb',
+                            color: selectedChildId === child.id ? '#fff' : '#1c211b',
+                            fontWeight: 800,
+                          }}
+                        >
+                          <Text>{child.name} · {child.stars}</Text>
+                        </View>
+                      ))}
+                  </View>
+                </View>
+              )}
+
+              {pendingReviewsForHabit(selectedHabit.id).length > 0 && (
+                <View style={{ width: '100%', marginBottom: 16, padding: 12, borderRadius: 16, background: '#fff6d8' }}>
+                  <Text style={{ fontSize: 12, fontWeight: 900, color: '#8a5a00' }}>待家长审核</Text>
+                  {pendingReviewsForHabit(selectedHabit.id).map(reviewTask => {
+                    const child = members.find(member => reviewTask.assignee_ids?.includes(member.id));
+                    return (
+                      <View key={reviewTask.id} style={{ marginTop: 8, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Text style={{ fontSize: 13, fontWeight: 700 }}>{child?.name || '孩子'} 已提交</Text>
+                        {userRole === 'parent' && (
+                          <View
+                            onClick={() => approveHabitReview(reviewTask)}
+                            style={{ padding: '6px 12px', borderRadius: 999, background: '#006e1c', color: '#fff' }}
+                          >
+                            <Text style={{ color: '#fff', fontWeight: 800 }}>通过</Text>
+                          </View>
+                        )}
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+
               {/* 操作按钮 */}
               <View className="hp-detail-actions">
                 <View className="hp-btn-back" onClick={() => setShowDetail(false)}>
                   <Text>返回</Text>
                 </View>
                 {userRole === 'parent' && (
-                  <>
-                    <View
-                      className="hp-btn-delete"
-                      onClick={handleDeleteHabit}
-                    >
-                      <Icon name="trash2" size={24} color="#e53935" />
-                      <Text>删除</Text>
-                    </View>
-                    <View
-                      className="hp-btn-checkin"
-                      onClick={() => handleCheckIn(selectedHabit!)}
-                    >
-                      <Icon name="plus" size={28} color="#ffffff" />
-                      <Text>打卡</Text>
-                    </View>
-                  </>
+                  <View
+                    className="hp-btn-delete"
+                    onClick={handleDeleteHabit}
+                  >
+                    <Icon name="trash2" size={24} color="#e53935" />
+                    <Text>删除</Text>
+                  </View>
                 )}
+                <View
+                  className="hp-btn-checkin"
+                  onClick={() => handleCheckIn(selectedHabit!)}
+                >
+                  <Icon name="plus" size={28} color="#ffffff" />
+                  <Text>
+                    {userRole === 'parent'
+                      ? ((selectedHabit.reward_stars || 0) < 0 ? '扣分' : '打卡')
+                      : pendingReviewsForHabit(selectedHabit.id).some(task => task.assignee_ids?.includes(userId || ''))
+                        ? '待审核'
+                        : ((selectedHabit.reward_stars || 0) < 0 ? '提交扣分' : '提交打卡')}
+                  </Text>
+                </View>
               </View>
             </View>
           </View>

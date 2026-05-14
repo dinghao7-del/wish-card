@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Star, ChevronLeft, MoreHorizontal, Plus, ChevronRight, Trophy, Ban, Globe, Edit, Trash2, CheckCircle2, Clock, AlertCircle, XCircle, Mic, X, Zap } from 'lucide-react';
 import { useFamily } from '../context/FamilyContext';
 import { useTranslation } from 'react-i18next';
@@ -13,9 +13,28 @@ import { CelebrationAnimation } from '../components/CelebrationAnimation';
 import { NotificationBell } from '../components/NotificationCenter';
 import { getRegisteredTaskIcon } from '../lib/lucideIconRegistry';
 
+const HabitIconImage: React.FC<{ src: string; size: number }> = ({ src, size }) => {
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError) {
+    return <Trophy size={size} />;
+  }
+
+  return (
+    <img
+      src={src}
+      alt=""
+      aria-hidden="true"
+      className="object-contain"
+      style={{ width: size, height: size }}
+      onError={() => setHasError(true)}
+    />
+  );
+};
+
 export function HabitRewards() {
   const { t } = useTranslation();
-  const { tasks, currentUser, members, updateTask, addTask, deleteTask, stars, setIsUserSelectorOpen, guestMode } = useFamily();
+  const { tasks, currentUser, members, addTask, deleteTask, approveTask, requestHabitCheckIn, approveHabitCheckIn, stars, setIsUserSelectorOpen, guestMode } = useFamily();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<'reward' | 'penalty'>('reward');
@@ -24,6 +43,7 @@ export function HabitRewards() {
   const [newHabitTitle, setNewHabitTitle] = useState('');
   const [newHabitStars, setNewHabitStars] = useState(10);
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
+  const [selectedChildId, setSelectedChildId] = useState('');
 
   const [isDetailSettingsOpen, setIsDetailSettingsOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -80,7 +100,7 @@ export function HabitRewards() {
       description: '',
       type: tpl.category,
       icon: 'Trophy',
-      rewardStars: activeTab === 'penalty' ? -tpl.stars : tpl.stars,
+      rewardStars: activeTab === 'penalty' || tpl.stars < 0 ? -Math.abs(tpl.stars) : Math.abs(tpl.stars),
       isHabit: true,
       creatorId: currentUser?.id || '',
       assigneeIds: currentUser?.role === 'parent'
@@ -112,14 +132,21 @@ export function HabitRewards() {
   const filteredHabits = habits.filter(h => activeTab === 'reward' ? h.rewardStars >= 0 : h.rewardStars < 0);
   const rewardHabits = habits.filter(h => h.rewardStars >= 0);
   const penaltyHabits = habits.filter(h => h.rewardStars < 0);
+  const childMembers = members.filter(m => m.role === 'child');
   const streakDays = Math.max(0, ...habits.map(h => h.currentCount || 0));
   const nextRewardHabit = rewardHabits.find(h => (h.currentCount || 0) < (h.targetCount || 5)) || rewardHabits[0];
+
+  useEffect(() => {
+    if (!selectedHabit || currentUser?.role !== 'parent') return;
+    const firstAssignedChild = childMembers.find(child => selectedHabit.assigneeIds.includes(child.id));
+    setSelectedChildId(firstAssignedChild?.id || childMembers[0]?.id || '');
+  }, [childMembers, currentUser?.role, selectedHabit]);
 
   const getTaskIcon = (iconName: string, size = 32) => {
     if (!iconName) return <Trophy size={size} />;
     // 支持本地 PNG 文件路径
     if (iconName.startsWith('/') || iconName.startsWith('http')) {
-      return <img src={iconName} alt="" className="object-contain" style={{ width: size, height: size }} />;
+      return <HabitIconImage src={iconName} size={size} />;
     }
     const IconComponent = getRegisteredTaskIcon(iconName);
     if (IconComponent) return <IconComponent size={size} />;
@@ -173,23 +200,20 @@ export function HabitRewards() {
 
   const [isCheckInSuccess, setIsCheckInSuccess] = useState(false);
 
-  const handleIncrement = (habit: Task) => {
-    if (currentUser?.role !== 'parent') return;
-
-    // 先显示动画
-    setIsCheckInSuccess(true);
+  const handleHabitAction = async (habit: Task) => {
+    if (!currentUser) return;
+    if (currentUser.role === 'parent') {
+      const targetMemberId = selectedChildId || childMembers.find(child => habit.assigneeIds.includes(child.id))?.id;
+      if (!targetMemberId) return;
+      await approveHabitCheckIn(habit.id, targetMemberId);
+      setIsCheckInSuccess(true);
+      return;
+    }
+    await requestHabitCheckIn(habit.id, currentUser.id);
+    setSelectedHabit(null);
   };
 
   const handleCelebrationComplete = () => {
-    if (!selectedHabit) return;
-
-    const newCount = (selectedHabit.currentCount || 0) + 1;
-    updateTask({
-      ...selectedHabit,
-      currentCount: newCount,
-      status: newCount >= (selectedHabit.targetCount || 1) ? 'completed' : selectedHabit.status
-    });
-
     setIsCheckInSuccess(false);
     setSelectedHabit(null);
   };
@@ -227,7 +251,7 @@ export function HabitRewards() {
           <Zap size={22} className="ui-habit-flash text-primary" strokeWidth={3} />
           <h1 className="text-xl font-black text-on-surface">心愿清单</h1>
           <div
-            className="hidden items-center gap-2 sm:gap-3 cursor-pointer group"
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer group"
             onClick={() => setIsUserSelectorOpen(true)}
           >
             <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={40} className="border-2 border-surface dark:border-surface shadow-sm group-hover:shadow-md transition-all" />
@@ -249,7 +273,7 @@ export function HabitRewards() {
             <Star size={14} className="sm:size-[18px] text-reward-display fill-current" />
             <span className="font-black text-on-surface text-sm sm:text-base">{stars.toLocaleString()}</span>
           </div>
-          {!guestMode && <NotificationBell />}
+          <NotificationBell />
         </div>
       </header>
 
@@ -300,9 +324,10 @@ export function HabitRewards() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => setShowTemplatePicker(true)}
-            className="ui-comic-button w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all flex-shrink-0"
+            aria-label="添加奖惩"
+            className="ui-habit-add-button w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all flex-shrink-0"
           >
-            <Plus size={24} strokeWidth={3} />
+            <Plus size={24} strokeWidth={3} className="text-white" />
           </motion.button>
         </div>
 
@@ -506,6 +531,12 @@ export function HabitRewards() {
                     (() => {
                       // 使用局部变量让TypeScript正确推断类型
                       const habit = selectedHabit;
+                      const pendingReviews = tasks.filter(task =>
+                        task.status === 'reviewing'
+                        && task.description.includes(`奖惩来源ID:${habit.id}`)
+                      );
+                      const currentUserPending = pendingReviews.some(task => task.assigneeIds.includes(currentUser?.id || ''));
+                      const targetChild = childMembers.find(child => child.id === selectedChildId);
                       return (
                         <motion.div
                           key="detail-content"
@@ -543,6 +574,55 @@ export function HabitRewards() {
                             </div>
                           </div>
 
+                          {currentUser?.role === 'parent' && childMembers.length > 0 && (
+                            <div className="w-full mb-5 text-left">
+                              <p className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest mb-2">指定孩子</p>
+                              <div className="grid grid-cols-2 gap-2">
+                                {childMembers
+                                  .filter(child => habit.assigneeIds.includes(child.id))
+                                  .map(child => (
+                                    <button
+                                      key={child.id}
+                                      onClick={() => setSelectedChildId(child.id)}
+                                      className={cn(
+                                        "rounded-2xl px-3 py-2 text-sm font-black border transition-all text-left",
+                                        selectedChildId === child.id
+                                          ? "bg-primary text-white border-primary"
+                                          : "bg-surface-container-low text-on-surface border-outline-variant/10"
+                                      )}
+                                    >
+                                      {child.name}
+                                      <span className="block text-[10px] opacity-70">{child.stars} 积分</span>
+                                    </button>
+                                  ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {pendingReviews.length > 0 && (
+                            <div className="w-full mb-5 rounded-2xl bg-warning-container/50 px-4 py-3 text-left">
+                              <p className="text-xs font-black text-warning mb-2">待家长审核</p>
+                              <div className="space-y-2">
+                                {pendingReviews.map(task => {
+                                  const child = members.find(member => task.assigneeIds.includes(member.id));
+                                  return (
+                                    <div key={task.id} className="flex items-center justify-between gap-2 text-sm">
+                                      <span className="font-bold text-on-surface">{child?.name || '孩子'} 已提交</span>
+                                      {currentUser?.role === 'parent' && (
+                                        <button
+                                          onClick={() => approveTask(task.id)}
+                                          className="rounded-full bg-primary px-3 py-1 text-xs font-black text-white"
+                                        >
+                                          通过
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
                           <div className="flex gap-4 w-full">
                             <button
                               onClick={() => setSelectedHabit(null)}
@@ -550,18 +630,23 @@ export function HabitRewards() {
                             >
                               返回
                             </button>
-                            {currentUser?.role === 'parent' && (
-                              <button
-                                onClick={() => {
-                                  if (!isCheckInSuccess) handleIncrement(habit);
-                                }}
-                                disabled={isCheckInSuccess}
-                                className="flex-[2] py-4 px-6 rounded-[1.5rem] bg-primary text-white font-black shadow-lg shadow-primary/20 hover:bg-primary-container active:scale-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50"
-                              >
-                                <Plus size={20} strokeWidth={3} />
-                                {t('habits.check_in', '打卡')}
-                              </button>
-                            )}
+                            <button
+                              onClick={() => {
+                                if (!isCheckInSuccess) handleHabitAction(habit);
+                              }}
+                              disabled={isCheckInSuccess || (currentUser?.role !== 'parent' && currentUserPending)}
+                              className={cn(
+                                "flex-[2] py-4 px-6 rounded-[1.5rem] text-white font-black shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50",
+                                habit.rewardStars < 0 ? "bg-red-500 shadow-red-500/20" : "bg-primary shadow-primary/20 hover:bg-primary-container"
+                              )}
+                            >
+                              <Plus size={20} strokeWidth={3} />
+                              {currentUser?.role === 'parent'
+                                ? `${targetChild ? `给${targetChild.name}` : '指定孩子'}${habit.rewardStars < 0 ? '扣分' : '打卡'}`
+                                : currentUserPending
+                                  ? '等待家长审核'
+                                  : `${habit.rewardStars < 0 ? '提交扣分' : t('habits.check_in', '打卡')}`}
+                            </button>
                           </div>
                         </motion.div>
                       );

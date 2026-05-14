@@ -41,6 +41,8 @@ interface FamilyContextType {
   deleteTask: (taskId: string) => Promise<void>;
   completeTask: (taskId: string) => Promise<void>;
   approveTask: (taskId: string) => Promise<void>;
+  requestHabitCheckIn: (habitId: string, memberId?: string) => Promise<void>;
+  approveHabitCheckIn: (habitId: string, memberId: string) => Promise<void>;
   addReward: (reward: Reward) => Promise<void>;
   updateReward: (reward: Reward) => Promise<void>;
   deleteReward: (rewardId: string) => Promise<void>;
@@ -73,6 +75,45 @@ const FamilyContext = createContext<FamilyContextType | undefined>(undefined);
 function deny(message: string): false {
   showToastGlobal(message, 'warning');
   return false;
+}
+
+const HABIT_REVIEW_MARKER = '奖惩来源ID:';
+
+function habitReviewMarker(habitId: string): string {
+  return `${HABIT_REVIEW_MARKER}${habitId}`;
+}
+
+function getHabitSourceId(task: Pick<Task, 'description'>): string | null {
+  const match = task.description?.match(/奖惩来源ID:([^\s\n]+)/);
+  return match?.[1] || null;
+}
+
+function buildHabitReviewTask(params: {
+  habit: Task;
+  memberId: string;
+  actorId: string;
+}): Task {
+  const isPenalty = params.habit.rewardStars < 0;
+  const now = new Date().toISOString();
+  return {
+    id: `habit-review-${params.habit.id}-${params.memberId}-${Date.now()}`,
+    title: `${isPenalty ? '扣分待审核' : '打卡待审核'}：${params.habit.title}`,
+    description: [
+      params.habit.description || '',
+      habitReviewMarker(params.habit.id),
+    ].filter(Boolean).join('\n'),
+    type: isPenalty ? 'penalty_review' : 'habit_review',
+    startTime: now,
+    assigneeIds: [params.memberId],
+    creatorId: params.actorId,
+    rewardStars: params.habit.rewardStars,
+    status: 'reviewing',
+    icon: params.habit.icon,
+    isHabit: false,
+    targetCount: 1,
+    currentCount: 0,
+    createdAt: now,
+  };
 }
 
 // DB 类型 → 前端类型映射
@@ -253,6 +294,7 @@ type GuestLocalState = {
 };
 
 const storageAdapter = getStorageAdapter();
+const DARK_MODE_STORAGE_KEY = 'ff_dark_mode';
 
 function readStoredGuestLocalState(): GuestLocalState | null {
   const stored = storageGetSync<GuestLocalState | null>(storageAdapter, STORAGE_KEYS.GUEST_LOCAL_STATE, null);
@@ -315,7 +357,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   const [rewards, setRewards] = useState<Reward[]>(() => storedGuestLocalStateRef.current?.rewards ?? []);
   const [history, setHistory] = useState<HistoryRecord[]>(() => normalizeHistoryRecords(storedGuestLocalStateRef.current?.history ?? []));
   const [auditLogs, setAuditLogs] = useState<DataOperationAuditLog[]>([]);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => storageGetSync<boolean>(storageAdapter, DARK_MODE_STORAGE_KEY, false));
   const [isInitialized, setIsInitialized] = useState(false);
   const [isUserSelectorOpen, setIsUserSelectorOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -411,6 +453,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isDarkMode) document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
+    storageSetSync(storageAdapter, DARK_MODE_STORAGE_KEY, isDarkMode);
   }, [isDarkMode]);
 
   // 初始化：检查 Supabase Session
@@ -746,27 +789,38 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       const task = tasks.find(t => t.id === taskId);
       if (task) {
         const completedAt = new Date().toISOString();
+        const sourceHabitId = getHabitSourceId(task);
+        const sourceHabit = sourceHabitId ? tasks.find(t => t.id === sourceHabitId) : null;
+        const habitCount = (sourceHabit?.currentCount || 0) + (sourceHabit ? 1 : 0);
         setTasks(prev => prev.map(t => t.id === taskId ? {
           ...t,
           status: 'completed' as const,
           completedAt,
+        } : sourceHabitId && t.id === sourceHabitId ? {
+          ...t,
+          currentCount: habitCount,
+          status: habitCount >= (t.targetCount || 1) ? 'completed' as const : t.status,
         } : t));
-        // 给当前用户加星星
-        if (task.assigneeIds.includes(currentUser.id)) {
-          const newStars = currentUser.stars + task.rewardStars;
-          setCurrentUser({ ...currentUser, stars: newStars });
-          setMembers(prev => prev.map(m => m.id === currentUser.id ? { ...m, stars: newStars } : m));
+        const assigneeIds = task.assigneeIds.length > 0 ? task.assigneeIds : [currentUser.id];
+        setMembers(prev => prev.map(member =>
+          assigneeIds.includes(member.id)
+            ? { ...member, stars: member.stars + task.rewardStars }
+            : member
+        ));
+        if (assigneeIds.includes(currentUser.id)) {
+          setCurrentUser({ ...currentUser, stars: currentUser.stars + task.rewardStars });
         }
         // 星星足迹只记录真实星星变化，0 星任务不进入账本。
-        setHistory(prev => normalizeHistoryRecords([{
-          id: `guest-hist-${Date.now()}`,
-          userId: currentUser.id,
+        const newHistoryRecords: HistoryRecord[] = assigneeIds.map(assigneeId => ({
+          id: `guest-hist-${taskId}-${assigneeId}-${Date.now()}`,
+          userId: assigneeId,
           title: `完成任务: ${task.title}`,
-          type: 'task',
+          type: task.rewardStars < 0 ? 'penalty' as const : 'task' as const,
           stars: task.rewardStars,
           timestamp: completedAt,
           icon: 'CheckCircle',
-        }, ...prev]));
+        }));
+        setHistory(prev => normalizeHistoryRecords([...newHistoryRecords, ...prev]));
       }
       return;
     }
@@ -784,8 +838,22 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       });
       setTasks(prev => prev.map(t => t.id === taskId ? toTaskFromDataLayer(dataTask) : t));
 
+      const sourceHabitId = getHabitSourceId(task);
+      if (sourceHabitId) {
+        const sourceHabit = tasks.find(t => t.id === sourceHabitId);
+        if (sourceHabit) {
+          const nextCount = (sourceHabit.currentCount || 0) + 1;
+          const updatedHabit = await dataLayerRef.current.updateTask(sourceHabitId, {
+            ...toDataLayerTask(sourceHabit, currentUser.id),
+            currentCount: nextCount,
+            status: nextCount >= (sourceHabit.targetCount || 1) ? 'completed' : sourceHabit.status === 'completed' ? 'completed' : 'pending',
+          });
+          setTasks(prev => prev.map(t => t.id === sourceHabitId ? toTaskFromDataLayer(updatedHabit) : t));
+        }
+      }
+
       for (const assigneeId of task.assigneeIds) {
-        await dataLayerRef.current.addStars(assigneeId, task.rewardStars, `完成任务(审批): ${task.title}`, { taskId });
+        await dataLayerRef.current.addStars(assigneeId, task.rewardStars, `完成任务(审批): ${task.title}`, { taskId, habitId: sourceHabitId || undefined });
       }
       setMembers(prev => prev.map(member =>
         task.assigneeIds.includes(member.id)
@@ -799,7 +867,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
         id: `local-hist-${taskId}-${assigneeId}-${Date.now()}`,
         userId: assigneeId,
         title: `完成任务(审批): ${task.title}`,
-        type: 'task' as const,
+        type: task.rewardStars < 0 ? 'penalty' as const : 'task' as const,
         stars: task.rewardStars,
         timestamp: completedAt,
         icon: 'CheckCircle',
@@ -807,6 +875,103 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       setHistory(prev => normalizeHistoryRecords([...newHistoryRecords, ...prev]));
     } catch (err: any) {
       showToastGlobal(`审批任务失败: ${err.message}`, 'error');
+    }
+  }, [currentUser, familyId, tasks]);
+
+  const requestHabitCheckIn = useCallback(async (habitId: string, memberId?: string) => {
+    if (!currentUser) return;
+    const habit = tasks.find(t => t.id === habitId && t.isHabit);
+    if (!habit) return;
+    const targetMemberId = memberId || currentUser.id;
+    if (currentUser.role !== 'parent' && targetMemberId !== currentUser.id) {
+      deny('孩子只能提交自己的打卡');
+      return;
+    }
+    if (!habit.assigneeIds.includes(targetMemberId)) {
+      showToastGlobal('这个奖惩没有分配给该孩子', 'warning');
+      return;
+    }
+    const hasPending = tasks.some(task =>
+      task.status === 'reviewing'
+      && task.assigneeIds.includes(targetMemberId)
+      && getHabitSourceId(task) === habitId
+    );
+    if (hasPending) {
+      showToastGlobal('这条奖惩已经提交，等待家长审核', 'info');
+      return;
+    }
+
+    const reviewTask = buildHabitReviewTask({
+      habit,
+      memberId: targetMemberId,
+      actorId: currentUser.id,
+    });
+
+    if (guestModeRef.current) {
+      setTasks(prev => [reviewTask, ...prev]);
+      showToastGlobal('已提交给家长审核', 'success');
+      return;
+    }
+    if (!familyId) return;
+    try {
+      await ensureDataLayer(familyId, currentUser.id);
+      const dataTask = await dataLayerRef.current.addTask(toDataLayerTask(reviewTask, currentUser.id));
+      setTasks(prev => [toTaskFromDataLayer(dataTask), ...prev]);
+      showToastGlobal('已提交给家长审核', 'success');
+    } catch (err: any) {
+      showToastGlobal(`提交奖惩失败: ${err.message}`, 'error');
+    }
+  }, [currentUser, familyId, tasks]);
+
+  const approveHabitCheckIn = useCallback(async (habitId: string, memberId: string) => {
+    if (!currentUser) return;
+    if (!canApproveTasks(currentUser)) {
+      deny('只有家长可以直接确认奖惩');
+      return;
+    }
+    const habit = tasks.find(t => t.id === habitId && t.isHabit);
+    if (!habit) return;
+    if (!habit.assigneeIds.includes(memberId)) {
+      showToastGlobal('这个奖惩没有分配给该孩子', 'warning');
+      return;
+    }
+    const now = new Date().toISOString();
+    const nextCount = (habit.currentCount || 0) + 1;
+    const nextHabit: Task = {
+      ...habit,
+      currentCount: nextCount,
+      status: nextCount >= (habit.targetCount || 1) ? 'completed' : habit.status === 'completed' ? 'completed' : 'pending',
+    };
+    const historyRecord: HistoryRecord = {
+      id: `habit-direct-${habitId}-${memberId}-${Date.now()}`,
+      userId: memberId,
+      title: `${habit.rewardStars < 0 ? '扣分' : '打卡'}: ${habit.title}`,
+      type: habit.rewardStars < 0 ? 'penalty' : 'task',
+      stars: habit.rewardStars,
+      timestamp: now,
+      icon: habit.rewardStars < 0 ? 'AlertCircle' : 'CheckCircle',
+    };
+
+    if (guestModeRef.current) {
+      setTasks(prev => prev.map(task => task.id === habitId ? nextHabit : task));
+      setMembers(prev => prev.map(member => member.id === memberId ? { ...member, stars: member.stars + habit.rewardStars } : member));
+      if (currentUser.id === memberId) setCurrentUser({ ...currentUser, stars: currentUser.stars + habit.rewardStars });
+      setHistory(prev => normalizeHistoryRecords([historyRecord, ...prev]));
+      showToastGlobal(habit.rewardStars < 0 ? '已扣除孩子积分' : '已为孩子打卡', 'success');
+      return;
+    }
+    if (!familyId) return;
+    try {
+      await ensureDataLayer(familyId, currentUser.id);
+      const updatedHabit = await dataLayerRef.current.updateTask(habitId, toDataLayerTask(nextHabit, currentUser.id));
+      await dataLayerRef.current.addStars(memberId, habit.rewardStars, `${habit.rewardStars < 0 ? '奖惩扣分' : '奖惩打卡'}: ${habit.title}`, { habitId });
+      setTasks(prev => prev.map(task => task.id === habitId ? toTaskFromDataLayer(updatedHabit) : task));
+      setMembers(prev => prev.map(member => member.id === memberId ? { ...member, stars: member.stars + habit.rewardStars } : member));
+      if (currentUser.id === memberId) setCurrentUser({ ...currentUser, stars: currentUser.stars + habit.rewardStars });
+      setHistory(prev => normalizeHistoryRecords([historyRecord, ...prev]));
+      showToastGlobal(habit.rewardStars < 0 ? '已扣除孩子积分' : '已为孩子打卡', 'success');
+    } catch (err: any) {
+      showToastGlobal(`确认奖惩失败: ${err.message}`, 'error');
     }
   }, [currentUser, familyId, tasks]);
 
@@ -1131,7 +1296,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
         currentUser, memberSession, setCurrentUser,
         stars: currentUser?.stars || 0,
         addStars, addTask, updateTask, deleteTask,
-        completeTask, approveTask,
+        completeTask, approveTask, requestHabitCheckIn, approveHabitCheckIn,
         addReward, updateReward, deleteReward, redeemReward, approveReward,
         isDarkMode, toggleDarkMode,
         addMember, deleteMember, updateMember,
