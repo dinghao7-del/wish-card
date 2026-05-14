@@ -199,10 +199,10 @@ export default function Home() {
     Taro.navigateTo({ url: '/pages/pomodoro/index' });
   };
 
-  /** 快捷操作：AI智能引导（Onboarding） */
-  const handleAiRecommend = () => {
-    console.log('[Home-DEBUG] handleAiRecommend FIRED!');
-    Taro.navigateTo({ url: '/pages/onboarding/index' });
+  /** 快捷操作：AI分析与智能建档 */
+  const handleAiAnalysis = () => {
+    console.log('[Home-DEBUG] handleAiAnalysis FIRED!');
+    Taro.navigateTo({ url: '/pages/ai-analysis/index' });
   };
 
   /** 快捷操作：计划管理 */
@@ -343,12 +343,12 @@ export default function Home() {
           <Text className="action-label">日历</Text>
         </View>
 
-        {/* AI智能推荐 */}
-        <View className="quick-action-item" onClick={handleAiRecommend}>
+        {/* AI分析 */}
+        <View className="quick-action-item" onClick={handleAiAnalysis}>
           <View className="action-icon-circle" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
             <Icon name="sparkles" size={48} color="#ffffff" />
           </View>
-          <Text className="action-label">AI推荐</Text>
+          <Text className="action-label">AI分析</Text>
         </View>
 
         {/* 计划 */}

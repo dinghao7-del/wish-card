@@ -101,13 +101,13 @@ export default function BasicSettings() {
         </View>
 
         {/* 关于 */}
-        <View className="bs-menu-item" onClick={() => Taro.showToast({ title: 'WishCard v2.0.0', icon: 'none' })}>
+        <View className="bs-menu-item" onClick={() => Taro.showToast({ title: 'WishCard 小程序 v1.0.2', icon: 'none' })}>
           <View className="bs-menu-icon-wrap">
             <Icon name="sparkles" size={32} color="#006e1c" />
           </View>
           <View className="bs-menu-content">
             <Text className="bs-menu-label">关于 WishCard</Text>
-            <Text className="bs-menu-desc">版本 2.0.0</Text>
+            <Text className="bs-menu-desc">小程序体验版 v1.0.2</Text>
           </View>
           <Text className="bs-menu-arrow">{'>'}</Text>
         </View>

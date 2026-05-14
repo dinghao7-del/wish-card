@@ -127,6 +127,13 @@ export default function Profile() {
     { icon: 'messageSquare', label: '意见反馈', route: '/pages/settings/feedback/index', color: '#0288D1' },
   ];
 
+  const menuGroupAi = [
+    { icon: 'sparkles', label: 'AI分析', route: '/pages/ai-analysis/index', color: '#006e1c' },
+    { icon: 'target', label: '四象限分析', route: '/pages/quadrant/index', color: '#F57C00' },
+    { icon: 'calendar', label: '公共时间与校历', route: '/pages/calendar/index', color: '#0288D1' },
+    { icon: 'settings2', label: 'AI助手设置', route: '/pages/settings/ai/index', color: '#7B1FA2' },
+  ];
+
   if (loading) {
     return (
       <View className="profile-page">
@@ -167,6 +174,9 @@ export default function Profile() {
           {user?.role === 'child' && (
             <View className="role-badge child"><Text>孩子</Text></View>
           )}
+          <View className="profile-version-badge">
+            <Text>小程序体验版 v1.0.2 · 2026-05-14</Text>
+          </View>
         </View>
 
         {/* ===== 家庭成员 (对齐Web: 横向滚动卡片+头像+名字+星星+当前用户高亮) ===== */}
@@ -194,6 +204,23 @@ export default function Profile() {
               </View>
             ))}
           </ScrollView>
+        </View>
+
+        {/* ===== AI能力入口：建档 / 复盘 / 日程 / 四象限 ===== */}
+        <View className="section-block">
+          {menuGroupAi.map((item, idx) => (
+            <View
+              key={idx}
+              className="menu-item"
+              onClick={() => Taro.navigateTo({ url: item.route })}
+            >
+              <View className="menu-icon-wrap" style={{ backgroundColor: `${item.color}15` }}>
+                <Icon name={item.icon as any} size={32} color={item.color} />
+              </View>
+              <Text className="menu-label">{item.label}</Text>
+              <Icon name="chevronRight" size={28} color="#becab9" />
+            </View>
+          ))}
         </View>
 
         {/* ===== 菜单组1 (安全/备份/日历同步/通知/反馈) ===== */}
