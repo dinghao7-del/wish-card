@@ -47,9 +47,9 @@ serve(async (req: Request) => {
         provider: 'minimax',
         apiKey: getRequiredEnv(['MINIMAX_API_KEY', 'AI_API_KEY']),
         endpoint: normalizeEndpoint(
-          Deno.env.get('MINIMAX_API_ENDPOINT') || 'https://api.minimax.io/v1/chat/completions',
+          Deno.env.get('MINIMAX_API_ENDPOINT') || 'https://api.minimax.io/v1/text/chatcompletion_v2',
         ),
-        model: body.model || Deno.env.get('MINIMAX_MODEL') || 'MiniMax-M2.7',
+        model: body.model || Deno.env.get('MINIMAX_MODEL') || 'MiniMax-M1',
         messages,
         temperature,
         maxTokens,
@@ -163,11 +163,12 @@ async function callOpenAICompatible(options: {
     payload = { raw: text };
   }
 
-  if (!upstream.ok) {
+  const businessError = getBusinessError(payload);
+  if (!upstream.ok || businessError) {
     return jsonResponse({
       error: `${options.provider} API error`,
       status: upstream.status,
-      detail: sanitizeUpstreamError(payload),
+      detail: sanitizeUpstreamError(businessError || payload),
       provider: options.provider,
       model: options.model,
     }, upstream.status >= 500 ? 502 : 400);
@@ -202,10 +203,25 @@ function enforceJsonInstruction(messages: ChatMessage[]): ChatMessage[] {
 function extractContent(payload: any): string {
   return payload?.choices?.[0]?.message?.content
     || payload?.choices?.[0]?.text
+    || payload?.choices?.[0]?.messages?.[0]?.text
+    || payload?.choices?.[0]?.messages?.[0]?.content
+    || payload?.choices?.[0]?.messages?.[0]?.content?.text
     || payload?.reply
     || payload?.content
     || payload?.output_text
     || '';
+}
+
+function getBusinessError(payload: any): any {
+  const statusCode = payload?.base_resp?.status_code;
+  if (typeof statusCode === 'number' && statusCode !== 0) {
+    return {
+      status_code: statusCode,
+      status_msg: payload?.base_resp?.status_msg || 'MiniMax business error',
+    };
+  }
+
+  return null;
 }
 
 function getRequiredEnv(names: string[]): string {
