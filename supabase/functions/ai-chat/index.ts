@@ -15,6 +15,7 @@ type AIChatRequest = {
   max_tokens?: number;
   response_format?: 'text' | 'json';
   jsonMode?: boolean;
+  timeoutMs?: number;
 };
 
 const corsHeaders = {
@@ -39,19 +40,21 @@ serve(async (req: Request) => {
     const jsonMode = body.response_format === 'json' || body.jsonMode === true;
     const temperature = clampNumber(body.temperature, 0, 1, 0.8);
     const maxTokens = Math.min(Math.max(Math.floor(body.max_tokens || 8192), 128), 8192);
+    const timeoutMs = Math.min(Math.max(Math.floor(body.timeoutMs || 45000), 5000), 120000);
 
     if (provider === 'minimax') {
       return await callOpenAICompatible({
         provider: 'minimax',
         apiKey: getRequiredEnv(['MINIMAX_API_KEY', 'AI_API_KEY']),
         endpoint: normalizeEndpoint(
-          Deno.env.get('MINIMAX_API_ENDPOINT') || 'https://api.minimax.chat/v1/text/chatcompletion_v2',
+          Deno.env.get('MINIMAX_API_ENDPOINT') || 'https://api.minimax.io/v1/chat/completions',
         ),
         model: body.model || Deno.env.get('MINIMAX_MODEL') || 'MiniMax-M2.7',
         messages,
         temperature,
         maxTokens,
         jsonMode,
+        timeoutMs,
       });
     }
 
@@ -67,6 +70,7 @@ serve(async (req: Request) => {
         temperature,
         maxTokens,
         jsonMode,
+        timeoutMs,
       });
     }
 
@@ -114,26 +118,42 @@ async function callOpenAICompatible(options: {
   temperature: number;
   maxTokens: number;
   jsonMode: boolean;
+  timeoutMs: number;
 }) {
   const messages = options.jsonMode
     ? enforceJsonInstruction(options.messages)
     : options.messages;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort('AI request timeout'), options.timeoutMs);
 
-  const upstream = await fetch(options.endpoint, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${options.apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: options.model,
-      messages,
-      temperature: options.temperature,
-      max_tokens: options.maxTokens,
-      stream: false,
-      ...(options.jsonMode ? { response_format: { type: 'json_object' } } : {}),
-    }),
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(options.endpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${options.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: options.model,
+        messages,
+        temperature: options.temperature,
+        max_tokens: options.maxTokens,
+        stream: false,
+        ...(options.jsonMode ? { response_format: { type: 'json_object' } } : {}),
+      }),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return jsonResponse({
+      error: `${options.provider} request failed`,
+      detail: message,
+      provider: options.provider,
+    }, message.toLowerCase().includes('timeout') || message.toLowerCase().includes('abort') ? 504 : 502);
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   const text = await upstream.text();
   let payload: any = null;
@@ -148,6 +168,8 @@ async function callOpenAICompatible(options: {
       error: `${options.provider} API error`,
       status: upstream.status,
       detail: sanitizeUpstreamError(payload),
+      provider: options.provider,
+      model: options.model,
     }, upstream.status >= 500 ? 502 : 400);
   }
 
@@ -198,6 +220,7 @@ function normalizeEndpoint(endpoint: string): string {
   const trimmed = endpoint.replace(/\/+$/, '');
   if (trimmed.endsWith('/chat/completions')) return trimmed;
   if (trimmed.endsWith('/v1')) return `${trimmed}/chat/completions`;
+  if (trimmed.endsWith('/api/v1')) return `${trimmed}/chat/completions`;
   return trimmed;
 }
 

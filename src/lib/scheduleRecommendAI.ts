@@ -504,8 +504,8 @@ export async function generateScheduleRecommendation(
     );
     return result;
   } catch (err) {
-    console.error('[ScheduleRecommend] AI generation failed:', err);
-    throw new Error('日程推荐生成失败，请稍后重试。如果持续失败，请检查AI服务配置。');
+    console.warn('[ScheduleRecommend] AI generation failed, using local fallback:', err);
+    return generateLocalScheduleRecommendation(profile);
   }
 }
 
@@ -531,8 +531,15 @@ ${JSON.stringify(originalRecommendation, null, 2)}
     );
     return result;
   } catch (err) {
-    console.error('[ScheduleRecommend] Refine failed:', err);
-    throw new Error('修改方案生成失败，请重试。');
+    console.warn('[ScheduleRecommend] Refine failed, using local fallback:', err);
+    return {
+      ...originalRecommendation,
+      summary: `${originalRecommendation.summary} 已根据“${feedback.slice(0, 24)}”做本地微调，建议家长再确认具体时间。`,
+      parentTips: [
+        `已记录修改方向：${feedback}`,
+        ...originalRecommendation.parentTips,
+      ].slice(0, 5),
+    };
   }
 }
 
@@ -571,6 +578,97 @@ function buildUserInfoPrompt(profile: ChildProfile): string {
   parts.push(`其他补充: ${profile.otherNotes || '无'}`);
 
   return parts.join('\n');
+}
+
+function generateLocalScheduleRecommendation(profile: ChildProfile): ScheduleRecommendation {
+  const age = profile.age ?? gradeToAge(profile.grade) ?? 8;
+  const isTeen = age >= 12;
+  const isPreschool = age <= 6;
+  const homeworkMinutes = profile.homeworkDuration ?? (isTeen ? 90 : isPreschool ? 20 : 60);
+  const sleepTime = isTeen ? '22:00' : isPreschool ? '20:30' : '21:00';
+  const exerciseName = profile.existingInterests.find(item => /游泳|篮球|足球|跳绳|武术|跆拳道|空手道|运动/.test(item)) || '户外运动';
+  const practiceName = profile.existingInterests.find(item => /钢琴|小提琴|绘画|画画|英语|识字|书法|编程|乐高|围棋/.test(item)) || '阅读练习';
+  const weakSubject = profile.weakSubjects[0] || '薄弱科目';
+  const interestLoadNote = profile.existingSchedules.length > 0
+    ? `已考虑已有固定安排：${profile.existingSchedules.slice(0, 2).join('、')}`
+    : '暂无固定课外班，建议先少量尝试，再稳定保留。';
+
+  const weekdaySchedule: TimeSlot[] = isPreschool
+    ? [
+        { time: '07:00-07:30', duration: '30分钟', activity: '起床洗漱', notes: '保持固定起床节奏', icon: 'Sun' },
+        { time: '16:30-17:20', duration: '50分钟', activity: exerciseName, notes: '以游戏化运动为主', icon: 'Dumbbell' },
+        { time: '19:30-20:00', duration: '30分钟', activity: '亲子阅读', notes: '家长陪伴表达和复述', icon: 'Book' },
+        { time: `${sleepTime}-20:45`, duration: '15分钟', activity: '睡前流程', notes: '洗漱、收玩具、安静入睡', icon: 'Moon' },
+      ]
+    : [
+        { time: '16:30-17:00', duration: '30分钟', activity: '放学缓冲', notes: '先吃点心、喝水，降低情绪消耗', icon: 'Home' },
+        { time: `17:00-${homeworkMinutes > 70 ? '18:20' : '18:00'}`, duration: `${homeworkMinutes}分钟`, activity: '完成学校作业', notes: '先完成最确定的任务，再处理难题', icon: 'BookOpen' },
+        { time: '18:30-19:00', duration: '30分钟', activity: '晚餐与休息', notes: '不把学习任务塞进吃饭时间', icon: 'Utensils' },
+        { time: '19:10-19:40', duration: '30分钟', activity: `${weakSubject}巩固`, notes: '短时高频，不做题海', icon: 'Target' },
+        { time: '19:45-20:15', duration: '30分钟', activity: practiceName, notes: interestLoadNote, icon: 'Sparkles' },
+        { time: `${sleepTime === '22:00' ? '21:30' : '20:30'}-${sleepTime}`, duration: '30分钟', activity: '睡前整理', notes: '整理书包、确认明日重点', icon: 'Moon' },
+      ];
+
+  const weekendSchedule: TimeSlot[] = [
+    { time: '09:00-10:00', duration: '60分钟', activity: exerciseName, notes: '优先安排户外或体能活动', icon: 'Dumbbell' },
+    { time: '10:30-11:10', duration: '40分钟', activity: `${weakSubject}轻复盘`, notes: '只复盘一类问题，避免周末过载', icon: 'BookOpen' },
+    { time: '15:00-16:30', duration: '90分钟', activity: '家庭自由活动', notes: '保留亲子陪伴和孩子自主选择', icon: 'Heart' },
+  ];
+
+  const recommendedActivities: RecommendedActivity[] = [
+    {
+      name: exerciseName === '户外运动' ? (profile.gender === 'girl' ? '游泳' : '篮球') : exerciseName,
+      category: '运动',
+      reason: '运动类活动对专注力、睡眠和情绪稳定都有兜底价值，适合作为长期保留项。',
+      weeklyHours: 2,
+      recommendedAge: `${Math.max(4, Math.min(age, 18))}岁+`,
+      priority: '推荐',
+    },
+    {
+      name: practiceName === '阅读练习' ? '阅读表达' : practiceName,
+      category: /编程|乐高|围棋/.test(practiceName) ? '思维' : /英语|阅读|识字/.test(practiceName) ? '语言' : '艺术',
+      reason: '适合放在平日晚间短时练习，重点是稳定出现，而不是一次练很久。',
+      weeklyHours: 2,
+      recommendedAge: `${Math.max(5, Math.min(age, 18))}岁+`,
+      priority: '可选',
+    },
+  ];
+
+  return {
+    summary: `已用本地智能规则生成方案：重点是稳定作息、控制晚间密度，并把${weakSubject}和${practiceName}拆成短时可坚持动作。`,
+    weekdaySchedule,
+    weekendSchedule,
+    recommendedActivities,
+    avoidActivities: ['同一天叠加过多课外班', '睡前安排高强度学习', '没有复盘的长期打卡'],
+    parentTips: [
+      '每天只抓一到两个关键动作，减少临时催促。',
+      '固定课外班要优先确认接送、路程和课前准备。',
+      '兴趣爱好适合短时高频，先让孩子形成稳定感。',
+      '周末保留家庭共同活动，别把复盘做成检查。',
+    ],
+    subjectAdvice: [
+      {
+        subject: weakSubject,
+        status: profile.weakSubjects.length > 0 ? '薄弱' : '中等',
+        strategy: '每天安排20-30分钟短时巩固，先解决一类典型问题。',
+        resources: ['错题复盘', '口头讲题', '基础练习'],
+      },
+    ],
+    developmentPath: [
+      {
+        phase: '当前阶段',
+        timeRange: '未来2-4周',
+        focus: ['稳定作息', '减少冲突', '形成每日小闭环'],
+        description: '先让家庭节奏跑顺，再逐步增加目标型计划。',
+      },
+      {
+        phase: '进阶阶段',
+        timeRange: '1个学期',
+        focus: ['固定兴趣方向', '建立复盘', '优化奖励机制'],
+        description: '观察孩子真实反馈，保留最有长期价值的安排。',
+      },
+    ],
+  };
 }
 
 /**
