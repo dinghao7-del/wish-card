@@ -4,26 +4,14 @@ import Taro from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
 import { getLocalUser } from '@/utils/localUser';
 import { getGuestData, isGuestMode } from '@/lib/guestData';
+import { normalizeStarHistoryRecords, type StarHistoryRecord } from '@/lib/starHistory';
 import Icon from '@/components/Icon';
 import './index.scss';
 
-// 对齐 Web 端 History.tsx (101行) — 星星足迹
-interface StarRecord {
-  id: string;
-  amount: number;
-  reason: string;
-  created_at: string;
-  type: 'earn' | 'spend' | 'reward' | 'penalty';
-}
-
 const GUEST_STAR_HISTORY_KEY = 'wishcard_guest_star_history';
 
-function normalizeRecords(records: StarRecord[]) {
-  return records.filter(record => Number(record.amount) !== 0);
-}
-
 export default function History() {
-  const [records, setRecords] = useState<StarRecord[]>([]);
+  const [records, setRecords] = useState<StarHistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [starBalance, setStarBalance] = useState(0);
 
@@ -42,16 +30,8 @@ export default function History() {
       if (isGuestMode() || user.family_id === 'guest-family' || user.family_id === 'demo-family') {
         const stored = Taro.getStorageSync(GUEST_STAR_HISTORY_KEY);
         const storedRecords = typeof stored === 'string' ? JSON.parse(stored || '[]') : (stored || []);
-        const demoRecords = getGuestData().history
-          .filter((item: any) => item.user_id === user.id || item.userId === user.id)
-          .map((item: any) => ({
-            id: item.id,
-            amount: item.stars || item.amount || 0,
-            reason: item.title || item.reason || '',
-            created_at: item.timestamp || item.created_at || new Date().toISOString(),
-            type: (item.stars || item.amount || 0) > 0 ? 'earn' : 'spend',
-          }));
-        setRecords(normalizeRecords([...storedRecords, ...demoRecords]));
+        const demoRecords = getGuestData().history.filter((item: any) => item.user_id === user.id || item.userId === user.id);
+        setRecords(normalizeStarHistoryRecords([...storedRecords, ...demoRecords]));
         setStarBalance(user.stars || 0);
         return;
       }
@@ -66,7 +46,7 @@ export default function History() {
           .limit(50);
 
         if (transactions) {
-          setRecords(normalizeRecords(transactions.map((t: any) => ({
+          setRecords(normalizeStarHistoryRecords(transactions.map((t: any) => ({
             id: t.id,
             amount: t.amount || 0,
             reason: t.reason || (t.amount > 0 ? '获得奖励' : '兑换消费'),
@@ -102,7 +82,7 @@ export default function History() {
     if (!groups[date]) groups[date] = [];
     groups[date].push(record);
     return groups;
-  }, {} as Record<string, StarRecord[]>);
+  }, {} as Record<string, StarHistoryRecord[]>);
 
   // 图标映射（对齐Web端不同类型显示不同图标）
   const getRecordIcon = (type: string, amount: number) => {
