@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-labelledby="title desc">
+  <title id="title">星星存起来欢迎漫画</title>
+  <desc id="desc">星星积累成愿望，家庭一起计划兑现的绿色手绘漫画</desc>
+  <rect width="900" height="900" rx="80" fill="#fffaf0"/>
+  <g fill="none" stroke="#111" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M672 116c42-34 92-18 94 34 42-8 76 28 60 65"/>
+    <path d="M764 110c35-20 67-12 77 22"/>
+    <path d="M86 716c164 36 330 20 500 8 120-8 196 0 250 18"/>
+  </g>
+  <text x="72" y="152" font-size="58" font-family="'PingFang SC', Arial, sans-serif" font-weight="900" fill="#078333">星星存起来</text>
+  <text x="74" y="214" font-size="54" font-family="'PingFang SC', Arial, sans-serif" font-weight="900" fill="#111">愿望会发芽</text>
+  <text x="78" y="265" font-size="24" font-family="'PingFang SC', Arial, sans-serif" font-weight="700" fill="#222">每一次被看见的努力，都会通向一个被认真兑现的愿望</text>
+  <g transform="translate(68 330)">
+    <rect width="180" height="250" rx="28" fill="#fffdf7" stroke="#078333" stroke-width="4"/>
+    <circle cx="56" cy="132" r="36" fill="#fff7ee" stroke="#111" stroke-width="6"/>
+    <path d="M30 116c18-34 56-34 76 0" fill="none" stroke="#111" stroke-width="6"/>
+    <rect x="104" y="55" width="52" height="142" rx="8" fill="#fff" stroke="#111" stroke-width="5"/>
+    <g fill="#16b84d" stroke="#111" stroke-width="3">
+      <path d="M126 68l6 12 13 2-10 9 3 14-12-7-12 7 3-14-10-9 13-2z"/>
+      <path d="M126 112l6 12 13 2-10 9 3 14-12-7-12 7 3-14-10-9 13-2z"/>
+      <path d="M126 156l6 12 13 2-10 9 3 14-12-7-12 7 3-14-10-9 13-2z"/>
+    </g>
+  </g>
+  <g transform="translate(272 330)">
+    <rect width="180" height="250" rx="28" fill="#fffdf7" stroke="#078333" stroke-width="4"/>
+    <circle cx="72" cy="128" r="38" fill="#fff7ee" stroke="#111" stroke-width="6"/>
+    <path d="M44 114c20-34 62-34 82 0" fill="none" stroke="#111" stroke-width="6"/>
+    <path d="M118 74l24 48 53 8-39 38 10 52-48-25-48 25 9-52-38-38 52-8z" fill="#18b84d" stroke="#111" stroke-width="6"/>
+  </g>
+  <g transform="translate(476 330)">
+    <rect width="180" height="250" rx="28" fill="#fffdf7" stroke="#078333" stroke-width="4"/>
+    <path d="M42 150c12-74 104-78 130 0z" fill="#19a843" stroke="#111" stroke-width="6"/>
+    <path d="M70 150l34-58 38 58" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+    <rect x="56" y="160" width="92" height="45" rx="9" fill="#fff" stroke="#111" stroke-width="5"/>
+    <path d="M80 160c4-28 45-28 49 0" fill="none" stroke="#111" stroke-width="5"/>
+  </g>
+  <g transform="translate(680 330)">
+    <rect width="180" height="250" rx="28" fill="#fffdf7" stroke="#078333" stroke-width="4"/>
+    <rect x="38" y="76" width="104" height="130" rx="12" fill="#06283a" stroke="#111" stroke-width="5"/>
+    <path d="M90 92l18 36 40 6-29 28 7 40-36-19-35 19 7-40-29-28 40-6z" fill="#19b84c" stroke="#fff7b0" stroke-width="4"/>
+    <circle cx="58" cy="176" r="12" fill="#ffdd5c"/><circle cx="130" cy="166" r="10" fill="#ffdd5c"/>
+  </g>
+  <g transform="translate(486 570)">
+    <path d="M144-318l41 84 93 14-67 65 16 92-83-44-82 44 16-92-67-65 93-14z" fill="#18b84d" stroke="#111" stroke-width="8"/>
+    <circle cx="126" cy="-204" r="7" fill="#111"/><circle cx="166" cy="-204" r="7" fill="#111"/><path d="M126-174c25 22 51 22 74 0" fill="none" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="76" cy="0" r="46" fill="#fff7ee" stroke="#111" stroke-width="7"/>
+    <circle cx="250" cy="-2" r="52" fill="#fff7ee" stroke="#111" stroke-width="7"/>
+    <circle cx="164" cy="80" r="46" fill="#fff7ee" stroke="#111" stroke-width="7"/>
+    <path d="M24 68c22-50 80-58 120-16 42-44 108-42 146 8 40 10 74 45 78 94H-28c2-46 20-76 52-86z" fill="#19a843" stroke="#111" stroke-width="7"/>
+    <rect x="106" y="142" width="120" height="78" rx="10" fill="#fffdf7" stroke="#111" stroke-width="5"/>
+    <path d="M134 178l20 18 42-48" fill="none" stroke="#078333" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <g fill="#ffe45c" stroke="#111" stroke-width="5">
+    <path d="M722 84l11 22 25 4-18 17 4 24-22-12-22 12 4-24-18-17 25-4z"/>
+    <path d="M196 640l9 18 20 3-14 14 3 20-18-10-18 10 3-20-14-14 20-3z"/>
+  </g>
+  <text x="220" y="704" font-size="32" font-family="'PingFang SC', Arial, sans-serif" font-weight="800" fill="#078333">努力被回应，愿望就有了方向</text>
+</svg>
