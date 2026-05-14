@@ -10,14 +10,13 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@google/genai": "^0.14.0",
     "@supabase/supabase-js": "^2.49.4",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
+    "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.546.0",
-    "bcryptjs": "^2.4.3",
     "otplib": "^12.0.1",
     "qrcode": "^1.5.4",
     "react": "18.3.1",
@@ -27,10 +26,10 @@
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
-    "@types/react": "^18.0.0",
-    "@types/react-dom": "^18.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
     "tailwindcss": "^4.1.14",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
