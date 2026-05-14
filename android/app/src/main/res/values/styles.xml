@@ -22,12 +22,13 @@
         <item name="android:windowTranslucentNavigation">false</item>
     </style>
 
-    <!-- 启动屏主题：继承 SplashScreen，启动后切换到 NoActionBar 主题 -->
-    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+    <!-- 启动屏主题：保持 AppCompat 兼容，避免 BridgeActivity 在部分设备上因 SplashScreen 主题闪退 -->
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:windowBackground">@drawable/splash</item>
-        <!-- 关键：指定 Splash 消失后切换的主题，防止闪白屏 -->
-        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
-        <item name="android:windowSplashScreenBackground">@color/primary</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:statusBarColor">@color/primary</item>
+        <item name="android:navigationBarColor">@color/primary</item>
     </style>
 
 </resources>

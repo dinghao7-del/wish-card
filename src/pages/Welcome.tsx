@@ -14,6 +14,19 @@ import { getActiveThemeSkin } from '../lib/themeSkins';
 
 type Step = 'intro' | 'register' | 'login' | 'otp' | 'verify';
 
+const FOREST_WELCOME_COMICS = [
+  '/skins/forest-comic/welcome-comic-review.svg',
+  '/skins/forest-comic/welcome-comic-promise.svg',
+  '/skins/forest-comic/welcome-comic-wish.svg',
+];
+
+function pickWelcomeIllustration(defaultIllustration: string) {
+  if (defaultIllustration.includes('/skins/forest-comic/')) {
+    return FOREST_WELCOME_COMICS[Math.floor(Math.random() * FOREST_WELCOME_COMICS.length)];
+  }
+  return defaultIllustration;
+}
+
 export function Welcome() {
   const { currentUser, setCurrentUser, loadGuestDemoData, setFamilyId } = useFamily();
   const { t } = useTranslation();
@@ -35,6 +48,7 @@ export function Welcome() {
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [logoFailed, setLogoFailed] = useState(false);
+  const [welcomeIllustration] = useState(() => pickWelcomeIllustration(themeSkin.assets.welcomeIllustration));
 
   // 注册状态
   const [regNickname, setRegNickname] = useState('');
@@ -420,12 +434,12 @@ export function Welcome() {
 
   // ==================== UI ====================
   return (
-    <div className="min-h-[100svh] bg-background flex flex-col items-center justify-start sm:justify-center px-4 sm:px-6 pt-20 pb-8 sm:py-10 relative overflow-x-hidden overflow-y-auto">
+    <div className="ui-welcome-page min-h-[100svh] bg-background flex flex-col items-center justify-start sm:justify-center px-4 sm:px-6 pt-20 pb-8 sm:py-10 relative overflow-x-hidden overflow-y-auto">
       {/* 右上角关闭/跳过按钮 - 始终可见，无延迟 */}
       <button
         onClick={handleSkip}
         disabled={loading}
-        className="fixed top-4 right-4 sm:top-6 sm:right-6 z-50 flex items-center gap-1.5 px-3 sm:px-4 h-11 bg-white/90 backdrop-blur-md rounded-full text-primary hover:bg-white hover:shadow-lg transition-all active:scale-95 shadow-md border border-primary/20 text-sm font-black"
+        className="ui-welcome-skip fixed top-4 right-4 sm:top-6 sm:right-6 z-50 flex items-center gap-1.5 px-3 sm:px-4 h-11 bg-white/90 backdrop-blur-md rounded-full text-primary hover:bg-white hover:shadow-lg transition-all active:scale-95 shadow-md border border-primary/20 text-sm font-black"
       >
         {loading ? <Loader2 className="animate-spin" size={16} /> : <X size={16} />}
         <span>{t('welcome.skip', '跳过')}</span>
@@ -439,12 +453,12 @@ export function Welcome() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.1 }}
-            className="w-full max-w-md text-center z-10"
+            className="ui-welcome-intro w-full max-w-md text-center z-10"
           >
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="w-48 h-48 min-[380px]:w-56 min-[380px]:h-56 sm:w-64 sm:h-64 mx-auto mb-2 sm:mb-3 relative flex items-center justify-center"
+              className="ui-welcome-art w-48 h-48 min-[380px]:w-56 min-[380px]:h-56 sm:w-64 sm:h-64 mx-auto mb-2 sm:mb-3 relative flex items-center justify-center"
             >
               {logoFailed ? (
                 <div className="w-full h-full relative z-10 rounded-[1.75rem] sm:rounded-[2.25rem] bg-white/80 shadow-inner border border-primary/10 flex items-center justify-center">
@@ -452,15 +466,15 @@ export function Welcome() {
                 </div>
               ) : (
                 <img
-                  src={themeSkin.assets.welcomeIllustration}
+                  src={welcomeIllustration}
                   alt="星愿卡"
-                  className="w-full h-full object-contain relative z-10"
+                  className="ui-welcome-art-img w-full h-full object-contain relative z-10"
                   referrerPolicy="no-referrer"
                   onError={() => setLogoFailed(true)}
                 />
               )}
             </motion.div>
-            <h1 className="font-artistic bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent text-[48px] min-[380px]:text-[56px] sm:text-[72px] leading-[1.1] mb-2"
+            <h1 className="ui-welcome-title font-artistic bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent text-[48px] min-[380px]:text-[56px] sm:text-[72px] leading-[1.1] mb-2"
             >{t('welcome.title', '星愿卡')}</h1>
             <p className="text-safe text-on-surface-variant font-bold text-sm sm:text-base mb-2">{t('welcome.subtitle', '用努力开启小确幸 🌱')}</p>
             <p className="text-safe text-primary font-black text-sm mb-6 sm:mb-12 tracking-tight">{t('welcome.tagline', '记录成长每一步')}</p>
@@ -468,14 +482,14 @@ export function Welcome() {
             <div className="space-y-3">
               <button
                 onClick={() => { clearError(); setStep('register'); }}
-                className="w-full h-14 sm:h-16 bg-primary text-white rounded-[2rem] font-black text-base sm:text-lg flex items-center justify-center gap-3 shadow-xl shadow-green-900/20 hover:bg-primary/80 transition-all active:scale-95"
+                className="ui-welcome-primary w-full h-14 sm:h-16 bg-primary text-white rounded-[2rem] font-black text-base sm:text-lg flex items-center justify-center gap-3 shadow-xl shadow-green-900/20 hover:bg-primary/80 transition-all active:scale-95"
               >
                 <UserPlus size={22} />
                 {t('welcome.register.submit', '注册')}
               </button>
               <button
                 onClick={() => { clearError(); setStep('login'); }}
-                className="w-full h-14 sm:h-16 bg-white text-primary rounded-[2rem] font-black text-base sm:text-lg flex items-center justify-center gap-3 shadow-lg border-2 border-primary/10 hover:border-primary/30 transition-all active:scale-95"
+                className="ui-welcome-secondary w-full h-14 sm:h-16 bg-white text-primary rounded-[2rem] font-black text-base sm:text-lg flex items-center justify-center gap-3 shadow-lg border-2 border-primary/10 hover:border-primary/30 transition-all active:scale-95"
               >
                 <LogIn size={22} />
                 {t('welcome.login.submit', '登录')}
@@ -483,7 +497,7 @@ export function Welcome() {
               <button
                 onClick={handleSkip}
                 disabled={loading}
-                className="w-full h-12 text-primary/60 bg-primary/5 rounded-[2rem] font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/10 transition-all active:scale-95 border border-primary/10"
+                className="ui-welcome-guest w-full h-12 text-primary/60 bg-primary/5 rounded-[2rem] font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/10 transition-all active:scale-95 border border-primary/10"
               >
                 {loading ? <Loader2 className="animate-spin" size={16} /> : <ArrowRight size={16} />}
                 {t('welcome.guest_mode', '先逛逛')}

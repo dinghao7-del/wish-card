@@ -13,12 +13,22 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 type Step = 'intro' | 'login' | 'register';
 
 const STORAGE_KEY = 'guest_user';
+const WELCOME_COMICS = [
+  '/static/skins/forest-comic/welcome-comic-review.svg',
+  '/static/skins/forest-comic/welcome-comic-promise.svg',
+  '/static/skins/forest-comic/welcome-comic-wish.svg',
+];
+
+function pickWelcomeComic() {
+  return WELCOME_COMICS[Math.floor(Math.random() * WELCOME_COMICS.length)];
+}
 
 export default function Login() {
   const [step, setStep] = useState<Step>('intro');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+  const [welcomeComic] = useState(pickWelcomeComic);
 
   // 登录状态
   const [loginUsername, setLoginUsername] = useState('');
@@ -245,7 +255,7 @@ export default function Login() {
 
       {/* ===== 跳过按钮（始终可见） ===== */}
       <View className="login-skip-btn" onClick={handleGuestMode}>
-        <Icon name="x" size={28} color="#006e1c" />
+        <Icon name="x" size={28} color="var(--color-primary)" />
         <Text>跳过</Text>
       </View>
 
@@ -256,7 +266,7 @@ export default function Login() {
             <View className="login-logo-glow" />
             <Image
               className="login-logo-img"
-              src="/static/skins/forest-comic/app-icon.png"
+              src={welcomeComic}
               mode="aspectFit"
             />
           </View>
@@ -269,14 +279,14 @@ export default function Login() {
               className="login-btn login-btn-primary"
               onClick={() => { clearError(); setStep('register'); }}
             >
-              <Icon name="userPlus" size={40} color="#ffffff" />
+              <Icon name="userPlus" size={40} color="var(--color-on-primary)" />
               <Text>注册</Text>
             </Button>
             <Button
               className="login-btn login-btn-secondary"
               onClick={() => { clearError(); setStep('login'); }}
             >
-              <Icon name="logIn" size={40} color="#006e1c" />
+              <Icon name="logIn" size={40} color="var(--color-primary)" />
               <Text>登录</Text>
             </Button>
             <Button
@@ -285,9 +295,9 @@ export default function Login() {
               disabled={loading}
             >
               {loading ? (
-                <Icon name="loader" size={28} color="rgba(0,110,28,0.5)" />
+                <Icon name="loader" size={28} color="var(--color-on-surface-variant)" />
               ) : (
-                <Icon name="arrowRight" size={28} color="rgba(0,110,28,0.5)" />
+                <Icon name="arrowRight" size={28} color="var(--color-on-surface-variant)" />
               )}
               <Text>先逛逛</Text>
             </Button>
@@ -302,7 +312,7 @@ export default function Login() {
             <Text className="login-form-title">欢迎登录</Text>
             <Text className="login-form-subtitle">输入账号密码开启今日愿望 🌱</Text>
             <View className="login-close-btn" onClick={() => { clearError(); setStep('intro'); }}>
-              <Icon name="plus" size={36} color="#3f4a3c" />
+              <Icon name="plus" size={36} color="var(--color-on-surface)" />
             </View>
           </View>
 
@@ -329,13 +339,13 @@ export default function Login() {
 
             {error && (
               <View className="login-error">
-                <Icon name="x" size={24} color="#e53935" />
+                <Icon name="x" size={24} color="var(--color-danger)" />
                 <Text>{error}</Text>
               </View>
             )}
             {info && (
               <View className="login-info">
-                <Icon name="checkCircle" size={24} color="#2E7D32" />
+                <Icon name="checkCircle" size={24} color="var(--color-primary)" />
                 <Text>{info}</Text>
               </View>
             )}
@@ -346,7 +356,7 @@ export default function Login() {
               disabled={loading}
             >
               {loading ? (
-                <Icon name="loader" size={36} color="#ffffff" />
+                <Icon name="loader" size={36} color="var(--color-on-primary)" />
               ) : (
                 '登录账号'
               )}
@@ -387,7 +397,7 @@ export default function Login() {
             <Text className="login-form-title">欢迎注册</Text>
             <Text className="login-form-subtitle">只有家长才可以注册管理员哦 🌱</Text>
             <View className="login-close-btn" onClick={() => { clearError(); setStep('intro'); }}>
-              <Icon name="plus" size={36} color="#3f4a3c" />
+              <Icon name="plus" size={36} color="var(--color-on-surface)" />
             </View>
           </View>
 
@@ -434,13 +444,13 @@ export default function Login() {
 
             {error && (
               <View className="login-error">
-                <Icon name="x" size={24} color="#e53935" />
+                <Icon name="x" size={24} color="var(--color-danger)" />
                 <Text>{error}</Text>
               </View>
             )}
             {info && (
               <View className="login-info">
-                <Icon name="checkCircle" size={24} color="#2E7D32" />
+                <Icon name="checkCircle" size={24} color="var(--color-primary)" />
                 <Text>{info}</Text>
               </View>
             )}
@@ -451,7 +461,7 @@ export default function Login() {
               disabled={loading}
             >
               {loading ? (
-                <Icon name="loader" size={36} color="#ffffff" />
+                <Icon name="loader" size={36} color="var(--color-on-primary)" />
               ) : (
                 '发送验证码'
               )}

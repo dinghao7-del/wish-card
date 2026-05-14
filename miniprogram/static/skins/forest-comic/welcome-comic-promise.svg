@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-labelledby="title desc">
+  <title id="title">星星承诺欢迎漫画</title>
+  <desc id="desc">孩子通过星星兑换愿望，父母收到兑现提醒的手绘漫画</desc>
+  <rect width="900" height="900" rx="80" fill="#fffaf0"/>
+  <g fill="none" stroke="#111" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M690 116c42-34 92-18 94 34 42-8 76 28 60 65"/>
+    <path d="M96 725c128 30 270 16 398 0 142-18 238-3 320 18"/>
+    <path d="M130 785c206 25 392 20 610-8"/>
+  </g>
+  <text x="76" y="142" font-size="58" font-family="'PingFang SC', Arial, sans-serif" font-weight="900" fill="#078333">星星不是终点</text>
+  <text x="78" y="205" font-size="54" font-family="'PingFang SC', Arial, sans-serif" font-weight="900" fill="#111">愿望才是家庭承诺</text>
+  <text x="82" y="256" font-size="24" font-family="'PingFang SC', Arial, sans-serif" font-weight="700" fill="#222">孩子完成任务，父母收到兑现提醒。</text>
+  <g transform="translate(74 330)" font-family="'PingFang SC', Arial, sans-serif">
+    <rect width="165" height="230" rx="28" fill="#fffdf7" stroke="#c9c0a4" stroke-width="4"/>
+    <rect x="48" y="-20" width="54" height="40" rx="18" fill="#078333"/>
+    <text x="66" y="9" font-size="28" font-weight="900" fill="#fff">1</text>
+    <path d="M62 60h42M62 88h42M62 116h42" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+    <path d="M38 58l12 12 22-30M38 88l12 12 22-30M38 118l12 12 22-30" fill="none" stroke="#078333" stroke-width="6" stroke-linecap="round"/>
+    <text x="40" y="175" font-size="24" font-weight="900" fill="#078333">完成任务</text>
+  </g>
+  <g transform="translate(273 330)" font-family="'PingFang SC', Arial, sans-serif">
+    <rect width="165" height="230" rx="28" fill="#fffdf7" stroke="#c9c0a4" stroke-width="4"/>
+    <rect x="48" y="-20" width="54" height="40" rx="18" fill="#078333"/>
+    <text x="66" y="9" font-size="28" font-weight="900" fill="#fff">2</text>
+    <path d="M82 50l25 50 55 8-40 39 10 55-50-27-49 27 9-55-39-39 54-8z" fill="#20bd55" stroke="#111" stroke-width="6"/>
+    <circle cx="72" cy="116" r="5" fill="#111"/><circle cx="96" cy="116" r="5" fill="#111"/><path d="M72 138c13 10 27 10 38 0" fill="none" stroke="#111" stroke-width="4"/>
+    <text x="40" y="175" font-size="24" font-weight="900" fill="#078333">获得星星</text>
+  </g>
+  <g transform="translate(472 330)" font-family="'PingFang SC', Arial, sans-serif">
+    <rect width="165" height="230" rx="28" fill="#fffdf7" stroke="#c9c0a4" stroke-width="4"/>
+    <rect x="48" y="-20" width="54" height="40" rx="18" fill="#078333"/>
+    <text x="66" y="9" font-size="28" font-weight="900" fill="#fff">3</text>
+    <path d="M40 70h100l-13 70H52z" fill="#fff" stroke="#111" stroke-width="6"/>
+    <path d="M56 70c8-28 62-28 70 0" fill="none" stroke="#111" stroke-width="6"/>
+    <path d="M91 90l11 22 25 4-18 17 4 24-22-12-22 12 4-24-18-17 25-4z" fill="#20bd55" stroke="#111" stroke-width="5"/>
+    <text x="40" y="175" font-size="24" font-weight="900" fill="#078333">兑换愿望</text>
+  </g>
+  <g transform="translate(672 330)" font-family="'PingFang SC', Arial, sans-serif">
+    <rect width="165" height="230" rx="28" fill="#fffdf7" stroke="#c9c0a4" stroke-width="4"/>
+    <rect x="48" y="-20" width="54" height="40" rx="18" fill="#078333"/>
+    <text x="66" y="9" font-size="28" font-weight="900" fill="#fff">4</text>
+    <path d="M84 56c32 0 56 22 56 55 0 12 8 22 18 29H10c11-7 18-17 18-29 0-33 24-55 56-55z" fill="#20bd55" stroke="#111" stroke-width="6"/>
+    <path d="M66 164c9 18 27 18 36 0" fill="none" stroke="#111" stroke-width="6"/>
+    <text x="40" y="175" font-size="24" font-weight="900" fill="#078333">父母兑现</text>
+  </g>
+  <g transform="translate(492 572)">
+    <path d="M145-300l38 78 86 12-62 60 15 86-77-41-76 41 14-86-62-60 86-12z" fill="#18b94d" stroke="#111" stroke-width="8" stroke-linejoin="round"/>
+    <circle cx="128" cy="-194" r="7" fill="#111"/><circle cx="166" cy="-194" r="7" fill="#111"/><path d="M126-166c24 20 48 20 70 0" fill="none" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="72" cy="24" r="50" fill="#fff7ee" stroke="#111" stroke-width="7"/>
+    <circle cx="252" cy="14" r="56" fill="#fff7ee" stroke="#111" stroke-width="7"/>
+    <path d="M24 78c20-55 84-66 124-18 38-52 114-50 158 2 48 6 86 50 86 108H-34c0-54 28-88 58-92z" fill="#19a843" stroke="#111" stroke-width="7"/>
+    <path d="M48-10c28-34 76-28 92 10M216-24c40-42 94-18 94 30" fill="none" stroke="#111" stroke-width="7"/>
+    <circle cx="164" cy="104" r="48" fill="#fff7ee" stroke="#111" stroke-width="7"/>
+    <path d="M120 96c26-40 76-38 104 0" fill="none" stroke="#111" stroke-width="7"/>
+    <path d="M114 174h110" stroke="#111" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <text x="178" y="704" font-size="32" font-family="'PingFang SC', Arial, sans-serif" font-weight="800" fill="#078333">奖励不是控制孩子，而是让努力被认真回应</text>
+</svg>
