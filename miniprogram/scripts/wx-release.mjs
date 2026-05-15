@@ -43,6 +43,16 @@ function assertDist() {
   }
 }
 
+function getPages() {
+  assertDist();
+  const app = readJson(APP_CONFIG);
+  const pages = [...(app.pages || [])];
+  for (const pack of app.subPackages || app.subpackages || []) {
+    for (const page of pack.pages || []) pages.push(`${pack.root}/${page}`);
+  }
+  return pages;
+}
+
 function getAppId() {
   if (process.env.WX_APPID) return process.env.WX_APPID;
   const project = readJson(PROJECT_CONFIG);
@@ -130,16 +140,41 @@ async function getAccessToken() {
   return data.access_token;
 }
 
+function preflight() {
+  assertDist();
+  const project = readJson(PROJECT_CONFIG);
+  const pages = getPages();
+  const secret = process.env.WX_APP_SECRET || process.env.WX_APPSECRET;
+  const hasAuditList = Boolean(process.env.WX_AUDIT_ITEM_LIST);
+  const hasSimpleAuditConfig = Boolean(
+    process.env.WX_AUDIT_FIRST_CLASS &&
+    process.env.WX_AUDIT_SECOND_CLASS &&
+    process.env.WX_AUDIT_FIRST_ID &&
+    process.env.WX_AUDIT_SECOND_ID
+  );
+
+  console.log(`appid: ${process.env.WX_APPID || project.appid || '(缺失)'}`);
+  console.log(`version: ${getVersion()}`);
+  console.log(`dist: ${DIST_DIR}`);
+  console.log(`pages: ${pages.length}`);
+  console.log(`entry: ${process.env.WX_AUDIT_ADDRESS || pages[0] || '(缺失)'}`);
+  console.log(`WX_APP_SECRET: ${secret ? '已配置' : '缺失'}`);
+  console.log(`audit config: ${hasAuditList || hasSimpleAuditConfig ? '已配置' : '缺失'}`);
+
+  if (!secret || (!hasAuditList && !hasSimpleAuditConfig)) {
+    process.exitCode = 1;
+    console.log('预检未通过：请补齐 miniprogram/.env 后再执行 wx:deploy:auto。');
+    return;
+  }
+  console.log('预检通过。');
+}
+
 async function printInfo(token) {
   assertDist();
-  const app = readJson(APP_CONFIG);
   console.log(`appid: ${getAppId()}`);
   console.log(`version: ${getVersion()}`);
   console.log('pages:');
-  for (const page of app.pages || []) console.log(`  - ${page}`);
-  for (const pack of app.subPackages || app.subpackages || []) {
-    for (const page of pack.pages || []) console.log(`  - ${pack.root}/${page}`);
-  }
+  for (const page of getPages()) console.log(`  - ${page}`);
 
   const category = await wxPost('/wxa/get_category', token, {});
   if (category.errcode && category.errcode !== 0) throw new Error(`获取类目失败：${JSON.stringify(category)}`);
@@ -201,6 +236,7 @@ async function main() {
   loadDotEnv(path.join(ROOT, '.env'));
   loadDotEnv(path.resolve(process.cwd(), '.env'));
   const command = process.argv[2] || 'info';
+  if (command === 'preflight') return preflight();
   const token = await getAccessToken();
 
   if (command === 'info') return printInfo(token);
@@ -208,7 +244,7 @@ async function main() {
   if (command === 'status') return getLatestAuditStatus(token);
   if (command === 'publish' || command === 'release') return publishRelease(token);
   if (command === 'auto') return autoRelease(token);
-  throw new Error(`未知命令：${command}。可用命令：info / submit / status / publish / auto`);
+  throw new Error(`未知命令：${command}。可用命令：preflight / info / submit / status / publish / auto`);
 }
 
 main().catch(error => {
