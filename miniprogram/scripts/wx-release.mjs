@@ -176,7 +176,7 @@ async function printInfo(token) {
   console.log('pages:');
   for (const page of getPages()) console.log(`  - ${page}`);
 
-  const category = await wxPost('/wxa/get_category', token, {});
+  const category = await wxGet('/wxa/get_category', { access_token: token });
   if (category.errcode && category.errcode !== 0) throw new Error(`获取类目失败：${JSON.stringify(category)}`);
   console.log('categories:');
   for (const item of category.category_list || []) {
@@ -192,13 +192,16 @@ async function submitAudit(token) {
     item_list: getAuditItems(),
     feedback_info: process.env.WX_AUDIT_FEEDBACK || `版本 ${getVersion()}：家庭日程、习惯奖惩、AI 复盘与计划管理功能更新。`,
   });
+  if (data.errcode === 86000 && String(data.errmsg || '').includes('third party')) {
+    throw new Error('提交审核失败：微信当前接口只允许第三方平台代小程序调用。普通小程序账号请在微信公众平台后台的“版本管理”中手动提交审核。');
+  }
   if (data.errcode && data.errcode !== 0) throw new Error(`提交审核失败：${JSON.stringify(data)}`);
   console.log(`提交审核成功，auditid: ${data.auditid}`);
   return data.auditid;
 }
 
 async function getLatestAuditStatus(token) {
-  const data = await wxPost('/wxa/get_latest_auditstatus', token, {});
+  const data = await wxGet('/wxa/get_latest_auditstatus', { access_token: token });
   if (data.errcode && data.errcode !== 0) throw new Error(`查询审核状态失败：${JSON.stringify(data)}`);
   console.log(`审核状态：${AUDIT_STATUS[data.status] || `未知状态 ${data.status}`}`);
   if (data.reason) console.log(`原因：${data.reason}`);
