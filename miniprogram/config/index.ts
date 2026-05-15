@@ -20,8 +20,9 @@ const config: Config = {
   copy: {
     patterns: [
       { from: 'static/skins', to: 'dist/static/skins' },
-      // 小程序游客/离线模式必须使用本地素材，避免头像、任务、心愿图片走云端造成 400/500。
-      { from: 'assets', to: 'dist/assets' },
+      // 首版发布包只保留必要 UI 图标和欢迎页皮肤。
+      // 大批头像/任务/心愿模板图走对象存储，并在组件层回退到文字图标，避免小程序包体超限。
+      { from: 'assets/icons', to: 'dist/assets/icons' },
     ],
     options: {},
   },
@@ -31,6 +32,9 @@ const config: Config = {
     enable: false,
   },
   mini: {
+    optimizeMainPackage: {
+      enable: true,
+    },
     postcss: {
       pxtransform: {
         enable: true,

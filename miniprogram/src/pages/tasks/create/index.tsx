@@ -380,7 +380,7 @@ export default function CreateTask() {
             <View className='cp-card'>
               <View className='cp-title-row-header'>
                 <View className='cp-card-label'>标题</View>
-                <View className='cp-import-btn' onClick={() => { Taro.navigateTo({ url: '/pages/templates/index?mode=habit&habitOnly=1' }); }}>
+                <View className='cp-import-btn' onClick={() => { Taro.navigateTo({ url: '/pkg/templates/index?mode=habit&habitOnly=1' }); }}>
                   <Text>导入</Text>
                   <Icon name='chevronRight' size={14} color='#4CAF50' />
                 </View>

@@ -173,47 +173,47 @@ export default function Home() {
 
   /** 头像点击 - 切换用户（对齐Web版 SwitchProfile） */
   const handleAvatarClick = () => {
-    Taro.navigateTo({ url: '/pages/switch-profile/index' });
+    Taro.navigateTo({ url: '/pkg/switch-profile/index' });
   };
 
   /** 星星余额点击 -> 历史记录页 */
   const handleStarClick = () => {
-    Taro.navigateTo({ url: '/pages/history/index' });
+    Taro.navigateTo({ url: '/pkg/history/index' });
   };
 
   /** 通知按钮 -> 通知设置/通知中心 */
   const handleNotificationClick = () => {
-    Taro.navigateTo({ url: '/pages/settings/notifications/index' });
+    Taro.navigateTo({ url: '/pkg/settings/notifications/index' });
   };
 
   /** 快捷操作：创建任务 */
   const handleCreateTask = () => {
-    Taro.navigateTo({ url: '/pages/templates/index' });
+    Taro.navigateTo({ url: '/pkg/templates/index' });
   };
 
   /** 快捷操作：日历视图 */
   const handleCalendar = () => {
-    Taro.navigateTo({ url: '/pages/calendar/index' });
+    Taro.navigateTo({ url: '/pkg/calendar/index' });
   };
 
   /** 快捷操作：番茄钟 */
   const handlePomodoro = () => {
-    Taro.navigateTo({ url: '/pages/pomodoro/index' });
+    Taro.navigateTo({ url: '/pkg/pomodoro/index' });
   };
 
   /** 快捷操作：AI分析与智能建档 */
   const handleAiAnalysis = () => {
-    Taro.navigateTo({ url: '/pages/ai-analysis/index' });
+    Taro.navigateTo({ url: '/pkg/ai-analysis/index' });
   };
 
   /** 快捷操作：计划管理 */
   const handlePlans = () => {
-    Taro.navigateTo({ url: '/pages/plans/index' });
+    Taro.navigateTo({ url: '/pkg/plans/index' });
   };
 
   /** 任务卡片点击 */
   const handleTaskClick = (taskId: string) => {
-    Taro.navigateTo({ url: `/pages/tasks/detail/index?id=${taskId}` });
+    Taro.navigateTo({ url: `/pkg/tasks/detail/index?id=${taskId}` });
   };
 
   /** 查看全部任务 */
@@ -223,12 +223,12 @@ export default function Home() {
 
   /** 排行榜成员点击 */
   const handleMemberClick = (memberId: string) => {
-    Taro.navigateTo({ url: `/pages/members/detail/index?id=${memberId}` });
+    Taro.navigateTo({ url: `/pkg/members/detail/index?id=${memberId}` });
   };
 
   /** 四象限入口 */
   const handleQuadrantClick = () => {
-    Taro.navigateTo({ url: '/pages/quadrant/index' });
+    Taro.navigateTo({ url: '/pkg/quadrant/index' });
   };
 
   // ====== 排行榜数据处理 ======
@@ -459,7 +459,7 @@ export default function Home() {
                         className={`checkin-btn checkin-btn-review ${isAdmin ? 'can-approve' : 'pending-confirm'}`}
                         onClick={(e) => {
                           e.stopPropagation();
-                          Taro.navigateTo({ url: `/pages/check-in/index?taskId=${task.id}` });
+                          Taro.navigateTo({ url: `/pkg/check-in/index?taskId=${task.id}` });
                         }}
                       >
                         <Icon name={isAdmin ? "checkCircle2" : "clock"} size={28} color="#FFFFFF" />
@@ -473,7 +473,7 @@ export default function Home() {
                         className="checkin-btn checkin-btn-primary"
                         onClick={(e) => {
                           e.stopPropagation();
-                          Taro.navigateTo({ url: `/pages/check-in/index?taskId=${task.id}` });
+                          Taro.navigateTo({ url: `/pkg/check-in/index?taskId=${task.id}` });
                         }}
                       >
                         <Icon name="checkCircle2" size={32} color="#FFFFFF" />

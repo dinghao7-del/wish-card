@@ -379,7 +379,7 @@ export default function Login() {
 
             {/* 忘记密码 */}
             <View className="login-forgot-link">
-              <Text onClick={() => Taro.navigateTo({ url: '/pages/forgot-password/index' })}>
+              <Text onClick={() => Taro.navigateTo({ url: '/pkg/forgot-password/index' })}>
                 忘记密码？
               </Text>
             </View>

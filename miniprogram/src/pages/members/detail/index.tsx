@@ -160,9 +160,9 @@ export default function MemberDetail() {
       <View className="md-hero">
         <View className="md-avatar-wrap">
           <Image className="md-avatar" src={resolveAvatarPath(member.avatar || '')} mode="aspectFill"
-                 onClick={() => Taro.navigateTo({ url: '/pages/profile/edit/index' })} />
+                 onClick={() => Taro.navigateTo({ url: '/pkg/profile/edit/index' })} />
           {/* 悬浮编辑按钮（对齐Web: 右下角悬浮） */}
-          <View className="md-hero-edit-btn" onClick={() => Taro.navigateTo({ url: `/pages/profile/edit/index?id=${memberId}` })}>
+          <View className="md-hero-edit-btn" onClick={() => Taro.navigateTo({ url: `/pkg/profile/edit/index?id=${memberId}` })}>
             <Icon name="edit" size={18} color="#ffffff" />
           </View>
         </View>

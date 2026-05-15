@@ -40,7 +40,7 @@ const inferEmoji = (icon: string | undefined, title: string | undefined): string
 
 /**
  * 任务详情页
- * 路由: /pages/tasks/detail/index?id=xxx
+ * 路由: /pkg/tasks/detail/index?id=xxx
  *
  * 数据流:
  * 1. 路由参数获取 taskId
@@ -207,7 +207,7 @@ export default function TaskDetail() {
             <View className="td-menu-list">
               <View className="td-menu-item" onClick={() => {
                 setShowMenu(false);
-                Taro.navigateTo({ url: `/pages/tasks/edit/index?id=${taskId}` });
+                Taro.navigateTo({ url: `/pkg/tasks/edit/index?id=${taskId}` });
               }}>
                 <Icon name="edit" size={28} color="#006e1c" />
                 <Text className="td-menu-item-text">编辑任务</Text>
@@ -254,8 +254,8 @@ export default function TaskDetail() {
               {(() => {
                 // 解析图标路径 — 对齐 resolveIconPath 逻辑
                 const resolvedIcon = task.icon ? resolveIconPath(task.icon) : '';
-                // 有效的本地 PNG 路径 → 显示图片
-                if (resolvedIcon && resolvedIcon.startsWith('/') && !imgError) {
+                // 有效的图片路径（本地或远程）→ 显示图片
+                if (resolvedIcon && (resolvedIcon.startsWith('/') || resolvedIcon.startsWith('http')) && !imgError) {
                   return (
                     <Image
                       className="td-hero-icon-img"
@@ -429,7 +429,7 @@ export default function TaskDetail() {
       <View className="td-bottom-bar">
         {(task.status === 'pending' || task.status === 'in_progress') && (
           <View className="td-action-btn td-action-primary" onClick={() => {
-            Taro.navigateTo({ url: `/pages/check-in/index?taskId=${taskId}` });
+            Taro.navigateTo({ url: `/pkg/check-in/index?taskId=${taskId}` });
           }}>
           <Icon name="checkCircle" size={36} color="#FFFFFF" />
           <Text className="td-action-text">打卡</Text>
@@ -439,7 +439,7 @@ export default function TaskDetail() {
         <View
           className="td-action-btn td-action-blue"
           onClick={() => {
-            Taro.navigateTo({ url: `/pages/check-in/index?taskId=${taskId}` });
+            Taro.navigateTo({ url: `/pkg/check-in/index?taskId=${taskId}` });
           }}
         >
           <Icon name="checkCircle" size={36} color="#FFFFFF" />

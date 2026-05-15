@@ -611,11 +611,11 @@ export default function Habits() {
           </View>
         </View>
         <View className="hp-header-right">
-          <View className="hp-star-badge" onClick={() => Taro.navigateTo({ url: '/pages/history/index' })}>
+          <View className="hp-star-badge" onClick={() => Taro.navigateTo({ url: '/pkg/history/index' })}>
             <Icon name="star" size={34} color="#F9A825" />
             <Text className="hp-star-text">{starBalance}</Text>
           </View>
-          <NotificationBell onClick={() => Taro.navigateTo({ url: '/pages/settings/notifications/index' })} />
+          <NotificationBell onClick={() => Taro.navigateTo({ url: '/pkg/settings/notifications/index' })} />
         </View>
       </View>
 
@@ -963,7 +963,7 @@ export default function Habits() {
               <View className="hp-tpl-custom-btn" onClick={() => {
                 setShowTemplateSheet(false);
                 Taro.navigateTo({
-                  url: '/pages/tasks/create/index?mode=habit&custom=1',
+                  url: '/pkg/tasks/create/index?mode=habit&custom=1',
                 });
               }}>
                 <Text className="hp-tpl-custom-text">自定义添加</Text>
@@ -1000,7 +1000,7 @@ export default function Habits() {
                     onClick={() => {
                       setShowTemplateSheet(false);
                       Taro.navigateTo({
-                        url: `/pages/tasks/create/index?mode=habit&title=${encodeURIComponent(tpl.title)}&stars=${tpl.defaultStars}`,
+                        url: `/pkg/tasks/create/index?mode=habit&title=${encodeURIComponent(tpl.title)}&stars=${tpl.defaultStars}`,
                       });
                     }}
                   >

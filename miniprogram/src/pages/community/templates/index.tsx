@@ -21,14 +21,14 @@ export default function CommunityTemplatesPage() {
   }, [activeScene, keyword]);
 
   const goReview = (id: string) => {
-    Taro.navigateTo({ url: `/pages/community/share-review/index?id=${encodeURIComponent(id)}` });
+    Taro.navigateTo({ url: `/pkg/community/share-review/index?id=${encodeURIComponent(id)}` });
   };
 
   const useTemplate = (id: string) => {
     Taro.setStorageSync('wishcard_pending_community_template', id);
     Taro.showToast({ title: '已选中模板', icon: 'success' });
     setTimeout(() => {
-      Taro.navigateTo({ url: `/pages/plans/wizard/index?communityTemplateId=${encodeURIComponent(id)}` });
+      Taro.navigateTo({ url: `/pkg/plans/wizard/index?communityTemplateId=${encodeURIComponent(id)}` });
     }, 500);
   };
 

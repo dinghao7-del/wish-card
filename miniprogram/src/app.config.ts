@@ -1,5 +1,5 @@
 export default defineAppConfig({
-  // ========== 主包：核心页面（≤1.5MB）==========
+  // ========== 主包：只保留启动页和 TabBar 页面，确保微信 2MB 主包限制 ==========
   pages: [
     // 启动页：先进入欢迎/登录页，再按本地游客或真实账号状态进入首页
     'pages/login/index',
@@ -9,68 +9,50 @@ export default defineAppConfig({
     'pages/habits/index',
     'pages/rewards/index',
     'pages/profile/index',
-    // 核心流程页面
-    'pages/check-in/index',
-    'pages/contact/index',
-    'pages/forgot-password/index',
-    'pages/onboarding/index',
-    'pages/ai-analysis/index',
-    'pages/switch-profile/index',
-    'pages/tasks/create/index',
-    'pages/tasks/edit/index',
-    'pages/tasks/detail/index',
-    'pages/templates/index',
-    'pages/members/add/index',
-    'pages/members/detail/index',
-    'pages/profile/edit/index',
-    'pages/settings/basic/index',
-    'pages/settings/security/index',
-    'pages/settings/backup/index',
-    'pages/settings/calendar/index',
-    'pages/settings/notifications/index',
-    'pages/settings/feedback/index',
-    'pages/settings/ai/index',
-    'pages/feedback/index',
-    'pages/reports/index',
-    'pages/community/templates/index',
-    'pages/community/share-review/index',
-    'pages/import/index',
-    'pages/history/index',
-    'pages/quadrant/index',
-    'pages/pomodoro/index',
-    'pages/plans/index',
-    'pages/plans/detail/index',
-    'pages/plans/wizard/index',
-    'pages/calendar/index',
-    'pages/schedule-recommend/index',
-    'pages/schedule/index',
   ],
 
-  // ========== 分包配置（方案A：独立分包目录）==========
-  // 注意：如果需要启用分包，需要先创建对应的目录并移动文件
-  // 当前先注释掉，采用"优化主包体积"的过渡方案
-  //
-  // subpackages: [
-  //   {
-  //     root: 'package-task',
-  //     pages: [
-  //       'pages/tasks/create/index',
-  //       'pages/tasks/edit/index',
-  //       'pages/tasks/detail/index',
-  //     ],
-  //   },
-  //   {
-  //     root: 'package-family',
-  //     pages: [
-  //       'pages/members/add/index',
-  //       'pages/members/detail/index',
-  //       'pages/profile/edit/index',
-  //       'pages/settings/basic/index',
-  //       'pages/settings/security/index',
-  //       'pages/settings/notifications/index',
-  //     ],
-  //   },
-  // ],
+  // ========== 分包：所有二级页和低频流程，保留完整功能但不挤占主包 ==========
+  subPackages: [
+    {
+      root: 'pkg',
+      pages: [
+        'check-in/index',
+        'contact/index',
+        'forgot-password/index',
+        'onboarding/index',
+        'ai-analysis/index',
+        'switch-profile/index',
+        'tasks/create/index',
+        'tasks/edit/index',
+        'tasks/detail/index',
+        'templates/index',
+        'members/add/index',
+        'members/detail/index',
+        'profile/edit/index',
+        'settings/basic/index',
+        'settings/security/index',
+        'settings/backup/index',
+        'settings/calendar/index',
+        'settings/notifications/index',
+        'settings/feedback/index',
+        'settings/ai/index',
+        'feedback/index',
+        'reports/index',
+        'community/templates/index',
+        'community/share-review/index',
+        'import/index',
+        'history/index',
+        'quadrant/index',
+        'pomodoro/index',
+        'plans/index',
+        'plans/detail/index',
+        'plans/wizard/index',
+        'calendar/index',
+        'schedule-recommend/index',
+        'schedule/index',
+      ],
+    },
+  ],
 
   // ========== 窗口配置 ==========
   window: {

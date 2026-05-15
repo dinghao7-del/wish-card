@@ -268,7 +268,7 @@ export default function SwitchProfile() {
           <Text className="sp-empty-desc">请先添加家庭成员</Text>
           <View
             className="sp-empty-btn"
-            onClick={() => Taro.navigateTo({ url: '/pages/members/add/index' })}
+            onClick={() => Taro.navigateTo({ url: '/pkg/members/add/index' })}
           >
             <Text>添加成员</Text>
           </View>

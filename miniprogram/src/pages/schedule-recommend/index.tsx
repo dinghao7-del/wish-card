@@ -300,7 +300,7 @@ export default function ScheduleRecommendPage() {
       const scheduleParam = encodeURIComponent(JSON.stringify(savedPlan.schedule));
       setTimeout(() => {
         Taro.navigateTo({
-          url: `/pages/plans/detail/index?id=${savedPlan.id}&name=${encodeURIComponent(savedPlan.name)}&type=${encodeURIComponent(savedPlan.type)}&schedule=${scheduleParam}`,
+          url: `/pkg/plans/detail/index?id=${savedPlan.id}&name=${encodeURIComponent(savedPlan.name)}&type=${encodeURIComponent(savedPlan.type)}&schedule=${scheduleParam}`,
         });
       }, 450);
     } catch (err) {

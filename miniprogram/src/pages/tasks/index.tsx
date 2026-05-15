@@ -343,7 +343,7 @@ export default function Tasks() {
 
   const renderTaskIcon = (icon: string | undefined, size: 'sm' | 'md' | 'lg' = 'sm', title?: string) => {
     const resolvedIcon = resolveIconPath(icon);
-    const isPng = resolvedIcon && resolvedIcon.startsWith('/assets/');
+    const isPng = resolvedIcon && (resolvedIcon.startsWith('/assets/') || resolvedIcon.startsWith('http'));
     if (!isPng) {
       // SVG icon name → 使用 Icon 组件
       const svgIcons: Record<string, boolean> = { listTodo: true, checkCircle: true, star: true, clock: true };
@@ -452,7 +452,7 @@ export default function Tasks() {
               className="task-btn task-btn-checkin"
               onClick={(e) => {
                 e.stopPropagation();
-                Taro.navigateTo({ url: `/pages/check-in/index?taskId=${task.id}` });
+                Taro.navigateTo({ url: `/pkg/check-in/index?taskId=${task.id}` });
               }}
             >
               <Icon name="checkCircle" size={26} color={MINI_UI_COLORS.onPrimary} />
@@ -490,7 +490,7 @@ export default function Tasks() {
       {/* ===== 顶部栏：对齐 Web 端头像 + AI + 视图切换 + 星星 + 通知 ===== */}
       <View className="tp-header">
         <View className="tp-header-left">
-          <View className="tp-avatar-btn" onClick={() => Taro.navigateTo({ url: '/pages/switch-profile/index' })}>
+          <View className="tp-avatar-btn" onClick={() => Taro.navigateTo({ url: '/pkg/switch-profile/index' })}>
             <Image className="tp-avatar" src={resolveAvatarPath(user?.avatar || '')} mode="aspectFill" />
           </View>
           <View className="tp-mic-btn" onClick={() => setIsAiDialogOpen(true)}>
@@ -508,12 +508,12 @@ export default function Tasks() {
         </View>
 
         <View className="tp-header-right">
-          <View className="tp-star-badge" onClick={() => Taro.navigateTo({ url: '/pages/history/index' })}>
+          <View className="tp-star-badge" onClick={() => Taro.navigateTo({ url: '/pkg/history/index' })}>
             <Icon name="star" size={24} color="#F9A825" />
             <Text className="tp-star-text">{(user?.stars || 0).toLocaleString()}</Text>
           </View>
-          <NotificationBell onClick={() => Taro.navigateTo({ url: '/pages/settings/notifications/index' })} />
-          <View className="tp-add-btn" onClick={() => Taro.navigateTo({ url: '/pages/templates/index' })}>
+          <NotificationBell onClick={() => Taro.navigateTo({ url: '/pkg/settings/notifications/index' })} />
+          <View className="tp-add-btn" onClick={() => Taro.navigateTo({ url: '/pkg/templates/index' })}>
             <Icon name="plus" size={36} color={MINI_UI_COLORS.onPrimary} />
           </View>
         </View>
@@ -609,7 +609,7 @@ export default function Tasks() {
         </View>
       )}
 
-      {/* ===== 任务详情面板 — 完全对齐 /pages/tasks/detail/index ===== */}
+      {/* ===== 任务详情面板 — 完全对齐 /pkg/tasks/detail/index ===== */}
       {showDetail && selectedTask && (() => {
         const task = selectedTask;
         const stars = Math.abs(task.star_amount ?? task.reward_stars ?? 0);
@@ -646,7 +646,7 @@ export default function Tasks() {
                 <View className="td-menu-popup">
                   <View className="td-menu-mask" onClick={() => setShowSettings(false)} />
                   <View className="td-menu-list">
-                    <View className="td-menu-item" onClick={() => { Taro.navigateTo({ url: `/pages/tasks/edit/index?id=${task.id}` }); setShowSettings(false); }}>
+                    <View className="td-menu-item" onClick={() => { Taro.navigateTo({ url: `/pkg/tasks/edit/index?id=${task.id}` }); setShowSettings(false); }}>
                       <Icon name="edit" size={28} color={MINI_UI_COLORS.primary} />
                       <Text className="td-menu-item-text">编辑任务</Text>
                     </View>
@@ -667,7 +667,7 @@ export default function Tasks() {
                   <View className="td-hero-icon-wrap">
                     {(() => {
                       const resolvedIcon = resolveIconPath(task.icon);
-                      const isPng = resolvedIcon.startsWith('/assets/');
+                      const isPng = resolvedIcon.startsWith('/assets/') || resolvedIcon.startsWith('http');
                       if (isPng) {
                         return <Image className="td-hero-icon-img" src={resolvedIcon} mode="aspectFit" />;
                       }

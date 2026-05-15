@@ -3,7 +3,7 @@
  *
  * 功能清单:
  * 1. ✅ 返回导航 + "联系我们"标题 (sticky header)
- * 2. ✅ 人工客服卡片 → 点击跳转 /pages/feedback/index
+ * 2. ✅ 人工客服卡片 → 点击跳转 /pkg/feedback/index
  * 3. ✅ QQ群卡片 → 点击复制群号
  * 4. ✅ 邮箱卡片 → 复制 support@xingmubiao.com (对齐Web)
  * 5. ✅ 卡片样式: 白底圆角2rem+shadow+左侧icon容器+右侧箭头/复制
@@ -31,7 +31,7 @@ export default function ContactUs() {
 
       <ScrollView scrollY enhanced className="cu-body">
         {/* ===== 人工客服 — 对齐Web第29-44行 ===== */}
-        <View className="cu-card" onClick={() => Taro.navigateTo({ url: '/pages/feedback/index' })}>
+        <View className="cu-card" onClick={() => Taro.navigateTo({ url: '/pkg/feedback/index' })}>
           <View className="cu-card-left">
             <View className="cu-icon-wrap primary">
               <Icon name="headset" size={44} color={MINI_UI_COLORS.primary} />

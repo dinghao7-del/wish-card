@@ -76,7 +76,7 @@ export default function TaskTemplates() {
       fromMode: mode,
     }));
     Taro.navigateTo({
-      url: `/pages/tasks/create/index?mode=${mode}&title=${encodeURIComponent(template.title)}&stars=${template.defaultStars}&category=${encodeURIComponent(template.category || '')}`,
+      url: `/pkg/tasks/create/index?mode=${mode}&title=${encodeURIComponent(template.title)}&stars=${template.defaultStars}&category=${encodeURIComponent(template.category || '')}`,
     });
   };
 
@@ -105,7 +105,7 @@ export default function TaskTemplates() {
         <View
           className="tpl-custom-btn"
           onClick={() =>
-            Taro.navigateTo({ url: `/pages/tasks/create/index?mode=${mode}&custom=1` })
+            Taro.navigateTo({ url: `/pkg/tasks/create/index?mode=${mode}&custom=1` })
           }
         >
           <Text className="tpl-custom-text">{mode === 'habit' ? '自定义习惯' : '自定义任务'}</Text>

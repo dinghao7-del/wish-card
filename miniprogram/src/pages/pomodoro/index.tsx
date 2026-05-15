@@ -394,7 +394,7 @@ export default function Pomodoro() {
               className="po-modal-footer po-task-footer"
               onClick={() => {
                 setIsTaskSelectorOpen(false);
-                Taro.navigateTo({ url: '/pages/tasks/create/index' });
+                Taro.navigateTo({ url: '/pkg/tasks/create/index' });
               }}
             >
               <Text className="po-new-task-text">+ 创建新任务</Text>

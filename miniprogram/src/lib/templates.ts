@@ -433,11 +433,7 @@ export function resolveLocalAssetPath(rawAsset: string | undefined | null): stri
   if (!rawAsset) return '';
 
   if (rawAsset.startsWith(SUPABASE_ASSETS_URL + '/')) {
-    const rel = rawAsset.slice(SUPABASE_ASSETS_URL.length + 1);
-    const filename = rel.split('/').pop() || '';
-    if (LOCAL_ASSET_FALLBACKS[rel]) return LOCAL_ASSET_FALLBACKS[rel];
-    if (LOCAL_AVATAR_FALLBACKS[filename]) return LOCAL_AVATAR_FALLBACKS[filename];
-    return `/assets/${rel}`;
+    return rawAsset;
   }
 
   if (rawAsset.startsWith('/assets/')) {
@@ -464,7 +460,7 @@ export function resolveLocalAssetPath(rawAsset: string | undefined | null): stri
 export function resolveIconPath(rawIcon: string | undefined | null): string {
   if (!rawIcon) return '';
   const localAsset = resolveLocalAssetPath(rawIcon);
-  if (localAsset.startsWith('/assets/')) return localAsset;
+  if (localAsset.startsWith('/assets/') || localAsset.startsWith('http')) return localAsset;
   // 非 PNG 本地路径直接返回（如 Lucide 图标名 "Star"、"Book" 等）
   if (!rawIcon.startsWith('/assets/') && !rawIcon.endsWith('.png')) return rawIcon;
   // 已经是正确的新格式路径，直接返回

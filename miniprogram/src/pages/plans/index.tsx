@@ -4,9 +4,9 @@
  * 功能清单:
  * 1. ✅ 返回导航 + 标题"计划"
  * 2. ✅ 计划卡片: 名称 + 目标数(🎯) + 心愿数(⭐) + 删除 + 右箭头
- * 3. ✅ 点击卡片→跳详情页 /pages/plans/detail/index?id=xxx
+ * 3. ✅ 点击卡片→跳详情页 /pkg/plans/detail/index?id=xxx
  * 4. ✅ 空状态提示
- * 5. ✅ 「🤖 智能创建计划」按钮 → /pages/onboarding/index (AI引导向导)
+ * 5. ✅ 「🤖 智能创建计划」按钮 → /pkg/onboarding/index (AI引导向导)
  * 6. ✅ 「+ 添加计划」虚线按钮 → 弹窗(含14个预设模板)
  * 7. ✅ 数据模型: name/type/targetCount/wishCount 对齐Web
  */
@@ -114,7 +114,7 @@ export default function Plans() {
           setShowAddDialog(false);
           const planId = `guest-${Date.now()}`;
           Taro.navigateTo({
-            url: `/pages/plans/detail/index?id=${planId}&name=${encodeURIComponent(newPlanName.trim())}&type=${encodeURIComponent(planType)}`,
+            url: `/pkg/plans/detail/index?id=${planId}&name=${encodeURIComponent(newPlanName.trim())}&type=${encodeURIComponent(planType)}`,
           });
           return;
         }
@@ -138,7 +138,7 @@ export default function Plans() {
       if (!error && data) {
         setNewPlanName('');
         setShowAddDialog(false);
-        Taro.navigateTo({ url: `/pages/plans/detail/index?id=${data.id}` });
+        Taro.navigateTo({ url: `/pkg/plans/detail/index?id=${data.id}` });
       } else {
         // fallback: 刷新列表
         loadPlans();
@@ -179,13 +179,13 @@ export default function Plans() {
   // ===== 点击卡片→跳详情页（对齐Web第143行）=====
   const handlePlanClick = (plan: PlanItem) => {
     Taro.navigateTo({
-      url: `/pages/plans/detail/index?id=${plan.id}&name=${encodeURIComponent(plan.name)}&type=${encodeURIComponent(plan.type)}`,
+      url: `/pkg/plans/detail/index?id=${plan.id}&name=${encodeURIComponent(plan.name)}&type=${encodeURIComponent(plan.type)}`,
     });
   };
 
   // ===== 智能创建计划 — 对齐Web第190行: navigate('/plans/wizard') =====
   const handleSmartCreate = () => {
-    Taro.navigateTo({ url: '/pages/plans/wizard/index' });
+    Taro.navigateTo({ url: '/pkg/plans/wizard/index' });
   };
 
   // ===== Loading =====

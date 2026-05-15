@@ -6,7 +6,7 @@
  * 2. ✅ 统计卡片: 目标数(🎯) + 心愿数(⭐) + 类型标签 + 年级标签 + 时区标签
  * 3. ✅ 每日作息展示: 起床/就寝/时段列表/三餐时间 (对齐Web第162-211行)
  * 4. ✅ 每周固定活动展示 (对齐Web第214-229行)
- * 5. ✅ 目标列表区 + 「+ 添加目标」→ /pages/tasks/create/index
+ * 5. ✅ 目标列表区 + 「+ 添加目标」→ /pkg/tasks/create/index
  * 6. ✅ 心愿列表区 + 「+ 添加心愿」→ /pages/rewards/index (带planId)
  * 7. ✅ 支持URL参数: id, name, type, schedule (含日程/活动/年级/时区)
  */
@@ -146,7 +146,7 @@ export default function PlanDetail() {
   // ===== 添加目标 — 对齐Web第237行 =====
   const handleAddTarget = () => {
     Taro.navigateTo({
-      url: `/pages/tasks/create/index?planId=${id}&planName=${encodeURIComponent(planName)}`,
+      url: `/pkg/tasks/create/index?planId=${id}&planName=${encodeURIComponent(planName)}`,
     });
   };
 

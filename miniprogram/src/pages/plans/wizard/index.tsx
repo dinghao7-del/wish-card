@@ -148,7 +148,7 @@ export default function PlanWizard() {
         if (!gu?.id || gu?.id.startsWith('guest-')) {
           const planId = `guest-${Date.now()}`;
           Taro.navigateTo({
-            url: `/pages/plans/detail/index?id=${planId}&name=${encodeURIComponent(planName)}&type=${encodeURIComponent(planType)}&schedule=${encodeURIComponent(scheduleData)}`,
+            url: `/pkg/plans/detail/index?id=${planId}&name=${encodeURIComponent(planName)}&type=${encodeURIComponent(planType)}&schedule=${encodeURIComponent(scheduleData)}`,
           });
           setLoading(false);
           return;
@@ -168,7 +168,7 @@ export default function PlanWizard() {
 
       if (!error && data) {
         Taro.navigateTo({
-          url: `/pages/plans/detail/index?id=${data.id}&name=${encodeURIComponent(planName)}&type=${encodeURIComponent(planType)}&schedule=${encodeURIComponent(scheduleData)}`,
+          url: `/pkg/plans/detail/index?id=${data.id}&name=${encodeURIComponent(planName)}&type=${encodeURIComponent(planType)}&schedule=${encodeURIComponent(scheduleData)}`,
         });
       } else {
         Taro.navigateBack();

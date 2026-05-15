@@ -131,21 +131,21 @@ export default function Profile() {
 
   // 菜单项配置（对齐 Web 端菜单组1+2）
   const menuGroup1 = [
-    { icon: 'shield', label: '账号安全', route: '/pages/settings/security/index', color: '#006e1c' },
+    { icon: 'shield', label: '账号安全', route: '/pkg/settings/security/index', color: '#006e1c' },
     { icon: 'download', label: '数据备份', action: () => setShowBackupModal(true), color: '#1976D2' },
-    { icon: 'calendar', label: '日历同步', route: '/pages/settings/calendar/index', color: '#7B1FA2' },
-    { icon: 'bell', label: '消息通知', route: '/pages/settings/notifications/index', color: '#F57C00' },
-    { icon: 'messageSquare', label: '意见反馈', route: '/pages/settings/feedback/index', color: '#0288D1' },
+    { icon: 'calendar', label: '日历同步', route: '/pkg/settings/calendar/index', color: '#7B1FA2' },
+    { icon: 'bell', label: '消息通知', route: '/pkg/settings/notifications/index', color: '#F57C00' },
+    { icon: 'messageSquare', label: '意见反馈', route: '/pkg/settings/feedback/index', color: '#0288D1' },
   ];
 
   const menuGroupAi = [
-    { icon: 'sparkles', label: 'AI分析与建档', route: '/pages/ai-analysis/index', color: '#006e1c' },
-    { icon: 'barChart', label: '家庭复盘', route: '/pages/reports/index', color: '#1976D2' },
-    { icon: 'calendar', label: '日程方案', route: '/pages/schedule-recommend/index', color: '#0288D1' },
-    { icon: 'users', label: '家庭社区', route: '/pages/community/templates/index', color: '#0f8f43' },
-    { icon: 'target', label: '四象限分析', route: '/pages/quadrant/index', color: '#F57C00' },
-    { icon: 'globe', label: '公共时间与校历', route: '/pages/calendar/index', color: '#0288D1' },
-    { icon: 'settings2', label: 'AI助手设置', route: '/pages/settings/ai/index', color: '#7B1FA2' },
+    { icon: 'sparkles', label: 'AI分析与建档', route: '/pkg/ai-analysis/index', color: '#006e1c' },
+    { icon: 'barChart', label: '家庭复盘', route: '/pkg/reports/index', color: '#1976D2' },
+    { icon: 'calendar', label: '日程方案', route: '/pkg/schedule-recommend/index', color: '#0288D1' },
+    { icon: 'users', label: '家庭社区', route: '/pkg/community/templates/index', color: '#0f8f43' },
+    { icon: 'target', label: '四象限分析', route: '/pkg/quadrant/index', color: '#F57C00' },
+    { icon: 'globe', label: '公共时间与校历', route: '/pkg/calendar/index', color: '#0288D1' },
+    { icon: 'settings2', label: 'AI助手设置', route: '/pkg/settings/ai/index', color: '#7B1FA2' },
   ];
 
   if (loading) {
@@ -169,7 +169,7 @@ export default function Profile() {
 
         {/* ===== Hero区域 (对齐Web: 大头像144px+编辑按钮悬浮+昵称+角色Badge) ===== */}
         <View className="profile-hero">
-          <View className="hero-avatar-wrap" onClick={() => Taro.navigateTo({ url: '/pages/profile/edit/index' })}>
+          <View className="hero-avatar-wrap" onClick={() => Taro.navigateTo({ url: '/pkg/profile/edit/index' })}>
             <Image
               className="hero-avatar"
               src={resolveAvatarPath(user?.avatar || '')}
@@ -195,7 +195,7 @@ export default function Profile() {
         <View className="section-block">
           <View className="section-header">
             <Text className="section-title">家庭成员</Text>
-            <View className="section-add-btn" onClick={() => Taro.navigateTo({ url: '/pages/members/add/index' })}>
+            <View className="section-add-btn" onClick={() => Taro.navigateTo({ url: '/pkg/members/add/index' })}>
               <Icon name="plus" size={24} color="#006e1c" />
             </View>
           </View>
@@ -204,7 +204,7 @@ export default function Profile() {
               <View
                 key={m.id}
                 className={`member-card ${m.id === user?.id ? 'current-user' : ''}`}
-                onClick={() => m.id !== user?.id && Taro.navigateTo({ url: `/pages/members/detail/index?id=${m.id}` })}
+                onClick={() => m.id !== user?.id && Taro.navigateTo({ url: `/pkg/members/detail/index?id=${m.id}` })}
               >
                 <Image className="member-avatar" src={resolveAvatarPath(m.avatar || '')} mode="aspectFill" />
                 <Text className="member-name">{m.name}</Text>
@@ -293,7 +293,7 @@ export default function Profile() {
             </View>
           </View>
 
-          <View className="menu-item" onClick={() => Taro.navigateTo({ url: '/pages/settings/basic/index' })}>
+          <View className="menu-item" onClick={() => Taro.navigateTo({ url: '/pkg/settings/basic/index' })}>
             <View className="menu-icon-wrap" style={{ backgroundColor: '#75757515' }}>
               <Icon name="settings" size={32} color="#757575" />
             </View>

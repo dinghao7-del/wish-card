@@ -59,7 +59,7 @@ export const useTaskShare = (task: any) => {
       
       return createShareCard({
         title: `✅ 我完成了任务「${task.title}」！`,
-        path: '/pages/tasks/detail/index',
+        path: '/pkg/tasks/detail/index',
         taskId: task.id,
         imageUrl: '/assets/share/task-complete.png',
       });

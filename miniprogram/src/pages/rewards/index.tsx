@@ -363,7 +363,7 @@ export default function Rewards() {
   };
 
   const handleNotificationClick = () => {
-    Taro.navigateTo({ url: '/pages/settings/notifications/index' });
+    Taro.navigateTo({ url: '/pkg/settings/notifications/index' });
   };
 
   // ===== 渲染：进度条计算 =====
@@ -404,7 +404,7 @@ export default function Rewards() {
           </View>
         </View>
         <View className="rw-header-right">
-          <View className="rw-star-badge" onClick={() => Taro.navigateTo({ url: '/pages/history/index' })}>
+          <View className="rw-star-badge" onClick={() => Taro.navigateTo({ url: '/pkg/history/index' })}>
             <Icon name="star" size={24} color="#F9A825" />
             <Text>{starBalance}</Text>
           </View>
