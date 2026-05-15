@@ -186,11 +186,11 @@ export function CommunityTemplates() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-container-low pb-28">
+    <div className="ui-template-page min-h-screen bg-surface-container-low pb-28">
       <TopAppBar title="社区模板" onBack={() => { navigate('/plans'); }} />
 
       <div className="p-4 space-y-4">
-        <div className="bg-surface rounded-2xl p-5 shadow-sm border border-outline-variant/10">
+        <div className="ui-template-card bg-surface rounded-2xl p-5 shadow-sm border border-outline-variant/10">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <Users size={20} />

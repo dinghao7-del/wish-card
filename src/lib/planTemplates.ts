@@ -36,6 +36,7 @@ export interface DailyScheduleTemplate {
 
 // 计划场景模板
 export interface PlanSceneTemplate {
+  id: string;
   type: PlanSceneType;
   name: string;
   emoji: string;
@@ -132,9 +133,148 @@ const exchangeDefault: DailyScheduleTemplate = {
   ],
 };
 
+const toddlerDefault: DailyScheduleTemplate = {
+  wakeTime: '07:30',
+  bedTime: '20:30',
+  napTime: '12:30-14:30',
+  mealTimes: { breakfast: '08:00', lunch: '12:00', dinner: '18:00' },
+  slots: [
+    { label: '晨间醒醒车', startTime: '07:30', endTime: '08:00', description: '换衣、洗手、喝水', icon: '🌞' },
+    { label: '早餐小火车', startTime: '08:00', endTime: '08:30', description: '坐好吃早餐，练习自己拿勺', icon: '🥣' },
+    { label: '感统小冒险', startTime: '09:00', endTime: '10:00', description: '跑跳、爬行、户外晒太阳', icon: '🛝' },
+    { label: '玩具回巢', startTime: '10:00', endTime: '10:20', description: '把玩具送回盒子', icon: '🧸' },
+    { label: '绘本充电', startTime: '10:30', endTime: '11:00', description: '亲子阅读或听故事', icon: '📖' },
+    { label: '午餐&午睡', startTime: '12:00', endTime: '14:30', description: '午餐后进入午睡流程', icon: '😴' },
+    { label: '自由探索', startTime: '15:00', endTime: '16:30', description: '积木、涂鸦、角色扮演', icon: '🎨' },
+    { label: '晚间收心', startTime: '19:30', endTime: '20:30', description: '洗澡、刷牙、睡前故事', icon: '🛁' },
+  ],
+};
+
+const kindergartenDefault: DailyScheduleTemplate = {
+  wakeTime: '07:10',
+  bedTime: '21:00',
+  napTime: '12:30-14:00',
+  mealTimes: { breakfast: '07:40', lunch: '12:00', dinner: '18:30' },
+  slots: [
+    { label: '入园装备台', startTime: '07:10', endTime: '07:45', description: '穿衣、洗漱、检查水杯和备用衣物', icon: '🎒' },
+    { label: '幼儿园主线', startTime: '08:00', endTime: '16:00', description: '入园、游戏、午休、集体活动', icon: '🏫' },
+    { label: '放学情报站', startTime: '16:30', endTime: '17:00', description: '说一件今天开心或困难的事', icon: '💬' },
+    { label: '户外能量包', startTime: '17:00', endTime: '17:45', description: '跑跳、拍球、平衡车或散步', icon: '⚽' },
+    { label: '晚餐礼仪局', startTime: '18:30', endTime: '19:10', description: '餐桌坐好、尝试蔬菜、表达谢谢', icon: '🍲' },
+    { label: '睡前小队', startTime: '20:00', endTime: '21:00', description: '收玩具、洗漱、阅读、关灯', icon: '🌙' },
+  ],
+};
+
+const lowerPrimaryDefault: DailyScheduleTemplate = {
+  wakeTime: '06:50',
+  bedTime: '21:10',
+  mealTimes: { breakfast: '07:20', lunch: '12:00', dinner: '18:30' },
+  slots: [
+    { label: '晨间启动', startTime: '06:50', endTime: '07:30', description: '洗漱、早餐、书包检查', icon: '🌅' },
+    { label: '小学主线', startTime: '08:00', endTime: '16:00', description: '学校上课与课间活动', icon: '📚' },
+    { label: '回家回血', startTime: '16:30', endTime: '17:00', description: '吃点心、聊天、短休息', icon: '🏠' },
+    { label: '作业开局', startTime: '17:00', endTime: '18:10', description: '先做最容易启动的一项作业', icon: '📝' },
+    { label: '错题猎人', startTime: '18:10', endTime: '18:30', description: '订正一道错题或记录一个不会的问题', icon: '🎯' },
+    { label: '晚餐&运动', startTime: '18:30', endTime: '19:40', description: '晚餐后户外活动或跳绳', icon: '🏃' },
+    { label: '阅读岛', startTime: '19:40', endTime: '20:10', description: '亲子/独立阅读20-30分钟', icon: '📖' },
+    { label: '睡前装备台', startTime: '20:10', endTime: '21:10', description: '洗漱、整理书包、关灯', icon: '🎒' },
+  ],
+};
+
+const upperPrimaryDefault: DailyScheduleTemplate = {
+  wakeTime: '06:40',
+  bedTime: '21:40',
+  mealTimes: { breakfast: '07:10', lunch: '12:00', dinner: '18:40' },
+  slots: [
+    { label: '晨间启动', startTime: '06:40', endTime: '07:30', description: '洗漱早餐、当天任务预览', icon: '🌅' },
+    { label: '学校主线', startTime: '08:00', endTime: '16:30', description: '课堂学习、社交、体育活动', icon: '🏫' },
+    { label: '番茄钟副本', startTime: '17:00', endTime: '18:20', description: '两个专注段完成作业或复习', icon: '🍅' },
+    { label: '错因拆弹', startTime: '18:20', endTime: '18:40', description: '拆一题错因或预习一个疑问', icon: '🧩' },
+    { label: '运动60分', startTime: '19:10', endTime: '20:00', description: '球类、跑步、跳绳或骑行', icon: '⚽' },
+    { label: '自由&复盘', startTime: '20:00', endTime: '20:50', description: '自由活动后写一句复盘', icon: '✨' },
+    { label: '睡眠防线', startTime: '20:50', endTime: '21:40', description: '收手机、洗漱、阅读、关灯', icon: '🌙' },
+  ],
+};
+
+const juniorDefault: DailyScheduleTemplate = {
+  wakeTime: '06:30',
+  bedTime: '22:20',
+  mealTimes: { breakfast: '07:00', lunch: '12:10', dinner: '18:40' },
+  slots: [
+    { label: '自主计划官', startTime: '06:30', endTime: '07:20', description: '早餐前确认今日三件事', icon: '🗓️' },
+    { label: '学校主线', startTime: '07:40', endTime: '17:00', description: '课程、作业记录、体育活动', icon: '📚' },
+    { label: '回血休整', startTime: '17:20', endTime: '18:00', description: '点心、放松、短运动', icon: '🏠' },
+    { label: '深度学习段', startTime: '18:50', endTime: '20:20', description: '按优先级完成作业/复习', icon: '🎯' },
+    { label: '错题二刷', startTime: '20:20', endTime: '20:50', description: '重做错题或整理错因', icon: '🧠' },
+    { label: '压力卸载', startTime: '20:50', endTime: '21:20', description: '运动、日记、沟通或拉伸', icon: '🌿' },
+    { label: '睡眠防线', startTime: '21:20', endTime: '22:20', description: '收屏、洗漱、低刺激阅读', icon: '🌙' },
+  ],
+};
+
 // 所有计划场景模板
 export const PLAN_SCENES: PlanSceneTemplate[] = [
   {
+    id: 'age-2-3-enlighten',
+    type: 'weekday',
+    name: '2-3岁启蒙日程',
+    emoji: '🧸',
+    description: '围绕洗手、进餐、午睡、收纳和亲子阅读建立最早的秩序感',
+    weekdaySchedule: toddlerDefault,
+    suggestedTasks: ['小手洗洗勇者', '玩具回巢员', '小牙刷骑士', '晚安小火车'],
+    timeRangeHint: '适合2-3岁在家或托育阶段',
+  },
+  {
+    id: 'age-3-5-kindergarten',
+    type: 'weekday',
+    name: '3-5岁幼儿园日程',
+    emoji: '🏫',
+    description: '适配幼儿园节奏，强化表达、规则、户外活动和睡前流程',
+    weekdaySchedule: kindergartenDefault,
+    suggestedTasks: ['幼儿园情报员', '排队小卫士', '情绪翻译官', '餐桌礼仪官'],
+    timeRangeHint: '适合幼儿园小中班到大班',
+  },
+  {
+    id: 'age-5-6-school-ready',
+    type: 'weekday',
+    name: '5-6岁幼小衔接日程',
+    emoji: '🎒',
+    description: '从幼儿园过渡到小学，重点练书包清单、课堂规则和睡前准备',
+    weekdaySchedule: lowerPrimaryDefault,
+    suggestedTasks: ['书包守门员', '铅笔补给官', '课堂举手新兵', '睡前装备台'],
+    timeRangeHint: '适合幼小衔接和小学一年级准备期',
+  },
+  {
+    id: 'age-6-8-study-start',
+    type: 'weekday',
+    name: '6-8岁学习启动日程',
+    emoji: '⚡',
+    description: '低年级用即时反馈保护学习动力，重点是启动作业、提问、错题改对',
+    weekdaySchedule: lowerPrimaryDefault,
+    suggestedTasks: ['勇气提问者', '错题猎人', '作业开局王', '跳绳能量条'],
+    timeRangeHint: '适合小学一至二年级',
+  },
+  {
+    id: 'age-9-12-self-growth',
+    type: 'weekday',
+    name: '9-12岁自主成长日程',
+    emoji: '🍅',
+    description: '高年级加入番茄钟、复盘、错因拆解、周计划和运动60分钟',
+    weekdaySchedule: upperPrimaryDefault,
+    suggestedTasks: ['番茄钟守护者', '错因拆弹员', '复盘侦探', '周计划小队长'],
+    timeRangeHint: '适合小学三至六年级',
+  },
+  {
+    id: 'age-13-15-junior',
+    type: 'weekday',
+    name: '13-15岁初中自主日程',
+    emoji: '🧠',
+    description: '初中阶段强调自主计划、睡眠防线、压力卸载和错题二刷',
+    weekdaySchedule: juniorDefault,
+    suggestedTasks: ['自主计划官', '睡眠防线', '错题二刷者', '压力卸载员'],
+    timeRangeHint: '适合初中阶段',
+  },
+  {
+    id: 'weekday-default',
     type: 'weekday',
     name: '平日计划',
     emoji: '📚',
@@ -144,6 +284,7 @@ export const PLAN_SCENES: PlanSceneTemplate[] = [
     timeRangeHint: '适合学期中的周一至周五',
   },
   {
+    id: 'holiday-default',
     type: 'holiday',
     name: '假期计划',
     emoji: '🌴',
@@ -153,6 +294,7 @@ export const PLAN_SCENES: PlanSceneTemplate[] = [
     timeRangeHint: '适合寒假、暑假、国庆等长假期间',
   },
   {
+    id: 'exchange-default',
     type: 'exchange',
     name: '交换留学',
     emoji: '✈️',
@@ -162,6 +304,7 @@ export const PLAN_SCENES: PlanSceneTemplate[] = [
     timeRangeHint: '适合短期交换、长期留学等跨时区场景',
   },
   {
+    id: 'custom-default',
     type: 'custom',
     name: '自定义',
     emoji: '✨',

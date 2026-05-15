@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import Icon from '@/components/Icon';
 import { getAIConfig } from '@/lib/aiEngine';
+import { getThemeClass } from '@/lib/themeSkins';
 
 interface AIConfigState {
   provider: string;
@@ -118,7 +119,7 @@ export default function AISettingsPage() {
   const models = MODEL_MAP[config.provider] || MODEL_MAP.minimax;
 
   return (
-    <View className="ai-settings-page">
+    <View className={`ai-settings-page ${getThemeClass()}`}>
       {/* Header */}
       <View className="as-header">
         <View className="as-back-btn" onClick={() => Taro.navigateBack()}>

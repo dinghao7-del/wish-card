@@ -26,12 +26,29 @@
 .hp-header-left {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 14rpx;
+  min-width: 0;
+}
+
+.hp-title-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46rpx;
+  height: 46rpx;
+  flex-shrink: 0;
+}
+
+.hp-page-title {
+  font-size: 34rpx;
+  font-weight: 900;
+  color: $text-primary;
+  white-space: nowrap;
 }
 
 .avatar-btn {
-  width: 80rpx;
-  height: 80rpx;
+  width: 70rpx;
+  height: 70rpx;
   border-radius: 50%;
   border: 3rpx solid $surface-container;
   overflow: hidden;
@@ -39,8 +56,8 @@
 }
 
 .voice-btn {
-  width: 80rpx;
-  height: 80rpx;
+  width: 68rpx;
+  height: 68rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -59,29 +76,71 @@
   align-items: center;
   gap: 8rpx;
   height: 60rpx;
-  padding: 0 24rpx;
+  padding: 0 18rpx;
   border-radius: 100rpx;
   background-color: $surface-container-low;
   box-shadow: 0 1rpx 4rpx rgba(0,0,0,0.04);
   border: 1rpx solid rgba($border-color, 0.1);
 }
 
+/* ===== 摘要卡 ===== */
+.hp-summary-card {
+  margin: 22rpx 0 18rpx;
+  padding: 34rpx 34rpx;
+  border-radius: 40rpx;
+  background-color: $card-bg;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 8rpx 24rpx rgba($text-primary, 0.05);
+}
+
+.hp-summary-label {
+  font-size: 22rpx;
+  font-weight: 900;
+  color: rgba($text-secondary, 0.72);
+}
+
+.hp-summary-days {
+  display: flex;
+  align-items: baseline;
+  gap: 10rpx;
+  margin-top: 8rpx;
+}
+
+.hp-summary-num {
+  font-size: 72rpx;
+  line-height: 1;
+  font-weight: 900;
+  color: $text-primary;
+}
+
+.hp-summary-unit {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: $text-primary;
+}
+
+.hp-summary-pill {
+  height: 54rpx;
+  padding: 0 22rpx;
+  border-radius: 999rpx;
+  background-color: $surface-container-low;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+
+  text {
+    font-size: 24rpx;
+    font-weight: 900;
+    color: $text-primary;
+  }
+}
+
 .hp-star-text {
   font-size: 26rpx;
   font-weight: 800;
   color: $text-primary;
-}
-
-.hp-notif-btn {
-  width: 60rpx;
-  height: 60rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background-color: $surface-container-low;
-  box-shadow: 0 1rpx 4rpx rgba(0,0,0,0.04);
-  border: 1rpx solid rgba($border-color, 0.1);
 }
 
 /* ===== Tab 切换器 ===== */
@@ -106,12 +165,21 @@
 .hp-swtich-tab {
   flex: 1;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
   padding: 14rpx 0;
   border-radius: 100rpx;
   font-size: 26rpx;
   font-weight: 700;
   color: $text-secondary-variant;
   transition: all 0.2s ease;
+}
+
+.hp-tab-count {
+  font-size: 20rpx;
+  opacity: 0.72;
 }
 
 .hp-swtich-tab.active.reward {

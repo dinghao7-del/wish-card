@@ -295,3 +295,31 @@
   font-size: 30rpx;
   font-weight: 900;
 }
+
+.theme-arcade-comic.plans-page {
+  background: $arcade-bg;
+}
+
+.theme-arcade-comic .plans-header,
+.theme-arcade-comic .plan-card,
+.theme-arcade-comic .dialog-content {
+  background: $arcade-card-bg;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 8rpx 10rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .smart-create-btn,
+.theme-arcade-comic .dialog-confirm-btn,
+.theme-arcade-comic .preset-tag.active {
+  background: $arcade-primary;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 8rpx 10rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .smart-create-text,
+.theme-arcade-comic .dialog-confirm-text,
+.theme-arcade-comic .header-title,
+.theme-arcade-comic .plan-name,
+.theme-arcade-comic .dialog-title {
+  color: $arcade-text-primary;
+}

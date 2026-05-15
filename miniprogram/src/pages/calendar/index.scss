@@ -201,3 +201,39 @@
 }
 .cs-import-cancel { background: #f0f0ec; color: #666; }
 .cs-import-confirm { background: #006e1c; color: #fff; }
+
+.theme-arcade-comic.cs-page {
+  background: $arcade-bg;
+}
+
+.theme-arcade-comic .cs-header,
+.theme-arcade-comic .cs-device-card,
+.theme-arcade-comic .cs-sub-item,
+.theme-arcade-comic .cs-brand-card,
+.theme-arcade-comic .cs-modal-panel,
+.theme-arcade-comic .cs-import-panel {
+  background: $arcade-card-bg;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 8rpx 10rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .cs-action-btn,
+.theme-arcade-comic .cs-add-sub-btn,
+.theme-arcade-comic .cs-footer-text,
+.theme-arcade-comic .cs-import-confirm {
+  background: $arcade-primary;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 6rpx 8rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .cs-header-title,
+.theme-arcade-comic .cs-device-brand,
+.theme-arcade-comic .cs-section-title,
+.theme-arcade-comic .cs-brand-name,
+.theme-arcade-comic .cs-action-text,
+.theme-arcade-comic .cs-add-sub-text,
+.theme-arcade-comic .cs-footer-text,
+.theme-arcade-comic .cs-import-confirm,
+.theme-arcade-comic .cs-modal-brand-name {
+  color: $arcade-text-primary;
+}

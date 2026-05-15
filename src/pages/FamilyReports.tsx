@@ -134,7 +134,7 @@ export function FamilyReports() {
     + report.completedFamilyPromises;
 
   return (
-    <div className="min-h-screen bg-background pb-24 animate-in fade-in duration-500">
+    <div className="ui-ai-subpage min-h-screen bg-background pb-24 animate-in fade-in duration-500">
       <TopAppBar title="家庭复盘" />
 
       <main className="px-4 py-4 space-y-3.5 sm:space-y-4">

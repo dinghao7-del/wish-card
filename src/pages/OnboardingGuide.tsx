@@ -2754,7 +2754,7 @@ ${activeProfile.specialRequests}
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
+    <div className="ui-ai-subpage min-h-screen bg-background flex flex-col overflow-x-hidden">
       {/* Header */}
       <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-background/80 backdrop-blur-xl">
         {currentStep !== 'welcome' && currentStep !== 'success' ? (

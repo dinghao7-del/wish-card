@@ -67,7 +67,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, idx, onClick, onCheckI
       )}
     >
       <div className={cn(
-          "absolute left-0 top-0 bottom-0 w-1.5",
+          "ui-task-accent absolute left-0 top-0 bottom-0 w-1.5",
           isPromise ? 'bg-primary' :
           isPenalty ? 'bg-danger' :
           task.status === 'reviewing' ? 'bg-warning' :

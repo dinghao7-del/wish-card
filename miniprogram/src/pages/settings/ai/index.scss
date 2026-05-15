@@ -192,3 +192,28 @@
   color: #7c3aed;
   line-height: 1.6;
 }
+
+.theme-arcade-comic.ai-settings-page {
+  background: #f4f4f4;
+}
+
+.theme-arcade-comic .as-header,
+.theme-arcade-comic .as-card {
+  background: #ffffff;
+  border: 5rpx solid #050505;
+  box-shadow: 8rpx 10rpx 0 #050505;
+}
+
+.theme-arcade-comic .as-chip.active,
+.theme-arcade-comic .as-picker {
+  background: #ffe100;
+  border: 4rpx solid #050505;
+  color: #050505;
+}
+
+.theme-arcade-comic .as-title,
+.theme-arcade-comic .as-card-label,
+.theme-arcade-comic .as-section-label,
+.theme-arcade-comic .as-action-name {
+  color: #050505;
+}

@@ -3,10 +3,9 @@ import Taro from '@tarojs/taro';
 import Icon from '@/components/Icon';
 import { getGuestData, isGuestMode } from '@/lib/guestData';
 import { getLocalUser } from '@/utils/localUser';
+import { APP_RELEASE_DATE, APP_VERSION, APP_VERSION_LABEL } from '@/lib/appMeta';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
-
-const MINI_PROGRAM_VERSION = 'v1.0.2';
-const RELEASE_DATE = '2026-05-14';
 
 const actions = [
   {
@@ -20,7 +19,7 @@ const actions = [
     icon: 'barChart',
     title: '家庭复盘',
     desc: '自动形成周报、月报，展示任务、习惯、星星和愿望进展',
-    url: '/pages/history/index',
+    url: '/pages/reports/index',
     color: '#1976D2',
   },
   {
@@ -43,6 +42,13 @@ const actions = [
     desc: '节假日、校历、临时公共事件会进入日程判断',
     url: '/pages/calendar/index',
     color: '#0288D1',
+  },
+  {
+    icon: 'users',
+    title: '家庭社区',
+    desc: '沉淀优秀家庭日程、假期玩法和心愿兑现模板',
+    url: '/pages/community/templates/index',
+    color: '#00897B',
   },
 ];
 
@@ -68,13 +74,13 @@ export default function AiAnalysis() {
   };
 
   return (
-    <View className="ai-page">
+    <View className={`ai-page ${getThemeClass()}`}>
       <View className="ai-header">
         <View className="ai-back" onClick={() => Taro.navigateBack()}>
           <Icon name="arrowLeft" size={34} color="#25352a" />
         </View>
         <Text className="ai-title">AI分析</Text>
-        <View className="ai-version"><Text>{MINI_PROGRAM_VERSION}</Text></View>
+        <View className="ai-version"><Text>{APP_VERSION}</Text></View>
       </View>
 
       <ScrollView scrollY enhanced className="ai-scroll">
@@ -85,7 +91,7 @@ export default function AiAnalysis() {
           <Text className="ai-hero-title">智能家庭管家已同步</Text>
           <Text className="ai-hero-desc">建档、复盘、日程推荐和四象限分析集中在这里，方便家长快速验收新版。</Text>
           <View className="ai-release-badge">
-            <Text>小程序体验版 {MINI_PROGRAM_VERSION} · {RELEASE_DATE}</Text>
+            <Text>{APP_VERSION_LABEL} · {APP_RELEASE_DATE}</Text>
           </View>
         </View>
 

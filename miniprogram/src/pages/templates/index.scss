@@ -187,3 +187,28 @@
   padding: 120rpx 0; gap: 16rpx;
 }
 .empty-text { font-size: 28rpx; font-weight: 700; color: rgba($text-secondary, 0.5); }
+
+.theme-arcade-comic.templates-page {
+  background: $arcade-bg;
+}
+
+.theme-arcade-comic .tpl-header,
+.theme-arcade-comic .tpl-search-box,
+.theme-arcade-comic .template-card {
+  background: $arcade-card-bg;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 8rpx 10rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .cat-pill.active,
+.theme-arcade-comic .select-btn {
+  background: $arcade-primary;
+  border: 4rpx solid $arcade-border;
+}
+
+.theme-arcade-comic .cat-pill.active .cat-pill-label,
+.theme-arcade-comic .tpl-custom-text,
+.theme-arcade-comic .tpl-title,
+.theme-arcade-comic .tpl-name {
+  color: $arcade-text-primary;
+}

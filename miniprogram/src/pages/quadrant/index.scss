@@ -80,3 +80,31 @@
 .qd-sugg-item { display: flex; align-items: flex-start; gap: 10rpx; }
 .qd-sugg-item .icon-wrapper { transform: rotate(180deg); } /* arrow-left rotated = arrow-right */
 .qd-sugg-text { font-size: 24rpx; font-weight: 700; color: #1b1c1a; flex: 1; }
+
+.theme-arcade-comic.qd-page {
+  background: $arcade-bg;
+}
+
+.theme-arcade-comic .qd-header,
+.theme-arcade-comic .qd-select-wrap,
+.theme-arcade-comic .qd-cell,
+.theme-arcade-comic .qd-suggestion-card {
+  background: $arcade-card-bg;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 8rpx 10rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .qd-range-opt.active,
+.theme-arcade-comic .qd-mic-btn {
+  background: $arcade-primary;
+  border: 4rpx solid $arcade-border;
+}
+
+.theme-arcade-comic .qd-range-opt.active,
+.theme-arcade-comic .qd-header-title,
+.theme-arcade-comic .qd-cell-title,
+.theme-arcade-comic .qd-task-title,
+.theme-arcade-comic .qd-sugg-title,
+.theme-arcade-comic .qd-sugg-text {
+  color: $arcade-text-primary;
+}

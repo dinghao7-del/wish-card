@@ -827,3 +827,24 @@
 .cp-icon-option:active {
   background-color: rgba(0,0,0,0.04);
 }
+
+.theme-arcade-comic.create-page {
+  background: $arcade-bg;
+}
+
+.theme-arcade-comic .cp-header,
+.theme-arcade-comic .cp-card,
+.theme-arcade-comic .cp-modal-content {
+  background: $arcade-card-bg;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 8rpx 10rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .cp-save-btn,
+.theme-arcade-comic .cp-import-btn,
+.theme-arcade-comic .cp-mode-btn.active,
+.theme-arcade-comic .cp-modal-confirm {
+  background: $arcade-primary;
+  color: $arcade-text-primary;
+  border: 4rpx solid $arcade-border;
+}

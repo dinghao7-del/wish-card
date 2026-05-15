@@ -71,8 +71,11 @@
 // ===== 对话消息列表 =====
 .va-messages {
   flex: 1;
-  padding: 24rpx 28rpx;
   overflow-y: auto;
+}
+
+.va-messages-inner {
+  padding: 24rpx 28rpx;
 }
 
 .va-msg-row {

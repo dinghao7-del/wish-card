@@ -31,11 +31,11 @@ export default class CustomTabBar extends Component<{}, CustomTabBarState> {
   };
 
   tabList: TabItem[] = [
-    // 对齐 Web 端 BottomNav.tsx: 首页 | 任务 | 奖励✨(高亮凸起) | 心愿单 | 我的
+    // 对齐 Web 端 BottomNav.tsx: 首页 | 任务 | 奖惩✨(高亮凸起) | 心愿 | 我的
     { pagePath: 'pages/home/index', text: '首页', icon: 'homeTab', isCheckIn: false },
     { pagePath: 'pages/tasks/index', text: '任务', icon: 'taskTab', isCheckIn: false },
-    { pagePath: 'pages/habits/index', text: '奖励', icon: 'rewardTab', isCheckIn: true },       // 第3位 = 奖励(habits), Sparkles 高亮 ✨
-    { pagePath: 'pages/rewards/index', text: '心愿单', icon: 'wishlistTab', isCheckIn: false },  // 第4位 = 心愿单(rewards), Heart
+    { pagePath: 'pages/habits/index', text: '奖惩', icon: 'rewardTab', isCheckIn: true },
+    { pagePath: 'pages/rewards/index', text: '心愿', icon: 'wishlistTab', isCheckIn: false },
     { pagePath: 'pages/profile/index', text: '我的', icon: 'profileTab', isCheckIn: false },
   ];
 

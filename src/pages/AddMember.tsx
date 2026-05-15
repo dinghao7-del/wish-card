@@ -62,7 +62,7 @@ export function AddMember() {
   };
 
   return (
-    <div className="px-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-screen bg-background">
+    <div className="ui-profile-subpage px-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-screen bg-background">
       <TopAppBar
         title={t('add_member.title', { defaultValue: '添加成员' })}
         backTo="/profile"
@@ -92,7 +92,7 @@ export function AddMember() {
           </button>
         </div>
 
-        <div className="space-y-6 bg-surface-container-low p-8 rounded-[2.5rem] shadow-sm border border-outline-variant/10">
+        <div className="ui-profile-form-panel space-y-6 bg-surface-container-low p-8 rounded-[2.5rem] shadow-sm border border-outline-variant/10">
           <div className="space-y-2">
             <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">{t('add_member.nickname', { defaultValue: '昵称' })}</label>
             <input 

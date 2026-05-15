@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
 import Icon from '@/components/Icon';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
 
 export default function DataBackup() {
@@ -143,8 +144,11 @@ export default function DataBackup() {
     : '';
 
   return (
-    <View className="settings-page">
+    <View className={`settings-page ${getThemeClass()}`}>
       <View className="settings-header">
+        <View className="settings-back" onClick={() => Taro.navigateBack()}>
+          <Icon name="arrowLeft" size={32} color="#3f4a3c" />
+        </View>
         <Text className="settings-title">数据备份与还原</Text>
         <Text className="settings-desc">导出或导入家庭任务数据</Text>
       </View>

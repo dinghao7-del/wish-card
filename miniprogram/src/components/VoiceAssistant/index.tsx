@@ -156,42 +156,44 @@ export default function VoiceAssistant({ visible, onClose }: Props) {
           showScrollbar={false}
           enhanced
         >
-          {messages.map(msg => (
-            <View key={msg.id} className={`va-msg-row ${msg.role}`}>
-              {msg.role === 'ai' && (
+          <View className="va-messages-inner">
+            {messages.map(msg => (
+              <View key={msg.id} className={`va-msg-row ${msg.role}`}>
+                {msg.role === 'ai' && (
+                  <View className="va-ai-avatar">
+                    <Icon name="sparkles" size={24} color="#006e1c" />
+                  </View>
+                )}
+                <View className={`va-bubble ${msg.role}`}>
+                  {msg.content.split('\n').map((line, i) => (
+                    <Text key={i}>
+                      {line}
+                      {i < msg.content.split('\n').length - 1 ? '\n' : ''}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            ))}
+
+            {/* "正在输入..." 动画 */}
+            {isTyping && (
+              <View className="va-msg-row ai">
                 <View className="va-ai-avatar">
                   <Icon name="sparkles" size={24} color="#006e1c" />
                 </View>
-              )}
-              <View className={`va-bubble ${msg.role}`}>
-                {msg.content.split('\n').map((line, i) => (
-                  <Text key={i}>
-                    {line}
-                    {i < msg.content.split('\n').length - 1 ? '\n' : ''}
-                  </Text>
-                ))}
-              </View>
-            </View>
-          ))}
-
-          {/* "正在输入..." 动画 */}
-          {isTyping && (
-            <View className="va-msg-row ai">
-              <View className="va-ai-avatar">
-                <Icon name="sparkles" size={24} color="#006e1c" />
-              </View>
-              <View className="va-bubble ai typing">
-                <View className="va-dots">
-                  <View className="va-dot va-dot-1" />
-                  <View className="va-dot va-dot-2" />
-                  <View className="va-dot va-dot-3" />
+                <View className="va-bubble ai typing">
+                  <View className="va-dots">
+                    <View className="va-dot va-dot-1" />
+                    <View className="va-dot va-dot-2" />
+                    <View className="va-dot va-dot-3" />
+                  </View>
+                  <Text className="va-typing-text">正在输入...</Text>
                 </View>
-                <Text className="va-typing-text">正在输入...</Text>
               </View>
-            </View>
-          )}
+            )}
 
-          <View style={{ height: '24rpx' }} />
+            <View style={{ height: '24rpx' }} />
+          </View>
         </ScrollView>
 
         {/* 快捷标签 */}

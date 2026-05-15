@@ -100,7 +100,7 @@ export function EditProfile() {
   if (!memberToEdit) return null;
 
   return (
-    <div className="px-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-screen bg-background">
+    <div className="ui-profile-subpage px-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-screen bg-background">
       <TopAppBar
         title={id ? t('edit_profile.edit_name', `编辑 ${memberToEdit.name}`, { name: memberToEdit.name }) : t('edit_profile.title', '编辑个人信息')}
         backTo="/profile"
@@ -136,7 +136,7 @@ export function EditProfile() {
           </button>
         </div>
 
-        <div className="space-y-6 bg-surface-container-low p-8 rounded-[2.5rem] shadow-sm border border-outline-variant/10">
+        <div className="ui-profile-form-panel space-y-6 bg-surface-container-low p-8 rounded-[2.5rem] shadow-sm border border-outline-variant/10">
           <div className="space-y-2">
             <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">{t('edit_profile.nickname', '昵称')}</label>
             <input 

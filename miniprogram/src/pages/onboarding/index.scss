@@ -676,3 +676,41 @@
 
 .success-big-title { font-size: 48rpx; font-weight: 900; color: #333; margin-top: 28rpx; display: block; text-align: center; }
 .success-big-desc { font-size: 28rpx; color: $text-secondary; text-align: center; line-height: 1.6; margin-top: 12rpx; display: block; }
+
+.theme-arcade-comic.ob-page {
+  background: $arcade-bg;
+}
+
+.theme-arcade-comic .ob-card,
+.theme-arcade-comic .ft-item,
+.theme-arcade-comic .field-input,
+.theme-arcade-comic .pick-box,
+.theme-arcade-comic .prev-list-card,
+.theme-arcade-comic .prev-textarea,
+.theme-arcade-comic .avatar-picker,
+.theme-arcade-comic .ob-step-header {
+  background: $arcade-card-bg;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 8rpx 10rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .ob-primary-btn,
+.theme-arcade-comic .prev-fam-card,
+.theme-arcade-comic .cc-round-btn,
+.theme-arcade-comic .gender-chip.active,
+.theme-arcade-comic .chk-box.on {
+  background: $arcade-primary;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 6rpx 8rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .ob-title,
+.theme-arcade-comic .ob-step-title,
+.theme-arcade-comic .ft-label,
+.theme-arcade-comic .field-label,
+.theme-arcade-comic .prev-list-title,
+.theme-arcade-comic .prev-row-name,
+.theme-arcade-comic .success-big-title,
+.theme-arcade-comic .ob-primary-btn text {
+  color: $arcade-text-primary;
+}

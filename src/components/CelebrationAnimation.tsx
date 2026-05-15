@@ -101,17 +101,18 @@ export function CelebrationAnimation({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-6 pointer-events-none overflow-hidden"
           style={{
             background: isReward 
-              ? 'radial-gradient(circle at center, rgba(255,215,0,0.2) 0%, transparent 70%)'
+              ? 'radial-gradient(circle at center, rgba(255,215,0,0.24) 0%, rgba(255,255,255,0.82) 70%)'
               : isHabit
-              ? 'radial-gradient(circle at center, rgba(76,175,80,0.2) 0%, transparent 70%)'
-              : 'radial-gradient(circle at center, rgba(244,67,54,0.2) 0%, transparent 70%)'
+              ? 'radial-gradient(circle at center, rgba(76,175,80,0.24) 0%, rgba(255,255,255,0.82) 70%)'
+              : 'radial-gradient(circle at center, rgba(244,67,54,0.24) 0%, rgba(255,255,255,0.82) 70%)'
           }}
         >
+          <div className="relative z-10 flex w-full max-w-[20rem] flex-col items-center justify-center gap-5 rounded-[2rem] bg-surface/90 px-5 py-6 text-center shadow-2xl backdrop-blur-md">
           {/* 中心爆发效果 */}
-          <div className="relative flex items-center justify-center">
+          <div className="relative flex h-36 w-36 shrink-0 items-center justify-center sm:h-40 sm:w-40">
             {/* 外圈脉冲 */}
             <motion.div
               initial={{ scale: 0, opacity: 0.8 }}
@@ -121,10 +122,9 @@ export function CelebrationAnimation({
               }}
               transition={{ duration: 0.6, ease: "easeOut" }}
               className={cn(
-                "absolute inset-0 rounded-full",
+                "absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full sm:h-32 sm:w-32",
                 isReward ? "bg-yellow-400/30" : isHabit ? "bg-green-400/30" : "bg-red-400/30"
               )}
-              style={{ width: 200, height: 200, marginLeft: -100, marginTop: -100 }}
             />
 
             {/* 中心图标 */}
@@ -136,18 +136,18 @@ export function CelebrationAnimation({
               }}
               transition={{ duration: 0.6, times: [0, 0.6, 1] }}
               className={cn(
-                "relative z-10 w-32 h-32 rounded-full flex items-center justify-center shadow-2xl",
+                "relative z-10 flex h-28 w-28 items-center justify-center rounded-full shadow-2xl sm:h-32 sm:w-32",
                 isReward ? "bg-gradient-to-br from-yellow-400 to-orange-500" :
                 isHabit ? "bg-gradient-to-br from-green-400 to-emerald-600" :
                 "bg-gradient-to-br from-red-400 to-pink-600"
               )}
             >
               {isReward ? (
-                <Trophy size={64} className="text-white drop-shadow-lg" strokeWidth={2.5} />
+                <Trophy size={56} className="text-white drop-shadow-lg sm:size-16" strokeWidth={2.5} />
               ) : isHabit ? (
-                <CheckCircle2 size={64} className="text-white drop-shadow-lg" strokeWidth={2.5} />
+                <CheckCircle2 size={56} className="text-white drop-shadow-lg sm:size-16" strokeWidth={2.5} />
               ) : (
-                <Zap size={64} className="text-white drop-shadow-lg" strokeWidth={2.5} />
+                <Zap size={56} className="text-white drop-shadow-lg sm:size-16" strokeWidth={2.5} />
               )}
             </motion.div>
 
@@ -178,7 +178,7 @@ export function CelebrationAnimation({
                     delay: delay * 0.3,
                     ease: "easeOut"
                   }}
-                  className="absolute top-1/2 left-1/2 -mt-2 -ml-2"
+                  className="absolute left-1/2 top-1/2 -ml-2 -mt-2"
                 >
                   {i % 3 === 0 ? (
                     <Star 
@@ -218,8 +218,7 @@ export function CelebrationAnimation({
                 opacity: [0.8, 0.4, 0]
               }}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="absolute top-1/2 left-1/2 -mt-16 -ml-16"
-              style={{ width: 128, height: 128 }}
+              className="absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 sm:h-32 sm:w-32"
             >
               <div className={cn(
                 "w-full h-full rounded-full border-4 border-dashed",
@@ -233,36 +232,33 @@ export function CelebrationAnimation({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
-            className="absolute bottom-1/3 text-center"
+            className="flex w-full flex-col items-center text-center"
           >
             <motion.h2
-              animate={{ 
-                scale: [1, 1.1, 1],
-                transition: { duration: 0.3, repeat: 1 }
-              }}
               className={cn(
-                "text-5xl font-black mb-2 drop-shadow-lg",
+                "max-w-full break-words text-3xl font-black leading-tight drop-shadow-lg sm:text-5xl",
                 isReward ? "text-yellow-500" : isHabit ? "text-green-500" : "text-red-500"
               )}
             >
               {title}
             </motion.h2>
-            <p className="text-xl font-bold text-on-surface/70">{subtitle}</p>
+            <p className="mt-2 max-w-full break-words px-2 text-sm font-bold leading-relaxed text-on-surface/70 sm:text-xl">{subtitle}</p>
             
             {stars > 0 && (
               <motion.div
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
-                className="flex items-center justify-center gap-2 mt-4"
+                className="mt-4 flex min-h-10 items-center justify-center gap-2 rounded-full bg-surface/90 px-4 py-2 shadow-lg"
               >
                 <Star className="text-yellow-400 fill-current" size={24} />
-                <span className="text-2xl font-black text-yellow-500">
+                <span className="text-xl font-black text-yellow-500 sm:text-2xl">
                   {isReward ? `消耗 ${stars}` : `+${stars}`}
                 </span>
               </motion.div>
             )}
           </motion.div>
+          </div>
 
           {/* 背景星星装饰 */}
           {[...Array(20)].map((_, i) => (

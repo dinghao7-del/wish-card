@@ -1,3 +1,5 @@
+@import "../../app.scss";
+
 /* ============================================================
    History 星星足迹 — 对齐 Web 端 History.tsx (101行)
    ============================================================ */
@@ -179,4 +181,31 @@
 }
 .record-star-suffix {
   font-size: 24rpx;
+}
+
+.theme-arcade-comic.history-page {
+  background: $arcade-bg;
+}
+
+.theme-arcade-comic .history-header,
+.theme-arcade-comic .history-balance-card,
+.theme-arcade-comic .history-record,
+.theme-arcade-comic .empty-btn {
+  background: $arcade-card-bg;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 8rpx 10rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .history-balance-card,
+.theme-arcade-comic .empty-btn {
+  background: $arcade-primary;
+}
+
+.theme-arcade-comic .history-title,
+.theme-arcade-comic .balance-num,
+.theme-arcade-comic .balance-label,
+.theme-arcade-comic .record-reason,
+.theme-arcade-comic .record-amount,
+.theme-arcade-comic .empty-btn text {
+  color: $arcade-text-primary;
 }

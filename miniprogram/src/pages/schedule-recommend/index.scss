@@ -1058,3 +1058,58 @@
     color: #006e1c;             // text-primary
   }
 }
+
+/* ===== 主题皮肤：电玩漫画风 ===== */
+.theme-arcade-comic.sr-page {
+  background: #f4f4f4;
+
+  .sr-header,
+  .sr-summary-card,
+  .sr-table-card,
+  .sr-feedback-card,
+  .sr-tips-card,
+  .sr-dev-card,
+  .sr-acts-card,
+  .sr-warn-card {
+    border: 4rpx solid #111;
+    box-shadow: 8rpx 8rpx 0 #111;
+  }
+
+  .sr-header-title,
+  .sr-table-title,
+  .sr-summary-title,
+  .sr-label {
+    color: #111;
+  }
+
+  .sr-next-btn,
+  .sr-save-btn,
+  .chip-pill.active,
+  .sr-tab-item.active {
+    background: #ffe100;
+    border: 4rpx solid #111;
+    box-shadow: 6rpx 6rpx 0 #111;
+  }
+
+  .sr-next-text,
+  .sr-save-text,
+  .chip-pill.active .chip-text,
+  .sr-tab-item.active .sr-tab-label {
+    color: #111;
+  }
+}
+
+.theme-flat-comic.sr-page {
+  background: #fffaf0;
+
+  .sr-header,
+  .sr-summary-card,
+  .sr-table-card,
+  .sr-feedback-card,
+  .sr-tips-card,
+  .sr-dev-card,
+  .sr-acts-card {
+    border-radius: 20rpx;
+    box-shadow: 0 8rpx 24rpx rgba(15, 143, 67, 0.08);
+  }
+}

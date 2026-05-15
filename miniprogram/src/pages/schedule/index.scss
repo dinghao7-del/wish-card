@@ -215,3 +215,47 @@
   &:active { opacity: 0.9; transform: scale(0.98); }
 }
 .sr-save-text { font-size: 32rpx; font-weight: 700; color: #fff; }
+
+.theme-arcade-comic.sr-page {
+  background: $arcade-bg;
+}
+
+.theme-arcade-comic .sr-progress-bar,
+.theme-arcade-comic .sr-gender-card,
+.theme-arcade-comic .sr-chip,
+.theme-arcade-comic .sr-input,
+.theme-arcade-comic .sr-textarea,
+.theme-arcade-comic .sr-summary-card,
+.theme-arcade-comic .sr-act-card,
+.theme-arcade-comic .sr-strategy-item,
+.theme-arcade-comic .sr-tips-card,
+.theme-arcade-comic .sr-feedback {
+  background: $arcade-card-bg;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 8rpx 10rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .sr-dot.active,
+.theme-arcade-comic .sr-chip.active,
+.theme-arcade-comic .sr-city-pill.active,
+.theme-arcade-comic .sr-next-btn,
+.theme-arcade-comic .sr-primary,
+.theme-arcade-comic .sr-rtab.active,
+.theme-arcade-comic .sr-fb-send,
+.theme-arcade-comic .sr-save-btn {
+  background: $arcade-primary;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 6rpx 8rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .sr-title,
+.theme-arcade-comic .sr-field-label,
+.theme-arcade-comic .sr-chip-text.active,
+.theme-arcade-comic .sr-city-text.active,
+.theme-arcade-comic .sr-next-text,
+.theme-arcade-comic .sr-save-text,
+.theme-arcade-comic .sr-summary-title,
+.theme-arcade-comic .sr-act-name,
+.theme-arcade-comic .sr-strategy-text {
+  color: $arcade-text-primary;
+}

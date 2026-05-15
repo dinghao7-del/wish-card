@@ -13,6 +13,7 @@ import {
   getTaskTemplatesByCategory,
   type TaskTemplate,
 } from '@/lib/templates';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
 
 // 分类映射：将 templates.ts 分类 ID 映射到中文标签
@@ -74,11 +75,13 @@ export default function TaskTemplates() {
       },
       fromMode: mode,
     }));
-    Taro.navigateBack();
+    Taro.navigateTo({
+      url: `/pages/tasks/create/index?mode=${mode}&title=${encodeURIComponent(template.title)}&stars=${template.defaultStars}&category=${encodeURIComponent(template.category || '')}`,
+    });
   };
 
   return (
-    <View className="templates-page">
+    <View className={`templates-page ${getThemeClass()}`}>
       {/* Header */}
       <View className="tpl-header">
         <View className="tpl-header-left" onClick={() => Taro.navigateBack()}>
@@ -105,7 +108,7 @@ export default function TaskTemplates() {
             Taro.navigateTo({ url: `/pages/tasks/create/index?mode=${mode}&custom=1` })
           }
         >
-          <Text className="tpl-custom-text">自定义任务</Text>
+          <Text className="tpl-custom-text">{mode === 'habit' ? '自定义习惯' : '自定义任务'}</Text>
         </View>
       </View>
 

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
 import Icon from '@/components/Icon';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
 
 export default function SecuritySettings() {
@@ -95,7 +96,7 @@ export default function SecuritySettings() {
           if (stored) {
             Taro.removeStorageSync('guest_user');
             Taro.hideLoading();
-            Taro.redirectTo({ url: '/pages/login/index' });
+            Taro.reLaunch({ url: '/pages/login/index' });
             return;
           }
           const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -106,7 +107,7 @@ export default function SecuritySettings() {
             await supabase.auth.signOut();
           }
           Taro.hideLoading();
-          Taro.redirectTo({ url: '/pages/login/index' });
+          Taro.reLaunch({ url: '/pages/login/index' });
         } catch {
           Taro.hideLoading();
           Taro.showToast({ title: '删除失败', icon: 'none' });
@@ -116,8 +117,11 @@ export default function SecuritySettings() {
   };
 
   return (
-    <View className="settings-page">
+    <View className={`settings-page ${getThemeClass()}`}>
       <View className="settings-header">
+        <View className="settings-back" onClick={() => Taro.navigateBack()}>
+          <Icon name="arrowLeft" size={32} color="#3f4a3c" />
+        </View>
         <Text className="settings-title">账号与安全</Text>
         <Text className="settings-desc">管理你的账户安全设置</Text>
       </View>

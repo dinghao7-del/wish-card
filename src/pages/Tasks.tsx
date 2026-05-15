@@ -12,7 +12,6 @@ import {
   Book,
   Home as HomeIcon,
   Flower2,
-  ArrowLeft,
   CircleDashed,
   Mic,
   Settings,
@@ -155,7 +154,7 @@ export function Tasks() {
             <Star size={14} className="sm:size-[18px] text-reward-display fill-current" />
             <span className="font-black text-on-surface text-sm sm:text-base">{stars.toLocaleString()}</span>
           </div>
-          {!guestMode && <NotificationBell />}
+          <NotificationBell />
         </div>
       </header>
 
@@ -290,9 +289,10 @@ export function Tasks() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => navigate('/tasks/templates')}
-                          className="ui-comic-button w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all ml-auto"
+                          aria-label="添加任务"
+                          className="ui-task-add-button w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all ml-auto"
                         >
-                          <Plus size={18} strokeWidth={3} />
+                          <Plus size={18} strokeWidth={3} className="text-white" />
                         </motion.button>
                     </h2>
                     <div className="space-y-3">
@@ -377,21 +377,27 @@ export function Tasks() {
       {/* Task Detail Modal */}
       <AnimatePresence>
         {selectedTask && (
-          <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden"
+          <div
+            className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 backdrop-blur-sm"
+            onClick={() => setSelectedTask(null)}
           >
-            <header className="flex items-center px-6 py-4 bg-background/80 backdrop-blur-xl shrink-0 z-20 border-b border-outline-variant/10">
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+            className="ui-detail-sheet relative w-full max-w-lg max-h-[88svh] bg-background flex flex-col overflow-hidden rounded-t-[2rem] shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="ui-detail-sheet-header flex items-center px-6 py-4 bg-background/80 backdrop-blur-xl shrink-0 z-20 border-b border-outline-variant/10">
                 <button
                   onClick={() => setSelectedTask(null)}
-                  className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container/50 transition-colors"
+                  className="ui-detail-sheet-close w-10 h-10 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container/50 transition-colors"
+                  aria-label={t('common.close', { defaultValue: '关闭' })}
                 >
-                  <ArrowLeft size={24} />
+                  <Plus size={24} className="rotate-45" />
                 </button>
-                <h1 className="flex-1 text-center font-bold text-lg text-on-surface">{t('tasks.detail.title', { defaultValue: '标题' })}</h1>
+                <h1 className="flex-1 text-center font-bold text-lg text-on-surface">{t('tasks.detail.title', { defaultValue: '任务详情' })}</h1>
                 {isAdmin ? (
                   <div className="relative">
                     <button
@@ -645,6 +651,7 @@ export function Tasks() {
                )}
             </div>
           </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

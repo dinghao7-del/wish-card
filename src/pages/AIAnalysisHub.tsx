@@ -204,13 +204,13 @@ export function AIAnalysisHub() {
   }, [currentUser?.id, familyId, visibleResourceMatches]);
 
   return (
-    <div className="min-h-screen bg-background pb-28 animate-in fade-in duration-500">
+    <div className="ui-ai-page min-h-screen bg-background pb-28 animate-in fade-in duration-500">
       <TopAppBar title="AI 分析" />
 
       <div className="px-4 sm:px-6 py-4 space-y-4">
-        <section className="rounded-3xl bg-primary-container border border-primary/10 p-4 sm:p-5 shadow-sm overflow-hidden relative">
+        <section className="ui-ai-hero rounded-3xl bg-primary-container border border-primary/10 p-4 sm:p-5 shadow-sm overflow-hidden relative">
           <div className="relative flex items-start gap-3 sm:gap-4">
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-surface/80 flex items-center justify-center text-primary shadow-sm shrink-0">
+            <div className="ui-ai-icon w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-surface/80 flex items-center justify-center text-primary shadow-sm shrink-0">
               <WandSparkles size={24} strokeWidth={2.6} />
             </div>
             <div className="min-w-0 max-w-full">
@@ -229,9 +229,9 @@ export function AIAnalysisHub() {
           <StatusTile label="兑现提醒" value={`${Math.max(familyPromiseTasks, redeemedWishes)} 项`} />
         </section>
 
-        <section className="rounded-3xl bg-surface border border-outline-variant/10 p-4 shadow-sm">
+        <section className="ui-ai-panel rounded-3xl bg-surface border border-outline-variant/10 p-4 shadow-sm">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <div className="ui-ai-icon w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <ListChecks size={20} strokeWidth={2.6} />
             </div>
             <div className="min-w-0">
@@ -243,9 +243,9 @@ export function AIAnalysisHub() {
           </div>
         </section>
 
-        <section className="rounded-3xl bg-surface border border-outline-variant/10 p-4 shadow-sm">
+        <section className="ui-ai-panel rounded-3xl bg-surface border border-outline-variant/10 p-4 shadow-sm">
           <div className="flex items-start gap-3 mb-3">
-            <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <div className="ui-ai-icon w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <Target size={20} strokeWidth={2.6} />
             </div>
             <div className="min-w-0">
@@ -261,7 +261,7 @@ export function AIAnalysisHub() {
                 key={card.id}
                 type="button"
                 onClick={() => handleRecommendationClick(card)}
-                className="w-full rounded-2xl bg-surface-container-low p-3 text-left active:scale-[0.99] transition-all flex items-start gap-3"
+                className="ui-ai-recommendation-card w-full rounded-2xl bg-surface-container-low p-3 text-left active:scale-[0.99] transition-all flex items-start gap-3"
               >
                 <div className="w-8 h-8 rounded-xl bg-surface text-primary flex items-center justify-center shrink-0">
                   <Sparkles size={16} strokeWidth={2.6} />
@@ -284,7 +284,7 @@ export function AIAnalysisHub() {
                 {visibleResourceMatches.map(match => (
                   <div
                     key={match.resource.id}
-                    className="w-full rounded-2xl bg-primary/5 p-3 text-left"
+                    className="ui-ai-resource-card w-full rounded-2xl bg-primary/5 p-3 text-left"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -347,9 +347,9 @@ export function AIAnalysisHub() {
                 key={item.title}
                 type="button"
                 onClick={() => navigate(item.to)}
-                className="w-full bg-surface dark:bg-surface-container-low rounded-3xl p-4 border border-outline-variant/10 shadow-sm active:scale-[0.98] transition-all text-left flex items-start gap-3 sm:gap-4"
+                className="ui-ai-action-card w-full bg-surface dark:bg-surface-container-low rounded-3xl p-4 border border-outline-variant/10 shadow-sm active:scale-[0.98] transition-all text-left flex items-start gap-3 sm:gap-4"
               >
-                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-surface-container-low flex items-center justify-center text-primary shrink-0">
+                <div className="ui-ai-icon w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-surface-container-low flex items-center justify-center text-primary shrink-0">
                   <Icon size={23} strokeWidth={2.5} />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -370,7 +370,7 @@ export function AIAnalysisHub() {
           })}
         </section>
 
-        <section className="rounded-3xl bg-surface-container-low border border-outline-variant/10 p-4 flex items-start gap-3">
+        <section className="ui-ai-note rounded-3xl bg-surface-container-low border border-outline-variant/10 p-4 flex items-start gap-3">
           <Sparkles size={18} className="text-primary shrink-0 mt-0.5" />
           <p className="text-safe text-xs font-bold text-on-surface-variant leading-relaxed">
             周报、月报、学期报和年度报不需要家长手动设置。系统会自动整理，让孩子看到努力带来的变化，也让家长提前看到下周期重点。
@@ -383,7 +383,7 @@ export function AIAnalysisHub() {
 
 function StatusTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-surface border border-outline-variant/10 p-3 shadow-sm min-w-0">
+    <div className="ui-ai-status-tile rounded-2xl bg-surface border border-outline-variant/10 p-3 shadow-sm min-w-0">
       <p className="text-[10px] font-black text-on-surface-variant/45">{label}</p>
       <p className="text-base font-black text-on-surface mt-1 truncate">{value}</p>
     </div>

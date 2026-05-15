@@ -1,0 +1,265 @@
+@import "../../../app.scss";
+
+.review-page {
+  min-height: 100vh;
+  background: #fbf9f5;
+  display: flex;
+  flex-direction: column;
+}
+
+.review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22rpx 28rpx;
+  padding-top: calc(env(safe-area-inset-top) + 22rpx);
+  background: rgba(255,255,255,0.92);
+  border-bottom: 1rpx solid rgba(190,202,185,0.35);
+}
+
+.review-back {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.review-title {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: #25352a;
+}
+
+.review-scroll {
+  flex: 1;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.privacy-card,
+.review-section,
+.consent-card {
+  background: #ffffff;
+  border-radius: 28rpx;
+  box-shadow: 0 6rpx 20rpx rgba(37,53,42,0.06);
+}
+
+.privacy-card {
+  padding: 30rpx 26rpx;
+}
+
+.privacy-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 26rpx;
+  background: #006e1c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.privacy-title,
+.template-title {
+  display: block;
+  margin-top: 18rpx;
+  font-size: 32rpx;
+  font-weight: 950;
+  color: #25352a;
+}
+
+.privacy-desc,
+.template-meta,
+.slot-desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  line-height: 1.55;
+  color: #6f7d70;
+}
+
+.review-section {
+  margin-top: 20rpx;
+  padding: 26rpx 24rpx;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 18rpx;
+}
+
+.section-head text {
+  font-size: 29rpx;
+  font-weight: 900;
+  color: #25352a;
+}
+
+.review-textarea {
+  width: 100%;
+  min-height: 150rpx;
+  margin-top: 18rpx;
+  padding: 18rpx;
+  border-radius: 20rpx;
+  background: #f3f6f1;
+  box-sizing: border-box;
+  font-size: 25rpx;
+  font-weight: 700;
+  color: #25352a;
+}
+
+.slot-row {
+  display: flex;
+  gap: 16rpx;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid rgba(190,202,185,0.35);
+}
+
+.slot-row:last-child {
+  border-bottom: none;
+}
+
+.slot-time {
+  width: 142rpx;
+  font-size: 22rpx;
+  font-weight: 950;
+  color: #006e1c;
+  flex-shrink: 0;
+}
+
+.slot-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.slot-title {
+  display: block;
+  font-size: 27rpx;
+  font-weight: 900;
+  color: #25352a;
+}
+
+.redaction-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.redaction-chip {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 10rpx 14rpx;
+  border-radius: 999rpx;
+  background: #eef2ec;
+}
+
+.redaction-chip text {
+  font-size: 22rpx;
+  font-weight: 850;
+  color: #3f4a3c;
+}
+
+.consent-card {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-top: 18rpx;
+  padding: 22rpx 20rpx;
+}
+
+.consent-card text {
+  flex: 1;
+  font-size: 25rpx;
+  font-weight: 850;
+  line-height: 1.45;
+  color: #25352a;
+}
+
+.check-box {
+  width: 42rpx;
+  height: 42rpx;
+  border-radius: 12rpx;
+  border: 3rpx solid #becab9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.check-box.active {
+  background: #006e1c;
+  border-color: #006e1c;
+}
+
+.confirm-btn {
+  height: 92rpx;
+  margin: 28rpx 0 80rpx;
+  border-radius: 999rpx;
+  background: #006e1c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10rpx 24rpx rgba(0,110,28,0.18);
+}
+
+.confirm-btn.disabled {
+  opacity: 0.55;
+}
+
+.confirm-btn text {
+  font-size: 29rpx;
+  font-weight: 950;
+  color: #ffffff;
+}
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18rpx;
+}
+
+.empty-state text {
+  font-size: 28rpx;
+  font-weight: 850;
+  color: #6f7d70;
+}
+
+.theme-arcade-comic.review-page {
+  background: $arcade-bg;
+}
+
+.theme-arcade-comic .review-header,
+.theme-arcade-comic .privacy-card,
+.theme-arcade-comic .review-section,
+.theme-arcade-comic .consent-card,
+.theme-arcade-comic .review-textarea {
+  background: $arcade-card-bg;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 8rpx 10rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .privacy-icon,
+.theme-arcade-comic .check-box.active,
+.theme-arcade-comic .confirm-btn {
+  background: $arcade-primary;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 6rpx 8rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .review-title,
+.theme-arcade-comic .privacy-title,
+.theme-arcade-comic .template-title,
+.theme-arcade-comic .section-head text,
+.theme-arcade-comic .slot-title,
+.theme-arcade-comic .consent-card text,
+.theme-arcade-comic .confirm-btn text {
+  color: $arcade-text-primary;
+}
+

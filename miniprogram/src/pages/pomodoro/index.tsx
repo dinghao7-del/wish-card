@@ -5,6 +5,7 @@ import Icon from '@/components/Icon';
 import { getLocalUser } from '@/utils/localUser';
 import { isGuestMode, getGuestData } from '@/lib/guestData';
 import { getFamilyTasks } from '@/utils/supabase';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
 
 // ===== 对齐 Web PomodoroTimer.tsx (663行) 核心逻辑 =====
@@ -165,7 +166,7 @@ export default function Pomodoro() {
   };
 
   return (
-    <View className="po-page">
+    <View className={`po-page ${getThemeClass()}`}>
       {/* ===== 庆祝动画（对齐 Web AnimatePresence）===== */}
       {showCelebration && (
         <View className="po-celebration">

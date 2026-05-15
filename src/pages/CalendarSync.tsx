@@ -9,6 +9,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFamily } from '../context/FamilyContext';
 import { TopAppBar } from '../components/navigation/TopAppBar';
+import { AppModal } from '../components/AppModal';
 import { showToastGlobal } from '../components/Toast';
 import { generateICSFile, downloadICS, getCalendarSyncGuide, type CalendarSyncGuide } from '../lib/voiceAssistant';
 import { cn } from '../lib/utils';
@@ -684,23 +685,14 @@ export function CalendarSync() {
       {/* 导入弹窗 */}
       <AnimatePresence>
         {showImportModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-sm bg-white dark:bg-surface-container rounded-[2.5rem] shadow-2xl overflow-hidden max-h-[calc(100svh-2rem)]"
-            >
-              <div className="p-8">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-2xl font-black text-on-surface">{t('calendar_sync.import_ics', { defaultValue: '导入ICS' }) || '导入日历'}</h3>
-                  <button 
-                    onClick={() => setShowImportModal(false)}
-                    className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container dark:bg-surface-container-high transition-colors"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
+          <AppModal
+            open={showImportModal}
+            onClose={() => setShowImportModal(false)}
+            title={t('calendar_sync.import_ics', { defaultValue: '导入日历' }) || '导入日历'}
+            surface="center"
+            zIndexClass="z-[120]"
+            bodyClassName="px-6 py-5"
+          >
 
                 {/* 导入方式选择 */}
                 <div className="flex gap-2 mb-6">
@@ -770,9 +762,7 @@ export function CalendarSync() {
                     </button>
                   </div>
                 )}
-              </div>
-            </motion.div>
-          </div>
+          </AppModal>
         )}
       </AnimatePresence>
     </div>

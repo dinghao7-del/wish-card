@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { TextAvatar } from '../components/TextAvatar';
 import { showToastGlobal } from '../components/Toast';
 import { showConfirm } from '../components/ConfirmDialog';
+import { AppModal } from '../components/AppModal';
 import * as api from '../lib/api';
 
 export function Profile() {
@@ -184,8 +185,8 @@ export function Profile() {
   };
 
   return (
-    <div className="px-6 pb-12 animate-in fade-in slide-in-from-left-4 duration-500 min-h-screen bg-background text-on-surface">
-      <header className="flex justify-between items-center py-4 sticky top-[var(--app-sticky-top,0px)] bg-background/80 backdrop-blur-xl z-40 -mx-6 px-6">
+    <div className="ui-profile-page px-6 pb-12 animate-in fade-in slide-in-from-left-4 duration-500 min-h-screen bg-background text-on-surface">
+      <header className="ui-profile-header flex justify-between items-center py-4 sticky top-[var(--app-sticky-top,0px)] bg-background/80 backdrop-blur-xl z-40 -mx-6 px-6">
         <div className="flex items-center gap-3">
           <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={32} />
           <h1 className="font-bold text-lg text-on-surface">{t('profile.title', { defaultValue: '标题' })}</h1>
@@ -194,12 +195,12 @@ export function Profile() {
       </header>
 
       {/* Profile Hero */}
-      <section className="relative mb-6 flex flex-col items-center mt-2">
+      <section className="ui-profile-hero relative mb-6 flex flex-col items-center mt-2">
           <button
             onClick={() => navigate('/profile/edit')}
-            className="relative group cursor-pointer transition-transform hover:scale-105"
+            className="ui-profile-avatar-button relative group cursor-pointer transition-transform hover:scale-105"
           >
-            <div className="w-28 h-28 flex items-center justify-center relative z-10">
+            <div className="ui-profile-main-avatar w-28 h-28 flex items-center justify-center relative z-10">
               <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={112} className="border-4 border-white dark:border-surface-container-highest shadow-xl" />
             </div>
             <div className="absolute bottom-0 right-0 w-9 h-9 bg-secondary-container rounded-full shadow-lg flex items-center justify-center text-on-secondary-container border-2 border-white dark:border-surface-container-highest z-20">
@@ -207,40 +208,24 @@ export function Profile() {
             </div>
           </button>
 
-        <h2 className="text-2xl font-black text-on-surface mt-2">{currentUser?.name}</h2>
+        <h2 className="ui-profile-name text-2xl font-black text-on-surface mt-2">{currentUser?.name}</h2>
       </section>
 
       <AnimatePresence>
         {isImportExportOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 outline-none">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsImportExportOpen(false)}
-              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-sm bg-surface dark:bg-surface-container rounded-[2.5rem] shadow-2xl overflow-y-auto max-h-[calc(100svh-2rem)]"
-            >
-              {/* Header */}
-              <div className="p-8 pb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-2xl font-black text-on-surface">{t('profile.menu.share_backup', { defaultValue: 'share backup' })}</h3>
-                  <button
-                    onClick={() => setIsImportExportOpen(false)}
-                    className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container dark:bg-surface-container-high transition-colors text-on-surface-variant hover:text-on-surface"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
-                <p className="text-sm text-on-surface-variant/50 font-bold">{t('profile.menu.share_backup_desc', { defaultValue: 'share backup desc' })}</p>
-              </div>
-
-              <div className="p-8 pt-0 space-y-6">
+          <AppModal
+            open={isImportExportOpen}
+            onClose={() => setIsImportExportOpen(false)}
+            title={t('profile.menu.share_backup', { defaultValue: '分享与备份' })}
+            surface="sheet"
+            zIndexClass="z-[120]"
+            className="max-h-[88svh]"
+            bodyClassName="px-6 py-5"
+          >
+              <p className="mb-5 text-sm text-on-surface-variant/60 font-bold">
+                {t('profile.menu.share_backup_desc', { defaultValue: '分享、导出或还原家庭数据' })}
+              </p>
+              <div className="space-y-6">
                 {/* Content Selection */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 mb-2">
@@ -366,15 +351,14 @@ export function Profile() {
                   {t('profile.import.warning', { defaultValue: '警告' })}
                 </p>
               </div>
-            </motion.div>
-          </div>
+          </AppModal>
         )}
       </AnimatePresence>
 
       {/* Family Members */}
-      <section className="mb-6">
+      <section className="ui-profile-section mb-6">
         <div className="flex justify-between items-center mb-4 px-1 gap-3">
-          <h3 className="font-black text-lg text-on-surface">{t('profile.members.title', { defaultValue: '标题' })}</h3>
+          <h3 className="ui-profile-section-title font-black text-lg text-on-surface">{t('profile.members.title', { defaultValue: '标题' })}</h3>
           <button
             onClick={() => navigate('/profile/members/add')}
             className="min-h-[44px] shrink-0 text-primary text-sm font-black flex items-center gap-1.5 rounded-full px-2 hover:bg-primary/5 transition-colors"
@@ -383,20 +367,22 @@ export function Profile() {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 pb-4 sm:grid-cols-4">
+        <div className="ui-profile-member-rail flex gap-4 overflow-x-auto pb-4 px-1">
           {members.map(member => (
             <motion.div
               key={member.id}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate(`/profile/members/${member.id}`)}
 className={cn(
-  "ui-panel-compact min-w-0 min-h-[120px] flex flex-col items-center bg-surface dark:bg-surface-container-low rounded-[1.8rem] p-3 shadow-sm border transition-all cursor-pointer relative",
-  currentUser?.id === member.id ? "border-primary-surface bg-primary-container/30 dark:bg-primary-container/10 shadow-md" : "border-outline-variant/10"
+  "ui-profile-member-card min-w-[78px] flex flex-col items-center gap-1.5 transition-all cursor-pointer relative",
+  currentUser?.id === member.id ? "is-active" : ""
 )}
             >
-              <TextAvatar src={member.avatar} name={member.name} size={48} className="mb-2" />
-              <span className="font-black text-[13px] mb-1 text-on-surface truncate w-full text-center">{member.name}</span>
-              <div className="bg-surface-container px-2 py-0.5 rounded-full">
+              <div className="ui-profile-member-avatar">
+                <TextAvatar src={member.avatar} name={member.name} size={58} />
+              </div>
+              <span className="ui-profile-member-name font-black text-[13px] mb-1 text-on-surface truncate w-full text-center">{member.name}</span>
+              <div className="ui-profile-member-score bg-surface-container px-2 py-0.5 rounded-full">
                 <span className="text-[9px] font-black text-success whitespace-nowrap">{member.stars} {t('common.stars_suffix', { defaultValue: 'stars suffix' })}</span>
               </div>
             </motion.div>
@@ -406,10 +392,10 @@ className={cn(
 
       {/* Local Audit Logs */}
       {currentUser?.role === 'parent' && auditLogs.length > 0 && (
-        <section className="mb-6">
+        <section className="ui-profile-section mb-6">
           <div className="flex items-center justify-between mb-4 px-1">
-            <h3 className="font-black text-lg text-on-surface">最近操作</h3>
-            <span className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest">本机记录</span>
+            <h3 className="ui-profile-section-title font-black text-lg text-on-surface">最近操作</h3>
+            <span className="ui-profile-kicker text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest">本机记录</span>
           </div>
           <div className="ui-panel bg-surface dark:bg-surface-container-low rounded-[2rem] shadow-sm border border-outline-variant/5 overflow-hidden p-2">
             {auditLogs.slice(0, 5).map(log => (
@@ -433,8 +419,8 @@ className={cn(
       )}
 
       {/* Menu Groups */}
-      <section className="space-y-4">
-        <div className="ui-panel bg-surface dark:bg-surface-container-low rounded-[2.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-2">
+      <section className="ui-profile-menu-section space-y-4">
+        <div className="ui-profile-menu-group ui-panel bg-surface dark:bg-surface-container-low rounded-[2.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-2">
           <MenuLink icon={Shield} label={t('profile.menu.security', { defaultValue: '安全' })} onClick={() => navigate('/settings/security')} />
           <MenuLink icon={Sparkles} label="AI 分析" desc="智能建档、家庭复盘、日程方案" onClick={() => navigate('/ai-analysis')} />
           <MenuLink icon={Download} label={t('profile.menu.share_backup', { defaultValue: 'share backup' })} desc={t('profile.menu.share_backup_desc', { defaultValue: 'share backup desc' })} onClick={() => setIsImportExportOpen(true)} />
@@ -444,14 +430,14 @@ className={cn(
           <MenuLink icon={MessageSquare} label={t('profile.menu.feedback', { defaultValue: '反馈' })} onClick={() => navigate('/support/feedback')} />
         </div>
 
-        <div className="ui-panel bg-surface dark:bg-surface-container-low rounded-[2.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-2">
+        <div className="ui-profile-menu-group ui-panel bg-surface dark:bg-surface-container-low rounded-[2.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-2">
           <MenuLink icon={Palette} label="主题皮肤" desc="绿色漫画风 · 电玩漫画风可切换" onClick={() => navigate('/settings/appearance')} />
           <MenuLink icon={Moon} label={t('profile.menu.dark_mode', { defaultValue: '深色模式' })} isToggle active={isDarkMode} onToggle={toggleDarkMode} />
           <MenuLink icon={Settings} label={t('profile.menu.basic_settings', { defaultValue: '基础设置' })} onClick={() => navigate('/settings/basic')} />
         </div>
       </section>
 
-      <div className="mt-auto pt-6 flex justify-center pb-4 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent">
+      <div className="ui-profile-logout-wrap mt-auto pt-6 flex justify-center pb-4 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent">
         <button
           onClick={() => handleLogout()}
           className="bg-danger-container px-10 py-3.5 rounded-full flex items-center gap-2 shadow-sm border border-danger/20 active:scale-95 transition-all"
@@ -471,13 +457,13 @@ function MenuLink({ icon: Icon, label, desc, isToggle, active, onToggle, onClick
     <div
       onClick={!isToggle ? onClick : onToggle}
       className={cn(
-        "flex items-center justify-between p-5 hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors cursor-pointer group rounded-[2rem] text-on-surface",
+        "ui-profile-menu-link flex items-center justify-between p-5 hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors cursor-pointer group rounded-[2rem] text-on-surface",
         isToggle && "cursor-default"
       )}
     >
       <div className="flex items-center gap-4">
         <div className={cn(
-          "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
+          "ui-profile-menu-icon w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
           iconBg || "bg-surface-container",
           iconColor || "text-primary",
           !iconBg && "group-hover:bg-primary/10"
@@ -485,8 +471,8 @@ function MenuLink({ icon: Icon, label, desc, isToggle, active, onToggle, onClick
           <Icon size={22} strokeWidth={2.5} />
         </div>
         <div className="flex flex-col">
-          <span className="font-black text-base text-on-surface">{label}</span>
-          {desc && <span className="text-xs text-on-surface-variant/50 font-bold">{desc}</span>}
+          <span className="ui-profile-menu-label font-black text-base text-on-surface">{label}</span>
+          {desc && <span className="ui-profile-menu-desc text-xs text-on-surface-variant/50 font-bold">{desc}</span>}
         </div>
       </div>
       {isToggle ? (

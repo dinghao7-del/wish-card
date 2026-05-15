@@ -412,12 +412,59 @@ const ICON_PATH_MAP: Record<string, string> = {
   'packing_schoo': 'https://qdiuufuoleharmjfarzr.supabase.co/storage/v1/object/public/assets/task-icons/independent/Cute_flat_kawaii_packing_schoo_2026-04-27T20-22-27.png',
 };
 
+/** Supabase Storage 公开访问基础 URL */
+const SUPABASE_ASSETS_URL = 'https://qdiuufuoleharmjfarzr.supabase.co/storage/v1/object/public/assets';
+
+const LOCAL_AVATAR_FALLBACKS: Record<string, string> = {
+  'Cute_cartoon_avatar_of_an_Asia_2026-04-27T18-33-03.png': '/assets/avatars/parent/Cute_cartoon_avatar_of_a_young_2026-04-27T18-33-32.png',
+  'Cute_cartoon_avatar_of_an_Asia_2026-04-27T18-33-09.png': '/assets/avatars/parent/Cute_cartoon_avatar_of_a_young_2026-04-27T18-33-08.png',
+  'Cute_cartoon_avatar_of_an_Asia_2026-04-27T18-33-33.png': '/assets/avatars/parent/Cute_cartoon_avatar_of_a_young_2026-04-27T18-33-32.png',
+  'Cute_cartoon_avatar_of_an_Asia_2026-04-27T18-33-34.png': '/assets/avatars/parent/Cute_cartoon_avatar_of_a_young_2026-04-27T18-33-05.png',
+  'Cute_cartoon_avatar_of_an_Asia_2026-04-27T18-34-42.png': '/assets/avatars/parent/Cute_cartoon_avatar_of_a_young_2026-04-27T18-33-32.png',
+};
+
+const LOCAL_ASSET_FALLBACKS: Record<string, string> = {
+  'reward-icons/prize/Cute_flat_kawaii_LEGO_building_2026-04-27T19-48-32.png': '/assets/reward-icons/activity/Cute_flat_kawaii_LEGO_building_2026-04-27T19-48-32.png',
+  'task-icons/life/Cute_flat_kawai_jump_rope_exe_2026-04-27T20-21-23.png': '/assets/task-icons/hobby/Cute_flat_kawaii_jump_rope_exe_2026-04-27T20-21-23.png',
+  'task-icons/critique/Cute_flat_kawaii_icon_of_using__2026-04-27T20-10-10.png': '/assets/task-icons/critique/Cute_flat_kawaii_icon_of_not_w_2026-04-27T20-09-08.png',
+};
+
+export function resolveLocalAssetPath(rawAsset: string | undefined | null): string {
+  if (!rawAsset) return '';
+
+  if (rawAsset.startsWith(SUPABASE_ASSETS_URL + '/')) {
+    const rel = rawAsset.slice(SUPABASE_ASSETS_URL.length + 1);
+    const filename = rel.split('/').pop() || '';
+    if (LOCAL_ASSET_FALLBACKS[rel]) return LOCAL_ASSET_FALLBACKS[rel];
+    if (LOCAL_AVATAR_FALLBACKS[filename]) return LOCAL_AVATAR_FALLBACKS[filename];
+    return `/assets/${rel}`;
+  }
+
+  if (rawAsset.startsWith('/assets/')) {
+    return LOCAL_ASSET_FALLBACKS[rawAsset.slice('/assets/'.length)] || rawAsset;
+  }
+
+  if (rawAsset.startsWith('/static/assets/')) {
+    const rel = rawAsset.replace('/static/assets/', '');
+    return LOCAL_ASSET_FALLBACKS[rel] || `/assets/${rel}`;
+  }
+
+  if (rawAsset.startsWith('/static/')) {
+    const rel = rawAsset.replace('/static/', '');
+    return LOCAL_ASSET_FALLBACKS[rel] || `/assets/${rel}`;
+  }
+
+  return rawAsset;
+}
+
 /**
  * 将数据库中的图标路径转换为小程序本地正确路径
  * 使用静态映射表优先查找，解决微信小程序动态路径 HTTP 500 问题
  */
 export function resolveIconPath(rawIcon: string | undefined | null): string {
   if (!rawIcon) return '';
+  const localAsset = resolveLocalAssetPath(rawIcon);
+  if (localAsset.startsWith('/assets/')) return localAsset;
   // 非 PNG 本地路径直接返回（如 Lucide 图标名 "Star"、"Book" 等）
   if (!rawIcon.startsWith('/assets/') && !rawIcon.endsWith('.png')) return rawIcon;
   // 已经是正确的新格式路径，直接返回
@@ -497,24 +544,11 @@ export function resolveIconPath(rawIcon: string | undefined | null): string {
     category = 'independent';
   }
 
-  // 所有图片已迁移到 Supabase Storage，返回云端 URL
-  const CLOUD_BASE = 'https://qdiuufuoleharmjfarzr.supabase.co/storage/v1/object/public/assets';
-  return `${CLOUD_BASE}/task-icons/${category}/${normalized}`;
+  return `/assets/task-icons/${category}/${normalized}`;
 }
 
-/** Supabase Storage 公开访问基础 URL */
-const SUPABASE_ASSETS_URL = 'https://qdiuufuoleharmjfarzr.supabase.co/storage/v1/object/public/assets';
-
-/** 解析头像/图标路径 — 转换为 Supabase 云端 URL */
+/** 解析头像/图标路径 — 小程序端优先使用本地素材，保证游客/离线模式一致 */
 export function resolveAvatarPath(rawAvatar: string | undefined | null): string {
   if (!rawAvatar) return '';
-  // 已经是网络 URL（包括 Supabase URL）
-  if (rawAvatar.startsWith('http')) return rawAvatar;
-  // /assets/avatars/xxx.png → 云端 URL
-  if (rawAvatar.includes('/avatars/') || rawAvatar.includes('/task-icons/') || rawAvatar.includes('/reward-icons/')) {
-    const rel = rawAvatar.replace(/^\/(static\/)?assets\//, '');
-    return `${SUPABASE_ASSETS_URL}/${rel}`;
-  }
-  // 其他情况原样返回
-  return rawAvatar;
+  return resolveLocalAssetPath(rawAvatar);
 }

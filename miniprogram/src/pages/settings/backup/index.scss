@@ -1,7 +1,8 @@
 @import '../../../app.scss';
 
 .settings-page { min-height: 100vh; background-color: #f8faf5; overflow-x: hidden; width: 100%; box-sizing: border-box; }
-.settings-header { padding: 48rpx 36rpx 24rpx; background-color: #ffffff; border-bottom: 1rpx solid rgba(63, 74, 60, 0.06); }
+.settings-header { padding: calc(env(safe-area-inset-top) + 28rpx) 36rpx 24rpx; background-color: #ffffff; border-bottom: 1rpx solid rgba(63, 74, 60, 0.06); }
+.settings-back { width: 68rpx; height: 68rpx; border-radius: 50%; background: rgba(27,28,26,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 12rpx; }
 .settings-title { font-size: 44rpx; font-weight: 900; color: #1a2e1a; letter-spacing: -0.5rpx; display: block; margin-bottom: 8rpx; }
 .settings-desc { font-size: 24rpx; font-weight: 600; color: #7a8a70; }
 .settings-body { padding: 24rpx 36rpx; overflow-x: hidden; box-sizing: border-box; }
@@ -36,3 +37,20 @@
 .hint { background-color: rgba($primary-color, 0.04); }
 .hint-title { font-size: 28rpx; font-weight: 800; color: $primary-color; display: block; margin-bottom: 16rpx; }
 .hint-text { font-size: 24rpx; font-weight: 600; color: $text-secondary-variant; line-height: 1.8; display: block; }
+
+.theme-arcade-comic.settings-page { background: $arcade-bg; }
+.theme-arcade-comic .settings-header,
+.theme-arcade-comic .settings-section {
+  background: $arcade-card-bg;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 8rpx 10rpx 0 $arcade-border;
+}
+.theme-arcade-comic .backup-action-btn.primary {
+  background: $arcade-primary;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 6rpx 8rpx 0 $arcade-border;
+}
+.theme-arcade-comic .backup-action-btn.primary .action-title,
+.theme-arcade-comic .backup-action-btn.primary .action-desc,
+.theme-arcade-comic .settings-title,
+.theme-arcade-comic .settings-section-title { color: $arcade-text-primary; }

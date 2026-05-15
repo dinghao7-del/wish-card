@@ -115,3 +115,31 @@
 }
 .back-home-btn:active { transform: scale(0.98); }
 .back-home-btn Text { color: #ffffff; font-size: 32rpx; font-weight: 900; }
+
+.theme-arcade-comic.import-page {
+  background: $arcade-bg;
+}
+
+.theme-arcade-comic .import-card,
+.theme-arcade-comic .items-box {
+  background: $arcade-card-bg;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 8rpx 10rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .confirm-btn,
+.theme-arcade-comic .back-home-btn {
+  background: $arcade-primary;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 8rpx 10rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .confirm-btn Text,
+.theme-arcade-comic .back-home-btn Text,
+.theme-arcade-comic .card-main-title,
+.theme-arcade-comic .status-title,
+.theme-arcade-comic .success-title,
+.theme-arcade-comic .error-title,
+.theme-arcade-comic .item-label {
+  color: $arcade-text-primary;
+}

@@ -440,3 +440,39 @@
 .po-ds-unit { font-size: 26rpx; color: #888; font-weight: 500; }
 .po-dur-footer { margin-top: 0; }
 .po-dur-footer .po-modal-footer-text { background: var(--active-color, #006e1c); }
+
+.theme-arcade-comic.po-page {
+  background: $arcade-bg;
+}
+
+.theme-arcade-comic .po-header,
+.theme-arcade-comic .po-phase-tabs,
+.theme-arcade-comic .po-task-selector,
+.theme-arcade-comic .po-timer-circle-wrap,
+.theme-arcade-comic .po-modal-content,
+.theme-arcade-comic .po-step-card,
+.theme-arcade-comic .po-duration-current {
+  background: $arcade-card-bg;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 8rpx 10rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .po-btn-main-wrap,
+.theme-arcade-comic .po-modal-footer,
+.theme-arcade-comic .po-sc-btn.active,
+.theme-arcade-comic .po-task-check.checked {
+  background: $arcade-primary !important;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 6rpx 8rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .po-header-title,
+.theme-arcade-comic .po-count-text,
+.theme-arcade-comic .po-time-text,
+.theme-arcade-comic .po-task-text,
+.theme-arcade-comic .po-modal-title,
+.theme-arcade-comic .po-btn-main-text,
+.theme-arcade-comic .po-modal-footer-text,
+.theme-arcade-comic .po-step-num {
+  color: $arcade-text-primary !important;
+}

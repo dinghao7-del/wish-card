@@ -83,7 +83,7 @@ export function MemberDetail() {
   const canEditProfile = isAdmin || currentUser?.id === member.id;
 
   return (
-    <div className="px-6 pb-12 animate-in fade-in slide-in-from-right-4 duration-500">
+    <div className="ui-profile-subpage px-6 pb-12 animate-in fade-in slide-in-from-right-4 duration-500">
       <TopAppBar title={t('member_detail.title', { defaultValue: '成员详情' })} backTo="/profile" />
 
       {/* Hero Section */}

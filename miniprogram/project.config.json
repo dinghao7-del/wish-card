@@ -1,5 +1,5 @@
 {
-  "description": "Forest Family 微信小程序",
+  "description": "星愿卡微信小程序",
   "packOptions": {
     "ignore": [],
     "include": []
@@ -45,7 +45,7 @@
   "compileType": "miniprogram",
   "libVersion": "3.3.4",
   "appid": "wxd7b02a2e1b4451bf",
-  "projectname": "forest-family",
+  "projectname": "wish-card",
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",

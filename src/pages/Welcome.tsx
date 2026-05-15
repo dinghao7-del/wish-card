@@ -14,15 +14,12 @@ import { getActiveThemeSkin } from '../lib/themeSkins';
 
 type Step = 'intro' | 'register' | 'login' | 'otp' | 'verify';
 
-const FOREST_WELCOME_COMICS = [
-  '/skins/forest-comic/welcome-comic-review.svg',
-  '/skins/forest-comic/welcome-comic-promise.svg',
-  '/skins/forest-comic/welcome-comic-wish.svg',
-];
-
 function pickWelcomeIllustration(defaultIllustration: string) {
   if (defaultIllustration.includes('/skins/forest-comic/')) {
-    return FOREST_WELCOME_COMICS[Math.floor(Math.random() * FOREST_WELCOME_COMICS.length)];
+    return '/skins/forest-comic/welcome-comic.svg';
+  }
+  if (defaultIllustration.includes('/skins/arcade-comic/')) {
+    return '/skins/arcade-comic/welcome-comic.svg';
   }
   return defaultIllustration;
 }

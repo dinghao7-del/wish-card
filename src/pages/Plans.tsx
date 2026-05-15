@@ -6,6 +6,7 @@ import { useFamily } from '../context/FamilyContext';
 import { cn } from '../lib/utils';
 import { useTranslation } from 'react-i18next';
 import { TopAppBar } from '../components/navigation/TopAppBar';
+import { AppModal } from '../components/AppModal';
 import { getDataLayer } from '../lib/DataLayer';
 import { buildPlanCenterOverview, buildPlanDisplaySummary, buildPlanExperienceSummary, buildPlanHierarchySummary, calculatePlanProgress, getPlanParentId, inferPlanKind, PLAN_KIND_DEFINITIONS, type PlanCenterOverview, type PlanDisplaySummary, type PlanExperienceCategory, type PlanExperienceSummary, type PlanHierarchySummary, type PlanKind, type PlanProgressSummary } from '../domain/familyPlanning';
 import { deleteGuestPlan, getGuestPlans, saveGuestPlan } from '../lib/guestPlans';
@@ -76,7 +77,7 @@ function PlanCenterSummary({ overview }: { overview: PlanCenterOverview }) {
   ];
 
   return (
-    <section className="rounded-3xl bg-white p-4 shadow-sm border border-outline-variant/10">
+    <section className="ui-ai-subpage-panel rounded-3xl bg-white p-4 shadow-sm border border-outline-variant/10">
       <div className="flex items-start gap-3">
         <div className="w-11 h-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
           <Layers size={20} />
@@ -268,7 +269,7 @@ export function Plans() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-container-low">
+    <div className="ui-ai-subpage min-h-screen bg-surface-container-low">
       {/* Header */}
       <TopAppBar
         title={t('plans.title', '计划')}
@@ -325,7 +326,7 @@ export function Plans() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-white rounded-2xl p-4 shadow-sm border border-outline-variant/10 active:scale-[0.98] transition-transform cursor-pointer"
+                className="ui-ai-subpage-card bg-white rounded-2xl p-4 shadow-sm border border-outline-variant/10 active:scale-[0.98] transition-transform cursor-pointer"
                 onClick={() => navigate(`/plans/${plan.id}`)}
               >
                 <div className="flex items-center justify-between">
@@ -472,30 +473,15 @@ export function Plans() {
       {/* Add plan modal */}
       <AnimatePresence>
         {showAddDialog && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/30 z-[100] flex items-end sm:items-center justify-center"
-            onClick={() => setShowAddDialog(false)}
+          <AppModal
+            open={showAddDialog}
+            onClose={() => setShowAddDialog(false)}
+            title={t('plans.add_plan_title', '添加计划')}
+            surface="sheet"
+            zIndexClass="z-[120]"
+            className="max-h-[86svh]"
+            bodyClassName="px-6 py-5"
           >
-            <motion.div
-              initial={{ y: 100 }}
-              animate={{ y: 0 }}
-              exit={{ y: 100 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 pb-[max(4rem,env(safe-area-inset-bottom,0px))] max-h-[85svh] overflow-y-auto"
-            >
-              <div className="mb-4 flex items-center justify-between gap-4">
-                <h2 className="text-lg font-black text-on-surface">{t('plans.add_plan_title', '添加计划')}</h2>
-                <button
-                  onClick={() => setShowAddDialog(false)}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-container text-on-surface-variant"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
               <input
                 autoFocus
                 value={newPlanName}
@@ -596,8 +582,7 @@ export function Plans() {
               >
                 {t('plans.add', '添加')}
               </button>
-            </motion.div>
-          </motion.div>
+          </AppModal>
         )}
       </AnimatePresence>
     </div>

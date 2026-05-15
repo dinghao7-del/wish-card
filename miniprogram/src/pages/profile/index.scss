@@ -36,9 +36,9 @@
 }
 .profile-header-actions {
   display: flex;
+  align-items: center;
   gap: 16rpx;
 }
-.notif-btn { padding: 8rpx; }
 
 /* ===== Loading ===== */
 .profile-loading {
@@ -378,4 +378,42 @@
   font-size: 24rpx;
   color: rgba($text-secondary, 0.75);
   margin-top: 4rpx;
+}
+
+/* ===== 主题皮肤：电玩漫画风 / 简约平面漫画风 ===== */
+.theme-arcade-comic.profile-page {
+  background: #f4f4f4;
+
+  .profile-header,
+  .profile-hero,
+  .section-block,
+  .backup-modal {
+    border: 4rpx solid #111;
+    box-shadow: 8rpx 8rpx 0 #111;
+  }
+
+  .profile-title,
+  .hero-name,
+  .section-title,
+  .menu-label {
+    color: #111;
+  }
+
+  .section-add-btn,
+  .role-badge,
+  .current-tag,
+  .logout-btn {
+    border: 3rpx solid #111;
+  }
+}
+
+.theme-flat-comic.profile-page {
+  background: #fffaf0;
+
+  .profile-hero,
+  .section-block,
+  .backup-modal {
+    border-radius: 20rpx;
+    box-shadow: 0 8rpx 24rpx rgba(15, 143, 67, 0.08);
+  }
 }

@@ -228,3 +228,42 @@
     color: #3f4a3c;
   }
 }
+
+.theme-arcade-comic.ai-page {
+  background: $arcade-bg;
+  color: $arcade-text-primary;
+}
+
+.theme-arcade-comic .ai-header,
+.theme-arcade-comic .summary-card,
+.theme-arcade-comic .ai-section,
+.theme-arcade-comic .ai-note {
+  background: $arcade-card-bg;
+  border: 5rpx solid $arcade-border;
+  box-shadow: 8rpx 10rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .ai-hero {
+  background: $arcade-primary;
+  border: 6rpx solid $arcade-border;
+  box-shadow: 10rpx 12rpx 0 $arcade-border;
+}
+
+.theme-arcade-comic .ai-hero-title,
+.theme-arcade-comic .ai-hero-desc,
+.theme-arcade-comic .ai-release-badge text {
+  color: $arcade-text-primary;
+}
+
+.theme-arcade-comic .ai-version {
+  background: $arcade-secondary-container;
+  border: 4rpx solid $arcade-border;
+}
+
+.theme-arcade-comic .ai-version text,
+.theme-arcade-comic .summary-value,
+.theme-arcade-comic .action-title,
+.theme-arcade-comic .section-title,
+.theme-arcade-comic .ai-title {
+  color: $arcade-text-primary;
+}

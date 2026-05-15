@@ -76,7 +76,7 @@ export function Layout() {
     <div
       className="min-h-screen bg-background overflow-x-hidden"
       style={{
-        '--app-sticky-top': guestMode && showGuestBanner && !isFullPage ? '3rem' : '0px',
+        '--app-sticky-top': guestMode && showGuestBanner && !isFullPage ? '1.75rem' : '0px',
       } as React.CSSProperties}
     >
       {/* 游客模式提示横幅 */}
@@ -84,24 +84,24 @@ export function Layout() {
         <motion.div 
           initial={{ y: -60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="ui-guest-banner fixed top-0 left-0 right-0 z-[45] h-12 bg-secondary-container border-b border-secondary/30 px-3 flex items-center justify-between gap-2 max-w-md mx-auto shadow-sm"
+          className="ui-guest-banner fixed top-0 left-0 right-0 z-[45] h-7 bg-secondary-container border-b border-secondary/30 px-3 flex items-center justify-between gap-2 max-w-md mx-auto shadow-sm"
         >
           <div className="flex min-w-0 items-center gap-2">
-            <Sparkles size={16} className="text-secondary shrink-0" />
-            <span className="text-safe text-xs font-black leading-snug text-tertiary">
+            <Sparkles size={13} className="text-secondary shrink-0" />
+            <span className="text-safe text-[10px] font-black leading-snug text-tertiary">
               体验模式 · 数据仅存于本地，注册后可永久保存
             </span>
           </div>
           <div className="flex items-center gap-1">
             <button 
               onClick={async () => { await logout(); }}
-              className="text-[10px] font-black text-primary bg-white/60 px-2.5 py-1 rounded-full hover:bg-white transition-colors"
+              className="text-[10px] font-black text-primary bg-white/60 px-2 py-0.5 rounded-full hover:bg-white transition-colors"
             >
               注册
             </button>
             <button 
               onClick={() => setShowGuestBanner(false)}
-              className="w-5 h-5 flex items-center justify-center text-tertiary/40 hover:text-tertiary transition-colors"
+              className="ui-guest-banner-close w-5 h-5 flex items-center justify-center text-tertiary/40 hover:text-tertiary transition-colors"
             >
               <X size={14} />
             </button>
@@ -136,7 +136,7 @@ export function Layout() {
       <main className={cn(
         "ui-app-content max-w-md mx-auto",
         !isFullPage && "pb-32",
-        !isFullPage && guestMode && showGuestBanner && "pt-12",
+        !isFullPage && guestMode && showGuestBanner && "pt-7",
         showSyncBanner && "pt-10"
       )}>
         <Outlet />

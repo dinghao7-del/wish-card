@@ -5,7 +5,11 @@ import { supabase } from '@/utils/supabase';
 import { resolveAvatarPath, TASK_CATEGORIES, getTaskTemplatesByCategory } from '@/lib/templates';
 import type { TaskTemplate } from '@/lib/templates';
 import { getHabitSelectableChildIds, resolveHabitTargetChildId } from '@/lib/habitTargeting';
+import { getGuestData, isGuestMode, updateGuestData } from '@/lib/guestData';
+import { setLocalUser } from '@/utils/localUser';
 import Icon from '@/components/Icon';
+import VoiceAssistant from '@/components/VoiceAssistant';
+import { NotificationBell } from '@/components/NotificationCenter';
 import './index.scss';
 
 interface Habit {
@@ -34,6 +38,10 @@ interface Member {
 const HABIT_REVIEW_MARKER = '奖惩来源ID:';
 const PARENT_FEEDBACK_MARKER = '亲子反馈卡';
 
+function isLocalFamily(fid?: string) {
+  return !fid || fid === 'guest-family' || fid === 'demo-family' || isGuestMode();
+}
+
 function habitReviewMarker(habitId: string) {
   return `${HABIT_REVIEW_MARKER}${habitId}`;
 }
@@ -57,6 +65,7 @@ export default function Habits() {
   const [starBalance, setStarBalance] = useState(0);
   const [showDetail, setShowDetail] = useState(false);
   const [isCheckInSuccess, setIsCheckInSuccess] = useState(false);
+  const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
 
   // ========== 添加习惯 → 弹出模板选择底部弹窗 ==========
   const [showTemplateSheet, setShowTemplateSheet] = useState(false);
@@ -100,16 +109,20 @@ export default function Habits() {
           setStarBalance(localUser.stars || 0);
           setUserRole(localUser.role || '');
           setFamilyId(localUser.family_id || '');
-          if (localUser.family_id) await fetchMembers(localUser.family_id);
-          // 尝试从云端获取真实数据，失败时才用本地兜底
-          if (localUser.family_id && localUser.family_id !== 'guest-family' && localUser.family_id !== 'demo-family') {
-            await fetchHabits(localUser.family_id, localUser.id, localUser.role || '');
+          if (isLocalFamily(localUser.family_id)) {
+            const guestData = getGuestData();
+            setMembers(guestData.members as Member[]);
+            const firstChild = guestData.members.find(m => m.role === 'child');
+            if (firstChild) setSelectedChildId(firstChild.id);
+            const firstParent = guestData.members.find(m => m.role === 'parent');
+            if (firstParent) setSelectedParentId(firstParent.id);
+            setHabits((guestData.tasks || []).map((item: any) => ({
+              ...item,
+              reward_stars: item.reward_stars ?? item.star_amount ?? 0,
+            })));
           } else {
-            setHabits([
-              { id: 'demo-reward-1', title: '阅读30分钟', reward_stars: 3, icon: 'Book', current_count: 2, target_count: 5, status: 'pending' },
-              { id: 'demo-reward-2', title: '整理房间', reward_stars: 2, icon: 'Sparkles', current_count: 1, target_count: 3, status: 'pending' },
-              { id: 'demo-penalty-1', title: '玩手机超时', reward_stars: -2, icon: 'Clock', current_count: 1, target_count: 3, status: 'pending' },
-            ]);
+            await fetchMembers(localUser.family_id || '');
+            await fetchHabits(localUser.family_id, localUser.id, localUser.role || '');
           }
           return;
         } catch {}
@@ -137,6 +150,14 @@ export default function Habits() {
   };
 
   const fetchHabits = async (familyId: string, uid: string, role: string) => {
+    if (isLocalFamily(familyId)) {
+      const guestData = getGuestData();
+      setHabits((guestData.tasks || []).map((item: any) => ({
+        ...item,
+        reward_stars: item.reward_stars ?? item.star_amount ?? 0,
+      })));
+      return;
+    }
     try {
       let query = supabase
         .from('tasks')
@@ -155,6 +176,13 @@ export default function Habits() {
   };
 
   const fetchMembers = async (fid: string) => {
+    if (isLocalFamily(fid)) {
+      const guestMembers = getGuestData().members as Member[];
+      setMembers(guestMembers);
+      const firstChild = guestMembers.find(m => m.role === 'child');
+      if (firstChild && !selectedChildId) setSelectedChildId(firstChild.id);
+      return;
+    }
     try {
       const { data } = await supabase
         .from('members')
@@ -174,6 +202,9 @@ export default function Habits() {
   const filteredHabits = visibleHabits.filter(h =>
     activeTab === 'reward' ? (h.reward_stars || h.star_amount || 0) > 0 : (h.reward_stars || h.star_amount || 0) < 0
   );
+  const rewardHabits = visibleHabits.filter(h => (h.reward_stars || h.star_amount || 0) > 0);
+  const penaltyHabits = visibleHabits.filter(h => (h.reward_stars || h.star_amount || 0) < 0);
+  const streakDays = Math.max(0, ...visibleHabits.map(h => h.current_count || 0));
   const childMembers = members.filter(m => m.role === 'child');
   const parentMembers = members.filter(m => m.role === 'parent');
   const feedbackTasks = habits.filter(h =>
@@ -210,6 +241,19 @@ export default function Habits() {
       success: async (res) => {
         if (res.confirm) {
           try {
+            if (isLocalFamily(familyId)) {
+              const nextData = updateGuestData((draft) => {
+                draft.tasks = (draft.tasks || []).filter((task: any) => task.id !== selectedHabit.id);
+              });
+              setHabits((nextData.tasks || []).map((item: any) => ({
+                ...item,
+                reward_stars: item.reward_stars ?? item.star_amount ?? 0,
+              })));
+              Taro.showToast({ title: '已删除（演示）', icon: 'success' });
+              setShowDetail(false);
+              setSelectedHabit(null);
+              return;
+            }
             const { error } = await supabase.from('tasks').delete().eq('id', selectedHabit.id);
             if (error) throw error;
             Taro.showToast({ title: '已删除', icon: 'success' });
@@ -258,6 +302,33 @@ export default function Habits() {
       Taro.showToast({ title: '已提交，等待家长审核', icon: 'none' });
       return;
     }
+    if (isLocalFamily(familyId)) {
+      const now = Date.now();
+      const reviewTask: Habit = {
+        id: `guest-habit-review-${habit.id}-${targetMemberId}-${now}`,
+        title: `${(habit.reward_stars || 0) < 0 ? '扣分待审核' : '打卡待审核'}：${habit.title}`,
+        description: [habit.description || '', habitReviewMarker(habit.id)].filter(Boolean).join('\n'),
+        reward_stars: habit.reward_stars || 0,
+        star_amount: habit.reward_stars || 0,
+        assignee_ids: [targetMemberId],
+        creator_id: userId || '',
+        status: 'reviewing',
+        is_habit: false,
+        target_count: 1,
+        current_count: 0,
+        icon: habit.icon || 'Star',
+      };
+      const nextData = updateGuestData((draft) => {
+        draft.tasks = [reviewTask, ...(draft.tasks || [])];
+      });
+      setHabits((nextData.tasks || []).map((item: any) => ({
+        ...item,
+        reward_stars: item.reward_stars ?? item.star_amount ?? 0,
+      })));
+      Taro.showToast({ title: '已提交给家长审核（演示）', icon: 'success' });
+      setShowDetail(false);
+      return;
+    }
     try {
       const now = new Date().toISOString();
       const { error } = await supabase.from('tasks').insert({
@@ -289,6 +360,42 @@ export default function Habits() {
     const nextStatus = newCount >= (habit.target_count || 1) ? 'completed' : (habit.status || 'pending');
     const member = members.find(m => m.id === targetMemberId);
     const amount = habit.reward_stars || 0;
+    if (isLocalFamily(familyId)) {
+      const nextData = updateGuestData((draft) => {
+        draft.tasks = (draft.tasks || []).map((item: any) => item.id === habit.id ? {
+          ...item,
+          current_count: newCount,
+          status: nextStatus,
+        } : item);
+        draft.members = (draft.members || []).map((item: any) => item.id === targetMemberId ? {
+          ...item,
+          stars: (item.stars || 0) + amount,
+        } : item);
+        draft.history = [{
+          id: `guest-habit-stars-${habit.id}-${targetMemberId}-${Date.now()}`,
+          user_id: targetMemberId,
+          title: `${amount < 0 ? '惩罚' : '完成习惯'}: ${habit.title}`,
+          type: amount < 0 ? 'penalty' : 'task',
+          stars: amount,
+          timestamp: new Date().toISOString(),
+          icon: amount < 0 ? 'Smartphone' : 'CheckCircle',
+        }, ...(draft.history || [])];
+      });
+      setHabits((nextData.tasks || []).map((item: any) => ({
+        ...item,
+        reward_stars: item.reward_stars ?? item.star_amount ?? 0,
+      })));
+      setMembers(nextData.members || []);
+      if (targetMemberId === userId) {
+        setStarBalance(prev => prev + amount);
+        const refreshedUser = (nextData.members || []).find((member: any) => member.id === userId);
+        if (refreshedUser) {
+          setUser(refreshedUser);
+          setLocalUser(refreshedUser);
+        }
+      }
+      return;
+    }
     await supabase
       .from('tasks')
       .update({ current_count: newCount, status: nextStatus })
@@ -314,6 +421,20 @@ export default function Habits() {
     const sourceHabit = habits.find(h => h.id === sourceId);
     const targetMemberId = reviewTask.assignee_ids?.[0];
     if (!sourceHabit || !targetMemberId) return;
+    if (isLocalFamily(familyId)) {
+      await applyHabitStars(sourceHabit, targetMemberId);
+      const nextData = updateGuestData((draft) => {
+        draft.tasks = (draft.tasks || []).map((task: any) =>
+          task.id === reviewTask.id ? { ...task, status: 'completed' } : task
+        );
+      });
+      setHabits((nextData.tasks || []).map((item: any) => ({
+        ...item,
+        reward_stars: item.reward_stars ?? item.star_amount ?? 0,
+      })));
+      Taro.showToast({ title: '审核通过（演示）', icon: 'success' });
+      return;
+    }
     try {
       await applyHabitStars(sourceHabit, targetMemberId);
       await supabase.from('tasks').update({ status: 'completed' }).eq('id', reviewTask.id);
@@ -357,7 +478,13 @@ export default function Habits() {
     }
     const now = new Date().toISOString();
     if (!familyId || familyId === 'guest-family' || familyId === 'demo-family') {
-      setHabits(prev => [feedbackTask, ...prev]);
+      const nextData = updateGuestData((draft) => {
+        draft.tasks = [feedbackTask, ...(draft.tasks || [])];
+      });
+      setHabits((nextData.tasks || []).map((item: any) => ({
+        ...item,
+        reward_stars: item.reward_stars ?? item.star_amount ?? 0,
+      })));
       setFeedbackTitle('希望你多听我说');
       setFeedbackDetail('');
       Taro.showToast({ title: '反馈卡已发送', icon: 'success' });
@@ -411,10 +538,16 @@ export default function Habits() {
     };
 
     if (!familyId || familyId === 'guest-family' || familyId === 'demo-family') {
-      setHabits(prev => [
-        ...(mode === 'promise' ? [promiseTask] : []),
-        ...prev.map(task => task.id === feedbackTask.id ? { ...task, status: 'completed' } : task),
-      ]);
+      const nextData = updateGuestData((draft) => {
+        draft.tasks = [
+          ...(mode === 'promise' ? [promiseTask] : []),
+          ...(draft.tasks || []).map((task: any) => task.id === feedbackTask.id ? { ...task, status: 'completed' } : task),
+        ];
+      });
+      setHabits((nextData.tasks || []).map((item: any) => ({
+        ...item,
+        reward_stars: item.reward_stars ?? item.star_amount ?? 0,
+      })));
       Taro.showToast({ title: mode === 'promise' ? '已生成承诺任务' : '已回应反馈', icon: 'success' });
       return;
     }
@@ -466,21 +599,44 @@ export default function Habits() {
       {/* ===== 头部 ===== */}
       <View className="hp-header">
         <View className="hp-header-left">
+          <View className="hp-title-mark">
+            <Icon name="sparkles" size={34} color="#006e1c" />
+          </View>
+          <Text className="hp-page-title">奖惩清单</Text>
           <View className="avatar-btn" onClick={() => Taro.switchTab({ url: '/pages/profile/index' })}>
             <Image className="avatar" src={resolveAvatarPath(user?.avatar || '')} />
           </View>
-          <View className="voice-btn" onClick={() => Taro.switchTab({ url: '/pages/home/index' })}>
+          <View className="voice-btn" onClick={() => setIsAiDialogOpen(true)}>
             <Icon name="microphone" size={40} color="#006e1c" />
           </View>
         </View>
         <View className="hp-header-right">
-          <View className="hp-star-badge" onClick={() => Taro.navigateTo({ url: '/pages/check-in/index' })}>
+          <View className="hp-star-badge" onClick={() => Taro.navigateTo({ url: '/pages/history/index' })}>
             <Icon name="star" size={34} color="#F9A825" />
             <Text className="hp-star-text">{starBalance}</Text>
           </View>
-          <View className="hp-notif-btn" onClick={() => Taro.navigateTo({ url: '/pages/settings/notifications/index' })}>
-            <Icon name="bell" size={40} color="#3f4a3c" />
+          <NotificationBell onClick={() => Taro.navigateTo({ url: '/pages/settings/notifications/index' })} />
+        </View>
+      </View>
+
+      <VoiceAssistant
+        visible={isAiDialogOpen}
+        onClose={() => setIsAiDialogOpen(false)}
+        userId={userId || undefined}
+        familyId={familyId}
+      />
+
+      <View className="hp-summary-card">
+        <View>
+          <Text className="hp-summary-label">当前连续</Text>
+          <View className="hp-summary-days">
+            <Text className="hp-summary-num">{streakDays}</Text>
+            <Text className="hp-summary-unit">天</Text>
           </View>
+        </View>
+        <View className="hp-summary-pill">
+          <Icon name="star" size={24} color="#F9A825" />
+          <Text>{starBalance} 积分</Text>
         </View>
       </View>
 
@@ -492,18 +648,21 @@ export default function Habits() {
             onClick={() => setActiveTab('reward')}
           >
             <Text>奖励</Text>
+            <Text className="hp-tab-count">{rewardHabits.length}</Text>
           </View>
           <View
             className={`hp-swtich-tab ${activeTab === 'penalty' ? 'active penalty' : ''}`}
             onClick={() => setActiveTab('penalty')}
           >
             <Text>惩罚</Text>
+            <Text className="hp-tab-count">{penaltyHabits.length}</Text>
           </View>
           <View
             className={`hp-swtich-tab ${activeTab === 'feedback' ? 'active feedback' : ''}`}
             onClick={() => setActiveTab('feedback')}
           >
             <Text>反馈</Text>
+            <Text className="hp-tab-count">{visibleFeedbackTasks.length}</Text>
           </View>
         </View>
         {activeTab !== 'feedback' && (

@@ -1,4 +1,9 @@
 import { UI_TOKENS } from './uiTokens';
+import {
+  ARCADE_COMIC_TEMPLATE,
+  FOREST_COMIC_BASE_TEMPLATE,
+  type ThemeSkinTemplate,
+} from './themeSkinTemplates';
 
 export type ThemeSkinId = 'forest-comic' | 'flat-comic' | 'arcade-comic';
 
@@ -22,6 +27,14 @@ export interface ThemeSkin {
       outlineVariant: string;
       rewardDisplay: string;
     };
+    darkColor?: {
+      primary: string;
+      primaryContainer: string;
+      background: string;
+      surfaceContainerLow: string;
+      outlineVariant: string;
+      rewardDisplay: string;
+    };
     radius: typeof UI_TOKENS.radius;
   };
   platformSupport: {
@@ -34,6 +47,7 @@ export interface ThemeSkin {
     minimumContrast: 'WCAG-AA';
     reducedMotion: boolean;
   };
+  template: ThemeSkinTemplate;
 }
 
 const LIGHT_COLOR_TOKENS = {
@@ -52,6 +66,15 @@ const ARCADE_COMIC_COLOR_TOKENS = {
   surfaceContainerLow: UI_TOKENS.color.arcadeComic.surfaceContainerLow,
   outlineVariant: UI_TOKENS.color.arcadeComic.outlineVariant,
   rewardDisplay: UI_TOKENS.color.arcadeComic.rewardDisplay,
+};
+
+const ARCADE_COMIC_DARK_COLOR_TOKENS = {
+  primary: UI_TOKENS.color.arcadeComicDark.primary,
+  primaryContainer: UI_TOKENS.color.arcadeComicDark.primaryContainer,
+  background: UI_TOKENS.color.arcadeComicDark.background,
+  surfaceContainerLow: UI_TOKENS.color.arcadeComicDark.surfaceContainerLow,
+  outlineVariant: UI_TOKENS.color.arcadeComicDark.outlineVariant,
+  rewardDisplay: UI_TOKENS.color.arcadeComicDark.rewardDisplay,
 };
 
 const CROSS_PLATFORM_SUPPORT = {
@@ -81,6 +104,7 @@ export const THEME_SKINS: Record<ThemeSkinId, ThemeSkin> = {
     },
     platformSupport: CROSS_PLATFORM_SUPPORT,
     accessibility: DEFAULT_ACCESSIBILITY,
+    template: FOREST_COMIC_BASE_TEMPLATE,
   },
   'flat-comic': {
     id: 'flat-comic',
@@ -96,6 +120,7 @@ export const THEME_SKINS: Record<ThemeSkinId, ThemeSkin> = {
     },
     platformSupport: CROSS_PLATFORM_SUPPORT,
     accessibility: DEFAULT_ACCESSIBILITY,
+    template: FOREST_COMIC_BASE_TEMPLATE,
   },
   'arcade-comic': {
     id: 'arcade-comic',
@@ -103,14 +128,16 @@ export const THEME_SKINS: Record<ThemeSkinId, ThemeSkin> = {
     description: '黄黑厚描边、积分任务感强的游戏化 UI 模板。',
     status: 'active',
     assets: {
-      welcomeIllustration: '/skins/arcade-comic/welcome-comic.svg',
+      welcomeIllustration: '/skins/arcade-comic/welcome-comic-01.png',
     },
     tokens: {
       color: ARCADE_COMIC_COLOR_TOKENS,
+      darkColor: ARCADE_COMIC_DARK_COLOR_TOKENS,
       radius: UI_TOKENS.radius,
     },
     platformSupport: CROSS_PLATFORM_SUPPORT,
     accessibility: DEFAULT_ACCESSIBILITY,
+    template: ARCADE_COMIC_TEMPLATE,
   },
 };
 

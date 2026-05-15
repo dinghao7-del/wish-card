@@ -50,6 +50,13 @@ export async function seedSystemTemplates(): Promise<{ seeded: number }> {
         usage_count: 0,
         is_active: true,
         i18n_key: `template.task.${t.id}`,
+        extra_data: {
+          ageGroup: t.ageGroup || null,
+          frequency: t.frequency || null,
+          tags: t.tags || [],
+          sourceHint: t.sourceHint || null,
+          iconKeyword: t.iconKeyword || null,
+        },
       }, { onConflict: 'type,title,source' });
     if (!error) count++;
   }
@@ -69,6 +76,11 @@ export async function seedSystemTemplates(): Promise<{ seeded: number }> {
         usage_count: 0,
         is_active: true,
         i18n_key: `template.reward.${r.id}`,
+        extra_data: {
+          ageGroup: r.ageGroup || null,
+          tags: r.tags || [],
+          sourceHint: r.sourceHint || null,
+        },
       }, { onConflict: 'type,title,source' });
     if (!error) count++;
   }

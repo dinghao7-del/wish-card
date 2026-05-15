@@ -10,6 +10,9 @@
  */
 import Taro from '@tarojs/taro';
 
+const GUEST_DATA_STORAGE_KEY = 'wishcard_guest_data_v2';
+const GUEST_DATA_VERSION = '2026-05-15-mini-replica-v2';
+
 const now = new Date();
 const today = now.toISOString().split('T')[0];
 const tomorrow = new Date(now.getTime() + 86400000).toISOString().split('T')[0];
@@ -453,7 +456,7 @@ export const GUEST_REWARDS = [
   { id: 'guest-r2', name: '冰淇淋', description: '一个美味冰淇淋', cost: 40, icon: '', image: 'https://qdiuufuoleharmjfarzr.supabase.co/storage/v1/object/public/assets/reward-icons/common/A_cute_flat_design_kawaii_styl_2026-04-27T19-41-28.png', category: 'common' },
   { id: 'guest-r3', name: '玩游戏', description: '玩30分钟电子游戏', cost: 50, icon: '', image: 'https://qdiuufuoleharmjfarzr.supabase.co/storage/v1/object/public/assets/reward-icons/common/A_cute_flat_design_kawaii_styl_2026-04-27T19-41-31.png', category: 'common' },
   { id: 'guest-r4', name: '家庭电影夜', description: '全家一起看电影，配爆米花和饮料', cost: 200, icon: '', image: 'https://qdiuufuoleharmjfarzr.supabase.co/storage/v1/object/public/assets/reward-icons/experience/Cute_flat_kawaii_amusement_par_2026-04-27T19-43-16.png', category: 'experience' },
-  { id: 'guest-r5', name: '乐高套装', description: '购买一套乐高积木玩具', cost: 400, icon: '', image: 'https://qdiuufuoleharmjfarzr.supabase.co/storage/v1/object/public/assets/reward-icons/prize/Cute_flat_kawaii_LEGO_building_2026-04-27T19-48-32.png', category: 'experience' },
+  { id: 'guest-r5', name: '乐高套装', description: '购买一套乐高积木玩具', cost: 400, icon: '', image: 'https://qdiuufuoleharmjfarzr.supabase.co/storage/v1/object/public/assets/reward-icons/activity/Cute_flat_kawaii_LEGO_building_2026-04-27T19-48-32.png', category: 'experience' },
   { id: 'guest-r6', name: '储零花钱', description: '获得一笔可以自由支配的零花钱', cost: 100, icon: '', image: 'https://qdiuufuoleharmjfarzr.supabase.co/storage/v1/object/public/assets/reward-icons/experience/Cute_flat_kawaii_free_pass_tic_2026-04-27T19-43-17.png', category: 'common' },
   { id: 'guest-r7', name: '游乐园', description: '去游乐园玩一整天！', cost: 500, icon: '', image: 'https://qdiuufuoleharmjfarzr.supabase.co/storage/v1/object/public/assets/reward-icons/experience/A_cute_flat_design_kawaii_styl_2026-04-27T19-42-05.png', category: 'experience' },
   { id: 'guest-r8', name: '北京环球影城', description: '全家一起去北京环球影城游玩两天', cost: 3000, icon: '', image: 'https://qdiuufuoleharmjfarzr.supabase.co/storage/v1/object/public/assets/reward-icons/activity/Cute_flat_kawaii_Universal_Stu_2026-04-27T19-47-50.png', category: 'experience', stock: 2 },
@@ -476,13 +479,19 @@ export const GUEST_HISTORY = [
 
 /** 获取所有游客展示数据 */
 export function getGuestData() {
-  return {
-    currentUser: GUEST_MEMBERS[2],
-    members: GUEST_MEMBERS,
-    tasks: [...GUEST_TASKS, ...GUEST_HABITS],
-    rewards: GUEST_REWARDS,
-    history: GUEST_HISTORY,
-  };
+  try {
+    const stored = Taro.getStorageSync(GUEST_DATA_STORAGE_KEY);
+    const parsed = typeof stored === 'string' ? JSON.parse(stored || '{}') : stored;
+    if (parsed?.version === GUEST_DATA_VERSION && parsed?.data) {
+      return withActiveGuestUser(normalizeGuestData(parsed.data));
+    }
+  } catch (err) {
+    console.warn('[guestData] read persisted guest data failed:', err);
+  }
+
+  const seeded = buildDefaultGuestData();
+  saveGuestData(seeded);
+  return withActiveGuestUser(seeded);
 }
 
 /** 判断当前是否为游客模式 */
@@ -497,4 +506,96 @@ export function isGuestMode(): boolean {
 /** 设置游客模式 */
 export function setGuestMode(enabled: boolean): void {
   Taro.setStorageSync('wishcard_guest_mode', String(enabled));
+  if (enabled) {
+    const current = getGuestData();
+    saveGuestData(current);
+  }
+}
+
+export function saveGuestData(data: any) {
+  const normalized = normalizeGuestData(data);
+  try {
+    Taro.setStorageSync(GUEST_DATA_STORAGE_KEY, JSON.stringify({
+      version: GUEST_DATA_VERSION,
+      data: normalized,
+    }));
+  } catch (err) {
+    console.warn('[guestData] save guest data failed:', err);
+  }
+  return withActiveGuestUser(normalized);
+}
+
+export function updateGuestData(mutator: (data: any) => any | void) {
+  const base = getGuestData();
+  const draft = cloneData(base);
+  const result = mutator(draft) || draft;
+  return saveGuestData(result);
+}
+
+export function resetGuestData() {
+  const seeded = buildDefaultGuestData();
+  saveGuestData(seeded);
+  return withActiveGuestUser(seeded);
+}
+
+function buildDefaultGuestData() {
+  return normalizeGuestData({
+    members: cloneData(GUEST_MEMBERS),
+    tasks: cloneData([...GUEST_TASKS, ...GUEST_HABITS]),
+    rewards: cloneData(GUEST_REWARDS),
+    history: cloneData(GUEST_HISTORY),
+  });
+}
+
+function normalizeGuestData(data: any) {
+  const members = Array.isArray(data?.members) ? data.members : cloneData(GUEST_MEMBERS);
+  const tasks = (Array.isArray(data?.tasks) ? data.tasks : cloneData([...GUEST_TASKS, ...GUEST_HABITS]))
+    .map(normalizeGuestTask);
+  const rewards = Array.isArray(data?.rewards) ? data.rewards : cloneData(GUEST_REWARDS);
+  const history = Array.isArray(data?.history) ? data.history : cloneData(GUEST_HISTORY);
+
+  return { members, tasks, rewards, history };
+}
+
+function normalizeGuestTask(task: any) {
+  const assigneeIds = Array.isArray(task.assignee_ids)
+    ? task.assignee_ids
+    : Array.isArray(task.assigneeIds)
+      ? task.assigneeIds
+      : task.assignee_id
+        ? [task.assignee_id]
+        : [];
+  const rewardStars = task.reward_stars ?? task.rewardStars ?? task.star_amount ?? 0;
+
+  return {
+    ...task,
+    assignee_id: task.assignee_id || assigneeIds[0] || '',
+    assignee_ids: assigneeIds,
+    creator_id: task.creator_id || task.creatorId || 'guest-mom',
+    reward_stars: rewardStars,
+    star_amount: task.star_amount ?? rewardStars,
+    start_time: task.start_time || task.startTime || today + 'T09:00:00.000Z',
+    end_time: task.end_time || task.endTime,
+    is_habit: task.is_habit ?? task.isHabit ?? false,
+    current_count: task.current_count ?? task.currentCount ?? 0,
+    target_count: task.target_count ?? task.targetCount ?? 1,
+  };
+}
+
+function withActiveGuestUser(data: any) {
+  let storedUser: any = null;
+  try {
+    const raw = Taro.getStorageSync('guest_user');
+    storedUser = typeof raw === 'string' ? JSON.parse(raw || '{}') : raw;
+  } catch {}
+
+  const currentUser = data.members.find((member: any) => member.id === storedUser?.id)
+    || data.members.find((member: any) => member.id === 'guest-son')
+    || data.members[0];
+
+  return { ...data, currentUser };
+}
+
+function cloneData<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value));
 }

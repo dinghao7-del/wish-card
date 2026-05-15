@@ -14,6 +14,8 @@
     "deploy:cf": "npm run build && npx wrangler pages deploy dist --project-name=wish-card-backup",
     "deploy:sync": "bash scripts/sync-deploy.sh",
     "deploy:verify": "bash scripts/sync-deploy.sh --verify-only",
+    "sync:platforms": "npm run build && npx cap copy && npx cap sync android && npm --prefix miniprogram run build:weapp && npm run verify:platform-sync",
+    "verify:platform-sync": "node scripts/verify-platform-sync.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, Button } from '@tarojs/components';
 import Taro from '@tarojs/taro';
+import { APP_NAME } from '@/lib/appMeta';
 import './index.scss';
 
 export default function PrivacyDialog() {
@@ -31,7 +32,7 @@ export default function PrivacyDialog() {
         
         <View className="privacy-content">
           <Text className="privacy-text">
-            欢迎使用 Forest Family（森林家庭）小程序。我们重视您的隐私保护，根据《个人信息保护法》等相关法律法规，我们需要征得您的同意。
+            欢迎使用{APP_NAME}小程序。我们重视您的隐私保护，根据《个人信息保护法》等相关法律法规，我们需要征得您的同意。
           </Text>
           
           <View className="privacy-list">

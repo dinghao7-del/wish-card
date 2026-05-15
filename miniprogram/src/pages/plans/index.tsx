@@ -15,6 +15,7 @@ import { useState, useEffect } from 'react';
 import Taro, { useRouter } from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
 import Icon from '@/components/Icon';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
 
 // ===== 对齐 Web Plans.tsx 第23-31行: 预设模板 =====
@@ -190,7 +191,7 @@ export default function Plans() {
   // ===== Loading =====
   if (loading) {
     return (
-      <View className="plans-page">
+      <View className={`plans-page ${getThemeClass()}`}>
         <View style={{ display: 'flex', justifyContent: 'center', paddingTop: '200rpx' }}>
           <Icon name="loader" size={48} color="#006e1c" />
         </View>
@@ -200,7 +201,7 @@ export default function Plans() {
 
   // ===== 渲染（对齐Web第116-266行）======
   return (
-    <View className="plans-page">
+    <View className={`plans-page ${getThemeClass()}`}>
       {/* ===== Header: 返回 + 标题 — 对齐Web第119-127行 ===== */}
       <View className="plans-header">
         <View className="header-left" onClick={() => Taro.navigateBack()}>
@@ -218,13 +219,11 @@ export default function Plans() {
         >
           <Text className="wishes-toggle-label">显示心愿数</Text>
           <View
-            role="switch"
-            aria-checked={separateWishes}
             style={{
               width: '84rpx', height: '48rpx', borderRadius: '9999px',
               padding: '6rpx', display: 'flex', alignItems: 'center',
               backgroundColor: separateWishes ? '#006e1c' : '#e5e7eb',
-              border: 'none', cursor: 'pointer', transition: 'background-color 0.3s',
+              border: 'none', transition: 'background-color 0.3s',
               boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.15)',
             }}
           >

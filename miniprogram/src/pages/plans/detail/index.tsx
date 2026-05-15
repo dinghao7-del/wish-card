@@ -15,6 +15,7 @@ import { useState, useEffect } from 'react';
 import Taro, { useRouter } from '@tarojs/taro';
 import Icon from '@/components/Icon';
 import { PLAN_SCENES, type DailyScheduleTemplate } from '@/lib/planTemplates';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
 
 interface PlanData {
@@ -57,6 +58,28 @@ export default function PlanDetail() {
     if (!id) {
       setLoading(false);
       return;
+    }
+
+    try {
+      const raw = Taro.getStorageSync('wishcard_saved_schedule_recommendations');
+      const savedPlans = typeof raw === 'string' ? JSON.parse(raw || '[]') : raw;
+      const savedPlan = Array.isArray(savedPlans) ? savedPlans.find((item: any) => item.id === id) : null;
+      if (savedPlan) {
+        setPlanName(savedPlan.name || decodeURIComponent(nameParam || '智能日程方案'));
+        setPlanType(savedPlan.type || decodeURIComponent(typeParam || '智能日程推荐'));
+        if (savedPlan.schedule) {
+          setSchedule(savedPlan.schedule);
+          setWeeklyActivities(savedPlan.schedule.weeklyActivities || []);
+          setGrade(savedPlan.schedule.grade || savedPlan.profile?.grade || '');
+          setTimezone(savedPlan.schedule.timezone?.label || '');
+        }
+        setTargetCount(savedPlan.targetCount ?? savedPlan.schedule?.slots?.length ?? 0);
+        setWishCount(savedPlan.wishCount ?? 0);
+        setLoading(false);
+        return;
+      }
+    } catch (e) {
+      console.log('[PlanDetail] 本地AI计划读取失败:', e);
     }
 
     // ⭐ 对齐Web第39-49行: 从 URL 参数读取日程数据（向导创建后传入）
@@ -129,15 +152,14 @@ export default function PlanDetail() {
 
   // ===== 添加心愿 — 对齐Web第261行: /rewards/new?planId=... =====
   const handleAddWish = () => {
-    Taro.navigateTo({
-      url: `/pages/rewards/new/index?planId=${id}&planName=${encodeURIComponent(planName)}`,
-    });
+    Taro.setStorageSync('wishcard_pending_reward_plan', JSON.stringify({ planId: id, planName }));
+    Taro.switchTab({ url: '/pages/rewards/index' });
   };
 
   // ===== Loading =====
   if (loading) {
     return (
-      <View className="detail-page">
+      <View className={`detail-page ${getThemeClass()}`}>
         <View style={{ display: 'flex', justifyContent: 'center', paddingTop: '200rpx' }}>
           <Icon name="loader" size={48} color="#006e1c" />
         </View>
@@ -146,7 +168,7 @@ export default function PlanDetail() {
   }
 
   return (
-    <View className="detail-page">
+    <View className={`detail-page ${getThemeClass()}`}>
       {/* ===== Header — 对齐Web第104-117行 (含动态emoji) ===== */}
       <View className="detail-header">
         <View className="header-nav">

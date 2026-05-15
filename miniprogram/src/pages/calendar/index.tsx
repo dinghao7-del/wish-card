@@ -4,6 +4,7 @@ import Taro from '@tarojs/taro';
 import Icon from '@/components/Icon';
 import { getLocalUser } from '@/utils/localUser';
 import { isGuestMode } from '@/lib/guestData';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
 
 /**
@@ -218,7 +219,7 @@ export default function CalendarSync() {
   const guide = selectedBrand ? BRAND_GUIDES[selectedBrand] : null;
 
   return (
-    <View className="cs-page">
+    <View className={`cs-page ${getThemeClass()}`}>
       {/* ===== Header ===== */}
       <View className="cs-header">
         <View className="cs-back" onClick={() => Taro.navigateBack()}>

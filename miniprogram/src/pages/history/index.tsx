@@ -6,9 +6,8 @@ import { getLocalUser } from '@/utils/localUser';
 import { getGuestData, isGuestMode } from '@/lib/guestData';
 import { normalizeStarHistoryRecords, type StarHistoryRecord } from '@/lib/starHistory';
 import Icon from '@/components/Icon';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
-
-const GUEST_STAR_HISTORY_KEY = 'wishcard_guest_star_history';
 
 export default function History() {
   const [records, setRecords] = useState<StarHistoryRecord[]>([]);
@@ -28,11 +27,11 @@ export default function History() {
       }
 
       if (isGuestMode() || user.family_id === 'guest-family' || user.family_id === 'demo-family') {
-        const stored = Taro.getStorageSync(GUEST_STAR_HISTORY_KEY);
-        const storedRecords = typeof stored === 'string' ? JSON.parse(stored || '[]') : (stored || []);
-        const demoRecords = getGuestData().history.filter((item: any) => item.user_id === user.id || item.userId === user.id);
-        setRecords(normalizeStarHistoryRecords([...storedRecords, ...demoRecords]));
-        setStarBalance(user.stars || 0);
+        const guestData = getGuestData();
+        const activeMember = guestData.members.find((member: any) => member.id === user.id) || user;
+        const demoRecords = (guestData.history || []).filter((item: any) => item.user_id === user.id || item.userId === user.id);
+        setRecords(normalizeStarHistoryRecords(demoRecords));
+        setStarBalance(activeMember.stars || user.stars || 0);
         return;
       }
 
@@ -95,7 +94,7 @@ export default function History() {
   };
 
   return (
-    <View className="history-page">
+    <View className={`history-page ${getThemeClass()}`}>
       {/* Header — 对齐Web: 返回 + "星星足迹" */}
       <View className="history-header">
         <View className="history-back" onClick={() => Taro.navigateBack()}>

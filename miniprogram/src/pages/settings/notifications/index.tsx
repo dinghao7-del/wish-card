@@ -2,6 +2,7 @@ import { View, Text, Switch, ScrollView, Picker } from '@tarojs/components';
 import { useState } from 'react';
 import Taro from '@tarojs/taro';
 import Icon from '@/components/Icon';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
 
 export default function NotificationSettings() {
@@ -20,8 +21,11 @@ export default function NotificationSettings() {
   };
 
   return (
-    <View className="settings-page">
+    <View className={`settings-page ${getThemeClass()}`}>
       <View className="settings-header">
+        <View className="settings-back" onClick={() => Taro.navigateBack()}>
+          <Icon name="arrowLeft" size={32} color="#3f4a3c" />
+        </View>
         <Text className="settings-title">通知设置</Text>
         <Text className="settings-desc">管理推送通知偏好</Text>
       </View>

@@ -1,5 +1,6 @@
 import Taro from '@tarojs/taro';
 import { shareTracking } from './analytics';
+import { APP_NAME } from '@/lib/appMeta';
 
 /**
  * 创建分享卡片配置
@@ -29,7 +30,7 @@ export const useHomeShare = () => {
   return {
     onShareAppMessage() {
       return createShareCard({
-        title: '🌲 来 Forest Family，和家人为彼此设定任务吧！',
+        title: `来${APP_NAME}，把家庭日程和愿望一起安排好`,
         path: '/pages/home/index',
         imageUrl: '/assets/share/invite-family.png',
       });
@@ -37,7 +38,7 @@ export const useHomeShare = () => {
     
     onShareTimeline() {
       return {
-        title: 'Forest Family - 让家人更亲密',
+        title: `${APP_NAME} - 家庭日程与心愿管家`,
         query: `inviter=${Taro.getStorageSync('userInfo')?.id || ''}`,
         imageUrl: '/assets/share/moments.png',
       };
@@ -52,7 +53,7 @@ export const useTaskShare = (task: any) => {
   return {
     onShareAppMessage() {
       if (!task) return createShareCard({
-        title: '🌲 Forest Family - 家庭任务管理',
+        title: `${APP_NAME} - 家庭任务管理`,
         path: '/pages/home/index',
       });
       

@@ -3,6 +3,7 @@ import { X, Search, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { TASK_CATEGORIES, type HabitTemplate } from '../lib/templates';
+import { TemplatePickerShell } from './AppModal';
 
 interface TaskTemplateSelectorProps {
   onSelect: (template: { title: string; icon: string | object; stars: number }) => void;
@@ -43,32 +44,10 @@ export function TaskTemplateSelector({ onSelect, onClose }: TaskTemplateSelector
   };
 
   return (
-    <motion.div 
-      initial={{ y: '100%' }}
-      animate={{ y: 0 }}
-      exit={{ y: '100%' }}
-      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-      className="fixed inset-0 z-[100] bg-surface flex flex-col pt-safe"
-    >
-      {/* 顶部导航栏 */}
-      <header className="flex items-center justify-between px-4 py-2 border-b border-outline-variant/10">
-        <button 
-          onClick={onClose}
-          className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors"
-        >
-          <X size={24} />
-        </button>
-        <h2 className="text-lg font-bold">选择模板</h2>
-        <button 
-          className="text-primary font-bold px-4 py-2 hover:bg-primary/5 rounded-xl transition-colors"
-          onClick={onClose}
-        >
-          导入
-        </button>
-      </header>
-
-      <div className="p-4 space-y-4 flex-1 flex flex-col">
-        {/* 搜索框 */}
+    <TemplatePickerShell
+      title="选择模板"
+      onClose={onClose}
+      search={
         <div className="relative">
           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40" />
           <input 
@@ -79,10 +58,9 @@ export function TaskTemplateSelector({ onSelect, onClose }: TaskTemplateSelector
             className="w-full bg-surface-container-low border-none rounded-2xl pl-12 pr-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all font-medium"
           />
         </div>
-
-        {/* 分类 Tab 切换栏（学习 | 生活 | 兴趣 | 独立 | 表扬 | 批评） */}
-        {!searchQuery.trim() && (
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+      }
+      tabs={!searchQuery.trim() && (
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
             {TASK_CATEGORIES.map(cat => (
               <button
                 key={cat.id}
@@ -97,11 +75,18 @@ export function TaskTemplateSelector({ onSelect, onClose }: TaskTemplateSelector
                 {cat.label}
               </button>
             ))}
-          </div>
-        )}
-
-        {/* 模板网格（4列，匹配截图布局） */}
-        <div className="grid grid-cols-4 gap-y-5 gap-x-3 overflow-y-auto pt-2 pb-20 no-scrollbar">
+        </div>
+      )}
+      footer={
+        <button 
+          onClick={onClose}
+          className="w-full bg-primary-surface/20 text-primary-text font-bold py-4 rounded-2xl active:scale-95 transition-transform"
+        >
+          自定义添加
+        </button>
+      }
+    >
+        <div className="grid grid-cols-4 gap-y-5 gap-x-3 pb-4">
           {filteredTemplates.map((template) => (
             <motion.div
               key={template.id}
@@ -132,17 +117,6 @@ export function TaskTemplateSelector({ onSelect, onClose }: TaskTemplateSelector
             </motion.div>
           ))}
         </div>
-      </div>
-
-      {/* 底部「自定义添加」按钮 */}
-      <div className="p-6 border-t border-outline-variant/10 bg-surface pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]">
-        <button 
-          onClick={onClose}
-          className="w-full bg-primary-surface/20 text-primary-text font-bold py-4 rounded-2xl active:scale-95 transition-transform"
-        >
-          自定义添加
-        </button>
-      </div>
-    </motion.div>
+    </TemplatePickerShell>
   );
 }

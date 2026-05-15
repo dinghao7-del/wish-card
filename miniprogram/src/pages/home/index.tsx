@@ -1,4 +1,4 @@
-import { View, Text, Image, ScrollView } from '@tarojs/components';
+import { View, Text, Image } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/utils/supabase';
@@ -6,11 +6,11 @@ import { isGuestMode, getGuestData } from '@/lib/guestData';
 import { resolveAvatarPath } from '@/lib/templates';
 import Icon from '@/components/Icon';
 import VoiceAssistant from '@/components/VoiceAssistant';
+import { NotificationBell } from '@/components/NotificationCenter';
 import './index.scss';
 
 const STORAGE_KEY = 'guest_user';
-const MINI_PROGRAM_VERSION = 'v1.0.6';
-
+const SUPABASE_AUTH_STORAGE_KEY = 'sb-qdiuufuoleharmjfarzr-auth-token';
 export default function Home() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [member, setMember] = useState<any>(null);
@@ -63,6 +63,12 @@ export default function Home() {
         return;
       }
 
+      const authToken = Taro.getStorageSync(SUPABASE_AUTH_STORAGE_KEY);
+      if (!authToken) {
+        Taro.reLaunch({ url: '/pages/login/index' });
+        return;
+      }
+
       // ===== 2. 非游客模式再检查真实登录状态 =====
       let userData;
       try {
@@ -70,6 +76,11 @@ export default function Home() {
         userData = user;
       } catch (authError) {
         console.warn('[Home] auth check failed:', authError);
+      }
+
+      if (!userData) {
+        Taro.reLaunch({ url: '/pages/login/index' });
+        return;
       }
 
       // 有真实登录用户 → 走真实数据路径
@@ -162,55 +173,46 @@ export default function Home() {
 
   /** 头像点击 - 切换用户（对齐Web版 SwitchProfile） */
   const handleAvatarClick = () => {
-    console.log('[Home-DEBUG] handleAvatarClick FIRED!');
     Taro.navigateTo({ url: '/pages/switch-profile/index' });
   };
 
   /** 星星余额点击 -> 历史记录页 */
   const handleStarClick = () => {
-    console.log('[Home-DEBUG] handleStarClick FIRED!');
     Taro.navigateTo({ url: '/pages/history/index' });
   };
 
-  /** 设置按钮 -> 个人中心 */
-  const handleSettingsClick = () => {
-    console.log('[Home-DEBUG] handleSettingsClick FIRED!');
-    Taro.switchTab({ url: '/pages/profile/index' });
+  /** 通知按钮 -> 通知设置/通知中心 */
+  const handleNotificationClick = () => {
+    Taro.navigateTo({ url: '/pages/settings/notifications/index' });
   };
 
   /** 快捷操作：创建任务 */
   const handleCreateTask = () => {
-    console.log('[Home-DEBUG] handleCreateTask FIRED!');
-    Taro.navigateTo({ url: '/pages/tasks/create/index' });
+    Taro.navigateTo({ url: '/pages/templates/index' });
   };
 
   /** 快捷操作：日历视图 */
   const handleCalendar = () => {
-    console.log('[Home-DEBUG] handleCalendar FIRED!');
-    Taro.switchTab({ url: '/pages/tasks/index' });
+    Taro.navigateTo({ url: '/pages/calendar/index' });
   };
 
   /** 快捷操作：番茄钟 */
   const handlePomodoro = () => {
-    console.log('[Home-DEBUG] handlePomodoro FIRED!');
     Taro.navigateTo({ url: '/pages/pomodoro/index' });
   };
 
   /** 快捷操作：AI分析与智能建档 */
   const handleAiAnalysis = () => {
-    console.log('[Home-DEBUG] handleAiAnalysis FIRED!');
     Taro.navigateTo({ url: '/pages/ai-analysis/index' });
   };
 
   /** 快捷操作：计划管理 */
   const handlePlans = () => {
-    console.log('[Home-DEBUG] handlePlans FIRED!');
     Taro.navigateTo({ url: '/pages/plans/index' });
   };
 
   /** 任务卡片点击 */
   const handleTaskClick = (taskId: string) => {
-    console.log('[Home-DEBUG] handleTaskClick FIRED! taskId=', taskId);
     Taro.navigateTo({ url: `/pages/tasks/detail/index?id=${taskId}` });
   };
 
@@ -244,11 +246,12 @@ export default function Home() {
     return posA - posB;
   });
 
-  const pendingTasks = todayTasks.filter((task: any) => task.status === 'pending').length;
-  const reviewingTasks = todayTasks.filter((task: any) => task.status === 'reviewing').length;
+  const completedTasks = todayTasks.filter((task: any) => task.status === 'completed').length;
+  const taskProgress = todayTasks.length > 0 ? Math.round((completedTasks / todayTasks.length) * 100) : 0;
 
   return (
-    <ScrollView scrollY className="home-page">
+    <View className="home-page">
+      <View className="home-content">
       {/* ========== Header 固定顶部栏 ========== */}
       <View className="header">
         {/* 左侧：头像 + AI麦克风 */}
@@ -270,12 +273,7 @@ export default function Home() {
           </View>
         </View>
 
-        <View className="header-center">
-          <Text className="home-brand-title">WishCard 家庭管家</Text>
-          <Text className="home-version-text">小程序新版 {MINI_PROGRAM_VERSION}</Text>
-        </View>
-
-        {/* 右侧：星星余额胶囊 + 设置按钮 */}
+        {/* 右侧：星星余额胶囊 + 通知按钮 */}
         <View className="header-right">
           {/* 星星余额胶囊（可点击查看历史） */}
           <View className="star-capsule" onClick={handleStarClick}>
@@ -283,79 +281,63 @@ export default function Home() {
             <Text className="star-balance-text">{stars.toLocaleString()}</Text>
           </View>
 
-          {/* 设置按钮 */}
-          <View className="settings-btn" onClick={handleSettingsClick}>
-            <Icon name="settings" size={40} color="#006e1c" />
-          </View>
+          <NotificationBell onClick={handleNotificationClick} />
         </View>
       </View>
 
-      <View className="latest-banner" onClick={handleAiAnalysis}>
-        <View className="latest-banner-copy">
-          <Text className="latest-kicker">新版已生效</Text>
-          <Text className="latest-title">AI分析、复盘和日程方案已集中到家庭管家</Text>
-          <Text className="latest-desc">今日待办 {pendingTasks} 项 · 待确认 {reviewingTasks} 项 · 家庭星星 {stars.toLocaleString()}</Text>
-        </View>
-        <View className="latest-banner-action">
-          <Icon name="sparkles" size={46} color="#ffffff" />
-          <Text>进入</Text>
-        </View>
-      </View>
-
-      <View className="smart-cards-row">
-        <View className="smart-card" onClick={handleAiAnalysis}>
-          <Icon name="barChart" size={36} color="#006e1c" />
-          <Text className="smart-card-title">家庭复盘</Text>
-          <Text className="smart-card-desc">周报/月报</Text>
-        </View>
-        <View className="smart-card" onClick={() => Taro.navigateTo({ url: '/pages/schedule-recommend/index' })}>
-          <Icon name="calendar" size={36} color="#1976D2" />
-          <Text className="smart-card-title">日程建议</Text>
-          <Text className="smart-card-desc">假期/课外班</Text>
-        </View>
-        <View className="smart-card" onClick={handleQuadrantClick}>
-          <Icon name="target" size={36} color="#F57C00" />
-          <Text className="smart-card-title">四象限</Text>
-          <Text className="smart-card-desc">轻重缓急</Text>
-        </View>
-      </View>
-
-      {/* ========== 能量卡（今日成长能量） ========== */}
+      {/* ========== 能量卡：对齐线上 Web 首页 ========== */}
       <View className={`energy-card ${showSparkles ? 'sparkle-active' : ''}`}>
-        {/* 浮动装饰元素 - Star */}
         <View className="float-decor float-star">
-          <Icon name="star" size={64} color="#FFD54F" />
+          <Icon name="star" size={40} color="#FFD54F" />
         </View>
-
-        {/* 浮动装饰元素 - Sparkles */}
         <View className="float-decor float-sparkles">
-          <Icon name="sparkles" size={96} color="#FFFFFF" opacity="0.3" />
+          <Icon name="zap" size={54} color="#FFFFFF" opacity="0.32" />
         </View>
-
-        {/* 浮动光点 */}
-        <View className="float-glow-dot" />
-
-        {/* 主内容区 */}
         <View className="energy-content">
-          {/* 标题标签 */}
-          <View className="energy-badge">
-            <View className="energy-badge-icon">
-              <Icon name="sparkles" size={28} color="#FFD54F" />
+          <View className="energy-top-row">
+            <View>
+              <Text className="energy-hi">Hi~</Text>
+              <Text className="energy-name">{member?.name || '小伙伴'}</Text>
             </View>
-            <Text className="energy-badge-text">今日成长能量</Text>
-          </View>
-
-          {/* 今日获得星星数（大号动态数字） */}
-          <View className="energy-number-row">
-            <Text className="energy-number">{todayEarnedStars.toLocaleString()}</Text>
-            <View className="energy-star-icon">
-              <Icon name="star" size={72} color="#FFD54F" />
+            <View className="energy-mood-btn">
+              <Icon name="smile" size={34} color="#ffffff" />
             </View>
           </View>
 
-          {/* 副标题 */}
+          <View className="energy-stats-grid">
+            <View className="energy-stat">
+              <View className="energy-stat-line">
+                <Icon name="star" size={26} color="#FFD54F" />
+                <Text className="energy-stat-value">{stars.toLocaleString()}</Text>
+              </View>
+              <Text className="energy-stat-label">星星</Text>
+            </View>
+            <View className="energy-stat">
+              <Text className="energy-stat-value">{completedTasks}/{todayTasks.length}</Text>
+              <Text className="energy-stat-label">今日任务</Text>
+            </View>
+            <View className="energy-stat">
+              <View className="energy-stat-line">
+                <Icon name="flame" size={24} color="#FFD54F" />
+                <Text className="energy-stat-value">0</Text>
+              </View>
+              <Text className="energy-stat-label">连续天数</Text>
+            </View>
+          </View>
+
+          {todayTasks.length > 0 && (
+            <View className="energy-progress-wrap">
+              <View className="energy-progress-head">
+                <Text>今日进度</Text>
+                <Text>{taskProgress}%</Text>
+              </View>
+              <View className="energy-progress-track">
+                <View className="energy-progress-fill" style={{ width: `${taskProgress}%` }} />
+              </View>
+            </View>
+          )}
           <View className="energy-subtitle-box">
-            <Text className="energy-subtitle">加油！离下一个愿望更近了</Text>
+            <Text className="energy-subtitle">今天获得 {todayEarnedStars.toLocaleString()} 颗星星，继续保持</Text>
           </View>
         </View>
       </View>
@@ -370,20 +352,20 @@ export default function Home() {
           <Text className="action-label">创建任务</Text>
         </View>
 
+        {/* AI分析 */}
+        <View className="quick-action-item" onClick={handleAiAnalysis}>
+          <View className="action-icon-circle action-icon-highlight">
+            <Icon name="sparkles" size={48} color="#ffffff" />
+          </View>
+          <Text className="action-label">AI分析</Text>
+        </View>
+
         {/* 日历 */}
         <View className="quick-action-item" onClick={handleCalendar}>
           <View className="action-icon-circle action-icon-blue">
             <Icon name="calendar" size={48} color="#ffffff" />
           </View>
           <Text className="action-label">日历</Text>
-        </View>
-
-        {/* AI分析 */}
-        <View className="quick-action-item" onClick={handleAiAnalysis}>
-          <View className="action-icon-circle" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-            <Icon name="sparkles" size={48} color="#ffffff" />
-          </View>
-          <Text className="action-label">AI分析</Text>
         </View>
 
         {/* 计划 */}
@@ -432,14 +414,41 @@ export default function Home() {
                       task.quadrant_color || '#4CAF50'
                   }} />
 
+                  {/* 任务图标区 */}
+                  <View className={`task-icon-box ${
+                    task.status === 'completed' ? 'is-completed' :
+                    isReviewing ? 'is-reviewing' :
+                    'is-pending'
+                  }`}>
+                    <Icon
+                      name={task.status === 'completed' ? 'checkCircle2' : isReviewing ? 'clock' : 'listTodo'}
+                      size={34}
+                      color={task.status === 'completed' ? '#006e1c' : isReviewing ? '#f57c00' : '#5d6559'}
+                    />
+                  </View>
+
                   {/* 中间内容区 */}
                   <View className="task-content">
                     <Text className={`task-title ${task.status === 'completed' ? 'task-completed' : ''}`}>
                       {task.title}
                     </Text>
-                    <Text className="task-time">
-                      {isReviewing ? '待审核' : new Date(task.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </Text>
+                    <View className="task-meta-row">
+                      <View className="task-meta-item">
+                        <Icon name="clock" size={18} color="#8b9486" />
+                        <Text className="task-time">
+                          {isReviewing ? '待审核' : new Date(task.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </Text>
+                      </View>
+                      <Text className="task-meta-dot">•</Text>
+                      <View className="task-meta-item task-assignee">
+                        <Icon name="user" size={18} color="#8b9486" />
+                        <Text className="task-time">
+                          {Array.isArray(task.assignee_ids)
+                            ? task.assignee_ids.map((id: string) => members.find((m: any) => m.id === id)?.name).filter(Boolean).join('、') || '所有人'
+                            : '所有人'}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
 
                   {/* 右侧操作区 — 对齐Web版 TaskCard */}
@@ -570,6 +579,7 @@ export default function Home() {
         userId={currentUser?.id}
         familyId={member?.family_id}
       />
-    </ScrollView>
+      </View>
+    </View>
   );
 }

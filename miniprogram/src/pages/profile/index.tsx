@@ -4,8 +4,11 @@ import Taro from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
 import { getLocalUser } from '@/utils/localUser';
 import { resolveAvatarPath } from '@/lib/templates';
+import { getGuestData, isGuestMode } from '@/lib/guestData';
 import Icon from '@/components/Icon';
-import { NotificationPanel } from '@/components/NotificationCenter';
+import { NotificationBell, NotificationPanel } from '@/components/NotificationCenter';
+import { APP_RELEASE_DATE, APP_VERSION, APP_VERSION_LABEL } from '@/lib/appMeta';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
 
 // 对齐 Web 端 Profile.tsx (462行) 完整功能清单
@@ -51,6 +54,10 @@ export default function Profile() {
   };
 
   const fetchMembers = async (familyId: string) => {
+    if (!familyId || familyId === 'guest-family' || familyId === 'demo-family' || isGuestMode()) {
+      setMembers(getGuestData().members || []);
+      return;
+    }
     try {
       const { data } = await supabase.from('members').select('*').eq('family_id', familyId);
       setMembers(Array.isArray(data) ? data : []);
@@ -110,9 +117,13 @@ export default function Profile() {
       confirmColor: '#e53935',
       success: async (res) => {
         if (res.confirm) {
-          await supabase.auth.signOut();
           Taro.removeStorageSync('guest_user');
-          Taro.redirectTo({ url: '/pages/login/index' });
+          try {
+            await supabase.auth.signOut();
+          } catch (err) {
+            console.warn('[Profile] remote signOut skipped:', err);
+          }
+          Taro.reLaunch({ url: '/pages/login/index' });
         }
       },
     });
@@ -128,30 +139,31 @@ export default function Profile() {
   ];
 
   const menuGroupAi = [
-    { icon: 'sparkles', label: 'AI分析', route: '/pages/ai-analysis/index', color: '#006e1c' },
+    { icon: 'sparkles', label: 'AI分析与建档', route: '/pages/ai-analysis/index', color: '#006e1c' },
+    { icon: 'barChart', label: '家庭复盘', route: '/pages/reports/index', color: '#1976D2' },
+    { icon: 'calendar', label: '日程方案', route: '/pages/schedule-recommend/index', color: '#0288D1' },
+    { icon: 'users', label: '家庭社区', route: '/pages/community/templates/index', color: '#0f8f43' },
     { icon: 'target', label: '四象限分析', route: '/pages/quadrant/index', color: '#F57C00' },
-    { icon: 'calendar', label: '公共时间与校历', route: '/pages/calendar/index', color: '#0288D1' },
+    { icon: 'globe', label: '公共时间与校历', route: '/pages/calendar/index', color: '#0288D1' },
     { icon: 'settings2', label: 'AI助手设置', route: '/pages/settings/ai/index', color: '#7B1FA2' },
   ];
 
   if (loading) {
     return (
-      <View className="profile-page">
+      <View className={`profile-page ${getThemeClass()}`}>
         <View className="profile-loading"><Icon name="loader-2" size={48} color="#006e1c" /><Text>加载中...</Text></View>
       </View>
     );
   }
 
   return (
-    <View className={`profile-page ${darkMode ? 'dark-mode' : ''}`}>
+    <View className={`profile-page ${getThemeClass()} ${darkMode ? 'dark-mode' : ''}`}>
       <ScrollView scrollY enhanced className="profile-scroll">
         {/* ===== Header (对齐Web: 头像+标题"我的"+通知铃铛) ===== */}
         <View className="profile-header">
           <Text className="profile-title">我的</Text>
           <View className="profile-header-actions">
-            <View className="notif-btn" onClick={() => setShowNotifPanel(true)}>
-              <Icon name="bell" size={40} color="#3f4a3c" />
-            </View>
+            <NotificationBell onClick={() => setShowNotifPanel(true)} />
           </View>
         </View>
 
@@ -175,7 +187,7 @@ export default function Profile() {
             <View className="role-badge child"><Text>孩子</Text></View>
           )}
           <View className="profile-version-badge">
-            <Text>小程序体验版 v1.0.2 · 2026-05-14</Text>
+            <Text>{APP_VERSION_LABEL} · {APP_RELEASE_DATE}</Text>
           </View>
         </View>
 
@@ -248,10 +260,7 @@ export default function Profile() {
               <Icon name="moon" size={32} color="#3f4a3c" />
             </View>
             <Text className="menu-label">深色模式</Text>
-            <div
-              role="switch"
-              aria-checked={darkMode}
-              tabIndex={0}
+            <View
               onClick={() => {
                 const next = !darkMode;
                 setDarkMode(next);
@@ -268,12 +277,12 @@ export default function Profile() {
                 width: 48, height: 28, borderRadius: 9999, padding: 4,
                 display: 'flex', alignItems: 'center',
                 backgroundColor: darkMode ? '#4CAF50' : '#E5E7EB',
-                border: 'none', cursor: 'pointer',
+                border: 'none',
                 boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.15)',
-                outline: 'none', userSelect: 'none', flexShrink: 0,
+                outline: 'none', flexShrink: 0,
               }}
             >
-              <div
+              <View
                 style={{
                   width: 20, height: 20, backgroundColor: 'white',
                   borderRadius: '50%', boxShadow: '0 1px 3px rgba(0,0,0,0.2)', flexShrink: 0,
@@ -281,14 +290,14 @@ export default function Profile() {
                   transition: 'transform 0.3s cubic-bezier(0.68,-0.55,0.265,1.55)',
                 }}
               />
-            </div>
+            </View>
           </View>
 
           <View className="menu-item" onClick={() => Taro.navigateTo({ url: '/pages/settings/basic/index' })}>
             <View className="menu-icon-wrap" style={{ backgroundColor: '#75757515' }}>
               <Icon name="settings" size={32} color="#757575" />
             </View>
-            <Text className="menu-label">基础设置</Text>
+            <Text className="menu-label">基础设置与主题皮肤</Text>
             <Icon name="chevronRight" size={28} color="#becab9" />
           </View>
         </View>

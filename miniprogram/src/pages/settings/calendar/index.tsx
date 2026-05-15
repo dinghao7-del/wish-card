@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
 import Icon from '@/components/Icon';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
 
 // DESIGN.md 3.12.1: iCal (.ics) 文件格式生成器
@@ -14,10 +15,10 @@ function generateICalContent(tasks: any[]): string {
 
   let ics = `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//WishCard//Forest Family//ZH
+PRODID:-//WishCard//StarWish//ZH
 CALSCALE:GREGORIAN
 METHOD:PUBLISH
-X-WR-CALNAME:愿望卡日程
+X-WR-CALNAME:星愿卡日程
 X-WR-TIMEZONE:Asia/Shanghai
 `;
 
@@ -111,7 +112,7 @@ export default function CalendarSync() {
             try {
               await new Promise((resolve, reject) => {
                 wx.addPhoneCalendar({
-                  title: `[愿望卡] ${task.title}`,
+                  title: `[星愿卡] ${task.title}`,
                   startTime: new Date(task.start_time || Date.now()).getTime(),
                   success: resolve,
                   fail: reject,
@@ -179,8 +180,11 @@ export default function CalendarSync() {
   };
 
   return (
-    <View className="settings-page">
+    <View className={`settings-page ${getThemeClass()}`}>
       <View className="settings-header">
+        <View className="settings-back" onClick={() => Taro.navigateBack()}>
+          <Icon name="arrowLeft" size={32} color="#3f4a3c" />
+        </View>
         <Text className="settings-title">同步日历</Text>
         <Text className="settings-desc">将任务同步到手机日历应用</Text>
       </View>

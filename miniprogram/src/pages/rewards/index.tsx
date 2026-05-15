@@ -14,12 +14,14 @@ import { View, Text, Image, ScrollView, Input, Textarea } from '@tarojs/componen
 import { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
-import { isGuestMode, getGuestData } from '@/lib/guestData';
-import { resolveAvatarPath } from '@/lib/templates';
+import { isGuestMode, getGuestData, updateGuestData } from '@/lib/guestData';
+import { resolveAvatarPath, resolveLocalAssetPath } from '@/lib/templates';
 import { setLocalUser } from '@/utils/localUser';
 import Icon from '@/components/Icon';
 import CelebrationAnimation from '@/components/CelebrationAnimation';
 import RewardTemplateSelector from '@/components/RewardTemplateSelector';
+import VoiceAssistant from '@/components/VoiceAssistant';
+import { NotificationBell } from '@/components/NotificationCenter';
 import './index.scss';
 
 // ===== 类型定义 =====
@@ -39,7 +41,9 @@ const CATEGORIES = [
   { key: 'activity', label: '活动' },
 ];
 
-const GUEST_STAR_HISTORY_KEY = 'wishcard_guest_star_history';
+function resolveRewardImage(rawImage?: string) {
+  return resolveLocalAssetPath(rawImage);
+}
 
 export default function Rewards() {
   // ===== 状态 =====
@@ -69,6 +73,7 @@ export default function Rewards() {
   // 心愿模板库状态
   const [showRewardTemplates, setShowRewardTemplates] = useState(false);
   const [familyId, setFamilyId] = useState('');
+  const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
 
   const openBlankRewardForm = () => {
     setCreateForm({ name: '', description: '', cost: 10, category: 'common', quantity: 1, image: '', icon: '🐷', exchangeLimit: false });
@@ -89,7 +94,20 @@ export default function Rewards() {
   // ===== 数据获取 =====
   const initPageData = async () => {
     try {
-      // ===== 1. 优先尝试真实登录用户 =====
+      // ===== 1. 游客模式永远走本地数据，避免小程序端误触发云端实时连接 =====
+      if (isGuestMode()) {
+        console.log('[Rewards] Guest mode: loading demo data');
+        const guestData = getGuestData();
+        setRewards(guestData.rewards || []);
+        const guestMember = guestData.members.find((m: any) => m.role === 'child') || guestData.members[2];
+        setUser(guestMember);
+        setStarBalance(guestMember?.stars || 186);
+        setFamilyId(guestMember?.family_id || 'guest-family');
+        setLoading(false);
+        return;
+      }
+
+      // ===== 2. 非游客模式再尝试真实登录用户 =====
       let authUser;
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -117,24 +135,6 @@ export default function Rewards() {
       }
       setLoading(false);
       return; // 真实数据路径完成
-      }
-
-      // ===== 2. 无真实用户 → 检查游客模式 =====
-      if (isGuestMode()) {
-        console.log('[Rewards] Guest mode: loading demo data');
-        const guestData = getGuestData();
-        setRewards(guestData.rewards || []);
-        const guestMember = guestData.members.find((m: any) => m.role === 'child') || guestData.members[2];
-        setUser(guestMember);
-        setStarBalance(guestMember?.stars || 186);
-        // 游客模式也获取 familyId（如有）
-        try {
-          const userStr = Taro.getStorageSync('localUser') || '{}';
-          const u = typeof userStr === 'string' ? JSON.parse(userStr) : userStr;
-          setFamilyId(u?.family_id || '');
-        } catch {}
-        setLoading(false);
-        return;
       }
 
       // ===== 3. 无任何用户 → 保持空白（用户需要先登录）=====
@@ -208,18 +208,20 @@ export default function Rewards() {
       const updatedUser = { ...user, stars: newBalance };
       const historyRecord = {
         id: `guest-reward-${Date.now()}`,
-        amount: -cost,
-        reason: `兑换心愿: ${selectedReward.name}`,
-        created_at: exchangedAt,
-        type: 'spend',
+        user_id: user.id,
+        title: `兑换心愿: ${selectedReward.name}`,
+        type: 'redeem',
+        stars: -cost,
+        timestamp: exchangedAt,
+        icon: 'Gift',
       };
       try {
-        const stored = Taro.getStorageSync(GUEST_STAR_HISTORY_KEY);
-        const records = typeof stored === 'string' ? JSON.parse(stored || '[]') : (stored || []);
-        Taro.setStorageSync(
-          GUEST_STAR_HISTORY_KEY,
-          [historyRecord, ...records].filter((record: any) => Number(record.amount) !== 0),
-        );
+        updateGuestData((draft) => {
+          draft.members = (draft.members || []).map((member: any) =>
+            member.id === user.id ? { ...member, stars: newBalance } : member
+          );
+          draft.history = [historyRecord, ...(draft.history || [])];
+        });
         setLocalUser(updatedUser);
       } catch (err) {
         console.warn('[Rewards] persist guest exchange failed:', err);
@@ -307,6 +309,29 @@ export default function Rewards() {
     }
     setCreating(true);
     try {
+      if (isGuestMode()) {
+        const newReward = {
+          id: `guest-reward-custom-${Date.now()}`,
+          name: createForm.name.trim(),
+          description: createForm.description.trim() || undefined,
+          cost: createForm.cost,
+          category: createForm.category,
+          image: createForm.image || '',
+          icon: createForm.icon || '🎁',
+          stock: createForm.quantity,
+        };
+        const nextData = updateGuestData((draft) => {
+          draft.rewards = [newReward, ...(draft.rewards || [])];
+        });
+        const nextRewards = activeCategory === 'all'
+          ? nextData.rewards || []
+          : (nextData.rewards || []).filter((reward: any) => reward.category === activeCategory);
+        setRewards(nextRewards);
+        Taro.showToast({ title: '心愿已添加（演示）', icon: 'success' });
+        setShowCreateDialog(false);
+        return;
+      }
+
       const userStr = Taro.getStorageSync('localUser') || '{}';
       let familyId = '';
       try { const u = typeof userStr === 'string' ? JSON.parse(userStr) : userStr; familyId = u?.family_id || ''; } catch {}
@@ -332,9 +357,13 @@ export default function Rewards() {
     }
   };
 
-  // 跳转个人中心
+  // 点击头像切换/进入成员资料
   const handleProfileClick = () => {
     Taro.switchTab({ url: '/pages/profile/index' });
+  };
+
+  const handleNotificationClick = () => {
+    Taro.navigateTo({ url: '/pages/settings/notifications/index' });
   };
 
   // ===== 渲染：进度条计算 =====
@@ -364,21 +393,31 @@ export default function Rewards() {
 
   return (
     <View className="rewards-page">
-      {/* ===== Header — 对齐Web原版：头像 + 星星 + 设置 ===== */}
+      {/* ===== Header — 对齐Web原版：头像 + AI麦克风 + 星星 + 通知 ===== */}
       <View className="rw-header">
-        <View className="rw-header-left" onClick={handleProfileClick}>
-          <Image className="rw-avatar" src={resolveAvatarPath(user?.avatar || '')} mode="aspectFill" />
+        <View className="rw-header-left">
+          <View onClick={handleProfileClick}>
+            <Image className="rw-avatar" src={resolveAvatarPath(user?.avatar || '')} mode="aspectFill" />
+          </View>
+          <View className="rw-mic-btn" onClick={() => setIsAiDialogOpen(true)}>
+            <Icon name="microphone" size={38} color="#006e1c" />
+          </View>
         </View>
         <View className="rw-header-right">
           <View className="rw-star-badge" onClick={() => Taro.navigateTo({ url: '/pages/history/index' })}>
             <Icon name="star" size={24} color="#F9A825" />
             <Text>{starBalance}</Text>
           </View>
-          <View className="rw-settings-btn">
-            <Icon name="settings" size={36} color="#5a6b54" />
-          </View>
+          <NotificationBell onClick={handleNotificationClick} />
         </View>
       </View>
+
+      <VoiceAssistant
+        visible={isAiDialogOpen}
+        onClose={() => setIsAiDialogOpen(false)}
+        userId={user?.id}
+        familyId={familyId}
+      />
 
       {/* ===== 标题栏 — 对齐Web原版：标题左边 + 大FAB右边 ===== */}
       <View className="rw-title-bar">
@@ -450,7 +489,7 @@ export default function Rewards() {
 
                     {(reward.image || reward.icon) ? (
                       reward.image ? (
-                        <Image className="rw-card-img" src={reward.image} mode="aspectFill" />
+                        <Image className="rw-card-img" src={resolveRewardImage(reward.image)} mode="aspectFill" />
                       ) : (
                         <Text style={{ fontSize: '96rpx', opacity: 0.4, lineHeight: '240rpx', textAlign: 'center' }}>{reward.icon}</Text>
                       )
@@ -525,7 +564,7 @@ export default function Rewards() {
               {selectedReward.image ? (
                 <Image
                   className="rw-modal-img"
-                  src={selectedReward.image}
+                  src={resolveRewardImage(selectedReward.image)}
                   mode="aspectFill"
                 />
               ) : (
@@ -634,7 +673,7 @@ export default function Rewards() {
             <View className="rw-create-img-row">
               <View className="rw-create-img-box">
                 {createForm.image ? (
-                  <Image className="rw-create-img-preview" src={createForm.image} mode="aspectFill" />
+                  <Image className="rw-create-img-preview" src={resolveRewardImage(createForm.image)} mode="aspectFill" />
                 ) : (
                   <Text className="rw-create-img-emoji">{createForm.icon || '🐷'}</Text>
                 )}
@@ -760,19 +799,17 @@ export default function Rewards() {
                 </View>
                 <Text className="rw-create-num-label">兑换限制</Text>
               </View>
-              {/* Toggle 开关 — 用div[role=switch]实现，遵循项目规范 */}
+              {/* Toggle 开关 */}
               <View
-                role="switch"
-                aria-checked={createForm.exchangeLimit}
                 onClick={() => setCreateForm(prev => ({ ...prev, exchangeLimit: !prev.exchangeLimit }))}
                 style={{
                   width: '96rpx', height: '52rpx', borderRadius: '9999px',
                   padding: '6rpx',
                   display: 'flex', alignItems: 'center',
                   backgroundColor: createForm.exchangeLimit ? '#4CAF50' : '#E5E7EB',
-                  border: 'none', cursor: 'pointer',
+                  border: 'none',
                   boxShadow: 'inset 0 1rpx 3rpx rgba(0,0,0,0.15)',
-                  outline: 'none', userSelect: 'none',
+                  outline: 'none',
                 }}
               >
                 <View style={{

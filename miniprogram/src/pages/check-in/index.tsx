@@ -13,7 +13,8 @@ import { View, Text } from '@tarojs/components';
 import { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
-import { isGuestMode, getGuestData } from '@/lib/guestData';
+import { isGuestMode, getGuestData, updateGuestData } from '@/lib/guestData';
+import { getLocalUser, setLocalUser } from '@/utils/localUser';
 import Icon from '@/components/Icon';
 import './index.scss';
 
@@ -149,6 +150,33 @@ export default function CheckIn() {
       if (isGuestMode()) {
         console.log('[CheckIn] Guest mode: simulating check-in');
         await new Promise(resolve => setTimeout(resolve, 500));
+        const localUser = getLocalUser();
+        const isParentReview = isReviewMode && localUser?.role === 'parent';
+        const assigneeIds = task.assignee_ids?.length ? task.assignee_ids : [];
+        const targetMemberId = assigneeIds[0] || localUser?.id || 'guest-son';
+        const nextData = updateGuestData((draft) => {
+          draft.tasks = (draft.tasks || []).map((item: any) =>
+            item.id === task.id ? { ...item, status: isParentReview ? 'completed' : 'reviewing' } : item
+          );
+          if (isParentReview && stars > 0) {
+            draft.members = (draft.members || []).map((member: any) =>
+              member.id === targetMemberId ? { ...member, stars: (member.stars || 0) + stars } : member
+            );
+            draft.history = [{
+              id: `guest-checkin-${task.id}-${Date.now()}`,
+              user_id: targetMemberId,
+              title: `完成任务: ${task.title}`,
+              type: 'task',
+              stars,
+              timestamp: new Date().toISOString(),
+              icon: 'CheckCircle',
+            }, ...(draft.history || [])];
+          }
+        });
+        if (localUser) {
+          const refreshed = nextData.members.find((member: any) => member.id === localUser.id);
+          if (refreshed) setLocalUser(refreshed);
+        }
         setEarnedStars(stars);
         setShowParticles(true);
         setTimeout(() => { setSuccess(true); setShowParticles(false); }, 1200);

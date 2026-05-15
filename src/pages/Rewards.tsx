@@ -13,6 +13,7 @@ import { showConfirm } from '../components/ConfirmDialog';
 import { getParentVerificationValue, isHighValueReward } from '../lib/sensitiveActions';
 import { getRewardCategoryLabel, normalizeRewardCategoryId, REWARD_CATEGORY_OPTIONS } from '../lib/rewardCategories';
 import { NotificationBell } from '../components/NotificationCenter';
+import { AppModal } from '../components/AppModal';
 import { verifyMemberPinOrPassword } from '../lib/memberCredentials';
 import { getActiveThemeSkin } from '../lib/themeSkins';
 import { getCreationTemplateRoute } from '../lib/createFlowRoutes';
@@ -536,19 +537,14 @@ export function Rewards() {
       {/* 删除确认弹窗 */}
       <AnimatePresence>
         {showDeleteConfirm && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white dark:bg-surface rounded-2xl p-6 shadow-2xl max-w-sm w-full max-h-[calc(100svh-2rem)] overflow-y-auto"
-            >
-              <h3 className="text-lg font-black text-on-surface mb-2">
-                {t('rewards.action.delete_confirm_title', { defaultValue: '确认删除' })}
-              </h3>
-              <p className="text-sm text-on-surface-variant mb-6">
-                {t('rewards.action.delete_confirm_message', { defaultValue: '确定要删除心愿「{{name}}」吗？此操作无法撤销。', name: showDeleteConfirm.name })}
-              </p>
+          <AppModal
+            open={Boolean(showDeleteConfirm)}
+            onClose={() => setShowDeleteConfirm(null)}
+            title={t('rewards.action.delete_confirm_title', { defaultValue: '确认删除' })}
+            surface="center"
+            zIndexClass="z-[140]"
+            bodyClassName="px-6 py-5"
+            footer={
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteConfirm(null)}
@@ -566,8 +562,12 @@ export function Rewards() {
                   {t('common.delete', { defaultValue: '删除' })}
                 </button>
               </div>
-            </motion.div>
-          </div>
+            }
+          >
+              <p className="text-sm text-on-surface-variant mb-6">
+                {t('rewards.action.delete_confirm_message', { defaultValue: '确定要删除心愿「{{name}}」吗？此操作无法撤销。', name: showDeleteConfirm.name })}
+              </p>
+          </AppModal>
         )}
       </AnimatePresence>
 

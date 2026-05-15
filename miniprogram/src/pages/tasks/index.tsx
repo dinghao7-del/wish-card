@@ -4,9 +4,11 @@ import Taro, { useDidShow } from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
 import { getLocalUser } from '@/utils/localUser';
 import { resolveIconPath, resolveAvatarPath } from '@/lib/templates';
-import { isGuestMode, getGuestData } from '@/lib/guestData';
+import { isGuestMode, getGuestData, updateGuestData } from '@/lib/guestData';
 import { MINI_UI_COLORS } from '@/utils/uiTokens';
 import Icon from '@/components/Icon';
+import VoiceAssistant from '@/components/VoiceAssistant';
+import { NotificationBell } from '@/components/NotificationCenter';
 import './index.scss';
 
 type ViewMode = 'list' | 'calendar';
@@ -15,7 +17,7 @@ type TaskStatus = 'pending' | 'reviewing' | 'completed';
 interface TaskItem {
   id: string; title: string; description?: string; start_time: string;
   status: TaskStatus; reward_stars: number; star_amount?: number; icon?: string; family_id?: string;
-  assignee_ids?: string[]; creator_id?: string; is_habit?: boolean;
+  assignee_id?: string; assignee_ids?: string[]; creator_id?: string; is_habit?: boolean;
   type?: string; reminder_time?: string; end_time?: string; deadline?: string; assignee_name?: string;
 }
 
@@ -30,6 +32,7 @@ export default function Tasks() {
   const [familyId, setFamilyId] = useState('');
   const [userId, setUserId] = useState('');
   const [members, setMembers] = useState<any[]>([]);
+  const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
 
   // 日历状态
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -94,6 +97,11 @@ export default function Tasks() {
   const submitForReview = async (taskId: string) => {
     // 游客模式：本地模拟状态变更
     if (isGuestMode()) {
+      updateGuestData((draft) => {
+        draft.tasks = (draft.tasks || []).map((task: any) =>
+          task.id === taskId ? { ...task, status: 'reviewing' } : task
+        );
+      });
       setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'reviewing' as TaskStatus } : t));
       Taro.showToast({ title: '已提交审核（演示）', icon: 'success' });
       return;
@@ -112,7 +120,37 @@ export default function Tasks() {
   const approveTask = async (taskId: string) => {
     // 游客模式：本地模拟
     if (isGuestMode()) {
-      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'completed' as TaskStatus } : t));
+      const approvedTask = tasks.find(t => t.id === taskId);
+      const rewardAmount = approvedTask ? Math.abs(approvedTask.star_amount ?? approvedTask.reward_stars ?? 0) : 0;
+      const assigneeIds = approvedTask?.assignee_ids?.length
+        ? approvedTask.assignee_ids
+        : approvedTask?.assignee_id
+          ? [approvedTask.assignee_id]
+          : [];
+      const nextData = updateGuestData((draft) => {
+        draft.tasks = (draft.tasks || []).map((task: any) =>
+          task.id === taskId ? { ...task, status: 'completed' } : task
+        );
+        if (rewardAmount > 0 && assigneeIds.length > 0) {
+          draft.members = (draft.members || []).map((member: any) =>
+            assigneeIds.includes(member.id) ? { ...member, stars: (member.stars || 0) + rewardAmount } : member
+          );
+          draft.history = [
+            ...assigneeIds.map((memberId: string) => ({
+              id: `guest-task-approved-${taskId}-${memberId}-${Date.now()}`,
+              user_id: memberId,
+              title: `完成任务: ${approvedTask?.title || '任务'}`,
+              type: 'task',
+              stars: rewardAmount,
+              timestamp: new Date().toISOString(),
+              icon: 'CheckCircle',
+            })),
+            ...(draft.history || []),
+          ];
+        }
+      });
+      setTasks(nextData.tasks || []);
+      setMembers(nextData.members || members);
       Taro.showToast({ title: '审核通过！（演示）', icon: 'success' });
       setShowDetail(false);
       return;
@@ -132,6 +170,11 @@ export default function Tasks() {
   const rejectTask = async (taskId: string) => {
     // 游客模式：本地模拟
     if (isGuestMode()) {
+      updateGuestData((draft) => {
+        draft.tasks = (draft.tasks || []).map((task: any) =>
+          task.id === taskId ? { ...task, status: 'pending' } : task
+        );
+      });
       setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'pending' as TaskStatus } : t));
       Taro.showToast({ title: '已退回（演示）', icon: 'none' });
       return;
@@ -160,6 +203,15 @@ export default function Tasks() {
     } else if (currentStatus === 'completed') {
       // 已完成可回退（仅管理员）
       if (isParent) {
+        if (isGuestMode()) {
+          updateGuestData((draft) => {
+            draft.tasks = (draft.tasks || []).map((task: any) =>
+              task.id === taskId ? { ...task, status: 'pending' } : task
+            );
+          });
+          setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'pending' as TaskStatus } : t));
+          return;
+        }
         supabase.from('tasks').update({ status: 'pending' }).eq('id', taskId).then(() => fetchTasksData(familyId));
       }
     }
@@ -414,6 +466,17 @@ export default function Tasks() {
 
   const handleDeleteTask = async () => {
     if (!selectedTask) return;
+    if (isGuestMode()) {
+      const nextData = updateGuestData((draft) => {
+        draft.tasks = (draft.tasks || []).filter((task: any) => task.id !== selectedTask.id);
+      });
+      setTasks(nextData.tasks || []);
+      Taro.showToast({ title: '已删除（演示）', icon: 'success' });
+      setShowDeleteConfirm(false);
+      setShowDetail(false);
+      setSelectedTask(null);
+      return;
+    }
     await supabase.from('tasks').delete().eq('id', selectedTask.id);
     Taro.showToast({ title: '已删除', icon: 'success' });
     setShowDeleteConfirm(false);
@@ -424,26 +487,44 @@ export default function Tasks() {
 
   return (
     <View className="tp-page">
-      {/* ===== 顶部栏（含视图切换） ===== */}
+      {/* ===== 顶部栏：对齐 Web 端头像 + AI + 视图切换 + 星星 + 通知 ===== */}
       <View className="tp-header">
         <View className="tp-header-left">
-          <Icon name={viewMode === 'list' ? 'list' : 'calendar'} size={40} color={MINI_UI_COLORS.primary} />
-          <Text className="tp-header-title">{viewMode === 'list' ? '所有任务' : '日历视图'}</Text>
-        </View>
-        <View className="tp-header-right">
-          <View className="tp-view-toggle">
-            <View className={`tp-view-btn ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')}>
-              <Icon name="list" size={28} color={viewMode === 'list' ? MINI_UI_COLORS.onPrimary : MINI_UI_COLORS.primary} />
-            </View>
-            <View className={`tp-view-btn ${viewMode === 'calendar' ? 'active' : ''}`} onClick={() => setViewMode('calendar')}>
-              <Icon name="calendar" size={28} color={viewMode === 'calendar' ? MINI_UI_COLORS.onPrimary : MINI_UI_COLORS.primary} />
-            </View>
+          <View className="tp-avatar-btn" onClick={() => Taro.navigateTo({ url: '/pages/switch-profile/index' })}>
+            <Image className="tp-avatar" src={resolveAvatarPath(user?.avatar || '')} mode="aspectFill" />
           </View>
+          <View className="tp-mic-btn" onClick={() => setIsAiDialogOpen(true)}>
+            <Icon name="microphone" size={38} color={MINI_UI_COLORS.primary} />
+          </View>
+        </View>
+
+        <View className="tp-view-toggle">
+          <View className={`tp-view-btn ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')}>
+            <Icon name="list" size={28} color={viewMode === 'list' ? MINI_UI_COLORS.onPrimary : MINI_UI_COLORS.primary} />
+          </View>
+          <View className={`tp-view-btn ${viewMode === 'calendar' ? 'active' : ''}`} onClick={() => setViewMode('calendar')}>
+            <Icon name="calendar" size={28} color={viewMode === 'calendar' ? MINI_UI_COLORS.onPrimary : MINI_UI_COLORS.primary} />
+          </View>
+        </View>
+
+        <View className="tp-header-right">
+          <View className="tp-star-badge" onClick={() => Taro.navigateTo({ url: '/pages/history/index' })}>
+            <Icon name="star" size={24} color="#F9A825" />
+            <Text className="tp-star-text">{(user?.stars || 0).toLocaleString()}</Text>
+          </View>
+          <NotificationBell onClick={() => Taro.navigateTo({ url: '/pages/settings/notifications/index' })} />
           <View className="tp-add-btn" onClick={() => Taro.navigateTo({ url: '/pages/templates/index' })}>
             <Icon name="plus" size={36} color={MINI_UI_COLORS.onPrimary} />
           </View>
         </View>
       </View>
+
+      <VoiceAssistant
+        visible={isAiDialogOpen}
+        onClose={() => setIsAiDialogOpen(false)}
+        userId={userId}
+        familyId={familyId}
+      />
 
       {/* ===== 列表模式 ===== */}
       {viewMode === 'list' && (

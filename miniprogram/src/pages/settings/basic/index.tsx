@@ -2,6 +2,8 @@ import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 import Taro from '@tarojs/taro';
 import Icon from '@/components/Icon';
+import { APP_VERSION, APP_VERSION_LABEL } from '@/lib/appMeta';
+import { MINI_THEME_SKINS, getActiveThemeSkin, saveActiveThemeSkin, type ThemeSkinId } from '@/lib/themeSkins';
 import './index.scss';
 
 const LANG_OPTIONS = ['简体中文', 'English', '繁體中文'];
@@ -14,9 +16,21 @@ export default function BasicSettings() {
   const [fontIdx, setFontIdx] = useState(() => {
     try { return Taro.getStorageSync('app_font_idx') ?? 1; } catch { return 1; }
   });
+  const [activeSkin, setActiveSkin] = useState(() => getActiveThemeSkin());
+
+  const handleSkinSelect = (skinId: ThemeSkinId) => {
+    const requested = MINI_THEME_SKINS.find(item => item.id === skinId);
+    if (requested?.status !== 'active') {
+      Taro.showToast({ title: '这套皮肤还在打磨中', icon: 'none' });
+      return;
+    }
+    const next = saveActiveThemeSkin(skinId);
+    setActiveSkin(next);
+    Taro.showToast({ title: `已切换为${next.name}`, icon: 'none' });
+  };
 
   return (
-    <View className="basic-settings-page">
+    <View className={`basic-settings-page ${activeSkin.className}`}>
       {/* 顶部栏 */}
       <View className="bs-header">
         <View className="bs-back" onClick={() => Taro.navigateBack()}>
@@ -24,6 +38,35 @@ export default function BasicSettings() {
         </View>
         <Text className="bs-header-title">基础设置</Text>
         <View />
+      </View>
+
+      <View className="bs-theme-section">
+        <View className="bs-section-title-row">
+          <Text className="bs-section-title">主题皮肤</Text>
+          <Text className="bs-section-desc">当前：{activeSkin.name}</Text>
+        </View>
+        <View className="bs-skin-grid">
+          {MINI_THEME_SKINS.map(skin => (
+            <View
+              key={skin.id}
+              className={`bs-skin-card ${activeSkin.id === skin.id ? 'active' : ''} ${skin.status === 'planned' ? 'planned' : ''}`}
+              onClick={() => handleSkinSelect(skin.id)}
+            >
+              <View className="bs-skin-preview" style={{ backgroundColor: skin.preview.background }}>
+                <View className="bs-skin-dot big" style={{ backgroundColor: skin.preview.primary }} />
+                <View className="bs-skin-dot" style={{ backgroundColor: skin.preview.secondary }} />
+                <View className="bs-skin-line" style={{ backgroundColor: skin.preview.primary }} />
+              </View>
+              <View className="bs-skin-copy">
+                <Text className="bs-skin-name">{skin.name}</Text>
+                <Text className="bs-skin-desc">{skin.description}</Text>
+              </View>
+              <View className={`bs-skin-state ${activeSkin.id === skin.id ? 'active' : ''}`}>
+                <Text>{activeSkin.id === skin.id ? '已启用' : skin.status === 'planned' ? '规划中' : '切换'}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
       </View>
 
       {/* 设置项列表 */}
@@ -101,13 +144,13 @@ export default function BasicSettings() {
         </View>
 
         {/* 关于 */}
-        <View className="bs-menu-item" onClick={() => Taro.showToast({ title: 'WishCard 小程序 v1.0.2', icon: 'none' })}>
+        <View className="bs-menu-item" onClick={() => Taro.showToast({ title: APP_VERSION_LABEL, icon: 'none' })}>
           <View className="bs-menu-icon-wrap">
             <Icon name="sparkles" size={32} color="#006e1c" />
           </View>
           <View className="bs-menu-content">
-            <Text className="bs-menu-label">关于 WishCard</Text>
-            <Text className="bs-menu-desc">小程序体验版 v1.0.2</Text>
+            <Text className="bs-menu-label">关于 星愿卡</Text>
+            <Text className="bs-menu-desc">{APP_VERSION}</Text>
           </View>
           <Text className="bs-menu-arrow">{'>'}</Text>
         </View>

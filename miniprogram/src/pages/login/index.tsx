@@ -1,4 +1,4 @@
-import { View, Text, Input, Button, Image, ScrollView } from '@tarojs/components';
+import { View, Text, Input, Button, Image } from '@tarojs/components';
 import { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
@@ -13,14 +13,14 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 type Step = 'intro' | 'login' | 'register';
 
 const STORAGE_KEY = 'guest_user';
-const WELCOME_COMICS = [
-  '/static/skins/forest-comic/welcome-comic-review.svg',
-  '/static/skins/forest-comic/welcome-comic-promise.svg',
-  '/static/skins/forest-comic/welcome-comic-wish.svg',
-];
+const SUPABASE_AUTH_STORAGE_KEY = 'sb-qdiuufuoleharmjfarzr-auth-token';
+const THEME_SKIN_STORAGE_KEY = 'wishcard-theme-skin';
 
 function pickWelcomeComic() {
-  return WELCOME_COMICS[Math.floor(Math.random() * WELCOME_COMICS.length)];
+  const storedSkin = Taro.getStorageSync(THEME_SKIN_STORAGE_KEY);
+  return storedSkin === 'arcade-comic'
+    ? '/static/skins/arcade-comic/welcome-comic.svg'
+    : '/static/skins/forest-comic/welcome-comic.svg';
 }
 
 export default function Login() {
@@ -70,6 +70,14 @@ export default function Login() {
 
   const checkExistingSession = async () => {
     try {
+      const localUser = Taro.getStorageSync(STORAGE_KEY);
+      if (localUser) {
+        Taro.switchTab({ url: '/pages/home/index' });
+        return;
+      }
+      const authToken = Taro.getStorageSync(SUPABASE_AUTH_STORAGE_KEY);
+      if (!authToken) return;
+
       // 使用 v2 兼容 API：优先 getSession，回退 getUser
       let user: any = null;
       try {
@@ -248,7 +256,7 @@ export default function Login() {
   const clearError = () => { setError(''); setInfo(''); };
 
   return (
-    <ScrollView className="login-page">
+    <View className="login-page">
       {/* ===== 动画背景装饰 ===== */}
       <View className="login-bg-deco-1" />
       <View className="login-bg-deco-2" />
@@ -475,6 +483,6 @@ export default function Login() {
           </View>
         </View>
       )}
-    </ScrollView>
+    </View>
   );
 }

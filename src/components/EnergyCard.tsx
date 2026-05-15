@@ -119,9 +119,11 @@ export function EnergyCard({
                     {/* 心情选择器 — 用图标替代 emoji */}
                     <motion.button
                         onClick={() => setIsMoodSelectorOpen(!isMoodSelectorOpen)}
-                        className={`w-12 h-12 min-w-12 min-h-12 rounded-full flex items-center justify-center shadow-lg transition-colors ${
+                        className={`ui-energy-mood-button w-12 h-12 min-w-12 min-h-12 rounded-full flex items-center justify-center shadow-lg transition-colors ${
                             selectedMood ? 'bg-white/25 backdrop-blur-sm ring-1 ring-white/30' : 'bg-white/15'
                         }`}
+                        animate={{ rotate: [-6, 6, -6], scale: [1, 1.08, 1] }}
+                        transition={{ duration: 1.35, repeat: Infinity, ease: 'easeInOut' }}
                         whileHover={{ scale: 1.08 }}
                         whileTap={{ scale: 0.92 }}
                     >
@@ -160,7 +162,7 @@ export function EnergyCard({
                 )}
 
                 {/* 数据统计 */}
-                <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="ui-energy-scoreboard grid grid-cols-3 gap-3 mb-4">
                     {/* 星星 */}
                     <motion.div
                         className="ui-energy-stat bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center"

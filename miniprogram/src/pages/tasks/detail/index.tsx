@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react';
 import Taro, { useRouter } from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
 import Icon from '@/components/Icon';
-import { isGuestMode, getGuestData } from '@/lib/guestData';
+import { isGuestMode, getGuestData, updateGuestData } from '@/lib/guestData';
 import { resolveIconPath, resolveAvatarPath } from '@/lib/templates';
 import './index.scss';
 
@@ -220,6 +220,14 @@ export default function TaskDetail() {
                   success: async (res) => {
                     if (!res.confirm) return;
                     try {
+                      if (isGuestMode()) {
+                        updateGuestData((draft) => {
+                          draft.tasks = (draft.tasks || []).filter((item: any) => item.id !== taskId);
+                        });
+                        Taro.showToast({ title: '已删除（演示）', icon: 'success' });
+                        setTimeout(() => Taro.navigateBack(), 1000);
+                        return;
+                      }
                       await supabase.from('tasks').delete().eq('id', taskId);
                       Taro.showToast({ title: '已删除', icon: 'success' });
                       setTimeout(() => Taro.navigateBack(), 1000);

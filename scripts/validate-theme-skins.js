@@ -9,6 +9,7 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 
 const themeSkinPath = path.join(rootDir, 'src/lib/themeSkins.ts');
+const themeSkinTemplatePath = path.join(rootDir, 'src/lib/themeSkinTemplates.ts');
 const uiTokensPath = path.join(rootDir, 'src/lib/uiTokens.ts');
 
 const errors = [];
@@ -81,17 +82,37 @@ function assertSkinContract(skinId, skin) {
 
   assert(skin.accessibility?.minimumContrast === 'WCAG-AA', `${skinId} must require WCAG-AA contrast.`);
   assert(skin.accessibility?.reducedMotion === true, `${skinId} must support reduced motion.`);
+
+  assert(skin.template && typeof skin.template === 'object', `${skinId} must attach a template file definition.`);
+  assert(typeof skin.template?.id === 'string' && skin.template.id.length > 0, `${skinId} template must define an id.`);
+  assert(typeof skin.template?.dataThemeSkin === 'string' && skin.template.dataThemeSkin.length > 0, `${skinId} template must define dataThemeSkin.`);
+  assert(typeof skin.template?.visualLanguage === 'string' && skin.template.visualLanguage.length > 0, `${skinId} template must define visualLanguage.`);
+  for (const pageName of ['home', 'tasks', 'rewards', 'habits', 'profile']) {
+    assert(typeof skin.template?.pagePatterns?.[pageName] === 'string' && skin.template.pagePatterns[pageName].length > 0, `${skinId} template must describe ${pageName}.`);
+  }
+  for (const recipeName of ['appShell', 'topBar', 'bottomNav', 'energyCard', 'quickAction', 'taskCard', 'rewardPromo', 'rewardCard', 'habitCard', 'modal']) {
+    const recipe = skin.template?.componentRecipes?.[recipeName];
+    assert(recipe && typeof recipe === 'object', `${skinId} template must define ${recipeName} recipe.`);
+    assert(typeof recipe?.role === 'string' && recipe.role.length > 0, `${skinId} ${recipeName} recipe must define a role.`);
+    assert(Array.isArray(recipe?.hooks) && recipe.hooks.length > 0, `${skinId} ${recipeName} recipe must define CSS hooks.`);
+    assert(recipe?.behavior === 'preserve-existing-flow', `${skinId} ${recipeName} recipe must preserve existing flow.`);
+  }
 }
 
 async function loadThemeSkins() {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'theme-skins-'));
   const uiTokensModulePath = path.join(tempDir, 'uiTokens.mjs');
+  const themeSkinTemplatesModulePath = path.join(tempDir, 'themeSkinTemplates.mjs');
   const themeSkinsModulePath = path.join(tempDir, 'themeSkins.mjs');
 
   fs.writeFileSync(uiTokensModulePath, transpileTsFile(uiTokensPath));
+  fs.writeFileSync(themeSkinTemplatesModulePath, transpileTsFile(themeSkinTemplatePath));
   fs.writeFileSync(
     themeSkinsModulePath,
-    transpileTsFile(themeSkinPath, [["'./uiTokens'", "'./uiTokens.mjs'"]])
+    transpileTsFile(themeSkinPath, [
+      ["'./uiTokens'", "'./uiTokens.mjs'"],
+      ["'./themeSkinTemplates'", "'./themeSkinTemplates.mjs'"],
+    ])
   );
 
   return import(`file://${themeSkinsModulePath}`);
@@ -103,6 +124,10 @@ if (!fs.existsSync(themeSkinPath)) {
 
 if (!fs.existsSync(uiTokensPath)) {
   errors.push('Missing src/lib/uiTokens.ts.');
+}
+
+if (!fs.existsSync(themeSkinTemplatePath)) {
+  errors.push('Missing src/lib/themeSkinTemplates.ts.');
 }
 
 if (errors.length === 0) {

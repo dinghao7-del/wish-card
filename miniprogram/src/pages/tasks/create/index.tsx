@@ -6,6 +6,7 @@ import { View, Text, Input, Textarea, ScrollView } from '@tarojs/components';
 import { useState, useEffect } from 'react';
 import Taro, { useRouter } from '@tarojs/taro';
 import Icon from '@/components/Icon';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
 
 // ===== 安全的 renderToggle (纯内联style, v5验证通过) =====
@@ -28,13 +29,27 @@ const renderToggle = (checked: boolean, onToggle: () => void) => (
   </View>
 );
 
+const decodeParam = (value?: string | string[]) => decodeURIComponent(String(Array.isArray(value) ? value[0] : value || ''));
+const mapTemplateCategory = (value?: string | string[]) => {
+  const raw = decodeParam(value);
+  const map: Record<string, string> = {
+    study: '学习',
+    life: '生活',
+    hobby: '兴趣',
+    independent: '独立',
+    praise: '表扬',
+    critique: '批评',
+  };
+  return map[raw] || raw || '生活';
+};
+
 export default function CreateTask() {
   const router = useRouter();
   const isEdit = !!router.params.id;
   const isCustomMode = router.params.custom === '1';
-  // custom=1 时强制 habit 模式；否则从 URL 读取或默认 'target'
+  // custom=1 时尊重入口 mode；否则从 URL 读取或默认 'target'
   let initialMode: 'target' | 'habit' = (router.params.mode || 'target') as any;
-  if (isCustomMode) initialMode = 'habit';
+  if (isCustomMode && router.params.mode !== 'habit') initialMode = 'target';
 
   // 模式 — Web 第62行
   const [viewMode, setViewMode] = useState<string>(initialMode);
@@ -42,10 +57,10 @@ export default function CreateTask() {
   const [resetAfterClaim, setResetAfterClaim] = useState(true);
 
   // 表单数据 — Web 第93-107行
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState(() => decodeParam(router.params.title));
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('生活');
-  const [rewardStars, setRewardStars] = useState(5);
+  const [category, setCategory] = useState(() => mapTemplateCategory(router.params.category));
+  const [rewardStars, setRewardStars] = useState(() => Number(router.params.stars) || 5);
   const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'once'>('daily');
   const [targetCount, setTargetCount] = useState(10);
   const [selectedIcon, setSelectedIcon] = useState('Sparkles');
@@ -157,7 +172,7 @@ export default function CreateTask() {
   ];
 
   return (
-    <View className='create-page'>
+    <View className={`create-page ${getThemeClass()}`}>
       {/* ===== Header — 对齐Web 第367-425行 ===== */}
       <View className='cp-header'>
         <View className='cp-header-back' onClick={handleBack}>

@@ -4,6 +4,12 @@
  * AI 生成的亚洲风格卡通头像
  */
 
+import {
+  EXPANDED_REWARD_TEMPLATES,
+  EXPANDED_TASK_CATEGORIES,
+  EXPANDED_TASK_TEMPLATES,
+} from './expandedTemplates';
+
 // ========== 图标名称（对应 Lucide React 图标）==========
 
 export const TASK_ICONS = [
@@ -94,6 +100,9 @@ export interface RewardTemplate {
   cost: number;         // 星星花费（正数=奖励，负数=特权类）
   category: string;     // 所属分类
   icon: string;         // 本地图标路径
+  ageGroup?: string;    // 适用年龄段
+  tags?: string[];      // 检索标签
+  sourceHint?: string;  // 来源/设计依据
 }
 
 // ─── 分类1：常用（日常高频使用的心愿）──┐
@@ -179,6 +188,7 @@ export const REWARD_CATEGORIES = [
   { id: '特权',   label: '特权', templates: REWARD_PRIVILEGE },
   { id: '成长',   label: '成长', templates: REWARD_GROWTH },
   { id: '活动',   label: '活动', templates: REWARD_ACTIVITY },
+  { id: '星愿副本', label: '星愿副本', templates: EXPANDED_REWARD_TEMPLATES },
 ] as const;
 
 /** 全部心愿模板合并数组（方便遍历） */
@@ -189,6 +199,7 @@ export const ALL_REWARD_TEMPLATES: RewardTemplate[] = [
   ...REWARD_PRIVILEGE,
   ...REWARD_GROWTH,
   ...REWARD_ACTIVITY,
+  ...EXPANDED_REWARD_TEMPLATES,
 ];
 
 // ========== 任务模板库（Task Template Library / 选择模板）==========
@@ -204,6 +215,11 @@ export interface HabitTemplate {
   category: string;     // 所属分类
   stars: number;        // 星星值（正数=奖励，负数=扣分）
   icon: string;         // 本地图标路径
+  ageGroup?: string;    // 适用年龄段
+  frequency?: 'daily' | 'weekly';
+  tags?: string[];
+  sourceHint?: string;  // 来源/设计依据
+  iconKeyword?: string; // 未来批量生成图标时使用
 }
 
 // ─── 分类1：学习（学业相关习惯）──┐
@@ -328,6 +344,7 @@ export const TASK_CATEGORIES = [
   { id: '独立', label: '独立', templates: TASK_INDEPENDENT },
   { id: '表扬', label: '表扬', templates: TASK_PRAISE },
   { id: '批评', label: '批评', templates: TASK_CRITIQUE },
+  ...EXPANDED_TASK_CATEGORIES,
 ] as const;
 
 /** 全部任务模板合并数组（方便遍历搜索） */
@@ -338,4 +355,5 @@ export const ALL_TASK_TEMPLATES: HabitTemplate[] = [
   ...TASK_INDEPENDENT,
   ...TASK_PRAISE,
   ...TASK_CRITIQUE,
+  ...EXPANDED_TASK_TEMPLATES,
 ];

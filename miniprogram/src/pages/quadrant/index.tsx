@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import { supabase } from '@/utils/supabase';
 import Icon from '@/components/Icon';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
 
 // 对齐 Web 版 QuadrantAnalysisPage.tsx
@@ -66,7 +67,7 @@ export default function QuadrantPage() {
   };
 
   return (
-    <View className="qd-page">
+    <View className={`qd-page ${getThemeClass()}`}>
       {/* Header — 对齐Web版第108-161行 */}
       <View className="qd-header">
         <View className="qd-header-left">

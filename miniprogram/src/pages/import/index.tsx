@@ -13,6 +13,7 @@ import { View, Text } from '@tarojs/components';
 import { useState, useEffect } from 'react';
 import Taro, { useRouter } from '@tarojs/taro';
 import Icon from '@/components/Icon';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
 
 // 对齐Web第14行: 导入数据结构
@@ -78,7 +79,7 @@ export default function ImportPage() {
 
   // ===== 渲染 (对齐Web第50-142行) =====
   return (
-    <View className="import-page">
+    <View className={`import-page ${getThemeClass()}`}>
       {/* Loading状态 — 对齐Web第57-62行 */}
       {status === 'loading' && (
         <View className="import-card">

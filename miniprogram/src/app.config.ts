@@ -1,6 +1,8 @@
 export default defineAppConfig({
   // ========== 主包：核心页面（≤1.5MB）==========
   pages: [
+    // 启动页：先进入欢迎/登录页，再按本地游客或真实账号状态进入首页
+    'pages/login/index',
     // TabBar 主页面（必须在主包）
     'pages/home/index',
     'pages/tasks/index',
@@ -8,7 +10,6 @@ export default defineAppConfig({
     'pages/rewards/index',
     'pages/profile/index',
     // 核心流程页面
-    'pages/login/index',
     'pages/check-in/index',
     'pages/contact/index',
     'pages/forgot-password/index',
@@ -30,6 +31,9 @@ export default defineAppConfig({
     'pages/settings/feedback/index',
     'pages/settings/ai/index',
     'pages/feedback/index',
+    'pages/reports/index',
+    'pages/community/templates/index',
+    'pages/community/share-review/index',
     'pages/import/index',
     'pages/history/index',
     'pages/quadrant/index',
@@ -72,13 +76,15 @@ export default defineAppConfig({
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#006e1c',
-    navigationBarTitleText: 'Forest Family',
+    navigationBarTitleText: '星愿卡',
     navigationBarTextStyle: 'white',
     backgroundColor: '#fbf9f5',
+    navigationStyle: 'custom',
   },
 
   // ========== TabBar 配置 ==========
   tabBar: {
+    custom: true,
     color: '#3f4a3c',
     selectedColor: '#006e1c',
     backgroundColor: '#ffffff',

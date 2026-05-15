@@ -3,6 +3,7 @@ import { useState, useRef } from 'react';
 import Taro from '@tarojs/taro';
 import Icon from '@/components/Icon';
 import { MINI_UI_COLORS } from '@/utils/uiTokens';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
 
 /**
@@ -136,7 +137,7 @@ export default function ScheduleRecommend() {
   };
 
   return (
-    <View className="sr-page">
+    <View className={`sr-page ${getThemeClass()}`}>
       {/* ===== 进度条（始终显示）===== */}
       <View className="sr-progress-bar">
         {[0, 1, 2, 3, 4, 5].map((i) => (

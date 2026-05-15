@@ -14,6 +14,7 @@ import { buildPlanExecutionTaskBundle, findPlanExecutionConflicts } from '../lib
 type WizardStep = 'scene' | 'info' | 'schedule' | 'activities' | 'confirm';
 
 interface WizardForm {
+  sceneId: string;
   scene: PlanSceneType;
   name: string;
   startDate: string;
@@ -27,6 +28,19 @@ interface WizardForm {
 
 const DAYS_OF_WEEK = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
 const GRADES = ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级', '初一', '初二', '初三'];
+
+function findScene(sceneIdOrType: string | null) {
+  return PLAN_SCENES.find(scene => scene.id === sceneIdOrType)
+    || PLAN_SCENES.find(scene => scene.type === sceneIdOrType)
+    || PLAN_SCENES[0];
+}
+
+function getPlanTypeLabel(type: PlanSceneType, sceneName?: string) {
+  if (type === 'weekday') return sceneName || '平日计划';
+  if (type === 'holiday') return '假期计划';
+  if (type === 'exchange') return '留学交换';
+  return '自定义';
+}
 
 function getDefaultDateRange(type: PlanSceneType): { start: string; end: string } {
   const now = new Date();
@@ -58,16 +72,14 @@ export function PlanWizard() {
   const [conflictsConfirmed, setConflictsConfirmed] = useState(false);
 
   const children = members.filter(m => m.role === 'child');
-  const initialSceneParam = searchParams.get('scene') as PlanSceneType | null;
-  const initialScene = initialSceneParam && PLAN_SCENES.some(scene => scene.type === initialSceneParam)
-    ? initialSceneParam
-    : 'weekday';
-  const initialSceneTemplate = PLAN_SCENES.find(scene => scene.type === initialScene) || PLAN_SCENES[0];
+  const initialSceneTemplate = findScene(searchParams.get('scene'));
+  const initialScene = initialSceneTemplate.type;
   const initialName = searchParams.get('name') || initialSceneTemplate.name;
   const defaultRange = getDefaultDateRange(initialScene);
   const [step, setStep] = useState<WizardStep>(searchParams.has('scene') ? 'info' : 'scene');
 
   const [form, setForm] = useState<WizardForm>({
+    sceneId: initialSceneTemplate.id,
     scene: initialScene,
     name: initialName,
     startDate: defaultRange.start,
@@ -88,11 +100,13 @@ export function PlanWizard() {
           const storedDraft = JSON.parse(payload);
           const preview = buildCommunityTemplateReusePreview(storedDraft);
           const range = getDefaultDateRange(preview.scene);
+          const scene = findScene(preview.scene);
           if (!active) return;
           setReusePreview(preview);
           setReuseSourceId(storedDraft.id);
           setForm(prev => ({
             ...prev,
+            sceneId: scene.id,
             scene: preview.scene,
             name: preview.title,
             schedule: preview.schedule,
@@ -115,10 +129,12 @@ export function PlanWizard() {
 
       const preview = buildCommunityTemplateReusePreview(storedDraft);
       const range = getDefaultDateRange(preview.scene);
+      const scene = findScene(preview.scene);
       setReusePreview(preview);
       setReuseSourceId(storedDraft.id);
       setForm(prev => ({
         ...prev,
+        sceneId: scene.id,
         scene: preview.scene,
         name: preview.title,
         schedule: preview.schedule,
@@ -137,14 +153,14 @@ export function PlanWizard() {
     setForm(prev => ({ ...prev, ...partial }));
   };
 
+  const selectedScene = findScene(form.sceneId);
+
   const previewTaskBundle = useMemo(() => {
     if (!currentUser) return null;
     return buildPlanExecutionTaskBundle({
       planId: 'preview-plan',
       planName: form.name.trim() || '新计划',
-      planType: form.scene === 'weekday' ? '平日计划' :
-                form.scene === 'holiday' ? '假期计划' :
-                form.scene === 'exchange' ? '留学交换' : '自定义',
+      planType: getPlanTypeLabel(form.scene, selectedScene?.name),
       planKind: 'routine',
       creatorId: currentUser.id,
       familyId: familyId || undefined,
@@ -152,24 +168,24 @@ export function PlanWizard() {
       schedule: form.schedule,
       sceneType: form.scene,
     });
-  }, [currentUser, familyId, form.children, form.name, form.scene, form.schedule]);
+  }, [currentUser, familyId, form.children, form.name, form.scene, form.schedule, selectedScene?.name]);
 
   const executionConflicts = useMemo(() => {
     if (!previewTaskBundle) return [];
     return findPlanExecutionConflicts(previewTaskBundle.drafts, tasks);
   }, [previewTaskBundle, tasks]);
 
-  const handleSelectScene = (type: PlanSceneType) => {
-    const scene = PLAN_SCENES.find(s => s.type === type);
-    if (!scene) return;
-    const range = getDefaultDateRange(type);
+  const handleSelectScene = (sceneId: string) => {
+    const scene = findScene(sceneId);
+    const range = getDefaultDateRange(scene.type);
     updateForm({
-      scene: type,
+      sceneId: scene.id,
+      scene: scene.type,
       name: scene.name,
       schedule: scene.weekdaySchedule,
       startDate: range.start,
       endDate: range.end,
-      timezone: type === 'exchange' ? EXCHANGE_TIMEZONES[0] : null,
+      timezone: scene.type === 'exchange' ? EXCHANGE_TIMEZONES[0] : null,
     });
     setStep('info');
   };
@@ -190,9 +206,7 @@ export function PlanWizard() {
     }
     setLoading(true);
     const planName = form.name.trim();
-    const planType = form.scene === 'weekday' ? '平日计划' :
-                     form.scene === 'holiday' ? '假期计划' :
-                     form.scene === 'exchange' ? '留学交换' : '自定义';
+    const planType = getPlanTypeLabel(form.scene, selectedScene?.name);
 
     const metadata = {
       ...form.schedule,
@@ -320,8 +334,8 @@ export function PlanWizard() {
               <p className="text-sm font-bold text-on-surface-variant/50 mb-1">选择最适合你的计划类型</p>
               {PLAN_SCENES.map((scene) => (
                 <button
-                  key={scene.type}
-                  onClick={() => handleSelectScene(scene.type)}
+                  key={scene.id}
+                  onClick={() => handleSelectScene(scene.id)}
                   className="w-full text-left bg-white rounded-2xl p-4 shadow-sm border border-outline-variant/10 active:scale-[0.98] transition-all"
                 >
                   <div className="flex items-center gap-3">
@@ -639,7 +653,7 @@ export function PlanWizard() {
               <div className="bg-white rounded-2xl p-5 shadow-sm border border-outline-variant/10">
                 <h3 className="font-black text-sm text-on-surface mb-3">建议任务</h3>
                 <div className="flex flex-wrap gap-2">
-                  {(PLAN_SCENES.find(s => s.type === form.scene) as any)?.suggestedTasks?.map((task: string) => (
+                  {selectedScene?.suggestedTasks?.map((task: string) => (
                     <span key={task} className="px-3 py-1.5 rounded-full bg-primary-container/30 text-primary text-xs font-bold">
                       {task}
                     </span>
@@ -660,7 +674,7 @@ export function PlanWizard() {
                 <h2 className="text-2xl font-black mt-1">{form.name}</h2>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-[10px] font-bold bg-white/20 px-2 py-0.5 rounded-full">
-                    {PLAN_SCENES.find(s => s.type === form.scene)?.emoji} {PLAN_SCENES.find(s => s.type === form.scene)?.name}
+                    {selectedScene?.emoji} {selectedScene?.name}
                   </span>
                   {form.grade && (
                     <span className="text-[10px] font-bold bg-white/20 px-2 py-0.5 rounded-full">

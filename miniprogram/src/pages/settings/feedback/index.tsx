@@ -2,6 +2,7 @@ import { View, Text, Input, Textarea, ScrollView } from '@tarojs/components';
 import { useState } from 'react';
 import Taro from '@tarojs/taro';
 import Icon from '@/components/Icon';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
 
 export default function Feedback() {
@@ -52,7 +53,7 @@ export default function Feedback() {
 
   if (submitted) {
     return (
-      <View className="feedback-page">
+      <View className={`feedback-page ${getThemeClass()}`}>
         <View className="success-container">
           <Icon name="checkCircle" size={96} color="#006e1c" />
           <Text className="success-title">提交成功！</Text>
@@ -63,7 +64,7 @@ export default function Feedback() {
   }
 
   return (
-    <View className="feedback-page">
+    <View className={`feedback-page ${getThemeClass()}`}>
       <View className="fb-header">
         <Text className="fb-title">意见反馈</Text>
         <Text className="fb-desc">你的每一条反馈都能帮助我们做得更好</Text>

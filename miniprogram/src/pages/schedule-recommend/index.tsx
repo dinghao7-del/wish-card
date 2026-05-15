@@ -16,6 +16,7 @@ import { View, Text, Input, Textarea, ScrollView } from '@tarojs/components';
 import { useState } from 'react';
 import Taro from '@tarojs/taro';
 import Icon from '@/components/Icon';
+import { getThemeClass } from '@/lib/themeSkins';
 import {
   generateScheduleRecommendation,
   refineScheduleRecommendation,
@@ -25,6 +26,27 @@ import {
   type ScheduleRecommendation,
 } from '@/lib/scheduleRecommendAI';
 import './index.scss';
+
+interface SavedSchedulePlan {
+  id: string;
+  name: string;
+  type: string;
+  source: 'ai-schedule-recommend';
+  profile: ChildProfile;
+  result: ScheduleRecommendation;
+  schedule: {
+    wakeTime: string;
+    bedTime: string;
+    mealTimes: { breakfast: string; lunch: string; dinner: string };
+    slots: Array<{ label: string; startTime: string; endTime: string; description: string; icon: string }>;
+    weeklyActivities: Array<{ day: string; time: string; activity: string }>;
+    grade: string;
+    timezone: { label: string };
+  };
+  targetCount: number;
+  wishCount: number;
+  savedAt: string;
+}
 
 // ===== 常量（对齐Web第32-76行）=====
 const GRADE_OPTIONS = [
@@ -72,6 +94,78 @@ const CITY_OPTIONS = [
   '南京', '西安', '重庆', '长沙', '苏州', '天津', '郑州',
   '东莞', '青岛', '沈阳', '宁波', '昆明', '其他',
 ];
+
+const readJsonArray = <T,>(key: string): T[] => {
+  try {
+    const raw = Taro.getStorageSync(key);
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw as T[];
+    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const parseSlotTime = (timeText: string): { startTime: string; endTime: string } => {
+  const normalized = String(timeText || '').replace(/：/g, ':');
+  const match = normalized.match(/(\d{1,2}:\d{2})\s*[-~—–至到]\s*(\d{1,2}:\d{2})/);
+  if (match) return { startTime: match[1], endTime: match[2] };
+  const single = normalized.match(/(\d{1,2}:\d{2})/);
+  return { startTime: single?.[1] || '18:00', endTime: single?.[1] || '18:30' };
+};
+
+const findTimeByActivity = (slots: ScheduleRecommendation['weekdaySchedule'], keywords: string[], fallback: string) => {
+  const found = slots.find(slot => keywords.some(keyword => `${slot.activity}${slot.notes || ''}`.includes(keyword)));
+  return found ? parseSlotTime(found.time).startTime : fallback;
+};
+
+const buildSavedSchedulePlan = (
+  profile: ChildProfile,
+  result: ScheduleRecommendation,
+): SavedSchedulePlan => {
+  const planId = `ai-plan-${Date.now()}`;
+  const planName = `${profile.grade || '孩子'}智能日程方案`;
+  const slots = (result.weekdaySchedule || []).map(slot => {
+    const time = parseSlotTime(slot.time);
+    return {
+      label: slot.activity,
+      startTime: time.startTime,
+      endTime: time.endTime,
+      description: slot.notes || slot.duration || '',
+      icon: slot.icon || '⭐',
+    };
+  });
+  const weeklyActivities = (result.recommendedActivities || []).slice(0, 6).map((act, index) => ({
+    day: index < 3 ? '工作日' : '周末',
+    time: `${act.weeklyHours || 1}h/周`,
+    activity: act.name,
+  }));
+  return {
+    id: planId,
+    name: planName,
+    type: '智能日程推荐',
+    source: 'ai-schedule-recommend',
+    profile,
+    result,
+    schedule: {
+      wakeTime: findTimeByActivity(result.weekdaySchedule || [], ['起床', '洗漱'], '07:00'),
+      bedTime: findTimeByActivity(result.weekdaySchedule || [], ['睡觉', '睡眠', '入睡'], '21:00'),
+      mealTimes: {
+        breakfast: findTimeByActivity(result.weekdaySchedule || [], ['早餐'], '07:30'),
+        lunch: findTimeByActivity(result.weekdaySchedule || [], ['午餐', '午饭'], '12:00'),
+        dinner: findTimeByActivity(result.weekdaySchedule || [], ['晚餐', '晚饭'], '18:30'),
+      },
+      slots,
+      weeklyActivities,
+      grade: profile.grade,
+      timezone: { label: profile.city ? `${profile.city}本地时间` : '本地时间' },
+    },
+    targetCount: slots.length,
+    wishCount: Math.min(weeklyActivities.length, 3),
+    savedAt: new Date().toISOString(),
+  };
+};
 
 // ===== ChipSelect 子组件（对齐Web第80-139行）=====
 
@@ -185,6 +279,33 @@ export default function ScheduleRecommendPage() {
       setError(err.message || '修订失败，请重试');
     } finally {
       setIsRefining(false);
+    }
+  };
+
+  const handleSaveAsPlan = () => {
+    if (!result) return;
+    try {
+      const savedPlan = buildSavedSchedulePlan(profile, result);
+      const existing = readJsonArray<SavedSchedulePlan>('wishcard_saved_schedule_recommendations');
+      const next = [savedPlan, ...existing.filter(item => item.id !== savedPlan.id)].slice(0, 20);
+      Taro.setStorageSync('schedule_recommendation', JSON.stringify({
+        result,
+        profile,
+        savedAt: savedPlan.savedAt,
+        planId: savedPlan.id,
+      }));
+      Taro.setStorageSync('wishcard_saved_schedule_recommendations', JSON.stringify(next));
+      Taro.setStorageSync('wishcard_pending_ai_schedule_plan', JSON.stringify(savedPlan));
+      Taro.showToast({ title: '已生成计划详情', icon: 'success' });
+      const scheduleParam = encodeURIComponent(JSON.stringify(savedPlan.schedule));
+      setTimeout(() => {
+        Taro.navigateTo({
+          url: `/pages/plans/detail/index?id=${savedPlan.id}&name=${encodeURIComponent(savedPlan.name)}&type=${encodeURIComponent(savedPlan.type)}&schedule=${scheduleParam}`,
+        });
+      }, 450);
+    } catch (err) {
+      console.warn('[ScheduleRecommend] 保存计划失败:', err);
+      Taro.showToast({ title: '保存失败', icon: 'none' });
     }
   };
 
@@ -661,17 +782,7 @@ export default function ScheduleRecommendPage() {
 
         {/* 操作按钮 — 对齐Web第769-788行 */}
         <View className="sr-action-buttons">
-          <View className="sr-save-btn" onClick={() => {
-            try {
-              Taro.setStorageSync('schedule_recommendation', JSON.stringify({
-                result,
-                profile,
-                savedAt: new Date().toISOString(),
-              }));
-              Taro.showToast({ title: '方案已保存', icon: 'success' });
-              setTimeout(() => Taro.navigateTo({ url: '/pages/plans/index' }), 500);
-            } catch { Taro.showToast({ title: '保存失败', icon: 'none' }); }
-          }}>
+          <View className="sr-save-btn" onClick={handleSaveAsPlan}>
             <Icon name="save" size={20} color="#fff" />
             <Text className="sr-save-text">保存为计划</Text>
           </View>
@@ -797,7 +908,7 @@ export default function ScheduleRecommendPage() {
   // ==================== 主渲染（对齐Web第963-1098行）====================
 
   return (
-    <View className="sr-page">
+    <View className={`sr-page ${getThemeClass()}`}>
       {/* Header — 对齐Web第966-1021行 */}
       <View className="sr-header">
         <View className="sr-header-top">

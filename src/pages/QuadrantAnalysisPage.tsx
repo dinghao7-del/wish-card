@@ -108,7 +108,7 @@ export function QuadrantAnalysisPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background transition-colors duration-700">
+    <div className="ui-ai-subpage min-h-screen bg-background transition-colors duration-700">
       {/* Header */}
       <TopAppBar
         title="任务四象限看板"

@@ -125,10 +125,10 @@ export function SettingsSubPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface px-6 pb-24 animate-in fade-in slide-in-from-right-4 duration-500">
+    <div className="ui-profile-subpage min-h-screen bg-surface px-6 pb-24 animate-in fade-in slide-in-from-right-4 duration-500">
       <TopAppBar title={content.title} backTo="/profile" />
 
-      <div className="mt-8 flex flex-col items-center mb-10">
+      <div className="ui-profile-subpage-hero mt-8 flex flex-col items-center mb-10">
         <div className={cn(
           "w-20 h-20 rounded-[1.5rem] flex items-center justify-center shadow-sm",
           content.iconBg,
@@ -136,11 +136,11 @@ export function SettingsSubPage() {
         )}>
            <content.icon size={40} />
         </div>
-        <p className="text-on-surface-variant/60 text-sm font-bold mt-4 tracking-tight">{content.subHeadline}</p>
+        <p className="ui-profile-subpage-desc text-on-surface-variant/60 text-sm font-bold mt-4 tracking-tight">{content.subHeadline}</p>
       </div>
 
       <div className="space-y-4">
-        <div className="ui-panel bg-surface rounded-[2rem] shadow-sm border border-outline-variant/10 overflow-hidden">
+        <div className="ui-profile-settings-group ui-panel bg-surface rounded-[2rem] shadow-sm border border-outline-variant/10 overflow-hidden">
           {content.items.map((item: SettingsItem, idx) => {
             const isActiveSkin = item.skin?.id === activeSkinId;
             const isPlannedSkin = item.skin?.status === 'planned';
@@ -149,14 +149,14 @@ export function SettingsSubPage() {
                key={idx} 
                onClick={() => handleItemClick(item)}
                className={cn(
-                 "flex items-center justify-between p-6 border-b border-outline-variant/5 last:border-0 hover:bg-surface-container active:bg-surface-container-high transition-colors cursor-pointer group",
+                 "ui-profile-settings-row flex items-center justify-between p-6 border-b border-outline-variant/5 last:border-0 hover:bg-surface-container active:bg-surface-container-high transition-colors cursor-pointer group",
                  isActiveSkin && "bg-primary/5",
                  isPlannedSkin && "opacity-75"
                )}
             >
               <div className="flex flex-col">
-                <span className="font-black text-[15px] text-on-surface">{item.label}</span>
-                <span className="text-xs text-on-surface-variant/50 font-bold mt-1 uppercase tracking-wider">{item.desc}</span>
+                <span className="ui-profile-settings-label font-black text-[15px] text-on-surface">{item.label}</span>
+                <span className="ui-profile-settings-desc text-xs text-on-surface-variant/50 font-bold mt-1 uppercase tracking-wider">{item.desc}</span>
               </div>
               {item.isToggle ? (
                 <div className="w-12 h-7 bg-primary-surface rounded-full relative p-1 flex items-center justify-end shadow-inner">

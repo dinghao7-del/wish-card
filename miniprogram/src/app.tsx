@@ -8,11 +8,13 @@ import { Provider } from 'react-redux';
 import { configureStore } from './store';
 import { supabase } from './utils/supabase';
 import { isGuestMode } from './lib/guestData';
+import { hasLocalUser } from './utils/localUser';
 import PrivacyDialog from './components/privacy-dialog';
 import './app.scss';
 
 // 创建Redux store
 const store = configureStore();
+const SUPABASE_AUTH_STORAGE_KEY = 'sb-qdiuufuoleharmjfarzr-auth-token';
 
 function App({ children }) {
   const [launchOptions, setLaunchOptions] = useState<any>(null);
@@ -36,7 +38,22 @@ function App({ children }) {
     // 优先级：已登录 > 游客模式 > 跳转登录页
     (async () => {
       try {
-        // 1. 检查 Supabase session
+        // 1. 本地/游客数据优先，避免小程序调试环境被 Supabase Realtime 初始化拦住
+        if (hasLocalUser() || isGuestMode()) {
+          console.log('[App] 本地体验模式');
+          return;
+        }
+
+        const authToken = Taro.getStorageSync(SUPABASE_AUTH_STORAGE_KEY);
+        if (!authToken) {
+          console.log('[App] 无远程登录凭证，跳转登录页');
+          setTimeout(() => {
+            Taro.reLaunch({ url: '/pages/login/index' });
+          }, 100);
+          return;
+        }
+
+        // 2. 检查 Supabase session
         let user: any = null;
         try {
           const { data: { session } } = await supabase.client.auth.getSession();
@@ -48,17 +65,11 @@ function App({ children }) {
           return; // 已登录，留在当前页面
         }
 
-        // 2. 检查游客模式
-        if (isGuestMode()) {
-          console.log('[App] 游客模式');
-          return; // 游客模式，留在当前页面
-        }
-
         // 3. 未登录且非游客 → 跳转登录页
         console.log('[App] 未登录，跳转登录页');
         // 延迟一帧确保 tabBar 初始化完成
         setTimeout(() => {
-          Taro.redirectTo({ url: '/pages/login/index' });
+          Taro.reLaunch({ url: '/pages/login/index' });
         }, 100);
       } catch (e) {
         console.error('[App] 路由守卫错误:', e);

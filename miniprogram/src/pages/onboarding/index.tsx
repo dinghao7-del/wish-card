@@ -6,6 +6,7 @@ import { View, Text, ScrollView, Input, Slider, Picker, Textarea } from '@tarojs
 import { useState } from 'react';
 import Taro from '@tarojs/taro';
 import Icon from '@/components/Icon';
+import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
 
 /* ===== 类型定义 ===== */
@@ -104,6 +105,7 @@ var PRI_LIST = [
 ];
 
 export default function OnboardingPage() {
+  const themeClass = getThemeClass();
   const [step, setStep] = useState('welcome');
   const [ci, setCi] = useState(0);
   const [profile, setProfile] = useState({
@@ -358,7 +360,7 @@ export default function OnboardingPage() {
   // Welcome
   if (step === 'welcome') {
     return (
-      <View className="ob-page">
+      <View className={`ob-page ${themeClass}`}>
         <View className="ob-card">
           <View className="welcome-icon-wrap"><Icon name="sparkles" size={80} color="#006e1c"/></View>
           <Text className="ob-title">欢迎使用星愿卡</Text>
@@ -379,7 +381,7 @@ export default function OnboardingPage() {
       { id: 'single', label: '单亲家庭', desc: '一位家长带孩子' },
     ];
     return (
-      <View className="ob-page">
+      <View className={`ob-page ${themeClass}`}>
         <ObHeader onBack={goBack}/>
         <ScrollView scrollY enhanced className="ob-step-body">
           <Text className="ob-step-title">您的家庭类型是？</Text>
@@ -414,7 +416,7 @@ export default function OnboardingPage() {
   // Children Count
   if (step === 'children-count') {
     return (
-      <View className="ob-page"><ObHeader onBack={goBack}/>
+      <View className={`ob-page ${themeClass}`}><ObHeader onBack={goBack}/>
         <View style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 48 }}>
           <Text className="ob-step-title" style={{ padding: 0 }}>您有几个孩子？</Text>
           <View style={{ display: 'flex', alignItems: 'center', gap: 40, marginTop: 64 }}>
@@ -442,7 +444,7 @@ export default function OnboardingPage() {
       : ['👧', '👩', '👩‍🦰', '🐥', '📋', '🙋'];
 
     return (
-      <View className="ob-page"><ObHeader onBack={ci > 0 ? prevOrGoBack : goBack}/>
+      <View className={`ob-page ${themeClass}`}><ObHeader onBack={ci > 0 ? prevOrGoBack : goBack}/>
         <ScrollView scrollY enhanced className="ob-step-body">
           <Text className="ob-step-title">{ch.name ? ch.name + ' 的信息' : '孩子' + (ci + 1) + ' 的信息'}</Text>
           <View className="dots-row">{dots}</View>
@@ -523,7 +525,7 @@ export default function OnboardingPage() {
   if (step === 'daily-schedule') {
     var sch = profile.children[ci];
     return (
-      <View className="ob-page"><ObHeader onBack={goBack}/>
+      <View className={`ob-page ${themeClass}`}><ObHeader onBack={goBack}/>
         <ScrollView scrollY enhanced className="ob-step-body">
           <Text className="ob-step-title">{sch.name ? sch.name + ' 的作息时间' : '孩子' + (ci + 1) + ' 的作息时间'}</Text>
           <View className="dots-row">{profile.children.map(function(_, i) { return i; }).map(function(i) { return <View key={i} className={'dot ' + (i === ci ? 'active' : '')}/>; })}</View>
@@ -573,7 +575,7 @@ export default function OnboardingPage() {
     var allSelected = ac.afterSchoolActivities.concat(customActs);
 
     return (
-      <View className="ob-page"><ObHeader onBack={goBack}/>
+      <View className={`ob-page ${themeClass}`}><ObHeader onBack={goBack}/>
         <ScrollView scrollY enhanced className="ob-step-body">
           <Text className="ob-step-title">{ac.name ? ac.name + ' 的课外活动' : '课外活动选择'}</Text>
           <Text className="ob-step-hint">{ac.gender === 'boy' ? '👦 为男孩推荐' : '👧 为女孩推荐'} · 选择或输入正在参加的活动</Text>
@@ -675,7 +677,7 @@ export default function OnboardingPage() {
   // Holiday Schedule
   if (step === 'holiday-schedule') {
     return (
-      <View className="ob-page"><ObHeader onBack={goBack}/>
+      <View className={`ob-page ${themeClass}`}><ObHeader onBack={goBack}/>
         <ScrollView scrollY enhanced className="ob-step-body">
           <Text className="ob-step-title">您的孩子有假期作息变化吗？</Text>
           <Text className="ob-step-hint">寒暑假、小长假期间日程会不同</Text>
@@ -730,7 +732,7 @@ export default function OnboardingPage() {
   // Priorities
   if (step === 'priorities') {
     return (
-      <View className="ob-page"><ObHeader onBack={goBack}/>
+      <View className={`ob-page ${themeClass}`}><ObHeader onBack={goBack}/>
         <ScrollView scrollY enhanced className="ob-step-body">
           <Text className="ob-step-title">您最看重哪些方面？</Text>
           <Text className="ob-step-hint">选择2-3个优先级</Text>
@@ -778,7 +780,7 @@ export default function OnboardingPage() {
     var selTasks = taskItems.filter(function(t) { return sel.has(t.id); });
     var selHabits = habitItems.filter(function(t) { return sel.has(t.id); });
     return (
-      <View className="ob-page">
+      <View className={`ob-page ${themeClass}`}>
         <ObHeader onBack={goBackFromRec} right={<Text className="rec-header-count">已选 {selCount}/{recs.length}</Text>} />
         {/* 标题区 */}
         <View className="rec-title-block">
@@ -862,7 +864,7 @@ export default function OnboardingPage() {
     var famName = profile.children.map(function(c) { return c.name; }).join('、');
 
     return (
-      <View className="ob-page">
+      <View className={`ob-page ${themeClass}`}>
         <ObHeader onBack={backToRecs} right={<Text className="step-num">预览</Text>} />
         <ScrollView scrollY enhanced className="ob-step-body">
 

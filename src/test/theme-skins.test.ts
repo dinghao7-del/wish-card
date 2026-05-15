@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { describe, expect, it, beforeEach } from 'vitest';
 import {
   applyThemeSkin,
@@ -35,6 +37,7 @@ describe('theme skins', () => {
     expect(skin.assets.welcomeIllustration).toBe('/skins/forest-comic/welcome-comic.svg');
     expect(THEME_SKINS['forest-comic'].tokens.color.primary).toBe(UI_TOKENS.color.light.primary);
     expect(THEME_SKINS['forest-comic'].tokens.color.rewardDisplay).toBe(UI_TOKENS.color.semantic.rewardDisplay);
+    expect(THEME_SKINS['forest-comic'].template.id).toBe('forest-comic-base');
     expect(THEME_SKINS['forest-comic'].platformSupport).toEqual({
       web: true,
       miniProgram: true,
@@ -61,9 +64,14 @@ describe('theme skins', () => {
 
     expect(skin.status).toBe('active');
     expect(skin.name).toBe('电玩漫画风');
-    expect(skin.assets.welcomeIllustration).toBe('/skins/arcade-comic/welcome-comic.svg');
+    expect(skin.assets.welcomeIllustration).toBe('/skins/arcade-comic/welcome-comic-01.png');
     expect(skin.tokens.color.primary).toBe(UI_TOKENS.color.arcadeComic.primary);
     expect(skin.tokens.color.outlineVariant).toBe(UI_TOKENS.color.arcadeComic.outlineVariant);
+    expect(skin.tokens.darkColor?.background).toBe(UI_TOKENS.color.arcadeComicDark.background);
+    expect(skin.tokens.darkColor?.outlineVariant).toBe(UI_TOKENS.color.arcadeComicDark.outlineVariant);
+    expect(skin.template.id).toBe('arcade-comic');
+    expect(skin.template.componentRecipes.rewardCard.structure).toContain('Two-column product card');
+    expect(skin.template.componentRecipes.energyCard.hooks).toContain('ui-energy-scoreboard');
   });
 
   it('exposes all skins for settings while only saving active skins', () => {
