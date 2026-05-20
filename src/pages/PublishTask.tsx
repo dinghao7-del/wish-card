@@ -10,7 +10,6 @@ import {
   Clock,
   Calendar,
   ChevronRight,
-  HelpCircle,
   Check,
   Plus,
   Trash2,
@@ -25,7 +24,8 @@ import {
   Text as TextIcon,
   Heading2,
   Image as ImageIcon,
-  CheckCircle2
+  CheckCircle2,
+  Watch
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TopAppBar } from '../components/navigation/TopAppBar';
@@ -34,7 +34,16 @@ import { cn } from '../lib/utils';
 import { TextAvatar } from '../components/TextAvatar';
 import { TaskTemplateSelector } from '../components/TaskTemplateSelector';
 import { AppModal } from '../components/AppModal';
+import { OptionHelp } from '../components/OptionHelp';
 import { getRegisteredTaskIcon } from '../lib/lucideIconRegistry';
+import { normalizeTaskRewardStars, normalizeTemplateStars } from '../lib/starEconomy';
+import {
+  buildWatchVerificationTaskPatch,
+  getWatchVerificationOption,
+  inferWatchVerificationMode,
+  WATCH_VERIFICATION_OPTIONS,
+  type WatchVerificationMode,
+} from '../domain/watchClient';
 import {
   format,
   addMonths,
@@ -47,7 +56,7 @@ import {
   endOfWeek,
   isToday
 } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+import { enUS, zhCN } from 'date-fns/locale';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -58,7 +67,9 @@ export function PublishTask() {
   const searchParams = new URLSearchParams(location.search);
   const planIdFromQuery = searchParams.get('planId') || undefined;
   const { addTask, updateTask, members, currentUser, tasks, familyId, guestMode } = useFamily();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const _rawCategories: any = (t as any)('publish_task.categories', { returnObjects: true, defaultValue: ['劳动', '学习', '生活', '兴趣', '独立', '表扬', '批评'] });
+  const defaultCategories: string[] = Array.isArray(_rawCategories) ? _rawCategories : ['劳动', '学习', '生活', '兴趣', '独立', '表扬', '批评'];
 
   // Basic consistency checks to prevent crashes
   const safeMembers = Array.isArray(members) ? members : [];
@@ -73,6 +84,8 @@ export function PublishTask() {
   const [habitType, setHabitType] = useState<'reward' | 'penalty'>('reward');
   const [emoji, setEmoji] = useState('✨');
   const [resetAfterClaim, setResetAfterClaim] = useState(true);
+  const [watchVerificationMode, setWatchVerificationMode] = useState<WatchVerificationMode>('none');
+  const [watchTargetCount, setWatchTargetCount] = useState(100);
 
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -85,8 +98,8 @@ export function PublishTask() {
   const [showDescInput, setShowDescInput] = useState(false);
 
   // Tag Management State
-  const [pickerCategories, setPickerCategories] = useState(['劳动', '学习', '生活', '兴趣', '独立', '表扬', '批评']);
-  const [tempCategory, setTempCategory] = useState('生活');
+  const [pickerCategories, setPickerCategories] = useState(defaultCategories);
+  const [tempCategory, setTempCategory] = useState(defaultCategories[2] || '生活');
   const [newTagName, setNewTagName] = useState('');
   const [isAddingTag, setIsAddingTag] = useState(false);
 
@@ -94,6 +107,7 @@ export function PublishTask() {
   const [selectedHour, setSelectedHour] = useState(8);
   const [selectedMinute, setSelectedMinute] = useState(0);
   const [durationIdx, setDurationIdx] = useState(1); // Default 1 hour
+  const [durationMinutes, setDurationMinutes] = useState(60);
   const [isReminderOn, setIsReminderOn] = useState(true);
   const [isRepeatEnabled, setIsRepeatEnabled] = useState(true);
   const [isTimeEnabled, setIsTimeEnabled] = useState(true);
@@ -103,7 +117,7 @@ export function PublishTask() {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [planList, setPlanList] = useState<Array<{ id: string; name: string; type: string }>>([]);
 
-  const _rawDurations: any = (t as any)('publish_task.durations', ['30分钟', '1小时', '2小时', '3小时', '4小时', '5小时', '6小时']);
+  const _rawDurations: any = (t as any)('publish_task.durations', { returnObjects: true, defaultValue: ['30分钟', '1小时', '2小时', '3小时', '4小时', '5小时', '6小时'] });
   const durations: string[] = Array.isArray(_rawDurations) ? _rawDurations : ['30分钟', '1小时', '2小时', '3小时', '4小时', '5小时', '6小时'];
   const durationValues = [30, 60, 120, 180, 240, 300, 360];
 
@@ -111,7 +125,7 @@ export function PublishTask() {
     title: '',
     description: '',
     planId: planIdFromQuery,
-    type: '生活',
+    type: defaultCategories[2] || '生活',
     rewardStars: 5,
     assigneeIds: [],
     startTime: new Date().toISOString(),
@@ -164,6 +178,9 @@ export function PublishTask() {
         setHabitType((taskToEdit.rewardStars || 0) < 0 ? 'penalty' : 'reward');
       }
       if (taskToEdit.description) setShowDescInput(true);
+      const mode = inferWatchVerificationMode(taskToEdit);
+      setWatchVerificationMode(mode);
+      setWatchTargetCount(taskToEdit.targetCount || getWatchVerificationOption(mode).defaultTargetCount || 100);
 
       // Initialize toggles from existing task
       setIsRepeatEnabled(taskToEdit.frequency !== 'once');
@@ -210,8 +227,8 @@ export function PublishTask() {
         const safeTemplate = {
           title: String(templateData.title || ''),
           description: String(templateData.description || ''),
-          stars: Number(templateData.stars ?? 5),
-          category: String(templateData.category || '生活'),
+          stars: normalizeTemplateStars(Number(templateData.stars ?? 5), String(templateData.category || (defaultCategories[2] || '生活'))),
+          category: String(templateData.category || (defaultCategories[2] || '生活')),
           frequency: templateData.frequency || (mode === 'habit' ? 'daily' : 'once'),
           icon: typeof templateData.icon === 'string' ? templateData.icon : 'ListTodo',
         };
@@ -270,20 +287,31 @@ export function PublishTask() {
     setIsSaving(true);
     try {
       // Force rewardStars to be negative if it's a penalty habit
-      let finalStars = formData.rewardStars || 0;
+      let finalStars = normalizeTaskRewardStars(formData.rewardStars || 0, {
+        category: formData.type,
+      });
       if (viewMode === 'habit') {
-        finalStars = habitType === 'reward' ? Math.abs(finalStars) : -Math.abs(finalStars);
+        finalStars = habitType === 'reward'
+          ? normalizeTaskRewardStars(Math.abs(finalStars), { category: formData.type })
+          : normalizeTaskRewardStars(-Math.abs(finalStars), { category: formData.type });
       }
 
       // Finalizing form data based on toggles
+      const watchPatch = buildWatchVerificationTaskPatch({
+        mode: viewMode === 'target' ? watchVerificationMode : 'none',
+        description: formData.description || '',
+        fallbackType: formData.type || (defaultCategories[2] || '生活'),
+        targetCount: watchTargetCount,
+      });
       const finalFormData: Partial<Task> = {
         ...formData,
+        ...(viewMode === 'target' ? watchPatch : {}),
         frequency: isRepeatEnabled ? (formData.frequency === 'once' ? 'daily' : formData.frequency) : 'once',
         reminderTime: isTimeEnabled ? formData.reminderTime : undefined,
         rewardStars: finalStars,
         status: 'pending',
         isHabit: viewMode === 'habit',
-        currentCount: formData.currentCount || 0
+        currentCount: viewMode === 'target' ? watchPatch.currentCount : formData.currentCount || 0
       };
 
       if (isEdit && taskToEdit) {
@@ -334,7 +362,10 @@ export function PublishTask() {
     setFormData(prev => ({
       ...prev,
       title: template.title || '',
-      rewardStars: typeof template.stars === 'number' ? template.stars : 5,
+      rewardStars: normalizeTemplateStars(
+        typeof template.stars === 'number' ? template.stars : 5,
+        template.category || formData.type,
+      ),
       icon: iconName
     }));
     setShowTemplateSelector(false);
@@ -347,6 +378,27 @@ export function PublishTask() {
     return <ListTodo size={size} className={className} />;
   };
 
+  const selectedWatchOption = getWatchVerificationOption(watchVerificationMode);
+  const showWatchTargetInput = watchVerificationMode === 'steps' || watchVerificationMode === 'active_minutes' || watchVerificationMode === 'motion_count';
+  const watchTargetUnit = watchVerificationMode === 'steps'
+    ? t('publish_task.watch_steps_unit', { defaultValue: '步' })
+    : watchVerificationMode === 'active_minutes'
+      ? t('publish_task.watch_minutes_unit', { defaultValue: '分钟' })
+      : t('publish_task.watch_times_unit', { defaultValue: '次' });
+  const getWatchOptionText = (mode: WatchVerificationMode, field: 'short' | 'desc', fallback: string) =>
+    t(`publish_task.watch_options.${mode}.${field}`, { defaultValue: fallback });
+  const getCategoryDisplayName = (category: string | undefined) => {
+    const zhCategories = ['劳动', '学习', '生活', '兴趣', '独立', '表扬', '批评'];
+    const index = category ? zhCategories.indexOf(category) : -1;
+    return index >= 0 ? (defaultCategories[index] || category) : (category || defaultCategories[2] || '生活');
+  };
+
+  const handleWatchModeChange = (mode: WatchVerificationMode) => {
+    const option = getWatchVerificationOption(mode);
+    setWatchVerificationMode(mode);
+    if (option.defaultTargetCount) setWatchTargetCount(option.defaultTargetCount);
+  };
+
   const renderSwitch = (checked: boolean, onToggle: () => void, label: string) => (
     <button
       type="button"
@@ -355,22 +407,19 @@ export function PublishTask() {
       aria-label={label}
       onClick={onToggle}
       className={cn(
-        "relative flex h-11 min-h-11 w-16 min-w-16 items-center rounded-full p-2 transition-colors shadow-inner focus:outline-none focus:ring-2 focus:ring-primary/25",
-        checked ? "bg-primary" : "bg-surface-container"
+        "ui-standard-switch relative inline-flex h-6 min-h-6 w-11 min-w-11 shrink-0 items-center overflow-hidden rounded-full p-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/25",
+        checked ? "bg-primary" : "bg-surface-container-highest"
       )}
     >
       <span
-        className={cn(
-          "h-7 w-7 rounded-full bg-white shadow-sm transition-transform",
-          checked ? "translate-x-5" : "translate-x-0"
-        )}
+        className="ui-standard-switch-thumb pointer-events-none h-5 w-5 rounded-full bg-white shadow-sm"
       />
     </button>
   );
 
-  const _rawDayNames: any = (t as any)('publish_task.weekday_labels', ['周一', '周二', '周三', '周四', '周五', '周六', '周日']);
+  const _rawDayNames: any = (t as any)('publish_task.weekday_labels', { returnObjects: true, defaultValue: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'] });
   const dayNames: string[] = Array.isArray(_rawDayNames) ? _rawDayNames : ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-  const _rawWeekHeaders: any = (t as any)('publish_task.week_headers', ['一', '二', '三', '四', '五', '六', '日']);
+  const _rawWeekHeaders: any = (t as any)('publish_task.week_headers', { returnObjects: true, defaultValue: ['一', '二', '三', '四', '五', '六', '日'] });
   const weekHeaders: string[] = Array.isArray(_rawWeekHeaders) ? _rawWeekHeaders : ['一', '二', '三', '四', '五', '六', '日'];
   const dayValues = [1, 2, 3, 4, 5, 6, 0];
 
@@ -405,7 +454,7 @@ export function PublishTask() {
   const getTimeLabel = () => {
     try {
       const start = `${(selectedHour || 0).toString().padStart(2, '0')}:${(selectedMinute || 0).toString().padStart(2, '0')}`;
-      const duration = durationValues[durationIdx] || 60;
+      const duration = Math.max(5, durationMinutes || durationValues[durationIdx] || 60);
       const totalMinutes = (selectedHour || 0) * 60 + (selectedMinute || 0) + duration;
       const endHour = Math.floor(totalMinutes / 60) % 24;
       const endMinute = totalMinutes % 60;
@@ -440,7 +489,7 @@ export function PublishTask() {
                 viewMode === 'target' ? "bg-white text-on-surface shadow-sm" : "text-on-surface-variant/40"
               )}
             >
-              {t('publish_task.create_target', '创建目标')}
+              {t('publish_task.task_tab', '任务')}
             </button>
             <div className="w-[1px] h-3 bg-outline-variant/20 mx-0.5" />
             <button
@@ -451,14 +500,14 @@ export function PublishTask() {
                 viewMode === 'habit' ? "bg-white text-on-surface shadow-sm" : "text-on-surface-variant/40"
               )}
             >
-              {t('publish_task.create_habit', '好习惯')}
+              {t('publish_task.habit_tab', '习惯')}
             </button>
           </div>
         ) : (
           <h1 className="text-lg font-black text-on-surface">
             {isEdit
-              ? (viewMode === 'target' ? t('publish_task.edit_target', '编辑目标') : t('publish_task.edit_habit', '编辑好习惯'))
-              : (viewMode === 'target' ? t('publish_task.create_target', '创建目标') : t('publish_task.create_habit', '好习惯'))
+              ? (viewMode === 'target' ? t('publish_task.edit_task', '编辑任务') : t('publish_task.edit_habit', '编辑习惯'))
+              : (viewMode === 'target' ? t('publish_task.create_task', '创建任务') : t('publish_task.create_habit', '创建习惯'))
             }
           </h1>
         )}
@@ -484,7 +533,7 @@ export function PublishTask() {
             <div className="ui-create-card bg-white rounded-[2rem] p-4 sm:p-5 shadow-sm border border-outline-variant/5">
               <div className="flex flex-col gap-0.5 mb-2">
                 <label className="text-[10px] font-black text-on-surface-variant/30 pl-1 uppercase tracking-widest">
-                  {t('publish_task.title_label', '请输入 {{mode}} 名称', { mode: viewMode === 'target' ? '目标' : '习惯' })}
+                  {t('publish_task.title_label', { defaultValue: '请输入 {{mode}} 名称', mode: viewMode === 'target' ? t('publish_task.mode_task', { defaultValue: '任务' }) : t('publish_task.mode_habit', { defaultValue: '习惯' }) })}
                 </label>
                 <div className="flex items-center">
                   <input
@@ -517,12 +566,12 @@ export function PublishTask() {
                 <button
                   type="button"
                   onClick={() => {
-                    setTempCategory(formData.type || '生活');
+                    setTempCategory(formData.type || (defaultCategories[2] || '生活'));
                     setShowCategoryModal(true);
                   }}
                   className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1 bg-surface-container-low rounded-full border border-outline-variant/5 hover:bg-surface-container transition-colors"
                 >
-                   <span className="text-sm font-bold text-on-surface-variant">{formData.type}</span>
+                   <span className="text-sm font-bold text-on-surface-variant">{getCategoryDisplayName(formData.type)}</span>
                    <ChevronRight size={14} className="flex-shrink-0 text-on-surface-variant/30" />
                 </button>
               </div>
@@ -549,10 +598,13 @@ export function PublishTask() {
                     )}>
                       <Plus size={20} className={cn("transition-transform duration-300", isRepeatEnabled ? "rotate-45" : "rotate-0")} />
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="font-black text-base sm:text-lg text-on-surface">{t('publish_task.repeat', '重复')}</span>
-                      {renderSwitch(isRepeatEnabled, () => setIsRepeatEnabled(!isRepeatEnabled), t('publish_task.repeat', '重复'))}
-                    </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-black text-base sm:text-lg text-on-surface">{t('publish_task.repeat', '重复')}</span>
+                    <OptionHelp title={t('publish_task.repeat_help_title', { defaultValue: '重复是什么意思' })}>
+                      {t('publish_task.repeat_help_body', { defaultValue: '重复用于每天、每周或每月都会出现的安排。比如“每天阅读 20 分钟”适合开启重复；“今天交手工作业”就可以关闭重复。' })}
+                    </OptionHelp>
+                    {renderSwitch(isRepeatEnabled, () => setIsRepeatEnabled(!isRepeatEnabled), t('publish_task.repeat', '重复'))}
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -578,6 +630,9 @@ export function PublishTask() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="font-black text-base sm:text-lg text-on-surface">{t('publish_task.time_slot', '时段')}</span>
+                    <OptionHelp title={t('publish_task.time_help_title', { defaultValue: '时段怎么用' })}>
+                      {t('publish_task.time_help_body', { defaultValue: '时段表示希望孩子在什么时间做这件事。可以选，也可以直接输入小时和分钟。以后 AI 排日程时会优先避开课外班、睡觉和家长工作时间。' })}
+                    </OptionHelp>
                     {renderSwitch(isTimeEnabled, () => setIsTimeEnabled(!isTimeEnabled), t('publish_task.time_slot', '时段'))}
                   </div>
                 </div>
@@ -605,7 +660,9 @@ export function PublishTask() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="font-black text-base sm:text-lg text-on-surface">{t('publish_task.plan', '计划')}</span>
-                    <HelpCircle size={14} className="text-on-surface-variant/20" />
+                    <OptionHelp title={t('publish_task.plan_help_title', { defaultValue: '计划有什么用' })}>
+                      {t('publish_task.plan_help_body', { defaultValue: '如果这件事属于某个长期安排，比如“钢琴考级”“暑假计划”，可以挂到对应计划里。这样复盘时能看到这个计划推进了多少，而不是只看到零散任务。' })}
+                    </OptionHelp>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 bg-surface-container-low/80 py-1.5 px-3 rounded-xl border border-outline-variant/5 shadow-sm active:scale-95 transition-all">
@@ -623,6 +680,75 @@ export function PublishTask() {
                     <ChevronRight size={14} className="text-on-surface-variant/20 ml-1" />
                 </div>
               </div>
+            </div>
+
+            {/* Xiaotiancai Watch Verification */}
+            <div className="ui-create-card bg-white rounded-[2rem] p-4 sm:p-5 shadow-sm border border-outline-variant/5">
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className={cn(
+                    "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0",
+                    watchVerificationMode === 'none' ? "bg-surface-container-low text-on-surface-variant/35" : "bg-primary/10 text-primary"
+                  )}>
+                    <Watch size={20} />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-black text-base sm:text-lg text-on-surface">{t('publish_task.watch_verification', { defaultValue: '手表验证方式' })}</h3>
+                    <div className="mt-1">
+                      <OptionHelp title={t('publish_task.watch_verification_help_title', { defaultValue: '手表验证方式' })}>
+                        {t('publish_task.watch_verification_help_body', { defaultValue: '这是给儿童手表使用的辅助验证。比如运动任务可以用步数或运动时长作参考，照片任务可以上传成果证明；最终是否通过仍由家长确认。' })}
+                      </OptionHelp>
+                    </div>
+                    <p className="text-xs font-bold text-on-surface-variant/45 leading-relaxed mt-1">
+                      {getWatchOptionText(watchVerificationMode, 'desc', selectedWatchOption.description)}
+                    </p>
+                  </div>
+                </div>
+                {watchVerificationMode !== 'none' && (
+                  <span className="rounded-full bg-primary/10 text-primary px-3 py-1 text-[10px] font-black shrink-0">
+                    {t('publish_task.xiaotiancai', { defaultValue: '小天才' })}
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                {WATCH_VERIFICATION_OPTIONS.map(option => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => handleWatchModeChange(option.id)}
+                    className={cn(
+                      "min-h-11 rounded-2xl px-2 py-2 text-xs font-black transition-all border",
+                      watchVerificationMode === option.id
+                        ? "bg-primary text-white border-primary shadow-md shadow-primary/15"
+                        : "bg-surface-container-low text-on-surface-variant/55 border-outline-variant/5"
+                    )}
+                  >
+                    {getWatchOptionText(option.id, 'short', option.shortLabel)}
+                  </button>
+                ))}
+              </div>
+
+              {showWatchTargetInput && (
+                <div className="mt-4 rounded-2xl bg-surface-container-low/60 border border-outline-variant/5 px-4 py-3 flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-black text-on-surface">{t('publish_task.target_value', { defaultValue: '目标数值' })}</p>
+                    <p className="text-[11px] font-bold text-on-surface-variant/40 mt-0.5">
+                      {t('publish_task.watch_result_hint', { defaultValue: '手表只提交汇总结果，家长最终确认' })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <input
+                      type="number"
+                      min={1}
+                      value={watchTargetCount}
+                      onChange={event => setWatchTargetCount(Math.max(1, parseInt(event.target.value) || 1))}
+                      className="h-11 w-20 rounded-xl border border-outline-variant/10 bg-white text-center text-base font-black text-on-surface focus:ring-2 focus:ring-primary/20"
+                    />
+                    <span className="text-xs font-black text-on-surface-variant/50 min-w-8">{watchTargetUnit}</span>
+                  </div>
+                </div>
+              )}
             </div>
           </>
         ) : (
@@ -704,7 +830,10 @@ export function PublishTask() {
               <div className="flex-1">
                 <div className="flex items-center gap-1">
                    <span className="text-red-500 text-sm">*</span>
-                   <span className="text-sm font-bold text-on-surface-variant/40">{t('publish_task.stars', '星星')}</span>
+                    <span className="text-sm font-bold text-on-surface-variant/40">{t('publish_task.stars', '星星')}</span>
+                    <OptionHelp title={t('publish_task.stars_help_title', { defaultValue: '星星怎么定' })}>
+                      {t('publish_task.stars_help_body', { defaultValue: '高频习惯建议少一点：生活习惯 1-2 星，学习和运动 3-5 星。不要把每天都会做的小事设太高，否则积分会很快膨胀。' })}
+                    </OptionHelp>
                 </div>
                 <input
                   required
@@ -724,6 +853,9 @@ export function PublishTask() {
                 <div className="flex items-center gap-1">
                    <span className="text-red-500 text-sm">*</span>
                    <span className="text-sm font-bold text-on-surface-variant/40">{t('publish_task.count_limit', '次数限制')}</span>
+                   <OptionHelp title={t('publish_task.count_limit_help_title', { defaultValue: '次数限制是什么意思' })}>
+                     {t('publish_task.count_limit_help_body', { defaultValue: '表示孩子需要累计几次后才算达成一轮习惯。比如“连续阅读 7 天”可以填 7；普通每天打卡一次的习惯可以填 1。' })}
+                   </OptionHelp>
                 </div>
                 <input
                   required
@@ -776,7 +908,7 @@ export function PublishTask() {
                   <div className="w-12 h-12 rounded-full bg-surface-container-low border-2 border-dashed border-outline-variant/20 flex items-center justify-center text-on-surface-variant/40">
                     <Plus size={20} />
                   </div>
-                  <span className="text-[10px] font-bold text-on-surface-variant">添加</span>
+                  <span className="text-[10px] font-bold text-on-surface-variant">{t('publish_task.add_member', { defaultValue: '添加' })}</span>
                 </button>
               </div>
             </div>
@@ -789,9 +921,11 @@ export function PublishTask() {
                   <div className="flex items-center gap-1">
                     <span className="text-red-500 text-sm">*</span>
                     <span className="text-sm font-bold text-on-surface-variant/40">{t('publish_task.type', '类型')}</span>
+                    <OptionHelp title={t('publish_task.type_help_title', { defaultValue: '奖励和惩罚怎么选' })}>
+                      {t('publish_task.type_help_body', { defaultValue: '奖励适合鼓励孩子主动完成好习惯；惩罚只适合明确需要纠正的行为，并且扣分不要太高，避免孩子觉得系统是在惩罚他。' })}
+                    </OptionHelp>
                   </div>
                 </div>
-                <HelpCircle size={18} className="text-on-surface-variant/20" />
               </div>
               <div className="flex p-1 bg-surface-container-low rounded-xl">
                  <button
@@ -838,6 +972,9 @@ export function PublishTask() {
           <div className="bg-white rounded-[2rem] p-4 sm:p-5 shadow-sm space-y-4 border border-outline-variant/5">
              <div className="flex items-center justify-between">
                 <label className="text-sm sm:text-base font-black text-on-surface">{t('publish_task.star_reward', '星星积分奖励')}</label>
+                <OptionHelp title={t('publish_task.task_reward_help_title', { defaultValue: '任务奖励怎么定' })}>
+                  {t('publish_task.task_reward_help_body', { defaultValue: '普通日常任务建议 1-3 星，比较费力的学习或运动任务建议 3-5 星，阶段性成果可以更高。系统保存时会限制过高数值，避免积分膨胀。' })}
+                </OptionHelp>
                 <div className="flex items-center bg-surface-container-low/50 p-1 px-3 rounded-full border border-outline-variant/5">
                    <button
                      type="button"
@@ -941,7 +1078,7 @@ export function PublishTask() {
           <button
             type="submit"
             disabled={isSaving}
-            className="ui-create-submit w-full min-h-14 bg-primary text-white font-black text-base sm:text-lg rounded-2xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-all relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+            className="ui-create-submit w-full min-h-11 bg-primary text-white font-black text-base rounded-2xl shadow-md shadow-primary/15 active:scale-[0.98] transition-all relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-40 pointer-events-none" />
             {!isSaving && !isEdit && <Plus size={20} strokeWidth={3} className="inline-block mr-2 align-[-3px]" />}
@@ -985,7 +1122,7 @@ export function PublishTask() {
                   type="button"
                   onClick={() => setTempCategory(cat)}
                   className={cn(
-                    "w-full py-4 rounded-2xl text-lg font-bold transition-all text-center",
+                    "w-full py-2.5 rounded-xl text-base font-bold transition-all text-center",
                     tempCategory === cat ? "bg-surface-container text-on-surface" : "text-on-surface-variant/20 hover:text-on-surface-variant"
                   )}
                 >
@@ -1029,6 +1166,40 @@ export function PublishTask() {
                 </button>
             }
           >
+              <div className="mb-5 grid grid-cols-3 gap-3">
+                <label className="rounded-2xl bg-surface-container-low p-3">
+                  <span className="block text-[10px] font-black text-on-surface-variant/45">{t('publish_task.start_hour', { defaultValue: '开始小时' })}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={23}
+                    value={selectedHour}
+                    onChange={(event) => setSelectedHour(Math.min(23, Math.max(0, parseInt(event.target.value) || 0)))}
+                    className="mt-1 h-10 w-full rounded-xl border-none bg-white text-center text-lg font-black focus:ring-2 focus:ring-primary/20"
+                  />
+                </label>
+                <label className="rounded-2xl bg-surface-container-low p-3">
+                  <span className="block text-[10px] font-black text-on-surface-variant/45">{t('publish_task.start_minute', { defaultValue: '开始分钟' })}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={59}
+                    value={selectedMinute}
+                    onChange={(event) => setSelectedMinute(Math.min(59, Math.max(0, parseInt(event.target.value) || 0)))}
+                    className="mt-1 h-10 w-full rounded-xl border-none bg-white text-center text-lg font-black focus:ring-2 focus:ring-primary/20"
+                  />
+                </label>
+                <label className="rounded-2xl bg-surface-container-low p-3">
+                  <span className="block text-[10px] font-black text-on-surface-variant/45">{t('publish_task.duration_minutes', { defaultValue: '持续分钟' })}</span>
+                  <input
+                    type="number"
+                    min={5}
+                    value={durationMinutes}
+                    onChange={(event) => setDurationMinutes(Math.max(5, parseInt(event.target.value) || 5))}
+                    className="mt-1 h-10 w-full rounded-xl border-none bg-white text-center text-lg font-black focus:ring-2 focus:ring-primary/20"
+                  />
+                </label>
+              </div>
               <div className="relative flex justify-between h-48 mb-6">
                 {/* Column Selection Highlights */}
                 <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 h-12 bg-surface-container-low rounded-2xl z-0 pointer-events-none" />
@@ -1070,7 +1241,10 @@ export function PublishTask() {
                   {durations.map((d, i) => (
                     <button
                       key={d}
-                      onClick={() => setDurationIdx(i)}
+                      onClick={() => {
+                        setDurationIdx(i);
+                        setDurationMinutes(durationValues[i] || 60);
+                      }}
                       className={cn(
                         "w-full h-12 flex items-center justify-center snap-center text-sm font-bold transition-all",
                         durationIdx === i ? "text-on-surface scale-110" : "text-on-surface-variant/20 scale-90"
@@ -1163,7 +1337,7 @@ export function PublishTask() {
                     />
                     <button
                       onClick={handleAddTag}
-                      className="px-6 py-3 bg-primary text-on-primary rounded-xl font-black text-sm shadow-sm"
+                      className="px-6 py-3 bg-primary text-white rounded-xl font-black text-sm shadow-sm"
                     >
                       {t('publish_task.add_tag', '添加')}
                     </button>
@@ -1304,7 +1478,7 @@ export function PublishTask() {
                          <ChevronLeft size={24} />
                       </button>
                       <h2 className="text-xl font-black text-on-surface">
-                         {format(calendarViewDate, 'yyyy年MM月', { locale: zhCN })}
+                         {format(calendarViewDate, i18n.language?.startsWith('en') ? 'MMM yyyy' : 'yyyy年MM月', { locale: i18n.language?.startsWith('en') ? enUS : zhCN })}
                       </h2>
                       <button onClick={() => setCalendarViewDate(addMonths(calendarViewDate, 1))} className="p-2 text-on-surface-variant">
                          <ChevronRight size={24} />
@@ -1312,7 +1486,7 @@ export function PublishTask() {
                    </div>
 
                    <div className="grid grid-cols-7 text-center mb-2">
-                      {['一', '二', '三', '四', '五', '六', '日'].map((d, i) => (
+                      {weekHeaders.map((d, i) => (
                         <span key={d} className="text-sm font-bold text-on-surface-variant/40">{t('publish_task.week_prefix', '周')}{weekHeaders[i]}</span>
                       ))}
                    </div>

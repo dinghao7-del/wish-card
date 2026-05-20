@@ -27,7 +27,7 @@ const resources = {
         'energy_title': '今日成长能量',
         'energy_subtitle': '加油！离下一个愿望更近了 🌱',
         'actions': {
-          'create_task': '创建目标',
+          'create_task': '创建任务',
           'make_wish': '许下心愿',
           'view_calendar': '查看日历',
           'pomodoro': '番茄时钟'

@@ -1,4 +1,7 @@
+import { useTranslation } from 'react-i18next';
+
 function LoadingScreen() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen flex items-center justify-center bg-forest-bg">
       <div className="text-center">
@@ -11,7 +14,7 @@ function LoadingScreen() {
           <div className="w-2 h-2 bg-forest-primary rounded-full animate-bounce delay-100" />
           <div className="w-2 h-2 bg-forest-primary rounded-full animate-bounce delay-200" />
         </div>
-        <p className="text-gray-600 mt-4">加载中...</p>
+        <p className="text-gray-600 mt-4">{t('loading.loading')}</p>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import type { HabitTemplate, RewardTemplate } from './templates';
+import { normalizeTemplateStars } from './starEconomy';
 
 const ICONS = {
   question: '/task-icons/praise/Cute_flat_kawaii_icon_of_raisi_2026-04-27T20-15-34.png',
@@ -154,7 +155,7 @@ function buildTask(seed: ExpandedTaskSeed, index: number): HabitTemplate {
     title: seed.title,
     description: seed.description,
     category: seed.category,
-    stars: seed.stars,
+    stars: normalizeTemplateStars(seed.stars, seed.category),
     icon: ICONS[seed.icon],
     ageGroup: seed.ageGroup,
     frequency: seed.frequency ?? 'daily',

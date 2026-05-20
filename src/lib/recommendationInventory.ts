@@ -162,7 +162,7 @@ const SEED_COMMERCIAL_RESOURCES: CommercialResourceItem[] = [
     effortLevelTags: ['balanced', 'easy'],
     priorityBoost: 22,
     actionLabel: '查看假期安排',
-    destination: '/school-calendar',
+    destination: '/plans/smart-recommend',
     sellingPoint: '适合在放假前，把营地、出行和课外班顺延一起规划。',
   },
   {
@@ -197,7 +197,7 @@ const SEED_COMMERCIAL_RESOURCES: CommercialResourceItem[] = [
     effortLevelTags: ['balanced', 'hands_on'],
     priorityBoost: 15,
     actionLabel: '查看亲子安排',
-    destination: '/school-calendar',
+    destination: '/plans/smart-recommend',
     sellingPoint: '适合孩子用积分兑换周末出游后，提醒父母兑现承诺。',
   },
   {
@@ -217,7 +217,7 @@ const SEED_COMMERCIAL_RESOURCES: CommercialResourceItem[] = [
     effortLevelTags: ['balanced'],
     priorityBoost: 19,
     actionLabel: '查看科学玩安排',
-    destination: '/school-calendar',
+    destination: '/plans/smart-recommend',
     sellingPoint: '适合预算不高、半天陪伴，把纯玩变成有探索感的科学体验。',
   },
   {
@@ -237,7 +237,7 @@ const SEED_COMMERCIAL_RESOURCES: CommercialResourceItem[] = [
     effortLevelTags: ['easy'],
     priorityBoost: 20,
     actionLabel: '查看度假安排',
-    destination: '/school-calendar',
+    destination: '/plans/smart-recommend',
     sellingPoint: '适合家长陪伴时间有限、预算较高、希望省心省力的大玩安排。',
   },
   {
@@ -252,7 +252,7 @@ const SEED_COMMERCIAL_RESOURCES: CommercialResourceItem[] = [
     categoryTags: ['medical', 'health', 'care'],
     priorityBoost: 10,
     actionLabel: '查看就医清单',
-    destination: '/school-calendar',
+    destination: '/plans/smart-recommend',
     sellingPoint: '适合把挂号、请假、复诊和护理事项整理成家庭日程。',
   },
 ];

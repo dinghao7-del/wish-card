@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Shield, Bell, Settings, ChevronRight, Smartphone, Mail, Globe, Palette, CheckCircle2, Clock3 } from 'lucide-react';
+import { Shield, Bell, Settings, ChevronRight, Smartphone, Palette, CheckCircle2, Clock3, Headset, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
@@ -18,6 +18,43 @@ type SettingsItem = {
   skin?: ThemeSkin;
 };
 
+type NotificationSettingId = 'reminders' | 'points' | 'announcements';
+
+const NOTIFICATION_SETTINGS_KEY = 'wishcard_notification_settings';
+const DEFAULT_NOTIFICATION_SETTINGS: Record<NotificationSettingId, boolean> = {
+  reminders: true,
+  points: true,
+  announcements: true,
+};
+
+function readLocalStorage(key: string): string | null {
+  try {
+    return typeof window !== 'undefined' && window.localStorage ? window.localStorage.getItem(key) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalStorage(key: string, value: string) {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(key, value);
+    }
+  } catch {
+    // Some embedded browsers disable localStorage. The React state still keeps the setting for this session.
+  }
+}
+
+function loadNotificationSettings(): Record<NotificationSettingId, boolean> {
+  try {
+    const raw = readLocalStorage(NOTIFICATION_SETTINGS_KEY);
+    if (!raw) return DEFAULT_NOTIFICATION_SETTINGS;
+    return { ...DEFAULT_NOTIFICATION_SETTINGS, ...JSON.parse(raw) };
+  } catch {
+    return DEFAULT_NOTIFICATION_SETTINGS;
+  }
+}
+
 export function SettingsSubPage() {
   const navigate = useNavigate();
   const { type } = useParams();
@@ -29,6 +66,7 @@ export function SettingsSubPage() {
   const [codeSent, setCodeSent] = React.useState(false);
   const [codeCountdown, setCodeCountdown] = React.useState(0);
   const [activeSkinId, setActiveSkinId] = React.useState(() => getActiveThemeSkin().id);
+  const [notificationSettings, setNotificationSettings] = React.useState(loadNotificationSettings);
 
   const getContent = () => {
     switch (type) {
@@ -60,15 +98,15 @@ export function SettingsSubPage() {
         };
       case 'appearance':
         return {
-          title: '主题皮肤',
+          title: t('settings.appearance.title', { defaultValue: '主题皮肤' }),
           icon: Palette,
           iconBg: 'bg-primary-container',
           iconColor: 'text-primary-text',
-          subHeadline: '选择星愿卡的视觉风格',
+          subHeadline: t('settings.appearance.subtitle', { defaultValue: '选择星愿卡的视觉风格' }),
           items: getSelectableThemeSkins().map(skin => ({
             id: `skin:${skin.id}`,
-            label: skin.name,
-            desc: skin.description,
+            label: t(`settings.appearance.skins.${skin.id}.name`, { defaultValue: skin.name }),
+            desc: t(`settings.appearance.skins.${skin.id}.description`, { defaultValue: skin.description }),
             skin,
           })),
         };
@@ -83,7 +121,7 @@ export function SettingsSubPage() {
           items: [
             { id: 'language', label: t('settings.language', { defaultValue: '语言' }), desc: getLanguageName(i18n.language) },
             { id: 'cache', label: t('settings.cache', { defaultValue: '清除缓存' }), desc: '24.5 MB' },
-            { id: 'about', label: t('settings.about', { defaultValue: '关于' }), desc: t('settings.basic.version', { version: '1.2.0' }) }
+            { id: 'about', label: t('settings.about', { defaultValue: '关于' }), desc: t('settings.basic.about_desc', { defaultValue: '版本 {{version}} · 隐私与注销说明', version: '1.2.0' }) }
           ]
         };
     }
@@ -102,18 +140,60 @@ export function SettingsSubPage() {
   }
 
   const content = getContent();
+  const legalLinks = [
+    {
+      icon: Shield,
+      label: t('settings.legal.privacy', { defaultValue: '隐私政策' }),
+      desc: t('settings.legal.privacy_desc', { defaultValue: '查看个人信息保护与儿童隐私说明' }),
+      href: '/legal/privacy.html',
+    },
+    {
+      icon: Headset,
+      label: t('settings.legal.deletion', { defaultValue: '账号注销说明' }),
+      desc: t('settings.legal.deletion_desc', { defaultValue: '了解注销、删除数据与客服处理方式' }),
+      href: '/legal/account-deletion.html',
+    },
+  ];
+
+  const handleNotificationToggle = async (id: NotificationSettingId) => {
+    const nextValue = !notificationSettings[id];
+
+    if (nextValue && id === 'reminders' && 'Notification' in window && Notification.permission === 'default') {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        showToastGlobal(t('settings.notifications.permission_denied', { defaultValue: '请在系统里允许通知后再开启提醒' }), 'warning');
+        return;
+      }
+    }
+
+    const next = { ...notificationSettings, [id]: nextValue };
+    setNotificationSettings(next);
+    writeLocalStorage(NOTIFICATION_SETTINGS_KEY, JSON.stringify(next));
+    showToastGlobal(
+      nextValue
+        ? t('settings.notifications.enabled_toast', { defaultValue: '已开启提醒' })
+        : t('settings.notifications.disabled_toast', { defaultValue: '已关闭提醒' }),
+      'success'
+    );
+  };
 
   const handleItemClick = (item: any) => {
-    if (item.isToggle) return;
+    if (item.isToggle) {
+      handleNotificationToggle(item.id as NotificationSettingId);
+      return;
+    }
     if (item.skin) {
       if (item.skin.status !== 'active') {
-        showToastGlobal('这套皮肤还在打磨中，暂时不能切换', 'info');
+        showToastGlobal(t('settings.appearance.unavailable_toast', { defaultValue: '这套皮肤还在打磨中，暂时不能切换' }), 'info');
         return;
       }
 
       const selectedSkin = saveActiveThemeSkin(item.skin.id);
       setActiveSkinId(selectedSkin.id);
-      showToastGlobal(`已使用${selectedSkin.name}`, 'success');
+      showToastGlobal(t('settings.appearance.selected_toast', {
+        defaultValue: '已使用{{name}}',
+        name: t(`settings.appearance.skins.${selectedSkin.id}.name`, { defaultValue: selectedSkin.name }),
+      }), 'success');
       return;
     }
     setActiveItem(item);
@@ -159,16 +239,33 @@ export function SettingsSubPage() {
                 <span className="ui-profile-settings-desc text-xs text-on-surface-variant/50 font-bold mt-1 uppercase tracking-wider">{item.desc}</span>
               </div>
               {item.isToggle ? (
-                <div className="w-12 h-7 bg-primary-surface rounded-full relative p-1 flex items-center justify-end shadow-inner">
-                  <div className="w-5 h-5 bg-white rounded-full shadow-md"></div>
-                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={notificationSettings[item.id as NotificationSettingId]}
+                  aria-label={item.label}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleNotificationToggle(item.id as NotificationSettingId);
+                  }}
+                  className={cn(
+                    "ui-standard-switch relative inline-flex h-6 min-h-6 w-11 min-w-11 shrink-0 items-center overflow-hidden rounded-full p-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/25",
+                    notificationSettings[item.id as NotificationSettingId] ? "bg-primary" : "bg-surface-container-highest"
+                  )}
+                >
+                  <span className="ui-standard-switch-thumb pointer-events-none h-5 w-5 rounded-full bg-white shadow-sm" />
+                </button>
               ) : item.skin ? (
                 <div className={cn(
                   "ml-4 shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black",
                   isActiveSkin ? "bg-primary text-white" : "bg-surface-container-high text-on-surface-variant"
                 )}>
                   {isActiveSkin ? <CheckCircle2 size={13} /> : <Clock3 size={13} />}
-                  {isActiveSkin ? '已启用' : isPlannedSkin ? '规划中' : '可用'}
+                  {isActiveSkin
+                    ? t('settings.appearance.enabled', { defaultValue: '已启用' })
+                    : isPlannedSkin
+                      ? t('settings.appearance.planned', { defaultValue: '规划中' })
+                      : t('settings.appearance.available', { defaultValue: '可用' })}
                 </div>
               ) : (
                 <ChevronRight size={18} className="text-on-surface-variant/20 group-hover:text-on-surface transition-colors" />
@@ -287,6 +384,37 @@ export function SettingsSubPage() {
                     </div>
                   )}
 
+                  {activeItem.id === 'about' && (
+                    <div className="space-y-3">
+                      <div className="rounded-2xl bg-surface-container-low p-4">
+                        <p className="text-base font-black text-on-surface">{t('welcome.title', { defaultValue: '星愿卡' })}</p>
+                        <p className="mt-1 text-xs font-bold text-on-surface-variant/60">{t('settings.basic.version', { defaultValue: '版本 {{version}}', version: '1.2.0' })}</p>
+                      </div>
+                      {legalLinks.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <button
+                            key={item.href}
+                            type="button"
+                            onClick={() => window.open(item.href, '_blank')}
+                            className="w-full rounded-2xl bg-surface-container-low p-4 text-left flex items-center justify-between gap-4 active:scale-[0.99] transition-transform"
+                          >
+                            <span className="flex min-w-0 items-center gap-3">
+                              <span className="w-11 h-11 rounded-2xl bg-white/70 flex items-center justify-center text-primary shrink-0">
+                                <Icon size={21} strokeWidth={2.5} />
+                              </span>
+                              <span className="min-w-0">
+                                <span className="block text-sm font-black text-on-surface">{item.label}</span>
+                                <span className="mt-1 block text-xs font-bold text-on-surface-variant/55 leading-relaxed">{item.desc}</span>
+                              </span>
+                            </span>
+                            <ExternalLink size={17} className="text-on-surface-variant/35 shrink-0" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
                  {activeItem.id === 'devices' && (
                    <div className="divide-y divide-outline-variant/10 bg-surface-container-low/50 rounded-2xl overflow-hidden">
                       <div className="p-4 flex items-center justify-between">
@@ -306,11 +434,19 @@ export function SettingsSubPage() {
                                <p className="text-[10px] text-on-surface-variant font-black uppercase">{t('settings.security.active_time', { time: '2h' })}</p>
                             </div>
                          </div>
-                         <button onClick={async () => { if (await showConfirm({ message: '确定要退出该设备吗？' })) { showToastGlobal('已退出该设备', 'success'); setActiveItem(null); } }} className="text-red-500 font-bold text-xs hover:bg-red-50 px-3 py-1 rounded-lg transition-colors">{t('settings.security.logout_device', { defaultValue: 'logout device' })}</button>
+                         <button onClick={async () => { if (await showConfirm({ message: t('settings.security.logout_device_confirm', { defaultValue: '确定要退出该设备吗？' }) })) { showToastGlobal(t('settings.security.logout_device_done', { defaultValue: '已退出该设备' }), 'success'); setActiveItem(null); } }} className="text-red-500 font-bold text-xs hover:bg-red-50 px-3 py-1 rounded-lg transition-colors">{t('settings.security.logout_device', { defaultValue: 'logout device' })}</button>
                       </div>
                    </div>
                  )}
                 
+                {activeItem.id === 'about' ? (
+                  <button
+                    onClick={() => setActiveItem(null)}
+                    className="w-full py-4 bg-on-surface text-white rounded-2xl font-black shadow-lg shadow-on-surface/20 active:scale-95 transition-transform"
+                  >
+                    {t('common.close', { defaultValue: '关闭' })}
+                  </button>
+                ) : (
                 <div className="flex gap-4 pt-4">
                   <button 
                     onClick={() => setActiveItem(null)}
@@ -325,6 +461,7 @@ export function SettingsSubPage() {
                      {t('common.save', { defaultValue: '保存' })}
                   </button>
                 </div>
+                )}
               </div>
             </motion.div>
           </>

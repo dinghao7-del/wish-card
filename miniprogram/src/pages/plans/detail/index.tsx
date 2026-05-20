@@ -65,8 +65,8 @@ export default function PlanDetail() {
       const savedPlans = typeof raw === 'string' ? JSON.parse(raw || '[]') : raw;
       const savedPlan = Array.isArray(savedPlans) ? savedPlans.find((item: any) => item.id === id) : null;
       if (savedPlan) {
-        setPlanName(savedPlan.name || decodeURIComponent(nameParam || '智能日程方案'));
-        setPlanType(savedPlan.type || decodeURIComponent(typeParam || '智能日程推荐'));
+        setPlanName(savedPlan.name || decodeURIComponent(nameParam || '智能日程优化方案'));
+        setPlanType(savedPlan.type || decodeURIComponent(typeParam || '智能日程优化'));
         if (savedPlan.schedule) {
           setSchedule(savedPlan.schedule);
           setWeeklyActivities(savedPlan.schedule.weeklyActivities || []);

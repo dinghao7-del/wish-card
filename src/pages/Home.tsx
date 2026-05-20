@@ -12,7 +12,7 @@ import { TextAvatar } from '../components/TextAvatar';
 import { EnergyCard } from '../components/EnergyCard';
 import { EmptyState } from '../components/EmptyState';
 import { getActiveThemeSkin } from '../lib/themeSkins';
-import { getCreationTemplateRoute } from '../lib/createFlowRoutes';
+import { getCustomCreationRoute } from '../lib/createFlowRoutes';
 
 function AnimatedNumber({ value }: { value: number }) {
   // Simply display the formatted number - animation is handled by parent's motion.div
@@ -53,8 +53,8 @@ export function Home() {
     .reduce((acc, curr) => acc + curr.stars, 0);
 
   return (
-    <div className="px-4 sm:px-6 pb-8 space-y-4 sm:space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-background/50 min-h-screen">
-      <header className="ui-home-header flex justify-between items-center py-4 sticky top-[var(--app-sticky-top,0px)] bg-background/80 backdrop-blur-xl z-40 -mx-4 sm:-mx-6 px-4 sm:px-6">
+    <div className="ui-home-page px-4 sm:px-6 pb-8 space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-background/50 min-h-screen">
+      <header className="ui-home-header flex justify-between items-center py-2.5 sm:py-3 sticky top-[var(--app-sticky-top,0px)] bg-background/80 backdrop-blur-xl z-40 -mx-4 sm:-mx-6 px-4 sm:px-6">
         <div className="flex items-center gap-3">
           <div
             className="flex items-center gap-2 sm:gap-3 cursor-pointer group"
@@ -112,16 +112,16 @@ export function Home() {
       </section>
 
       {/* Quick Actions */}
-      <section className="-mx-4 overflow-x-auto px-4 no-scrollbar sm:mx-0 sm:px-0">
-        <div className="grid auto-cols-[4.75rem] grid-flow-col gap-2.5 sm:grid-flow-row sm:grid-cols-5">
+      <section className="ui-home-quick-section -mx-4 overflow-x-auto px-4 no-scrollbar sm:mx-0 sm:px-0">
+        <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
           <QuickActionButton
             icon={PlusCircle}
             label={t('home.actions.create_task', { defaultValue: '创建任务' })}
-            onClick={() => navigate(getCreationTemplateRoute('task'))}
+            onClick={() => navigate(getCustomCreationRoute('task'))}
           />
           <QuickActionButton
             icon={Brain}
-            label={t('home.actions.ai_analysis', { defaultValue: 'AI分析' })}
+            label={t('home.actions.ai_analysis', { defaultValue: '家庭管家' })}
             highlight
             onClick={() => navigate('/ai-analysis')}
           />
@@ -144,9 +144,9 @@ export function Home() {
       </section>
 
       {/* Today's Tasks */}
-      <section className="space-y-4 sm:space-y-5">
+      <section className="space-y-2.5 sm:space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="font-black text-xl sm:text-2xl flex items-center gap-2 sm:gap-2.5 text-on-surface">
+          <h3 className="font-black text-lg sm:text-xl flex items-center gap-2 text-on-surface">
             {t('home.today_tasks', { defaultValue: '今日任务' })}
             <span className="ui-count-badge bg-secondary-container text-secondary text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-black">
               {todayTasks.length}
@@ -155,7 +155,7 @@ export function Home() {
           <button onClick={() => navigate('/tasks')} className="text-primary-text text-xs sm:text-sm font-black">{t('common.view_all', { defaultValue: 'view all' })}</button>
         </div>
 
-        <div className="space-y-4 sm:space-y-5">
+        <div className="space-y-2.5 sm:space-y-3">
           {todayTasks.length > 0 ? todayTasks.map((task, idx) => (
             <TaskCard
               key={task.id}
@@ -168,8 +168,8 @@ export function Home() {
           )) : (
             <EmptyState
               scenario="empty_state"
-              onAction={() => navigate(getCreationTemplateRoute('task'))}
-              actionText="创建第一个任务"
+              onAction={() => navigate(getCustomCreationRoute('task'))}
+              actionText={t('home.actions.create_task', { defaultValue: '创建任务' })}
             />
           )}
         </div>
@@ -256,15 +256,15 @@ function QuickActionButton({ icon: Icon, label, onClick, highlight = false }: { 
   return (
     <button
       onClick={onClick}
-      className="ui-quick-action aspect-square min-h-0 rounded-2xl bg-surface-container-low p-2.5 flex flex-col items-center justify-center gap-1.5 active:scale-95 transition-all group"
+      className="ui-quick-action h-[4.05rem] min-h-0 rounded-[1.15rem] bg-surface-container-low px-1.5 py-1.5 flex flex-col items-center justify-center gap-1 active:scale-95 transition-all group"
     >
       <div className={cn(
-        "w-12 h-12 min-w-12 min-h-12 rounded-full flex items-center justify-center transition-colors",
+        "ui-quick-action-icon w-9 h-9 min-w-9 min-h-9 rounded-full flex items-center justify-center transition-colors",
         highlight ? "bg-primary text-white group-hover:bg-primary-container" : "bg-surface-container text-on-surface-variant group-hover:bg-surface-container-high"
       )}>
         <Icon size={20} />
       </div>
-      <span className="text-center text-[10px] font-bold text-on-surface-variant leading-tight">{label}</span>
+      <span className="ui-quick-action-label text-center text-[10px] font-bold text-on-surface-variant leading-[1.05]">{label}</span>
     </button>
   );
 }

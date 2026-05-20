@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, GraduationCap, HeartPulse, Lock, Map, ShieldCheck, Sparkles, type LucideIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { TopAppBar } from '../components/navigation/TopAppBar';
 import { showToastGlobal } from '../components/Toast';
 import { useFamily } from '../context/FamilyContext';
@@ -17,41 +18,29 @@ import { getRecommendationEventCounts, getRecommendationEventTypeCounts, removeA
 import { buildDefaultRecommendationCandidates, buildRecommendationGateway } from '../lib/recommendationGateway';
 import { syncRecommendationPrivacyData } from '../lib/recommendationSync';
 
-const CONSENT_ITEMS: Array<{
+const CONSENT_ITEM_META: Array<{
   id: RecommendationCategory;
-  title: string;
-  desc: string;
   icon: LucideIcon;
 }> = [
   {
     id: 'education',
-    title: '教育产品与活动',
-    desc: '课程、训练营、学习工具、亲子活动',
     icon: GraduationCap,
   },
   {
     id: 'travel',
-    title: '假期旅行与营地',
-    desc: '寒暑假路线、亲子游、冬夏令营',
     icon: Map,
   },
   {
     id: 'healthcare',
-    title: '健康与就医建议',
-    desc: '儿童健康提醒、就医路径、护理安排',
     icon: HeartPulse,
   },
 ];
 
-const EVENT_TYPE_LABELS: Record<RecommendationEventType, string> = {
-  impression: '展示',
-  click: '点击',
-  dismiss: '关闭',
-  conversion: '转化',
-};
-
 export function RecommendationConsent() {
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
+  const isZh = (i18n.language || '').toLowerCase().startsWith('zh');
+  const tt = (zh: string, en: string) => (isZh ? zh : en);
   const { currentUser, familyId, syncStatus } = useFamily();
   const [consent, setConsent] = useState<RecommendationConsentState>(DEFAULT_RECOMMENDATION_CONSENT);
   const [eventCounts, setEventCounts] = useState<Record<RecommendationCategory, number>>({
@@ -68,6 +57,25 @@ export function RecommendationConsent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [cloudSyncMessage, setCloudSyncMessage] = useState('');
+  const consentItems = useMemo(() => CONSENT_ITEM_META.map(item => ({
+    ...item,
+    title: item.id === 'education'
+      ? tt('教育产品与活动', 'Education Products & Activities')
+      : item.id === 'travel'
+        ? tt('假期旅行与营地', 'Holiday Travel & Camps')
+        : tt('健康与就医建议', 'Health & Care Suggestions'),
+    desc: item.id === 'education'
+      ? tt('课程、训练营、学习工具、亲子活动', 'Courses, camps, learning tools, and family activities')
+      : item.id === 'travel'
+        ? tt('寒暑假路线、亲子游、冬夏令营', 'Holiday routes, family trips, winter and summer camps')
+        : tt('儿童健康提醒、就医路径、护理安排', 'Child health reminders, care paths, and family care planning'),
+  })), [isZh]);
+  const eventTypeLabels: Record<RecommendationEventType, string> = {
+    impression: tt('展示', 'Shown'),
+    click: tt('点击', 'Clicked'),
+    dismiss: tt('关闭', 'Dismissed'),
+    conversion: tt('转化', 'Converted'),
+  };
 
   useEffect(() => {
     let active = true;
@@ -121,15 +129,15 @@ export function RecommendationConsent() {
       if (familyId && syncStatus.isOnline) {
         try {
           const result = await syncRecommendationPrivacyData(familyId, next, currentUser?.id);
-          setCloudSyncMessage(`已同步 ${result.consentRows} 项授权设置和 ${result.eventRows} 条推荐记录`);
-          showToastGlobal('推荐授权已保存并同步', 'success');
+          setCloudSyncMessage(tt(`已同步 ${result.consentRows} 项授权设置和 ${result.eventRows} 条推荐记录`, `Synced ${result.consentRows} permission settings and ${result.eventRows} recommendation records.`));
+          showToastGlobal(tt('推荐授权已保存并同步', 'Recommendation settings saved and synced.'), 'success');
         } catch {
-          setCloudSyncMessage('已本机保存，云端同步稍后重试');
-          showToastGlobal('推荐授权已本机保存', 'success');
+          setCloudSyncMessage(tt('已本机保存，云端同步稍后重试', 'Saved on this device. Cloud sync will retry later.'));
+          showToastGlobal(tt('推荐授权已本机保存', 'Recommendation settings saved on this device.'), 'success');
         }
       } else {
-        setCloudSyncMessage('已本机保存，联网后可同步');
-        showToastGlobal('推荐授权已本机保存', 'success');
+        setCloudSyncMessage(tt('已本机保存，联网后可同步', 'Saved on this device. It can sync after reconnecting.'));
+        showToastGlobal(tt('推荐授权已本机保存', 'Recommendation settings saved on this device.'), 'success');
       }
     } finally {
       setSaving(false);
@@ -149,7 +157,7 @@ export function RecommendationConsent() {
       dismiss: 0,
       conversion: 0,
     });
-    showToastGlobal(removedCount > 0 ? '推荐记录已清理' : '暂无推荐记录', 'success');
+    showToastGlobal(removedCount > 0 ? tt('推荐记录已清理', 'Recommendation records cleared.') : tt('暂无推荐记录', 'No recommendation records yet.'), 'success');
   };
 
   if (loading) {
@@ -162,7 +170,7 @@ export function RecommendationConsent() {
 
   return (
     <div className="min-h-screen bg-surface-container-low pb-28">
-      <TopAppBar title="推荐授权" onBack={() => { navigate('/profile'); }} />
+      <TopAppBar title={tt('推荐授权', 'Recommendation Settings')} onBack={() => { navigate('/profile'); }} />
 
       <div className="p-4 space-y-4">
         <div className="bg-surface rounded-2xl p-5 shadow-sm border border-outline-variant/10">
@@ -171,21 +179,21 @@ export function RecommendationConsent() {
               <ShieldCheck size={20} />
             </div>
             <div>
-              <h2 className="text-base font-black text-on-surface">由你决定是否开启个性化推荐</h2>
+              <h2 className="text-base font-black text-on-surface">{tt('由你决定是否开启个性化推荐', 'You control personalized recommendations')}</h2>
               <p className="text-xs font-bold text-on-surface-variant/60 mt-1 leading-relaxed">
-                这些开关只影响未来的教育、旅行、健康推荐，不影响基础日程、任务、积分功能。
+                {tt('这些开关只影响未来的教育、旅行、健康推荐，不影响基础日程、任务、积分功能。', 'These settings only affect future education, travel, and health recommendations. Core schedules, tasks, and points are not affected.')}
               </p>
             </div>
           </div>
           <div className="rounded-2xl bg-surface-container-low p-3 mt-4">
-            <span className="text-[10px] font-black text-on-surface-variant/40 block">已开启</span>
-            <span className="text-xl font-black text-on-surface">{enabledCount} / {CONSENT_ITEMS.length}</span>
+            <span className="text-[10px] font-black text-on-surface-variant/40 block">{tt('已开启', 'Enabled')}</span>
+            <span className="text-xl font-black text-on-surface">{enabledCount} / {CONSENT_ITEM_META.length}</span>
           </div>
           {transparencySummary.enabledCategories.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
               {transparencySummary.enabledCategories.map(category => (
                 <span key={category} className="rounded-full bg-primary/5 px-3 py-1 text-[11px] font-black text-primary">
-                  {RECOMMENDATION_CATEGORY_DEFINITIONS[category].shortLabel}已开启
+                  {isZh ? `${RECOMMENDATION_CATEGORY_DEFINITIONS[category].shortLabel}已开启` : `${category} enabled`}
                 </span>
               ))}
             </div>
@@ -193,7 +201,7 @@ export function RecommendationConsent() {
         </div>
 
         <div className="bg-surface rounded-2xl p-2 shadow-sm border border-outline-variant/10">
-          {CONSENT_ITEMS.map(item => (
+          {consentItems.map(item => (
             <button
               key={item.id}
               onClick={() => toggleCategory(item.id)}
@@ -205,7 +213,7 @@ export function RecommendationConsent() {
               <div className="min-w-0 flex-1">
                 <h3 className="text-sm font-black text-on-surface">{item.title}</h3>
                 <p className="text-xs font-bold text-on-surface-variant/50 mt-0.5">
-                  {item.desc} · 本机记录 {eventCounts[item.id]} 条
+                  {item.desc} · {tt('本机记录', 'Local records')} {eventCounts[item.id]}
                 </p>
                 <p className="text-[10px] font-bold text-on-surface-variant/35 mt-1 leading-relaxed">
                   {RECOMMENDATION_CATEGORY_DEFINITIONS[item.id].sensitiveBoundary}
@@ -227,9 +235,9 @@ export function RecommendationConsent() {
               <Sparkles size={19} />
             </div>
             <div>
-              <h3 className="text-sm font-black text-on-surface">开启后会出现什么</h3>
+              <h3 className="text-sm font-black text-on-surface">{tt('开启后会出现什么', 'What happens when enabled')}</h3>
               <p className="text-xs font-bold text-on-surface-variant/55 mt-1 leading-relaxed">
-                {recommendationGateway.headline}。关闭的类别只显示说明，不记录展示和点击。
+                {isZh ? `${recommendationGateway.headline}。关闭的类别只显示说明，不记录展示和点击。` : 'Enabled categories can show matching suggestions. Disabled categories only show explanations and do not record impressions or clicks.'}
               </p>
             </div>
           </div>
@@ -258,9 +266,9 @@ export function RecommendationConsent() {
         </div>
 
         <div className="bg-surface rounded-2xl p-5 shadow-sm border border-outline-variant/10">
-          <h3 className="text-sm font-black text-on-surface mb-2">边界说明</h3>
+          <h3 className="text-sm font-black text-on-surface mb-2">{tt('边界说明', 'Boundaries')}</h3>
           <p className="text-xs font-bold text-on-surface-variant/60 leading-relaxed">
-            关闭后不应基于家庭成员、日程、任务完成情况做该类别推荐。打开后也应优先使用粗粒度标签，避免直接使用孩子姓名、住址、联系方式等敏感信息。
+            {tt('关闭后不应基于家庭成员、日程、任务完成情况做该类别推荐。打开后也应优先使用粗粒度标签，避免直接使用孩子姓名、住址、联系方式等敏感信息。', 'When a category is disabled, it should not use family members, schedules, or task completion to make recommendations in that category. When enabled, broad tags should be preferred and sensitive details such as child names, addresses, and contact info should be avoided.')}
           </p>
           {transparencySummary.riskNotes.length > 0 && (
             <div className="mt-3 space-y-2">
@@ -272,16 +280,16 @@ export function RecommendationConsent() {
             </div>
           )}
           <div className="grid grid-cols-4 gap-2 mt-4">
-            {(Object.keys(EVENT_TYPE_LABELS) as RecommendationEventType[]).map(type => (
+            {(Object.keys(eventTypeLabels) as RecommendationEventType[]).map(type => (
               <div key={type} className="rounded-2xl bg-surface-container-low p-2 text-center">
-                <span className="block text-[9px] font-black text-on-surface-variant/40">{EVENT_TYPE_LABELS[type]}</span>
+                <span className="block text-[9px] font-black text-on-surface-variant/40">{eventTypeLabels[type]}</span>
                 <span className="text-sm font-black text-on-surface">{eventTypeCounts[type]}</span>
               </div>
             ))}
           </div>
           {consent.updatedAt && (
             <p className="text-[10px] font-black text-on-surface-variant/35 mt-3">
-              上次更新：{new Date(consent.updatedAt).toLocaleString('zh-CN')}
+              {tt('上次更新：', 'Last updated: ')}{new Date(consent.updatedAt).toLocaleString(isZh ? 'zh-CN' : 'en-US')}
             </p>
           )}
           {cloudSyncMessage && (
@@ -293,7 +301,7 @@ export function RecommendationConsent() {
             onClick={handleClearEvents}
             className="mt-4 w-full py-2.5 rounded-2xl bg-surface-container-low text-on-surface-variant text-xs font-black active:scale-[0.98] transition-all"
           >
-            清理本机推荐记录
+            {tt('清理本机推荐记录', 'Clear local recommendation records')}
           </button>
         </div>
       </div>
@@ -304,7 +312,7 @@ export function RecommendationConsent() {
           disabled={saving}
           className="w-full py-3 rounded-2xl bg-primary text-white font-black text-sm active:scale-[0.98] transition-all disabled:opacity-50"
         >
-          {saving ? '保存中...' : '保存授权设置'}
+          {saving ? tt('保存中...', 'Saving...') : tt('保存授权设置', 'Save Settings')}
         </button>
       </div>
     </div>

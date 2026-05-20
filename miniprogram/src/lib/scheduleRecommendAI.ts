@@ -9,6 +9,19 @@
  */
 
 import { sendToAI } from './aiEngine';
+import {
+  buildScheduleOptimizationSkill,
+  buildScheduleOptimizationSkillPrompt,
+  sanitizeScheduleRecommendationForStage,
+} from './scheduleOptimizationSkill';
+
+export {
+  buildScheduleOptimizationSkill,
+  buildScheduleOptimizationSkillPrompt,
+  inferScheduleOptimizationStage,
+  sanitizeChildProfileForScheduleStage,
+  sanitizeScheduleRecommendationForStage,
+} from './scheduleOptimizationSkill';
 
 // ==================== 类型定义 ====================
 
@@ -123,9 +136,11 @@ function getScheduleKnowledgeBase(): string {
  * 生成个性化日程推荐
  */
 export async function generateScheduleRecommendation(profile: ChildProfile): Promise<ScheduleRecommendation> {
-  const systemInstruction = getScheduleKnowledgeBase() + `\n\n
+  const skill = buildScheduleOptimizationSkill(profile);
+  const safeProfile = skill.profile;
+  const systemInstruction = getScheduleKnowledgeBase() + `\n\n${buildScheduleOptimizationSkillPrompt(safeProfile)}\n\n
 你是一位拥有20年经验的家庭教育顾问和儿童时间管理专家。
-请根据用户提供的孩子信息，结合知识库中的各年龄阶段特点、性别差异数据、兴趣班推荐原则和作息框架，
+请根据用户提供的孩子信息，结合专用技能中的年龄阶段特点、兴趣班推荐原则和作息框架，
 生成一份个性化、可执行的日程推荐方案。
 
 **输出格式要求：返回严格JSON格式**
@@ -140,11 +155,12 @@ export async function generateScheduleRecommendation(profile: ChildProfile): Pro
 
 关键要求：
 1. 严格根据孩子的年龄/年级选择对应的作息框架
-2. 区分性别差异，但考虑用户填写的已有兴趣和性格特点
-3. 作息表中要预留充足的睡眠时间（幼儿园10-12h，小学生9-11h，初中8-10h，高中7-8h）
-4. 所有内容用中文输出`;
+2. 性别只能作为弱参考，必须优先考虑年龄、真实兴趣、性格、已有安排和家庭约束
+3. 不允许生成超出当前年龄阶段的学科建议；幼儿园只谈能力发展和生活化陪伴
+4. 作息表中要预留充足睡眠（当前阶段建议：${skill.stage.sleepTarget}）
+5. 所有内容用中文输出`;
 
-  const userInfo = buildUserInfoPrompt(profile);
+  const userInfo = buildUserInfoPrompt(safeProfile);
 
   try {
     // 使用 aiEngine 的 sendToAI 函数
@@ -154,18 +170,18 @@ export async function generateScheduleRecommendation(profile: ChildProfile): Pro
       // 尝试解析 JSON
       const jsonMatch = resultText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+        return sanitizeScheduleRecommendationForStage(JSON.parse(jsonMatch[0]), safeProfile);
       }
       throw new Error('无法从响应中提取JSON');
     } catch (parseErr) {
       console.error('[ScheduleRecommend] JSON parse failed:', parseErr);
       // 返回本地生成的推荐
-      return generateLocalRecommendation(profile);
+      return generateLocalRecommendation(safeProfile);
     }
   } catch (err) {
     console.error('[ScheduleRecommend] AI generation failed:', err);
     // Fallback 到本地推荐
-    return generateLocalRecommendation(profile);
+    return generateLocalRecommendation(safeProfile);
   }
 }
 
@@ -173,9 +189,12 @@ export async function generateScheduleRecommendation(profile: ChildProfile): Pro
  * 本地备选方案（当AI不可用时）
  */
 function generateLocalRecommendation(profile: ChildProfile): ScheduleRecommendation {
-  const age = profile.age || 8;
-  const gender = profile.gender || 'boy';
-  const grade = profile.grade || getGradeFromAge(age);
+  const skill = buildScheduleOptimizationSkill(profile);
+  const safeProfile = skill.profile;
+  const age = safeProfile.age || 8;
+  const gender = safeProfile.gender || 'boy';
+  const grade = safeProfile.grade || getGradeFromAge(age);
+  const isPreschool = skill.stage.key === 'preschool';
   
   // 基础作息模板
   const baseWeekday: TimeSlot[] = [
@@ -215,7 +234,13 @@ function generateLocalRecommendation(profile: ChildProfile): ScheduleRecommendat
 
   // 推荐活动
   const activities: RecommendedActivity[] = [];
-  if (gender === 'boy') {
+  if (isPreschool) {
+    activities.push(
+      { name: '体能游戏/亲子户外', category: '运动', reason: '幼儿园阶段优先保证大运动、情绪释放和睡眠质量', weeklyHours: 3, recommendedAge: '3岁+', priority: '强烈推荐' },
+      { name: '绘本共读和表达', category: '语言', reason: '帮助孩子在亲子互动里练习表达、复述和情绪命名', weeklyHours: 2, recommendedAge: '3岁+', priority: '推荐' },
+      { name: '创意美术/手工', category: '艺术', reason: '通过动手和审美体验发展精细动作，不需要学科化', weeklyHours: 1.5, recommendedAge: '3岁+', priority: '可选' },
+    );
+  } else if (gender === 'boy') {
     activities.push(
       { name: '篮球', category: '运动', reason: '团队协作+身体发育', weeklyHours: 3, recommendedAge: '6岁+', priority: '强烈推荐' },
       { name: '编程', category: '思维', reason: '逻辑思维+未来技能', weeklyHours: 2, recommendedAge: '6岁+', priority: '推荐' },
@@ -230,22 +255,29 @@ function generateLocalRecommendation(profile: ChildProfile): ScheduleRecommendat
   }
 
   // 学科建议
-  const subjects: SubjectAdvice[] = [
-    { subject: '语文', status: '中等', strategy: '注重阅读积累和写作训练', resources: ['课外阅读', '日记写作'] },
-    { subject: '数学', status: '中等', strategy: '重视计算基础和逻辑思维', resources: ['练习册', '思维训练'] },
-    { subject: '英语', status: '中等', strategy: '多听多说培养语感', resources: ['英文动画', '绘本'] },
-  ];
+  const subjects: SubjectAdvice[] = isPreschool
+    ? [
+        { subject: '语言表达', status: '中等', strategy: '每天用绘本、复述和讲今天发生的事练表达', resources: ['绘本共读', '亲子对话'] },
+        { subject: '生活自理', status: '中等', strategy: '把穿衣、刷牙、收玩具做成可见的小成就', resources: ['生活习惯打卡'] },
+      ]
+    : [
+        { subject: '语文', status: '中等', strategy: '注重阅读积累和写作训练', resources: ['课外阅读', '日记写作'] },
+        { subject: '数学', status: '中等', strategy: '重视计算基础和逻辑思维', resources: ['练习册', '思维训练'] },
+        { subject: '英语', status: '中等', strategy: '多听多说培养语感', resources: ['英文动画', '绘本'] },
+      ];
 
   return {
-    summary: `${gender === 'boy' ? '他' : '她'}今年${age}岁${grade ? `，上${grade}` : ''}。根据${age}岁儿童的发展特点，建议重点关注${age <= 10 ? '习惯养成和兴趣启蒙' : '学业效率和自主管理'}。保持充足睡眠(${age <= 6 ? '10-12小时' : age <= 12 ? '9-10小时' : '8-9小时'})是高效学习和健康成长的基础。`,
+    summary: isPreschool
+      ? `${gender === 'boy' ? '他' : '她'}今年${age}岁${grade ? `，上${grade}` : ''}。这个阶段不适合按学科强弱做日程，建议优先关注规律作息、生活自理、语言表达、户外运动和亲子陪伴。`
+      : `${gender === 'boy' ? '他' : '她'}今年${age}岁${grade ? `，上${grade}` : ''}。根据${age}岁儿童的发展特点，建议重点关注${age <= 10 ? '习惯养成和兴趣启蒙' : '学业效率和自主管理'}。保持充足睡眠(${age <= 12 ? '9-10小时' : '8-9小时'})是高效学习和健康成长的基础。`,
     weekdaySchedule: baseWeekday,
     weekendSchedule: baseWeekend,
     recommendedActivities: activities,
-    avoidActivities: [],
+    avoidActivities: isPreschool ? ['提前学科补习', '长时间刷题', '睡前使用屏幕'] : [],
     parentTips: [
       '保证充足的睡眠时间是提高学习效率的基础',
       '每天至少1小时的户外活动有助于身心健康',
-      '建立固定的学习时间和地点有助于养成好习惯',
+      isPreschool ? '把生活自理和表达做成游戏化小任务，不要用学科强弱评价孩子' : '建立固定的学习时间和地点有助于养成好习惯',
       '电子产品使用应限制在合理范围内',
       '多鼓励少批评，关注过程而非只看结果',
     ],
@@ -294,6 +326,7 @@ export async function refineScheduleRecommendation(
 // ==================== 辅助函数 ====================
 
 function buildUserInfoPrompt(profile: ChildProfile): string {
+  const skill = buildScheduleOptimizationSkill(profile);
   const parts: string[] = [];
 
   parts.push('=== 孩子基本信息 ===');
@@ -302,11 +335,12 @@ function buildUserInfoPrompt(profile: ChildProfile): string {
   parts.push(`年级: ${profile.grade || '未说明'}`);
   parts.push(`所在城市: ${profile.city || '未说明'}`);
   parts.push(`学校类型: ${profile.schoolType || '未说明'}`);
+  parts.push(`阶段判断: ${skill.stage.label}，核心目标为 ${skill.stage.coreFocus.join('、')}`);
 
-  parts.push('\n=== 学业情况 ===');
-  parts.push(`强项科目: ${profile.strongSubjects.length > 0 ? profile.strongSubjects.join('、') : '未说明'}`);
-  parts.push(`薄弱科目: ${profile.weakSubjects.length > 0 ? profile.weakSubjects.join('、') : '未说明'}`);
-  parts.push(`每天作业时长: ${profile.homeworkDuration ?? '未说明'}分钟`);
+  parts.push('\n=== 学习/发展情况 ===');
+  parts.push(`${skill.strengthLabel}: ${profile.strongSubjects.length > 0 ? profile.strongSubjects.join('、') : '未说明'}`);
+  parts.push(`${skill.challengeLabel}: ${profile.weakSubjects.length > 0 ? profile.weakSubjects.join('、') : '未说明'}`);
+  parts.push(`${skill.homeworkLabel}: ${profile.homeworkDuration ?? '未说明'}分钟`);
 
   parts.push('\n=== 已有兴趣/课外安排 ===');
   parts.push(`已有兴趣班: ${profile.existingInterests.length > 0 ? profile.existingInterests.join('、') : '无'}`);

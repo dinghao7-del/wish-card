@@ -352,12 +352,12 @@ export default function Home() {
           <Text className="action-label">创建任务</Text>
         </View>
 
-        {/* AI分析 */}
+        {/* 家庭管家 */}
         <View className="quick-action-item" onClick={handleAiAnalysis}>
           <View className="action-icon-circle action-icon-highlight">
             <Icon name="sparkles" size={48} color="#ffffff" />
           </View>
-          <Text className="action-label">AI分析</Text>
+          <Text className="action-label">家庭管家</Text>
         </View>
 
         {/* 日历 */}

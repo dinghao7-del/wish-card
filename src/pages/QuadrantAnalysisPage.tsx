@@ -57,7 +57,8 @@ const DATE_RANGE_OPTIONS = [
 
 export function QuadrantAnalysisPage() {
   const { tasks, members, rewards, currentUser, familyId } = useFamily();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const english = isEnglishLanguage(i18n.language);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -85,12 +86,12 @@ export function QuadrantAnalysisPage() {
     setError('');
 
     if (!tasks || !Array.isArray(tasks)) {
-      setError(t('quadrant_analysis.error', { defaultValue: '任务数据无效' }));
+      setError(english ? 'Task data is unavailable' : t('quadrant_analysis.error', { defaultValue: '任务数据无效' }));
       setIsLoading(false);
       return;
     }
     if (!members || !Array.isArray(members)) {
-      setError(t('quadrant_analysis.error', { defaultValue: '成员数据无效' }));
+      setError(english ? 'Family member data is unavailable' : t('quadrant_analysis.error', { defaultValue: '成员数据无效' }));
       setIsLoading(false);
       return;
     }
@@ -101,7 +102,7 @@ export function QuadrantAnalysisPage() {
       setAnalysis(result);
     } catch (err: any) {
       console.error('四象限分析失败:', err);
-      setError(`分析失败: ${err.message}`);
+      setError(english ? `Analysis failed: ${err.message}` : `分析失败: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -111,7 +112,7 @@ export function QuadrantAnalysisPage() {
     <div className="ui-ai-subpage min-h-screen bg-background transition-colors duration-700">
       {/* Header */}
       <TopAppBar
-        title="任务四象限看板"
+        title={english ? 'Task Priority Matrix' : '任务四象限看板'}
         rightContent={
           <button
             onClick={() => setIsVoiceOpen(true)}
@@ -137,7 +138,7 @@ export function QuadrantAnalysisPage() {
                   active ? "bg-primary text-white shadow-sm" : "text-on-surface-variant"
                 )}
               >
-                {t(opt.labelKey, { defaultValue: opt.defaultLabel })}
+                {english ? getRangeLabel(opt.key) : t(opt.labelKey, { defaultValue: opt.defaultLabel })}
               </button>
             );
           })}
@@ -150,7 +151,7 @@ export function QuadrantAnalysisPage() {
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 size={48} className="animate-spin text-primary" />
             <p className="text-sm font-bold text-on-surface-variant">
-              正在分析任务...
+              {english ? 'Analyzing tasks...' : '正在分析任务...'}
             </p>
           </div>
         )}
@@ -162,7 +163,7 @@ export function QuadrantAnalysisPage() {
               onClick={runAnalysis}
               className="bg-danger text-white px-6 py-2.5 rounded-2xl font-bold text-sm active:scale-95 transition-all"
             >
-              重试
+              {english ? 'Retry' : '重试'}
             </button>
           </div>
         )}
@@ -182,13 +183,13 @@ export function QuadrantAnalysisPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-[11px] font-black mb-1 text-primary">
-                    {analysis.periodLabel}先看这一句
+                    {english ? `${getRangeLabel(dateRange)} focus` : `${analysis.periodLabel}先看这一句`}
                   </p>
                   <p className="text-base font-black leading-snug text-on-surface">
-                    {analysis.summary || '系统正在帮你们判断先做什么。'}
+                    {english ? buildEnglishQuadrantSummary(analysis, dateRange) : (analysis.summary || '系统正在帮你们判断先做什么。')}
                   </p>
                   <p className="text-xs font-bold leading-relaxed mt-2 text-on-surface-variant">
-                    {analysis.parentAction}
+                    {english ? 'Keep the next step small, visible, and easy to start.' : analysis.parentAction}
                   </p>
                 </div>
               </div>
@@ -201,10 +202,10 @@ export function QuadrantAnalysisPage() {
               className="rounded-3xl border border-primary/15 bg-primary-container p-4 mb-4 shadow-sm"
             >
               <p className="text-[11px] font-black mb-1 text-primary">
-                可以对孩子这样说
+                {english ? 'You can say this' : '可以对孩子这样说'}
               </p>
               <p className="text-sm font-black leading-relaxed text-primary-text">
-                {analysis.childEncouragement}
+                {english ? 'Let us finish one clear step first. Small progress still counts.' : analysis.childEncouragement}
               </p>
             </motion.div>
 
@@ -230,7 +231,7 @@ export function QuadrantAnalysisPage() {
                         <Icon size={16} style={{ color: config.color }} />
                       </div>
                       <h3 className="font-black text-sm text-on-surface">
-                        {t(config.titleKey, { defaultValue: config.defaultTitle })}
+                        {english ? getQuadrantTitle(config.key) : t(config.titleKey, { defaultValue: config.defaultTitle })}
                       </h3>
                     </div>
 
@@ -241,17 +242,17 @@ export function QuadrantAnalysisPage() {
                           className="rounded-xl bg-surface-container-low p-3"
                         >
                           <p className="text-xs font-bold mb-1 text-on-surface">
-                            {item.task.title}
+                            {english ? displayTaskTitle(item.task.title) : item.task.title}
                           </p>
                           <p className="text-[10px] text-on-surface-variant">
-                            {item.reason}
+                            {english ? 'Suggested by urgency, importance, and family timing.' : item.reason}
                           </p>
                         </div>
                       )) : (
                         <p
                           className="text-xs text-center py-4 text-on-surface-variant/50"
                         >
-                          暂无任务
+                          {english ? 'No tasks' : '暂无任务'}
                         </p>
                       )}
                     </div>
@@ -260,7 +261,7 @@ export function QuadrantAnalysisPage() {
                       <p
                         className="text-[10px] text-center mt-2 text-on-surface-variant/60"
                       >
-                        还有 {items.length - 3} 个任务
+                        {english ? `${items.length - 3} more tasks` : `还有 ${items.length - 3} 个任务`}
                       </p>
                     )}
                   </motion.div>
@@ -278,35 +279,35 @@ export function QuadrantAnalysisPage() {
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles size={20} className="text-primary" />
                 <h3 className="font-black text-sm text-on-surface">
-                  {analysis.periodLabel} AI 权衡建议
+                  {english ? `${getRangeLabel(dateRange)} AI advice` : `${analysis.periodLabel} AI 权衡建议`}
                 </h3>
               </div>
             <p className="text-sm font-bold leading-relaxed mb-4 text-on-surface-variant">
-                {analysis.coachingSummary || analysis.summary || '暂无建议'}
+                {english ? 'Review the important items first, then move anything non-urgent to a calmer time.' : (analysis.coachingSummary || analysis.summary || '暂无建议')}
               </p>
 
               <div className="grid grid-cols-1 gap-2 mb-4">
                 <div className="rounded-2xl bg-surface-container-low p-3">
                   <p className="text-[10px] font-black mb-1 text-primary">
-                    给孩子
+                    {english ? 'For the child' : '给孩子'}
                   </p>
                   <p className="text-xs font-bold leading-relaxed text-on-surface">
-                    {analysis.childEncouragement}
+                    {english ? 'Choose one simple action and finish it before adding more.' : analysis.childEncouragement}
                   </p>
                 </div>
                 <div className="rounded-2xl bg-surface-container-low p-3">
                   <p className="text-[10px] font-black mb-1 text-primary">
-                    给家长
+                    {english ? 'For parents' : '给家长'}
                   </p>
                   <p className="text-xs font-bold leading-relaxed text-on-surface">
-                    {analysis.parentAction}
+                    {english ? 'Help the child see the next tiny step and remove one avoidable distraction.' : analysis.parentAction}
                   </p>
                 </div>
               </div>
 
               {analysis.suggestions.length > 0 && (
                 <div className="space-y-2">
-                  {analysis.suggestions.map((s, idx) => (
+                  {(english ? getEnglishSuggestions(dateRange) : analysis.suggestions).map((s, idx) => (
                     <div key={idx} className="flex items-start gap-2">
                       <ArrowLeft size={14} className="mt-0.5 shrink-0 rotate-180 text-primary" />
                       <p className="text-xs font-bold text-on-surface">
@@ -331,4 +332,57 @@ export function QuadrantAnalysisPage() {
       />
     </div>
   );
+}
+
+function isEnglishLanguage(language?: string): boolean {
+  return (language || '').toLowerCase().startsWith('en');
+}
+
+function getRangeLabel(range: QuadrantDateRange): string {
+  if (range === 'week') return 'This week';
+  if (range === 'month') return 'This month';
+  return 'Today';
+}
+
+function getQuadrantTitle(key: (typeof QUADRANT_CONFIG)[number]['key']): string {
+  if (key === 'urgentImportant') return 'Urgent & important';
+  if (key === 'notUrgentImportant') return 'Important, not urgent';
+  if (key === 'urgentNotImportant') return 'Urgent, lower importance';
+  return 'Low priority';
+}
+
+function buildEnglishQuadrantSummary(analysis: QuadrantAnalysis, range: QuadrantDateRange): string {
+  const total = QUADRANT_CONFIG.reduce((count, config) => count + (analysis[config.key] as QuadrantItem[]).length, 0);
+  if (total === 0) return `${getRangeLabel(range)} has no pending items.`;
+  return `${getRangeLabel(range)} has ${total} pending items. Start with the clearest priority.`;
+}
+
+function displayTaskTitle(title: string): string {
+  const map: Record<string, string> = {
+    '数学作业：两位数乘法': 'Math homework: two-digit multiplication',
+    '书法练习：抄写古诗三首': 'Calligraphy practice: copy three poems',
+    '语文阅读理解练习': 'Chinese reading comprehension practice',
+    '科学实验报告（已提交待审核）': 'Science report (submitted for review)',
+    '准备下月朗诵比赛': 'Prepare for next month recital',
+  };
+  return map[title] || title;
+}
+
+function getEnglishSuggestions(range: QuadrantDateRange): string[] {
+  if (range === 'month') {
+    return [
+      'Keep long-term goals visible, but only schedule the next concrete action.',
+      'Move low-value tasks out of the busy weekday window.',
+    ];
+  }
+  if (range === 'week') {
+    return [
+      'Reserve one calm block for important but non-urgent work.',
+      'Confirm any parent-reviewed items early.',
+    ];
+  }
+  return [
+    'Do the urgent and important item first.',
+    'Move low-priority items to a later time if the day is crowded.',
+  ];
 }

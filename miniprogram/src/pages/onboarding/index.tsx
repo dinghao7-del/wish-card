@@ -12,6 +12,7 @@ import './index.scss';
 /* ===== 类型定义 ===== */
 interface ChildInfo {
   name: string;
+  birthday?: string;
   age: number;
   gender: string;
   grade: string;
@@ -61,6 +62,49 @@ function getGradeFromAge(a) {
   return '高三';
 }
 
+function getAgeFromBirthday(birthday) {
+  if (!birthday) return null;
+  var birth = new Date(birthday + 'T00:00:00');
+  if (isNaN(birth.getTime())) return null;
+  var today = new Date();
+  var age = today.getFullYear() - birth.getFullYear();
+  var hadBirthday = today.getMonth() > birth.getMonth() ||
+    (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
+  if (!hadBirthday) age -= 1;
+  return Math.max(0, Math.min(18, age));
+}
+
+function getGradeCandidatesFromAge(age, currentGrade) {
+  var map = {
+    3: ['幼儿园小班', '托班/小小班'],
+    4: ['幼儿园中班', '幼儿园小班'],
+    5: ['幼儿园大班', '幼儿园中班'],
+    6: ['一年级', '幼儿园大班'],
+    7: ['二年级', '一年级'],
+    8: ['三年级', '二年级'],
+    9: ['四年级', '三年级'],
+    10: ['五年级', '四年级'],
+    11: ['六年级', '五年级'],
+    12: ['初一', '六年级'],
+    13: ['初二', '初一'],
+    14: ['初三', '初二'],
+    15: ['高一', '初三'],
+    16: ['高二', '高一'],
+    17: ['高三', '高二'],
+    18: ['高三'],
+  };
+  var arr = (map[age] || [getGradeFromAge(age)]).concat([getGradeFromAge(age), currentGrade]).filter(Boolean);
+  return Array.from(new Set(arr));
+}
+
+function getStageLabel(age) {
+  if (age <= 5) return '幼儿园阶段';
+  if (age <= 8) return '小学低年级';
+  if (age <= 11) return '小学高年级';
+  if (age <= 14) return '初中阶段';
+  return '高中阶段';
+}
+
 function getDefaultAvatar(gender, idx) {
   var boys = ['👦', '👨', '🧑‍🎓', '👩', '👦', '👴'];
   var girls = ['👧', '👩', '👩‍🦰', '🐥', '📋', '🙋'];
@@ -82,6 +126,9 @@ var CATEGORIZED_ACTIVITIES = [
   /* 艺术类 */
   { id: 'painting', label: '画画', category: 'arts', icon: 'edit' },
   { id: 'piano', label: '钢琴', category: 'arts', icon: 'sparkles' },
+  { id: 'violin', label: '小提琴', category: 'arts', icon: 'sparkles' },
+  { id: 'vocal', label: '声乐/唱歌', category: 'arts', icon: 'sparkles' },
+  { id: 'drums', label: '架子鼓', category: 'arts', icon: 'sparkles' },
   { id: 'dance', label: '舞蹈', category: 'arts', icon: 'sparkles' },
   { id: 'calligraphy', label: '书法', category: 'arts', icon: 'edit' },
   { id: 'go', label: '围棋', category: 'arts', icon: 'grid' },
@@ -113,6 +160,7 @@ export default function OnboardingPage() {
     childrenCount: 1,
     children: [{
       name: '大宝',
+      birthday: '',
       age: 8,
       gender: 'boy',
       grade: '三年级',
@@ -227,7 +275,9 @@ export default function OnboardingPage() {
   }
   function incChildren() {
     if (profile.childrenCount < 4) {
-      var newCh = { name: '', age: 8, gender: profile.childrenCount % 2 === 0 ? 'boy' : 'girl', grade: '二年级', avatar: getDefaultAvatar(profile.childrenCount % 2 === 0 ? 'boy' : 'girl', profile.childrenCount), schoolTime: { start: '08:00', end: '16:00' }, hasAfterSchool: false, afterSchoolActivities: [], customActivities: [] };
+      var defaultNames = ['大宝', '二宝', '三宝', '四宝'];
+      var gender = profile.childrenCount % 2 === 0 ? 'boy' : 'girl';
+      var newCh = { name: defaultNames[profile.childrenCount] || ('孩子' + (profile.childrenCount + 1)), birthday: '', age: 8, gender: gender, grade: '二年级', avatar: getDefaultAvatar(gender, profile.childrenCount), schoolTime: { start: '08:00', end: '16:00' }, hasAfterSchool: false, afterSchoolActivities: [], customActivities: [] };
       setProfile(function(p) { return Object.assign({}, p, { childrenCount: p.childrenCount + 1, children: p.children.concat([newCh]) }); });
     }
   }
@@ -244,17 +294,28 @@ export default function OnboardingPage() {
   function onNameInput(val) {
     updChild(ci, { name: val });
   }
+  function onBirthdayInput(val) {
+    var age = getAgeFromBirthday(val);
+    if (age === null) {
+      updChild(ci, { birthday: val });
+      return;
+    }
+    var ch = profile.children[ci];
+    updChild(ci, { birthday: val, age: age, grade: getGradeFromAge(age), avatar: getDefaultAvatar(ch.gender, ci) });
+  }
   function onAgeChange(val) {
     updChild(ci, { age: val, grade: getGradeFromAge(val) });
   }
   function setGenderBoy() {
-    updChild(ci, { gender: 'boy' });
+    updChild(ci, { gender: 'boy', avatar: getDefaultAvatar('boy', ci) });
   }
   function setGenderGirl() {
-    updChild(ci, { gender: 'girl' });
+    updChild(ci, { gender: 'girl', avatar: getDefaultAvatar('girl', ci) });
   }
   function onGradeChange(idx) {
-    updChild(ci, { grade: GRADE_LIST[idx] });
+    var ch = profile.children[ci];
+    var grades = getGradeCandidatesFromAge(ch.age, ch.grade);
+    updChild(ci, { grade: grades[idx] });
   }
   function onSchoolStartChange(val) {
     var sch = profile.children[ci].schoolTime;
@@ -439,6 +500,7 @@ export default function OnboardingPage() {
   if (step === 'child-details') {
     var ch = profile.children[ci];
     var dots = profile.children.map(function(_, i) { return i; }).map(function(i) { return <View key={i} className={'dot ' + (i === ci ? 'active' : '')}/>; });
+    var gradeCandidates = getGradeCandidatesFromAge(ch.age, ch.grade);
     var avatarList = ch.gender === 'boy'
       ? ['👦', '👨', '🧑‍🎓', '👩', '👦', '👴']
       : ['👧', '👩', '👩‍🦰', '🐥', '📋', '🙋'];
@@ -483,6 +545,19 @@ export default function OnboardingPage() {
             onInput={function(e) { onNameInput(e.detail.value); }} />
           <Text className="field-hint">创建后将直接建立孩子的账户</Text>
 
+          {/* 生日 */}
+          <Text className="field-label" style={{ marginTop: 24 }}>生日</Text>
+          <Input
+            className="field-input"
+            type="date"
+            value={ch.birthday || ''}
+            placeholder="选择生日"
+            onInput={function(e) { onBirthdayInput(e.detail.value); }}
+          />
+          <Text className="field-hint">
+            {ch.birthday ? ('已自动推断：' + ch.age + '岁 · ' + getStageLabel(ch.age)) : '填写生日后自动推断年龄、学段和适龄选项'}
+          </Text>
+
           {/* 年龄滑块 */}
           <Text className="field-label" style={{ marginTop: 24 }}>年龄</Text>
           <View style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '8px 0', width: '100%' }}>
@@ -511,7 +586,7 @@ export default function OnboardingPage() {
 
           {/* 年级 */}
           <Text className="field-label" style={{ marginTop: 24 }}>年级<Text style={{ fontWeight: 400, color: '#999' }}>（自动推算）</Text></Text>
-          <Picker mode='selector' range={GRADE_LIST} value={Math.max(0, GRADE_LIST.indexOf(ch.grade))} onChange={function(e) { onGradeChange(e.detail.value); }}>
+          <Picker mode='selector' range={gradeCandidates} value={Math.max(0, gradeCandidates.indexOf(ch.grade))} onChange={function(e) { onGradeChange(e.detail.value); }}>
             <View className="pick-box"><Text>{ch.grade}</Text><Icon name="chevronDown" size={26} color="#999"/></View>
           </Picker>
           <View className="sp-h"/>
@@ -567,7 +642,12 @@ export default function OnboardingPage() {
 
     /* 按类别分组预置活动 */
     var grouped = {};
-    CATEGORIZED_ACTIVITIES.forEach(function(act) {
+    var stageActivities = CATEGORIZED_ACTIVITIES.filter(function(act) {
+      if (ac.age <= 5) return ['swim', 'painting', 'piano', 'vocal', 'reading', 'science', 'robot'].indexOf(act.id) >= 0;
+      if (ac.age <= 12) return ['swim', 'soccer', 'basketball', 'badminton', 'taekwondo', 'painting', 'piano', 'violin', 'dance', 'calligraphy', 'go', 'coding', 'science', 'english', 'reading'].indexOf(act.id) >= 0;
+      return ['swim', 'basketball', 'badminton', 'piano', 'violin', 'vocal', 'drums', 'calligraphy', 'coding', 'robot', 'english', 'reading'].indexOf(act.id) >= 0;
+    });
+    stageActivities.forEach(function(act) {
       if (!grouped[act.category]) grouped[act.category] = [];
       grouped[act.category].push(act);
     });
@@ -578,7 +658,7 @@ export default function OnboardingPage() {
       <View className={`ob-page ${themeClass}`}><ObHeader onBack={goBack}/>
         <ScrollView scrollY enhanced className="ob-step-body">
           <Text className="ob-step-title">{ac.name ? ac.name + ' 的课外活动' : '课外活动选择'}</Text>
-          <Text className="ob-step-hint">{ac.gender === 'boy' ? '👦 为男孩推荐' : '👧 为女孩推荐'} · 选择或输入正在参加的活动</Text>
+          <Text className="ob-step-hint">{ac.gender === 'boy' ? '👦 为男孩推荐' : '👧 为女孩推荐'} · {getStageLabel(ac.age)} · 选项不足可直接输入</Text>
           <View className="dots-row">{profile.children.map(function(_, i) { return i; }).map(function(i) { return <View key={i} className={'dot ' + (i === ci ? 'active' : '')}/>; })}</View>
 
           {/* 自定义活动输入区 */}
@@ -591,7 +671,7 @@ export default function OnboardingPage() {
             <View className="act-input-row">
               <Input
                 value={customActInput}
-                placeholder="输入活动名称，如：跆拳道、击剑..."
+                placeholder="输入活动名称，如：小提琴、唱歌、击剑..."
                 placeholderClass="custom-act-ph"
                 onInput={function(e) { setCustomActInput(e.detail.value); }}
                 onConfirm={function() { addCustomActivity(); }}

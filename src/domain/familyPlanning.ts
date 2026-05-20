@@ -223,6 +223,22 @@ export interface PlanExecutionDraftInput {
   kind: PlanKind;
   childIds: string[];
   schedulePlan?: FamilySchedulePlan;
+  goalPlan?: GoalPlanMetadata;
+}
+
+export interface GoalPlanMilestone {
+  title: string;
+  targetPercent: number;
+}
+
+export interface GoalPlanMetadata {
+  finalGoal: string;
+  targetDate?: string;
+  practiceFrequency: string;
+  practiceMinutes: number;
+  practiceTime?: string;
+  milestones: GoalPlanMilestone[];
+  optimizationHint?: string;
 }
 
 export function scheduleSlotToTaskDraft(slot: ScheduleSlot): TaskDraftFromSchedule {
@@ -298,6 +314,45 @@ export function buildPlanExecutionDrafts(input: PlanExecutionDraftInput): TaskDr
   }
 
   if (input.kind === 'goal') {
+    if (input.goalPlan) {
+      const practiceTime = input.goalPlan.practiceTime || '19:00';
+      const practiceEndTime = addMinutesToTime(practiceTime, input.goalPlan.practiceMinutes);
+      const milestoneDrafts = input.goalPlan.milestones.slice(0, 5).map((milestone, index) => planTask({
+        title: `${input.planName}：${milestone.title}`,
+        description: `阶段目标：${input.goalPlan?.finalGoal || input.planName}。完成这个里程碑后，计划进度约到 ${milestone.targetPercent}%。`,
+        startTime: index === 0 ? '19:30' : '20:00',
+        deadline: index === 0 ? '20:00' : '20:30',
+        rewardStars: 6 + index,
+        icon: 'Flag',
+        type: 'study',
+        frequency: 'once',
+      }, childIds));
+
+      return [
+        planTask({
+          title: `${input.planName}：固定练习 ${input.goalPlan.practiceMinutes} 分钟`,
+          description: `${input.goalPlan.practiceFrequency}，穿插到日常行程中。目标：${input.goalPlan.finalGoal}`,
+          startTime: practiceTime,
+          deadline: practiceEndTime,
+          rewardStars: 5,
+          icon: 'Music',
+          type: 'interest',
+          frequency: 'weekly',
+        }, childIds),
+        ...milestoneDrafts,
+        planTask({
+          title: `${input.planName}：阶段复盘与调整`,
+          description: input.goalPlan.optimizationHint || '根据完成质量调整练习频率、难度和家长陪伴方式。',
+          startTime: '20:30',
+          deadline: '20:45',
+          rewardStars: 4,
+          icon: 'ClipboardCheck',
+          type: 'family',
+          frequency: 'weekly',
+        }, childIds),
+      ];
+    }
+
     return [
       planTask({
         title: `${input.planName}：确定验收目标`,
@@ -414,6 +469,15 @@ export function buildPlanExecutionDrafts(input: PlanExecutionDraftInput): TaskDr
       frequency: 'daily',
     }, childIds),
   ];
+}
+
+function addMinutesToTime(time: string, minutes: number): string {
+  const match = time.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return time;
+  const total = Number(match[1]) * 60 + Number(match[2]) + minutes;
+  const hour = Math.floor(total / 60) % 24;
+  const minute = total % 60;
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }
 
 export interface PlanTaskProgressInput {

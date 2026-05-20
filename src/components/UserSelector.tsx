@@ -7,6 +7,7 @@ import { Member } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { TextAvatar } from './TextAvatar';
 import { hasSwitchCredential, verifyMemberPinOrPassword } from '../lib/memberCredentials';
+import { useTranslation } from 'react-i18next';
 
 interface UserSelectorProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface UserSelectorProps {
 }
 
 export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
+  const { t } = useTranslation();
   const { members, currentUser, setCurrentUser } = useFamily();
   const [selectedUser, setSelectedUser] = useState<Member | null>(null);
   const [pin, setPin] = useState('');
@@ -96,7 +98,7 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
             
             <header className="flex justify-between items-center mb-8">
               <div>
-                <h2 className="text-2xl font-black tracking-tight text-primary">切换用户</h2>
+                <h2 className="text-2xl font-black tracking-tight text-primary">{t('switch_profile.title')}</h2>
               </div>
               <button 
                 onClick={onClose}
@@ -154,7 +156,7 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
                 <div className="w-10 h-10 rounded-full bg-secondary-container/50 flex items-center justify-center text-secondary">
                   <UserPlus size={20} />
                 </div>
-                <span className="text-[10px] font-black text-on-surface-variant">添加成员</span>
+                <span className="text-[10px] font-black text-on-surface-variant">{t('switch_profile.add_member')}</span>
               </button>
             </div>
 
@@ -178,9 +180,9 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
                     <div className="mb-4 shadow-lg">
                       <TextAvatar src={selectedUser.avatar} name={selectedUser.name} size={80} className="border-4 border-primary/20" />
                     </div>
-                    <h3 className="text-xl font-black">输入 {selectedUser.name} 的密码</h3>
+                    <h3 className="text-xl font-black">{t('switch_profile.password_title', { name: selectedUser.name })}</h3>
                     <p className="text-xs text-on-surface-variant font-bold mt-1 text-center">
-                      {selectedUser.role === 'parent' ? '🔒 这是个森林守护者账号' : '🔓 快来解锁你的探险之路'}
+                      {selectedUser.role === 'parent' ? t('switch_profile.parent_hint') : t('switch_profile.child_hint')}
                     </p>
                   </div>
 
@@ -229,7 +231,7 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
                   </div>
                   
                   {error && (
-                    <p className="text-danger text-[10px] font-black text-center mt-4 animate-bounce">密码错误，请森林探险家再试一次 🍃</p>
+                    <p className="text-danger text-[10px] font-black text-center mt-4 animate-bounce">{t('switch_profile.password_error')}</p>
                   )}
                 </motion.div>
               )}

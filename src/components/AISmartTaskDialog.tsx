@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Sparkles, Mic, Loader2, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useFamily } from '../context/FamilyContext';
 import { cn } from '../lib/utils';
 import { callAIJson } from '../lib/voiceAssistant';
@@ -12,12 +13,11 @@ interface AISmartTaskDialogProps {
 }
 
 export function AISmartTaskDialog({ isOpen, onClose }: AISmartTaskDialogProps) {
+  const { t } = useTranslation();
   const { members, addTask, currentUser } = useFamily();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string; task?: any }[]>([
-    { role: 'assistant', content: '您好！我是您的家庭助手。您可以直接告诉我想要创建的任务，例如：“让坦坦明天下午3点去练琴，奖励30颗星星”。' }
-  ]);
+  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string; task?: any }[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -27,6 +27,12 @@ export function AISmartTaskDialog({ isOpen, onClose }: AISmartTaskDialogProps) {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    if (isOpen && messages.length === 0) {
+      setMessages([{ role: 'assistant', content: t('ai_task_dialog.greeting') }]);
+    }
+  }, [isOpen, messages.length, t]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -66,17 +72,21 @@ export function AISmartTaskDialog({ isOpen, onClose }: AISmartTaskDialogProps) {
       if (result.error) {
         setMessages(prev => [...prev, { role: 'assistant', content: result.error }]);
       } else if (result.missingInfo) {
-        setMessages(prev => [...prev, { role: 'assistant', content: `收到！不过还差一点信息：${result.missingInfo}。您可以补充一下吗？` }]);
+        setMessages(prev => [...prev, { role: 'assistant', content: t('ai_task_dialog.missing_info', { info: result.missingInfo }) }]);
       } else {
         setMessages(prev => [...prev, { 
           role: 'assistant', 
-          content: `为您解析到一条任务：\n\n📌 **${result.title}**\n👤 执行人：${members.filter(m => result.assigneeIds.includes(m.id)).map(m => m.name).join(', ')}\n⭐ 奖励：${result.rewardStars} 颗星\n\n是否确认创建？`,
+          content: t('ai_task_dialog.parsed_task', {
+            title: result.title,
+            assignees: members.filter(m => result.assigneeIds.includes(m.id)).map(m => m.name).join(', '),
+            stars: result.rewardStars,
+          }),
           task: result
         }]);
       }
     } catch (error) {
       console.error('AI error:', error);
-      setMessages(prev => [...prev, { role: 'assistant', content: '抱歉，我现在有点忙，请稍后再试或点击“手动创建”。' }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: t('ai_task_dialog.busy') }]);
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +105,7 @@ export function AISmartTaskDialog({ isOpen, onClose }: AISmartTaskDialogProps) {
       isHabit: taskData.type === 'habit'
     };
     addTask(newTask);
-    setMessages(prev => [...prev, { role: 'assistant', content: '✅ 任务已成功添加到今日清单！' }]);
+    setMessages(prev => [...prev, { role: 'assistant', content: t('ai_task_dialog.created') }]);
   };
 
   return (
@@ -115,8 +125,8 @@ export function AISmartTaskDialog({ isOpen, onClose }: AISmartTaskDialogProps) {
                   <Sparkles size={24} />
                 </div>
                 <div>
-                  <h3 className="font-black text-on-surface">智能任务助手</h3>
-                  <p className="text-[10px] text-on-surface-variant font-bold opacity-60">AI 加速任务创建</p>
+                  <h3 className="font-black text-on-surface">{t('ai_task_dialog.title')}</h3>
+                  <p className="text-[10px] text-on-surface-variant font-bold opacity-60">{t('ai_task_dialog.subtitle')}</p>
                 </div>
               </div>
               <button 
@@ -146,13 +156,13 @@ export function AISmartTaskDialog({ isOpen, onClose }: AISmartTaskDialogProps) {
                           className="flex-1 bg-primary text-on-primary py-2.5 rounded-xl font-black text-xs flex items-center justify-center gap-2"
                         >
                           <CheckCircle2 size={14} />
-                          确认创建
+                          {t('ai_task_dialog.confirm_create')}
                         </button>
                         <button 
-                          onClick={() => setMessages(prev => [...prev, { role: 'assistant', content: '好的，我们再试一次。您可以更详细地描述任务内容。' }])}
+                          onClick={() => setMessages(prev => [...prev, { role: 'assistant', content: t('ai_task_dialog.retry_hint') }])}
                           className="flex-1 bg-surface-container py-2.5 rounded-xl font-black text-xs text-on-surface-variant"
                         >
-                          取消
+                          {t('common.cancel')}
                         </button>
                       </div>
                     )}
@@ -163,7 +173,7 @@ export function AISmartTaskDialog({ isOpen, onClose }: AISmartTaskDialogProps) {
                 <div className="flex items-start gap-2">
                   <div className="bg-white dark:bg-surface-container-high p-4 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-2">
                     <Loader2 size={16} className="animate-spin text-primary" />
-                    <span className="text-xs font-bold text-on-surface-variant">正在解析您的指令...</span>
+                    <span className="text-xs font-bold text-on-surface-variant">{t('ai_task_dialog.parsing')}</span>
                   </div>
                 </div>
               )}
@@ -179,7 +189,7 @@ export function AISmartTaskDialog({ isOpen, onClose }: AISmartTaskDialogProps) {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder="输入任务描述..."
+                    placeholder={t('ai_task_dialog.input_placeholder')}
                     className="w-full bg-surface-container-low rounded-2xl px-5 py-4 pr-12 font-bold text-sm outline-none border-2 border-transparent focus:border-primary transition-all placeholder:text-on-surface-variant/40"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 text-primary/40">
@@ -195,7 +205,7 @@ export function AISmartTaskDialog({ isOpen, onClose }: AISmartTaskDialogProps) {
                 </button>
               </div>
               <p className="text-center text-[10px] text-on-surface-variant/40 font-bold mt-4">
-                由航大 AI 提供智能动力 ⚡️
+                {t('ai_task_dialog.powered_by')}
               </p>
             </div>
           </motion.div>

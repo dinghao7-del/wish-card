@@ -139,12 +139,11 @@ export default function Profile() {
   ];
 
   const menuGroupAi = [
-    { icon: 'sparkles', label: 'AI分析与建档', route: '/pkg/ai-analysis/index', color: '#006e1c' },
+    { icon: 'sparkles', label: '家庭管家', route: '/pkg/ai-analysis/index', color: '#006e1c' },
+    { icon: 'calendar', label: '日程优化', route: '/pkg/schedule-recommend/index', color: '#0288D1' },
     { icon: 'barChart', label: '家庭复盘', route: '/pkg/reports/index', color: '#1976D2' },
-    { icon: 'calendar', label: '日程方案', route: '/pkg/schedule-recommend/index', color: '#0288D1' },
     { icon: 'users', label: '家庭社区', route: '/pkg/community/templates/index', color: '#0f8f43' },
     { icon: 'target', label: '四象限分析', route: '/pkg/quadrant/index', color: '#F57C00' },
-    { icon: 'globe', label: '公共时间与校历', route: '/pkg/calendar/index', color: '#0288D1' },
     { icon: 'settings2', label: 'AI助手设置', route: '/pkg/settings/ai/index', color: '#7B1FA2' },
   ];
 

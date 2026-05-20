@@ -444,11 +444,11 @@ function HelpModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
                 <p>{t('pomodoro.help_origin_detail', { defaultValue: '由意大利大学生弗朗西斯科·齐里洛于20世纪80年代末发明。' })}</p>
               </div>
               <div className="space-y-3 pl-4 border-l-2 border-outline-variant">
-                <p className="text-xs text-on-surface-variant">01. 选择一个任务</p>
-                <p className="text-xs text-on-surface-variant">02. 设定25分钟</p>
-                <p className="text-xs text-on-surface-variant">03. 专注工作</p>
-                <p className="text-xs text-on-surface-variant">04. 休息5分钟</p>
-                <p className="text-xs text-on-surface-variant">05. 每4个番茄钟长休息</p>
+                <p className="text-xs text-on-surface-variant">01. {t('pomodoro.help_step1', { defaultValue: '选择一个任务' })}</p>
+                <p className="text-xs text-on-surface-variant">02. {t('pomodoro.help_step2', { defaultValue: '设定25分钟' })}</p>
+                <p className="text-xs text-on-surface-variant">03. {t('pomodoro.help_step3', { defaultValue: '专注工作' })}</p>
+                <p className="text-xs text-on-surface-variant">04. {t('pomodoro.help_step4', { defaultValue: '休息5分钟' })}</p>
+                <p className="text-xs text-on-surface-variant">05. {t('pomodoro.help_step5', { defaultValue: '每4个番茄钟长休息' })}</p>
               </div>
             </div>
             <button onClick={onClose} className="ui-primary-button w-full rounded-full tracking-widest">{t('pomodoro.got_it', { defaultValue: '明白了' })}</button>
@@ -484,7 +484,7 @@ function TaskSelectorModal({ isOpen, onClose, onSelect, tasks, onNewTask }: {
               {tasks.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-on-surface-variant gap-3 py-12">
                   <div className="text-4xl opacity-20">📝</div>
-                  <p className="text-sm font-bold">暂无任务</p>
+                  <p className="text-sm font-bold">{t('pomodoro.task_selector_no_tasks', { defaultValue: '暂无任务' })}</p>
                 </div>
               ) : tasks.map((task: any) => (
                 <button key={task.id} onClick={() => { onSelect(task.title); onClose(); }} className="w-full p-4 text-left text-sm font-bold text-on-surface hover:bg-surface-container-low rounded-xl">

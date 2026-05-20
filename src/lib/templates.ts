@@ -9,6 +9,7 @@ import {
   EXPANDED_TASK_CATEGORIES,
   EXPANDED_TASK_TEMPLATES,
 } from './expandedTemplates';
+import { normalizeTemplateStars } from './starEconomy';
 
 // ========== 图标名称（对应 Lucide React 图标）==========
 
@@ -222,6 +223,13 @@ export interface HabitTemplate {
   iconKeyword?: string; // 未来批量生成图标时使用
 }
 
+function normalizeHabitTemplate<T extends HabitTemplate>(template: T): T {
+  return {
+    ...template,
+    stars: normalizeTemplateStars(template.stars, template.category),
+  };
+}
+
 // ─── 分类1：学习（学业相关习惯）──┐
 export const TASK_STUDY: HabitTemplate[] = [
   { id: 's01', title: '练字',       category: '学习', stars: 30,  icon: '/task-icons/study/Cute_flat_kawaii_calligraphy_w_2026-04-27T20-18-14.png' },
@@ -233,7 +241,7 @@ export const TASK_STUDY: HabitTemplate[] = [
   { id: 's07', title: '口算',       category: '学习', stars: 20,  icon: '/task-icons/study/Cute_flat_kawaii_mental_arithm_2026-04-27T20-19-01.png' },
   { id: 's08', title: '古诗',       category: '学习', stars: 30,  icon: '/task-icons/study/Cute_flat_kawei_reciting_ancie_2026-04-27T20-19-17.png' },
   { id: 's09', title: '英语',       category: '学习', stars: 40,  icon: '/task-icons/study/Cute_flat_kawaii_English_learn_2026-04-27T20-19-13.png' },
-];
+].map(normalizeHabitTemplate);
 
 // ─── 分类2：生活（日常生活好习惯）────┤
 export const TASK_LIFE: HabitTemplate[] = [
@@ -246,7 +254,7 @@ export const TASK_LIFE: HabitTemplate[] = [
   { id: 'l07', title: '睡午觉',     category: '生活', stars: 20,  icon: '/task-icons/life/Cute_flat_kawaii_taking_aftern_2026-04-27T20-20-39.png' },
   { id: 'l08', title: '刷牙',       category: '生活', stars: 10,  icon: '/task-icons/life/Cute_flat_kawaii_brushing_teet_2026-04-27T20-20-31.png' },
   { id: 'l09', title: '洗脸',       category: '生活', stars: 10,  icon: '/task-icons/life/Cute_flat_kawaii_washing_face__2026-04-27T20-20-33.png' },
-];
+].map(normalizeHabitTemplate);
 
 // ─── 分类3：兴趣（兴趣爱好类）────────┤
 export const TASK_HOBBY: HabitTemplate[] = [
@@ -258,7 +266,7 @@ export const TASK_HOBBY: HabitTemplate[] = [
   { id: 'h06', title: '绘画',       category: '兴趣', stars: 40,  icon: '/task-icons/hobby/Cute_flat_kawaii_painting_draw_2026-04-27T20-22-01.png' },
   { id: 'h07', title: '运动',       category: '兴趣', stars: 40,  icon: '/task-icons/hobby/Cute_flat_kawaii_sports_exerci_2026-04-27T20-21-52.png' },
   { id: 'h08', title: '自行车',     category: '兴趣', stars: 40,  icon: '/task-icons/hobby/Cute_flat_kawaii_riding_bicycl_2026-04-27T20-21-54.png' },
-];
+].map(normalizeHabitTemplate);
 
 // ─── 分类4：独立（自理能力培养）────────┤
 export const TASK_INDEPENDENT: HabitTemplate[] = [
@@ -270,7 +278,7 @@ export const TASK_INDEPENDENT: HabitTemplate[] = [
   { id: 'i06', title: '穿衣服',     category: '独立', stars: 20,  icon: '/task-icons/independent/Cute_flat_kawaii_getting_dress_2026-04-27T20-23-19.png' },
   { id: 'i07', title: '检查作业',   category: '独立', stars: 30,  icon: '/task-icons/independent/Cute_flat_kawai_checking_homew_2026-04-27T20-23-21.png' },
   { id: 'i08', title: '自己睡觉',   category: '独立', stars: 40,  icon: '/task-icons/independent/Cute_flat_kawaii_going_to_slee_2026-04-27T20-23-27.png' },
-];
+].map(normalizeHabitTemplate);
 
 // ─── 分类5：表扬（正向行为奖励）────────┤
 export const TASK_PRAISE: HabitTemplate[] = [
@@ -304,7 +312,7 @@ export const TASK_PRAISE: HabitTemplate[] = [
   { id: 'p28', title: '不吃零食',   category: '表扬', stars: 20,  icon: '/task-icons/praise/Cute_flat_kawaii_icon_of_refus_2026-04-27T20-15-30.png' },
   { id: 'p29', title: 'A++',         category: '表扬', stars: 98,  icon: '/task-icons/praise/Cute_flat_kawaii_icon_of_A_plu_2026-04-27T20-15-25.png' },
   { id: 'p30', title: '学霸',       category: '表扬', stars: 100, icon: '/task-icons/praise/Cute_flat_kawaii_icon_of_top_s_2026-04-27T20-16-28.png' },
-];
+].map(normalizeHabitTemplate);
 
 // ─── 分类6：批评（负向行为扣分）────────┘
 export const TASK_CRITIQUE: HabitTemplate[] = [
@@ -332,7 +340,7 @@ export const TASK_CRITIQUE: HabitTemplate[] = [
   { id: 'c22', title: '迟到',       category: '批评', stars: -20, icon: '/task-icons/critique/Cute_flat_kawaii_icon_of_being_2026-04-27T20-10-30.png' },
   { id: 'c23', title: '走神',       category: '批评', stars: -15, icon: '/task-icons/critique/Cute_flat_kawaii_icon_of_zonin_2026-04-27T20-10-36.png' },
   { id: 'c24', title: '尿床',       category: '批评', stars: -30, icon: '/task-icons/critique/Cute_flat_kawaii_icon_of_bedwe_2026-04-27T20-10-35.png' },
-];
+].map(normalizeHabitTemplate);
 
 // ========== 任务模板库汇总 ==========
 

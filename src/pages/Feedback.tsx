@@ -1,11 +1,49 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Phone, Send, CheckCircle2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Camera, Phone, CheckCircle2, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
 import { showToastGlobal } from '../components/Toast';
 import { TopAppBar } from '../components/navigation/TopAppBar';
+import { AppModal } from '../components/AppModal';
+
+type FeedbackRecord = {
+  id: string;
+  category: string;
+  content: string;
+  contact: string;
+  images: string[];
+  createdAt: string;
+  status: 'submitted';
+};
+
+const FEEDBACK_STORAGE_KEY = 'wishcard_feedback_records';
+
+function readLocalStorage(key: string): string | null {
+  try {
+    return typeof window !== 'undefined' && window.localStorage ? window.localStorage.getItem(key) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalStorage(key: string, value: string) {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(key, value);
+    }
+  } catch {
+    // Some embedded browsers disable localStorage. The in-memory state still keeps feedback visible for this session.
+  }
+}
+
+function loadFeedbackRecords(): FeedbackRecord[] {
+  try {
+    return JSON.parse(readLocalStorage(FEEDBACK_STORAGE_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
 
 export function Feedback() {
   const navigate = useNavigate();
@@ -25,6 +63,8 @@ export function Feedback() {
   const [contact, setContact] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [images, setImages] = useState<string[]>([]);
+  const [records, setRecords] = useState<FeedbackRecord[]>(loadFeedbackRecords);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,10 +72,19 @@ export function Feedback() {
       showToastGlobal(t('feedback.error_min_length', { defaultValue: 'error min length' }), 'warning');
       return;
     }
-    // Simulate submission
-    setTimeout(() => {
-      setIsSubmitted(true);
-    }, 800);
+    const nextRecord: FeedbackRecord = {
+      id: `feedback-${Date.now()}`,
+      category: selectedCategory,
+      content: content.trim(),
+      contact: contact.trim(),
+      images,
+      createdAt: new Date().toISOString(),
+      status: 'submitted',
+    };
+    const nextRecords = [nextRecord, ...records].slice(0, 50);
+    setRecords(nextRecords);
+    writeLocalStorage(FEEDBACK_STORAGE_KEY, JSON.stringify(nextRecords));
+    setIsSubmitted(true);
   };
 
   if (isSubmitted) {
@@ -64,7 +113,13 @@ export function Feedback() {
         title={t('feedback.title', { defaultValue: '意见反馈' })}
         backTo="/profile"
         rightContent={
-          <button className="text-on-surface-variant text-sm font-bold opacity-60">{t('feedback.my_feedback', { defaultValue: '我的反馈' })}</button>
+          <button
+            type="button"
+            onClick={() => setIsHistoryOpen(true)}
+            className="text-primary text-sm font-black"
+          >
+            {t('feedback.my_feedback', { defaultValue: '我的反馈' })}
+          </button>
         }
       />
 
@@ -161,9 +216,10 @@ className={cn(
       </div>
 
       {/* Primary Submit Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-surface via-surface to-transparent z-40">
+      <div className="ui-feedback-submit-bar fixed left-0 right-0 p-5 bg-gradient-to-t from-surface via-surface to-transparent z-50">
         <div className="max-w-md mx-auto">
 <button 
+  type="button"
   onClick={handleSubmit}
   className="w-full py-5 bg-primary-surface hover:bg-primary-surface/80 text-primary-text font-black text-lg rounded-[2rem] shadow-primary-surface/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
 >
@@ -171,6 +227,53 @@ className={cn(
           </button>
         </div>
       </div>
+
+      <AppModal
+        open={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        title={t('feedback.my_feedback', { defaultValue: '我的反馈' })}
+        surface="sheet"
+        zIndexClass="z-[120]"
+        bodyClassName="px-5 py-4"
+      >
+        {records.length === 0 ? (
+          <div className="py-8 text-center text-sm font-bold text-on-surface-variant/55">
+            {t('feedback.empty_records', { defaultValue: '还没有提交过反馈' })}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {records.map(record => (
+              <div key={record.id} className="rounded-2xl bg-surface-container-low p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">{record.category}</span>
+                  <span className="text-[11px] font-bold text-on-surface-variant/45">
+                    {new Date(record.createdAt).toLocaleString()}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm font-bold leading-relaxed text-on-surface">{record.content}</p>
+                {record.contact && (
+                  <p className="mt-2 text-xs font-bold text-on-surface-variant/55">{record.contact}</p>
+                )}
+                {record.images.length > 0 && (
+                  <div className="mt-3 flex gap-2 overflow-x-auto">
+                    {record.images.map((img, index) => (
+                      <img key={index} src={img} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={() => setIsHistoryOpen(false)}
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-surface-container-highest py-3 text-sm font-black text-on-surface"
+        >
+          <X size={16} />
+          {t('common.close', { defaultValue: '关闭' })}
+        </button>
+      </AppModal>
     </div>
   );
 }

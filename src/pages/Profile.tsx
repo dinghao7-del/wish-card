@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Settings, Shield, Moon, Bell, Edit3, UserPlus, LogOut, ChevronRight, MessageSquare, Headset, Download, Upload, X, Link, HardDrive, Share2, Copy, Check, Calendar, Sparkles, Palette } from 'lucide-react';
+import { Settings, Shield, Moon, Bell, Edit3, UserPlus, LogOut, ChevronRight, MessageSquare, Download, Upload, X, Link, HardDrive, Share2, Copy, Check, Calendar, Sparkles, Palette } from 'lucide-react';
 import { useFamily } from '../context/FamilyContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -81,7 +81,7 @@ export function Profile() {
     const shareUrl = `${window.location.origin}/import?data=${base64Data}`;
 
     if (shareUrl.length > 2000) {
-      showToastGlobal('分享内容过多，链接过长可能无法正常使用，建议使用文件备份。', 'warning');
+      showToastGlobal(t('profile.share.link_too_long', { defaultValue: '分享内容过多，链接过长可能无法正常使用，建议使用文件备份。' }), 'warning');
     }
 
     navigator.clipboard.writeText(shareUrl);
@@ -91,14 +91,14 @@ export function Profile() {
 
   const executeImport = async (data: api.ImportData) => {
     if (!familyId || !currentUser) {
-      showToastGlobal('请先登录后再导入数据', 'error');
+      showToastGlobal(t('profile.import.login_required', { defaultValue: '请先登录后再导入数据' }), 'error');
       return;
     }
     try {
       await api.bulkImport(familyId, data, currentUser.id);
       window.location.reload();
     } catch (err: any) {
-      showToastGlobal(`导入失败: ${err.message}`, 'error');
+      showToastGlobal(t('profile.import.failed', { defaultValue: '导入失败：{{message}}', message: err.message }), 'error');
     }
   };
 
@@ -138,7 +138,7 @@ export function Profile() {
       const data = await response.json();
       setUrlImportData(data);
     } catch (err) {
-      showToastGlobal('无法获取链接数据，请检查链接是否有效', 'error');
+      showToastGlobal(t('profile.import.fetch_failed', { defaultValue: '无法获取链接数据，请检查链接是否有效' }), 'error');
     } finally {
       setIsImporting(false);
     }
@@ -160,55 +160,54 @@ export function Profile() {
 
   const auditActionLabel = (operationType: string) => {
     const labels: Record<string, string> = {
-      insert_tasks: '创建任务',
-      update_tasks: '更新任务',
-      delete_tasks: '删除任务',
-      insert_plans: '创建计划',
-      update_plans: '更新计划',
-      insert_members: '添加成员',
-      update_members: '更新成员',
-      insert_rewards: '创建心愿',
-      update_rewards: '更新心愿',
-      delete_rewards: '删除心愿',
-      insert_star_transactions: '星星变动',
+      insert_tasks: t('profile.activity.actions.insert_tasks', { defaultValue: '创建任务' }),
+      update_tasks: t('profile.activity.actions.update_tasks', { defaultValue: '更新任务' }),
+      delete_tasks: t('profile.activity.actions.delete_tasks', { defaultValue: '删除任务' }),
+      insert_plans: t('profile.activity.actions.insert_plans', { defaultValue: '创建计划' }),
+      update_plans: t('profile.activity.actions.update_plans', { defaultValue: '更新计划' }),
+      insert_members: t('profile.activity.actions.insert_members', { defaultValue: '添加成员' }),
+      update_members: t('profile.activity.actions.update_members', { defaultValue: '更新成员' }),
+      insert_rewards: t('profile.activity.actions.insert_rewards', { defaultValue: '创建心愿' }),
+      update_rewards: t('profile.activity.actions.update_rewards', { defaultValue: '更新心愿' }),
+      delete_rewards: t('profile.activity.actions.delete_rewards', { defaultValue: '删除心愿' }),
+      insert_star_transactions: t('profile.activity.actions.insert_star_transactions', { defaultValue: '星星变动' }),
     };
     return labels[operationType] || operationType;
   };
 
   const auditTargetLabel = (log: typeof auditLogs[number]) => {
     const payload = log.payload as Record<string, any>;
-    return payload.title || payload.name || payload.reason || log.targetId || '家庭数据';
+    return payload.title || payload.name || payload.reason || log.targetId || t('profile.activity.fallback_target', { defaultValue: '家庭数据' });
   };
 
   const auditActorName = (memberId: string | null) => {
-    return members.find(member => member.id === memberId)?.name || '家庭成员';
+    return members.find(member => member.id === memberId)?.name || t('profile.activity.family_member', { defaultValue: '家庭成员' });
   };
 
   return (
-    <div className="ui-profile-page px-6 pb-12 animate-in fade-in slide-in-from-left-4 duration-500 min-h-screen bg-background text-on-surface">
-      <header className="ui-profile-header flex justify-between items-center py-4 sticky top-[var(--app-sticky-top,0px)] bg-background/80 backdrop-blur-xl z-40 -mx-6 px-6">
-        <div className="flex items-center gap-3">
-          <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={32} />
-          <h1 className="font-bold text-lg text-on-surface">{t('profile.title', { defaultValue: '标题' })}</h1>
-        </div>
-        <div className="w-10" />
-      </header>
-
+    <div className="ui-profile-page px-5 pt-3 pb-10 animate-in fade-in slide-in-from-left-4 duration-500 min-h-screen bg-background text-on-surface">
       {/* Profile Hero */}
-      <section className="ui-profile-hero relative mb-6 flex flex-col items-center mt-2">
+      <section className="ui-profile-hero relative mb-4 flex items-center gap-3 rounded-[1.75rem] bg-surface p-3.5 shadow-sm border border-outline-variant/5">
           <button
             onClick={() => navigate('/profile/edit')}
             className="ui-profile-avatar-button relative group cursor-pointer transition-transform hover:scale-105"
           >
-            <div className="ui-profile-main-avatar w-28 h-28 flex items-center justify-center relative z-10">
-              <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={112} className="border-4 border-white dark:border-surface-container-highest shadow-xl" />
+            <div className="ui-profile-main-avatar w-16 h-16 flex items-center justify-center relative z-10">
+              <TextAvatar src={currentUser?.avatar} name={currentUser?.name || '?'} size={64} className="border-[3px] border-white dark:border-surface-container-highest shadow-lg" />
             </div>
-            <div className="absolute bottom-0 right-0 w-9 h-9 bg-secondary-container rounded-full shadow-lg flex items-center justify-center text-on-secondary-container border-2 border-white dark:border-surface-container-highest z-20">
-              <Edit3 size={16} strokeWidth={2.5} />
+            <div className="absolute -bottom-0.5 -right-0.5 w-7 h-7 bg-secondary-container rounded-full shadow-md flex items-center justify-center text-on-secondary-container border-2 border-white dark:border-surface-container-highest z-20">
+              <Edit3 size={13} strokeWidth={2.5} />
             </div>
           </button>
 
-        <h2 className="ui-profile-name text-2xl font-black text-on-surface mt-2">{currentUser?.name}</h2>
+        <div className="min-w-0 flex-1">
+          <h2 className="ui-profile-name text-xl font-black text-on-surface leading-tight truncate">{currentUser?.name}</h2>
+          <p className="mt-1 text-xs font-bold text-on-surface-variant/55">
+            {currentUser?.role === 'parent'
+              ? t('profile.members.parent_account', { defaultValue: '家长账号' })
+              : t('profile.members.child_account', { defaultValue: '孩子账号' })} · {t('profile.members.count', { defaultValue: '{{count}} 位家庭成员', count: members.length })}
+          </p>
+        </div>
       </section>
 
       <AnimatePresence>
@@ -260,7 +259,7 @@ export function Profile() {
                 {/* Shared Link Section */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 mb-1">
-                    <div className="w-8 h-8 rounded-xl bg-warning-container text-warning flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                       <Share2 size={16} strokeWidth={2.5} />
                     </div>
                     <span className="font-black text-sm">{t('profile.share.link_title', { defaultValue: 'link title' })}</span>
@@ -268,7 +267,7 @@ export function Profile() {
 
 <button
   onClick={handleCopyShareLink}
-  className="w-full py-4 bg-amber-600 text-white rounded-2xl font-black text-base shadow-lg shadow-amber-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+  className="w-full py-4 bg-primary text-white rounded-2xl font-black text-base shadow-lg shadow-primary/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
 >
                     {copySuccess ? <Check size={20} /> : <Share2 size={20} />}
                     {copySuccess ? t('profile.share.link_copied', { defaultValue: 'link copied' }) : t('profile.share.copy_link', { defaultValue: 'copy link' })}
@@ -278,24 +277,31 @@ export function Profile() {
                 {/* Backup & Restore Section */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 mb-1">
-                    <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                       <Download size={16} strokeWidth={2.5} />
                     </div>
                     <span className="font-black text-sm">{t('profile.menu.share_backup', { defaultValue: 'share backup' })}</span>
                   </div>
 
-                  <div className="p-6 bg-surface-container-high dark:bg-white/5 rounded-[2.5rem] space-y-4 border border-outline-variant/10">
+                  <div className="p-5 bg-surface-container-low dark:bg-white/5 rounded-[2rem] space-y-4 border border-outline-variant/10">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="application/json,.json"
+                      onChange={handleFileImport}
+                      className="hidden"
+                    />
                     <div className="flex gap-2">
 <button
   onClick={handleExport}
   disabled={isExporting}
-  className="flex-1 py-3.5 bg-tertiary text-on-tertiary rounded-xl font-black text-sm active:scale-[0.98] transition-all disabled:opacity-50"
+  className="flex-1 py-3.5 bg-surface text-on-surface rounded-xl font-black text-sm border border-outline-variant/10 active:scale-[0.98] transition-all disabled:opacity-50"
 >
                         {t('profile.export.download', { defaultValue: '下载' })}
                       </button>
 <button
   onClick={() => fileInputRef.current?.click()}
-  className="flex-1 py-3.5 bg-primary text-on-primary rounded-xl font-black text-sm active:scale-[0.98] transition-all"
+  className="flex-1 py-3.5 bg-primary text-white rounded-xl font-black text-sm active:scale-[0.98] transition-all"
 >
                         {t('profile.import.upload', { defaultValue: '上传' })}
                       </button>
@@ -305,7 +311,7 @@ export function Profile() {
                       <div className="relative">
                         <input
                           type="url"
-                          placeholder="或粘贴还原链接地址..."
+                          placeholder={t('profile.import.placeholder', { defaultValue: '或粘贴还原链接地址...' })}
                           value={importUrl}
                           onChange={(e) => {
                             setImportUrl(e.target.value);
@@ -337,7 +343,7 @@ export function Profile() {
                           </div>
                           <button
                             onClick={() => executeImport(urlImportData)}
-                            className="w-full py-2 bg-primary text-on-primary rounded-lg text-xs font-black active:scale-95 transition-all"
+                            className="w-full py-2 bg-primary text-white rounded-lg text-xs font-black active:scale-95 transition-all"
                           >
                             {t('profile.import.action', { defaultValue: 'action' })}
                           </button>
@@ -356,33 +362,33 @@ export function Profile() {
       </AnimatePresence>
 
       {/* Family Members */}
-      <section className="ui-profile-section mb-6">
-        <div className="flex justify-between items-center mb-4 px-1 gap-3">
-          <h3 className="ui-profile-section-title font-black text-lg text-on-surface">{t('profile.members.title', { defaultValue: '标题' })}</h3>
+      <section className="ui-profile-section mb-4">
+        <div className="flex justify-between items-center mb-2 px-1 gap-3">
+          <h3 className="ui-profile-section-title font-black text-base text-on-surface">{t('profile.members.title', { defaultValue: '标题' })}</h3>
           <button
             onClick={() => navigate('/profile/members/add')}
-            className="min-h-[44px] shrink-0 text-primary text-sm font-black flex items-center gap-1.5 rounded-full px-2 hover:bg-primary/5 transition-colors"
+            className="min-h-[36px] shrink-0 text-primary text-xs font-black flex items-center gap-1.5 rounded-full px-2.5 hover:bg-primary/5 transition-colors"
           >
-            <UserPlus size={18} strokeWidth={2.5} /> {t('profile.members.add', { defaultValue: '添加' })}
+            <UserPlus size={16} strokeWidth={2.5} /> {t('profile.members.add', { defaultValue: '添加' })}
           </button>
         </div>
 
-        <div className="ui-profile-member-rail flex gap-4 overflow-x-auto pb-4 px-1">
+        <div className="ui-profile-member-rail flex gap-3 overflow-x-auto pb-2 px-1">
           {members.map(member => (
             <motion.div
               key={member.id}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate(`/profile/members/${member.id}`)}
 className={cn(
-  "ui-profile-member-card min-w-[78px] flex flex-col items-center gap-1.5 transition-all cursor-pointer relative",
+  "ui-profile-member-card min-w-[66px] flex flex-col items-center gap-1 transition-all cursor-pointer relative",
   currentUser?.id === member.id ? "is-active" : ""
 )}
             >
               <div className="ui-profile-member-avatar">
-                <TextAvatar src={member.avatar} name={member.name} size={58} />
+                <TextAvatar src={member.avatar} name={member.name} size={48} />
               </div>
-              <span className="ui-profile-member-name font-black text-[13px] mb-1 text-on-surface truncate w-full text-center">{member.name}</span>
-              <div className="ui-profile-member-score bg-surface-container px-2 py-0.5 rounded-full">
+              <span className="ui-profile-member-name font-black text-xs text-on-surface truncate w-full text-center">{member.name}</span>
+              <div className="ui-profile-member-score bg-surface-container px-2 py-0.5 rounded-full leading-none">
                 <span className="text-[9px] font-black text-success whitespace-nowrap">{member.stars} {t('common.stars_suffix', { defaultValue: 'stars suffix' })}</span>
               </div>
             </motion.div>
@@ -392,16 +398,16 @@ className={cn(
 
       {/* Local Audit Logs */}
       {currentUser?.role === 'parent' && auditLogs.length > 0 && (
-        <section className="ui-profile-section mb-6">
-          <div className="flex items-center justify-between mb-4 px-1">
-            <h3 className="ui-profile-section-title font-black text-lg text-on-surface">最近操作</h3>
-            <span className="ui-profile-kicker text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest">本机记录</span>
+        <section className="ui-profile-section mb-4">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <h3 className="ui-profile-section-title font-black text-base text-on-surface">{t('profile.activity.title', { defaultValue: '最近操作' })}</h3>
+            <span className="ui-profile-kicker text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest">{t('profile.activity.local', { defaultValue: '本机记录' })}</span>
           </div>
-          <div className="ui-panel bg-surface dark:bg-surface-container-low rounded-[2rem] shadow-sm border border-outline-variant/5 overflow-hidden p-2">
+          <div className="ui-panel bg-surface dark:bg-surface-container-low rounded-[1.5rem] shadow-sm border border-outline-variant/5 overflow-hidden p-1.5">
             {auditLogs.slice(0, 5).map(log => (
-              <div key={log.id} className="flex items-center gap-3 p-3 rounded-[1.5rem]">
-                <div className="w-10 h-10 rounded-2xl bg-surface-container flex items-center justify-center text-primary shrink-0">
-                  <HardDrive size={18} strokeWidth={2.5} />
+              <div key={log.id} className="flex items-center gap-3 p-2.5 rounded-[1.25rem]">
+                <div className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-primary shrink-0">
+                  <HardDrive size={17} strokeWidth={2.5} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-black text-on-surface truncate">
@@ -419,31 +425,30 @@ className={cn(
       )}
 
       {/* Menu Groups */}
-      <section className="ui-profile-menu-section space-y-4">
-        <div className="ui-profile-menu-group ui-panel bg-surface dark:bg-surface-container-low rounded-[2.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-2">
+      <section className="ui-profile-menu-section space-y-3">
+        <div className="ui-profile-menu-group ui-panel bg-surface dark:bg-surface-container-low rounded-[1.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-1.5">
           <MenuLink icon={Shield} label={t('profile.menu.security', { defaultValue: '安全' })} onClick={() => navigate('/settings/security')} />
-          <MenuLink icon={Sparkles} label="AI 分析" desc="智能建档、家庭复盘、日程方案" onClick={() => navigate('/ai-analysis')} />
+          <MenuLink icon={Sparkles} label={t('profile.menu.family_assistant', { defaultValue: '家庭管家' })} desc={t('profile.menu.family_assistant_desc', { defaultValue: '智能建档、日程优化、复盘与取舍' })} onClick={() => navigate('/ai-analysis')} />
           <MenuLink icon={Download} label={t('profile.menu.share_backup', { defaultValue: 'share backup' })} desc={t('profile.menu.share_backup_desc', { defaultValue: 'share backup desc' })} onClick={() => setIsImportExportOpen(true)} />
           <MenuLink icon={Calendar} label={t('profile.menu.calendar_sync', { defaultValue: '同步日历' })} desc={t('calendar_sync.subtitle', { defaultValue: '将任务同步到手机日历' })} onClick={() => navigate('/calendar-sync')} />
-          <MenuLink icon={Calendar} label="校历与公共时间" desc="开学、放假、极端天气、交通影响" onClick={() => navigate('/school-calendar')} />
           <MenuLink icon={Bell} label={t('profile.menu.notifications', { defaultValue: '通知' })} desc={t('settings.notifications.subtitle', { defaultValue: '副标题' })} onClick={() => navigate('/settings/notifications')} />
           <MenuLink icon={MessageSquare} label={t('profile.menu.feedback', { defaultValue: '反馈' })} onClick={() => navigate('/support/feedback')} />
         </div>
 
-        <div className="ui-profile-menu-group ui-panel bg-surface dark:bg-surface-container-low rounded-[2.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-2">
-          <MenuLink icon={Palette} label="主题皮肤" desc="绿色漫画风 · 电玩漫画风可切换" onClick={() => navigate('/settings/appearance')} />
+        <div className="ui-profile-menu-group ui-panel bg-surface dark:bg-surface-container-low rounded-[1.5rem] shadow-sm border border-outline-variant/5 dark:border-outline-variant/10 overflow-hidden p-1.5">
+          <MenuLink icon={Palette} label={t('profile.menu.theme_skin', { defaultValue: '主题皮肤' })} desc={t('profile.menu.theme_skin_desc', { defaultValue: '绿色漫画风 · 电玩漫画风可切换' })} onClick={() => navigate('/settings/appearance')} />
           <MenuLink icon={Moon} label={t('profile.menu.dark_mode', { defaultValue: '深色模式' })} isToggle active={isDarkMode} onToggle={toggleDarkMode} />
           <MenuLink icon={Settings} label={t('profile.menu.basic_settings', { defaultValue: '基础设置' })} onClick={() => navigate('/settings/basic')} />
         </div>
       </section>
 
-      <div className="ui-profile-logout-wrap mt-auto pt-6 flex justify-center pb-4 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent">
+      <div className="ui-profile-logout-wrap mt-auto pt-4 flex justify-center pb-3 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent">
         <button
           onClick={() => handleLogout()}
-          className="bg-danger-container px-10 py-3.5 rounded-full flex items-center gap-2 shadow-sm border border-danger/20 active:scale-95 transition-all"
+          className="bg-danger-container px-8 py-3 rounded-full flex items-center gap-2 shadow-sm border border-danger/20 active:scale-95 transition-all"
         >
           <LogOut size={18} className="text-danger" />
-          <span className="text-base font-black text-danger tracking-wide">
+          <span className="text-sm font-black text-danger tracking-wide">
             {t('profile.action.logout', { defaultValue: '退出' })}
           </span>
         </button>
@@ -457,22 +462,22 @@ function MenuLink({ icon: Icon, label, desc, isToggle, active, onToggle, onClick
     <div
       onClick={!isToggle ? onClick : onToggle}
       className={cn(
-        "ui-profile-menu-link flex items-center justify-between p-5 hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors cursor-pointer group rounded-[2rem] text-on-surface",
+        "ui-profile-menu-link flex items-center justify-between p-3 hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors cursor-pointer group rounded-[1.25rem] text-on-surface",
         isToggle && "cursor-default"
       )}
     >
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 min-w-0">
         <div className={cn(
-          "ui-profile-menu-icon w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
+          "ui-profile-menu-icon w-10 h-10 rounded-xl flex items-center justify-center transition-colors shrink-0",
           iconBg || "bg-surface-container",
           iconColor || "text-primary",
           !iconBg && "group-hover:bg-primary/10"
         )}>
-          <Icon size={22} strokeWidth={2.5} />
+          <Icon size={20} strokeWidth={2.5} />
         </div>
-        <div className="flex flex-col">
-          <span className="ui-profile-menu-label font-black text-base text-on-surface">{label}</span>
-          {desc && <span className="ui-profile-menu-desc text-xs text-on-surface-variant/50 font-bold">{desc}</span>}
+        <div className="flex min-w-0 flex-col">
+          <span className="ui-profile-menu-label font-black text-[15px] leading-tight text-on-surface">{label}</span>
+          {desc && <span className="ui-profile-menu-desc text-[11px] leading-snug text-on-surface-variant/50 font-bold truncate">{desc}</span>}
         </div>
       </div>
       {isToggle ? (
@@ -482,7 +487,7 @@ function MenuLink({ icon: Icon, label, desc, isToggle, active, onToggle, onClick
             onToggle();
           }}
           className={cn(
-            "w-12 h-7 rounded-full relative p-1 flex items-center transition-colors cursor-pointer",
+            "w-11 h-6 rounded-full relative p-0.5 flex items-center transition-colors cursor-pointer shrink-0",
             active ? "bg-primary" : "bg-surface-container-highest"
           )}
         >

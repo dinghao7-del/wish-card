@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
 
 type ModalSurface = 'sheet' | 'center' | 'fullscreen';
@@ -30,12 +31,14 @@ export function AppModal({
   footer,
   className,
   bodyClassName,
-  closeLabel = '关闭',
+  closeLabel,
 }: AppModalProps) {
+  const { t } = useTranslation();
   if (!open) return null;
 
   const isFullscreen = surface === 'fullscreen';
   const isCenter = surface === 'center';
+  const resolvedCloseLabel = closeLabel || t('common.close', { defaultValue: '关闭' });
 
   return (
     <div
@@ -48,7 +51,7 @@ export function AppModal({
       {!isFullscreen && (
         <motion.button
           type="button"
-          aria-label={closeLabel}
+          aria-label={resolvedCloseLabel}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -75,7 +78,7 @@ export function AppModal({
             <button
               type="button"
               onClick={onClose}
-              aria-label={closeLabel}
+              aria-label={resolvedCloseLabel}
               className="ui-app-modal-close flex h-10 w-10 items-center justify-center rounded-full bg-surface-container text-on-surface-variant"
             >
               <Plus size={24} className="rotate-45" strokeWidth={2.8} />

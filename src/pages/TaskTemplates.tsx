@@ -23,6 +23,22 @@ const TEMPLATE_DATA: TaskTemplate[] = ALL_TASK_TEMPLATES.map(template => ({
   frequency: template.frequency || 'daily',
 }));
 
+const EN_TASK_TEMPLATES: TaskTemplate[] = [
+  { id: 'en-read-20', title: 'Read for 20 minutes', description: 'Build a steady daily reading rhythm.', category: 'Study', stars: 3, icon: 'book', frequency: 'daily' },
+  { id: 'en-math-practice', title: 'Math practice', description: 'Finish one small math practice set.', category: 'Study', stars: 3, icon: 'pencil', frequency: 'daily' },
+  { id: 'en-english-words', title: 'English words', description: 'Review or memorize a small word list.', category: 'Study', stars: 4, icon: 'book', frequency: 'daily' },
+  { id: 'en-drink-water', title: 'Drink water', description: 'Drink enough water during the day.', category: 'Life', stars: 1, icon: 'cup', frequency: 'daily' },
+  { id: 'en-brush-teeth', title: 'Brush teeth', description: 'Finish morning or bedtime brushing.', category: 'Life', stars: 1, icon: 'sparkles', frequency: 'daily' },
+  { id: 'en-pack-schoolbag', title: 'Pack schoolbag', description: 'Prepare school items before bedtime.', category: 'Independence', stars: 2, icon: 'bag', frequency: 'daily' },
+  { id: 'en-tidy-toys', title: 'Tidy toys', description: 'Put toys back after play time.', category: 'Independence', stars: 2, icon: 'home', frequency: 'daily' },
+  { id: 'en-practice-piano', title: 'Practice piano', description: 'Practice an instrument for the planned time.', category: 'Interest', stars: 5, icon: 'music', frequency: 'daily' },
+  { id: 'en-jump-rope', title: 'Jump rope', description: 'Do a short exercise session.', category: 'Interest', stars: 3, icon: 'sport', frequency: 'daily' },
+  { id: 'en-teacher-praise', title: 'Teacher praise', description: 'Record meaningful praise or progress from school.', category: 'Praise', stars: 5, icon: 'trophy', frequency: 'weekly' },
+  { id: 'en-keep-promise', title: 'Keep a promise', description: 'Follow through on a family agreement.', category: 'Praise', stars: 5, icon: 'heart', frequency: 'weekly' },
+  { id: 'en-late-bedtime', title: 'Late bedtime correction', description: 'Use a small correction when bedtime is missed.', category: 'Correction', stars: -2, icon: 'moon', frequency: 'daily' },
+  { id: 'en-screen-time', title: 'Screen time correction', description: 'Use a small correction when screen rules are broken.', category: 'Correction', stars: -3, icon: 'phone', frequency: 'daily' },
+];
+
 function TemplateIcon({ template }: { template: TaskTemplate }) {
   if (template.icon.startsWith('/')) {
     return <img src={template.icon} alt="" className="w-8 h-8 object-contain" loading="lazy" />;
@@ -34,14 +50,17 @@ export function TaskTemplates() {
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>(t('task_templates.all', '全部'));
 
-  const categories = [t('task_templates.all', '全部'), ...Array.from(new Set(TEMPLATE_DATA.map(tpl => tpl.category)))];
+  const isEnglish = i18n.language?.startsWith('en');
+  const displayTemplates = isEnglish ? EN_TASK_TEMPLATES : TEMPLATE_DATA;
+  const categories = [t('task_templates.all', '全部'), ...Array.from(new Set(displayTemplates.map(tpl => tpl.category)))];
 
-  const filteredTemplates = TEMPLATE_DATA.filter(template => {
-    const matchesSearch = template.title.includes(searchQuery) || template.description.includes(searchQuery);
+  const filteredTemplates = displayTemplates.filter(template => {
+    const keyword = searchQuery.trim().toLowerCase();
+    const matchesSearch = !keyword || `${template.title} ${template.description} ${template.category}`.toLowerCase().includes(keyword);
     const matchesCategory = activeCategory === t('task_templates.all', '全部') || template.category === activeCategory;
     return matchesSearch && matchesCategory;
   });
@@ -72,7 +91,7 @@ export function TaskTemplates() {
 
   return (
     <div className="ui-template-page min-h-screen bg-surface pb-24">
-      <header className="ui-create-header sticky top-0 z-50 bg-surface/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
+      <header className="ui-create-header sticky top-0 z-50 bg-surface/80 backdrop-blur-xl px-4 py-3 flex items-center justify-between">
         <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container/50 text-on-surface-variant transition-colors">
           <ArrowLeft size={20} />
         </button>
@@ -80,7 +99,7 @@ export function TaskTemplates() {
         <div className="w-10" />
       </header>
 
-      <div className="px-6 space-y-6">
+      <div className="px-4 space-y-4">
         {/* Search & Custom Add */}
         <div className="flex items-center gap-3 mt-2">
           <div className="relative flex-1">
@@ -90,7 +109,7 @@ export function TaskTemplates() {
               placeholder={t('task_templates.search_placeholder', '搜索任务')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border-none rounded-2xl pl-11 pr-4 py-3.5 shadow-sm focus:ring-2 focus:ring-primary/20 transition-all font-bold text-sm"
+              className="w-full bg-white border-none rounded-xl pl-10 pr-3 py-2.5 shadow-sm focus:ring-2 focus:ring-primary/20 transition-all font-bold text-sm"
             />
           </div>
           <button 
@@ -98,7 +117,7 @@ export function TaskTemplates() {
               planId: searchParams.get('planId'),
               planName: searchParams.get('planName'),
             }), { state: { fromMode: searchParams.get('fromMode') || location.state?.fromMode || 'target' } })}
-            className="ui-create-add-button px-4 py-3.5 bg-white rounded-2xl shadow-sm border border-outline-variant/10 flex items-center gap-2 active:scale-95 transition-all shrink-0"
+            className="ui-create-add-button px-3 py-2.5 bg-white rounded-xl shadow-sm border border-outline-variant/10 flex items-center gap-1.5 active:scale-95 transition-all shrink-0"
           >
              <Plus size={18} className="text-primary" />
              <span className="text-sm font-black text-on-surface">{t('task_templates.add_custom', '添加自定义')}</span>
@@ -112,7 +131,7 @@ export function TaskTemplates() {
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={cn(
-                "px-[18px] py-[9px] rounded-full text-xs font-black whitespace-nowrap transition-all border-[1.5px] snap-start shrink-0",
+                "px-4 py-2 rounded-full text-xs font-black whitespace-nowrap transition-all border snap-start shrink-0",
                 activeCategory === cat 
                   ? "bg-primary border-primary text-white shadow-md shadow-primary/20" 
                   : "bg-white border-outline-variant/15 text-on-surface-variant/50 hover:border-outline-variant/30"
@@ -124,7 +143,7 @@ export function TaskTemplates() {
         </div>
 
         {/* Template List */}
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           <AnimatePresence mode="popLayout">
             {filteredTemplates.map((template, idx) => (
               <motion.div 
@@ -133,9 +152,9 @@ export function TaskTemplates() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(idx, 8) * 0.025 }}
                 onClick={() => handleSelect(template)}
-                className="ui-template-card bg-white rounded-[1.5rem] p-4 shadow-sm border border-outline-variant/10 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all group"
+                className="ui-template-card bg-white rounded-2xl p-3 shadow-sm border border-outline-variant/10 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-all group"
               >
-                <div className="w-12 h-12 rounded-2xl bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                <div className="w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
                   <TemplateIcon template={template} />
                 </div>
                 

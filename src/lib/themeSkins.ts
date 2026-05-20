@@ -96,7 +96,7 @@ export const THEME_SKINS: Record<ThemeSkinId, ThemeSkin> = {
     description: '当前默认皮肤，强调轻松、正向、家庭陪伴感。',
     status: 'active',
     assets: {
-      welcomeIllustration: '/skins/forest-comic/welcome-comic.svg',
+      welcomeIllustration: '/skins/forest-comic/welcome/welcome-green-01.png',
     },
     tokens: {
       color: LIGHT_COLOR_TOKENS,
@@ -112,7 +112,7 @@ export const THEME_SKINS: Record<ThemeSkinId, ThemeSkin> = {
     description: '预留给项目包中新版 UI 的候选皮肤，暂不直接混入主界面。',
     status: 'planned',
     assets: {
-      welcomeIllustration: '/skins/forest-comic/welcome-comic.svg',
+      welcomeIllustration: '/skins/forest-comic/welcome/welcome-green-01.png',
     },
     tokens: {
       color: LIGHT_COLOR_TOKENS,
@@ -128,7 +128,7 @@ export const THEME_SKINS: Record<ThemeSkinId, ThemeSkin> = {
     description: '黄黑厚描边、积分任务感强的游戏化 UI 模板。',
     status: 'active',
     assets: {
-      welcomeIllustration: '/skins/arcade-comic/welcome-comic-01.png',
+      welcomeIllustration: '/skins/forest-comic/welcome/welcome-green-01.png',
     },
     tokens: {
       color: ARCADE_COMIC_COLOR_TOKENS,

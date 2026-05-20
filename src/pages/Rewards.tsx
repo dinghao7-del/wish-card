@@ -40,7 +40,6 @@ export function Rewards() {
   const filteredRewards = activeTab === 'all'
     ? (rewards || [])
     : (rewards || []).filter(r => normalizeRewardCategoryId(r.category) === activeTab);
-
   const handleRedeem = (reward: Reward) => {
     if (stars >= reward.cost) {
       setRedeemedReward(reward);
@@ -60,8 +59,8 @@ export function Rewards() {
   const canApproveReward = (reward: Reward) => currentUser?.role === 'parent' && reward.status === 'pending_approval';
   const canRedeemReward = (reward: Reward) => (!reward.status || reward.status === 'available') && stars >= reward.cost;
   const rewardStatusLabel = (reward: Reward) => {
-    if (reward.status === 'pending_approval') return '待确认';
-    if (reward.status === 'redeemed') return '已兑换';
+    if (reward.status === 'pending_approval') return t('rewards.status.pending_approval', { defaultValue: '待确认' });
+    if (reward.status === 'redeemed') return t('rewards.status.redeemed', { defaultValue: '已兑换' });
     return '';
   };
 
@@ -69,16 +68,16 @@ export function Rewards() {
     if (isHighValueReward(reward)) {
       const verificationValue = getParentVerificationValue(currentUser);
       const confirmed = await showConfirm({
-        title: '高价值心愿确认',
-        message: `确认兑换「${reward.name}」将消耗 ${reward.cost} 颗星星，请家长再次确认。`,
+        title: t('rewards.high_value.title', { defaultValue: '高价值心愿确认' }),
+        message: t('rewards.high_value.message', { defaultValue: '确认兑换「{{name}}」将消耗 {{cost}} 颗星星，请家长再次确认。', name: reward.name, cost: reward.cost }),
         type: 'warning',
-        confirmText: '确认兑换',
+        confirmText: t('rewards.high_value.confirm', { defaultValue: '确认兑换' }),
         verificationValue: verificationValue || undefined,
         verificationMatcher: currentUser?.role === 'parent'
           ? (input) => verifyMemberPinOrPassword(currentUser, input) !== null
           : undefined,
-        verificationLabel: verificationValue ? '输入当前家长 PIN 或密码' : undefined,
-        verificationPlaceholder: verificationValue ? 'PIN 或密码' : undefined,
+        verificationLabel: verificationValue ? t('rewards.high_value.verification_label', { defaultValue: '输入当前家长 PIN 或密码' }) : undefined,
+        verificationPlaceholder: verificationValue ? t('rewards.high_value.verification_placeholder', { defaultValue: 'PIN 或密码' }) : undefined,
       });
       if (!confirmed) return;
     }
@@ -134,7 +133,7 @@ export function Rewards() {
       <div className="mt-4 mb-6 px-1">
         <div className="flex justify-between items-center">
           <h2 className="text-[32px] font-black tracking-tight text-on-surface leading-[1.1] whitespace-pre-line">
-            {t('home.title', { defaultValue: '标题' })}
+            {t('rewards.headline', { defaultValue: '用努力\n开启小确幸 🌱' })}
           </h2>
           {currentUser?.role === 'parent' && (
             <button
@@ -150,16 +149,16 @@ export function Rewards() {
       {isArcadeSkin && (
         <section className="ui-reward-promo mb-6 overflow-hidden rounded-3xl bg-primary p-5 text-on-surface">
           <div className="relative z-10 max-w-[68%]">
-            <p className="text-xs font-black uppercase tracking-wide">LIMITED DROP!</p>
+            <p className="text-xs font-black uppercase tracking-wide">{t('rewards.promo.eyebrow', { defaultValue: '限时上新' })}</p>
             <p className="mt-2 text-sm font-bold leading-relaxed">
-              攒够星星兑换心愿卡，精选奖励随时上新。
+              {t('rewards.promo.desc', { defaultValue: '攒够星星兑换心愿卡，精选奖励随时上新。' })}
             </p>
             <button
               type="button"
               onClick={() => navigate(getCreationTemplateRoute('reward'))}
               className="mt-4 rounded-xl bg-on-surface px-5 py-2 text-xs font-black text-surface"
             >
-              VIEW SHOP
+              {t('rewards.promo.button', { defaultValue: '逛逛心愿' })}
             </button>
           </div>
           <div className="ui-reward-promo-icon">
@@ -182,9 +181,9 @@ export function Rewards() {
               <CalendarCheck size={18} className="text-primary" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-black text-on-surface">已加入父母兑现待办</p>
+              <p className="text-sm font-black text-on-surface">{t('rewards.fulfillment.title', { defaultValue: '已加入父母兑现待办' })}</p>
               <p className="text-xs font-bold text-on-surface-variant leading-relaxed mt-1">
-                「{fulfillmentNotice.name}」会进入父母任务和四象限，提醒家长完成这个约定。
+                {t('rewards.fulfillment.desc', { defaultValue: '「{{name}}」会进入父母任务和四象限，提醒家长完成这个约定。', name: fulfillmentNotice.name })}
               </p>
               <div className="flex gap-2 mt-3">
                 <button
@@ -192,14 +191,14 @@ export function Rewards() {
                   onClick={() => navigate('/tasks')}
                   className="rounded-full px-3 py-1.5 text-[11px] font-black bg-primary text-white active:scale-95 transition-all"
                 >
-                  查看待办
+                  {t('rewards.fulfillment.tasks', { defaultValue: '查看待办' })}
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate('/quadrant?range=week')}
                   className="rounded-full px-3 py-1.5 text-[11px] font-black bg-white/80 text-primary border border-primary/20 active:scale-95 transition-all"
                 >
-                  本周四象限
+                  {t('rewards.fulfillment.quadrant', { defaultValue: '本周四象限' })}
                 </button>
               </div>
             </div>
@@ -355,7 +354,7 @@ export function Rewards() {
                       isArcadeSkin ? "rounded-full" : "rounded-xl"
                     )}
                   >
-                    确认
+                    {t('common.confirm', { defaultValue: '确认' })}
                   </button>
                 ) : canRedeemReward(reward) ? (
                   <button
@@ -412,7 +411,7 @@ export function Rewards() {
                 >
                   <Plus size={24} className="rotate-45" />
                 </button>
-                <h2 className="flex-1 text-center text-lg font-bold text-on-surface">心愿详情</h2>
+                <h2 className="flex-1 text-center text-lg font-bold text-on-surface">{t('rewards.detail.title', { defaultValue: '心愿详情' })}</h2>
                 <div className="w-10" />
               </header>
 
@@ -475,9 +474,9 @@ export function Rewards() {
                     canRedeemReward(selectedReward) ? "text-primary" : "text-on-surface-variant/60"
                   )}>
                     {selectedReward.status === 'pending_approval'
-                      ? '等待家长确认'
+                      ? t('rewards.status.pending_approval', { defaultValue: '等待家长确认' })
                       : selectedReward.status === 'redeemed'
-                        ? '这个心愿已兑换'
+                        ? t('rewards.status.redeemed', { defaultValue: '这个心愿已兑换' })
                         : stars >= selectedReward.cost
                       ? t('rewards.progress.ready', { defaultValue: '可以兑换啦！' })
                       : t('rewards.progress.need_more', { defaultValue: '再攒 {{count}} 颗', count: selectedReward.cost - stars })}
@@ -509,7 +508,7 @@ export function Rewards() {
                   {canApproveReward(selectedReward) ? (
                     <>
                       <CheckCircle2 size={16} />
-                      确认兑换
+                      {t('rewards.action.confirm', { defaultValue: '确认兑换' })}
                     </>
                   ) : canRedeemReward(selectedReward) ? (
                     <>

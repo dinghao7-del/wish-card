@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { Task, Member, Reward, HistoryRecord } from '../types';
 import * as api from '../lib/api';
 import { supabase, type Database } from '../lib/supabase';
-import { getGuestData } from '../lib/guestData';
+import { getGuestData, localizeGuestDataForLocale } from '../lib/guestData';
 import { showToastGlobal } from '../components/Toast';
 import { getDataLayer, type DataMember, type DataOperationAuditLog, type DataPlan, type DataReward, type DataTask } from '../lib/DataLayer';
 import type { SyncStatus } from '../lib/SyncEngine';
@@ -19,6 +19,7 @@ import {
 import { prepareMemberCredentialsForStorage } from '../lib/memberCredentials';
 import { getStorageAdapter, STORAGE_KEYS, storageGetSync, storageSetSync } from '../lib/StorageAdapter';
 import { clearGuestPlans, saveGuestPlan } from '../lib/guestPlans';
+import i18n from '../i18n';
 
 type DbMember = Database['public']['Tables']['members']['Row'];
 type DbTask = Database['public']['Tables']['tasks']['Row'];
@@ -360,9 +361,20 @@ const DARK_MODE_STORAGE_KEY = 'ff_dark_mode';
 function readStoredGuestLocalState(): GuestLocalState | null {
   const stored = storageGetSync<GuestLocalState | null>(storageAdapter, STORAGE_KEYS.GUEST_LOCAL_STATE, null);
   if (!stored?.guestMode || !stored.currentUser || !stored.familyId) return null;
+  const localized = localizeGuestDataForLocale({
+    members: stored.members || [],
+    tasks: stored.tasks || [],
+    rewards: stored.rewards || [],
+    history: stored.history || [],
+  });
+  const localizedCurrentUser = localized.members.find(member => member.id === stored.currentUser.id) || stored.currentUser;
   return {
     ...stored,
-    history: normalizeHistoryRecords(stored.history || []),
+    currentUser: localizedCurrentUser,
+    members: localized.members,
+    tasks: localized.tasks,
+    rewards: localized.rewards,
+    history: normalizeHistoryRecords(localized.history || []),
   };
 }
 
@@ -497,6 +509,23 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
 
   // 保持 guestMode ref 同步
   useEffect(() => { guestModeRef.current = guestMode; }, [guestMode]);
+
+  useEffect(() => {
+    if (!guestMode) return;
+    const handleLanguageChanged = (language: string) => {
+      const localized = localizeGuestDataForLocale({ members, tasks, rewards, history }, language);
+      setMembers(localized.members);
+      setTasks(localized.tasks);
+      setRewards(localized.rewards);
+      setHistory(normalizeHistoryRecords(localized.history));
+      const nextCurrentUser = localized.members.find(member => member.id === currentUserRef.current?.id) || currentUserRef.current;
+      if (nextCurrentUser) setCurrentUser(nextCurrentUser, memberSession?.verificationMethod || 'none');
+    };
+    i18n.on('languageChanged', handleLanguageChanged);
+    return () => {
+      i18n.off('languageChanged', handleLanguageChanged);
+    };
+  }, [guestMode, history, memberSession?.verificationMethod, members, rewards, tasks]);
 
   useEffect(() => {
     if (!guestMode || !currentUser || !familyId) return;

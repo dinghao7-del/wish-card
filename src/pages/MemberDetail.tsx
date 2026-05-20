@@ -43,16 +43,19 @@ export function MemberDetail() {
   const handleDelete = async () => {
     const verificationValue = getParentVerificationValue(currentUser);
     const confirmed = await showConfirm({
-      title: '家长二次确认',
-      message: `删除「${member.name}」会影响成员资料和后续任务归属，请再次确认。`,
+      title: t('member_detail.delete_confirm_title', { defaultValue: '确认删除成员？' }),
+      message: t('member_detail.delete_confirm_desc', {
+        defaultValue: '删除成员「{{name}}」后，该成员的所有任务记录和星星都将消失，且无法恢复。',
+        name: member.name,
+      }),
       type: 'danger',
-      confirmText: '删除',
+      confirmText: t('member_detail.delete_member', { defaultValue: '删除成员' }),
       verificationValue: verificationValue || undefined,
       verificationMatcher: currentUser?.role === 'parent'
         ? (input) => verifyMemberPinOrPassword(currentUser, input) !== null
         : undefined,
-      verificationLabel: verificationValue ? '输入当前家长 PIN 或密码' : undefined,
-      verificationPlaceholder: verificationValue ? 'PIN 或密码' : undefined,
+      verificationLabel: verificationValue ? t('member_detail.delete_verify_label', { defaultValue: '输入当前家长 PIN 或密码' }) : undefined,
+      verificationPlaceholder: verificationValue ? t('member_detail.delete_verify_placeholder', { defaultValue: 'PIN 或密码' }) : undefined,
     });
     if (!confirmed) return;
 

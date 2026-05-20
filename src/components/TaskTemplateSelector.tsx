@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { X, Search, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
 import { TASK_CATEGORIES, type HabitTemplate } from '../lib/templates';
 import { TemplatePickerShell } from './AppModal';
@@ -11,6 +12,7 @@ interface TaskTemplateSelectorProps {
 }
 
 export function TaskTemplateSelector({ onSelect, onClose }: TaskTemplateSelectorProps) {
+  const { t } = useTranslation();
   // 默认选中第一个分类（学习）
   const [activeTab, setActiveTab] = useState<string>(TASK_CATEGORIES[0]?.id || '学习');
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,14 +47,14 @@ export function TaskTemplateSelector({ onSelect, onClose }: TaskTemplateSelector
 
   return (
     <TemplatePickerShell
-      title="选择模板"
+      title={t('task_templates.pick_title')}
       onClose={onClose}
       search={
         <div className="relative">
           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40" />
           <input 
             type="text" 
-            placeholder="搜索模型"
+            placeholder={t('task_templates.search_placeholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-surface-container-low border-none rounded-2xl pl-12 pr-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all font-medium"
@@ -72,7 +74,7 @@ export function TaskTemplateSelector({ onSelect, onClose }: TaskTemplateSelector
                     : "bg-surface border-surface text-on-surface-variant/40"
                 )}
               >
-                {cat.label}
+                {t(`task_templates.categories.${cat.id}`, cat.label)}
               </button>
             ))}
         </div>
@@ -82,7 +84,7 @@ export function TaskTemplateSelector({ onSelect, onClose }: TaskTemplateSelector
           onClick={onClose}
           className="w-full bg-primary-surface/20 text-primary-text font-bold py-4 rounded-2xl active:scale-95 transition-transform"
         >
-          自定义添加
+          {t('task_templates.add_custom')}
         </button>
       }
     >

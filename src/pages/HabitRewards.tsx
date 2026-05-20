@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Star, ChevronLeft, MoreHorizontal, Plus, ChevronRight, Trophy, Ban, Globe, Edit, Trash2, CheckCircle2, Clock, AlertCircle, XCircle, Mic, X, Zap, MessageCircle, HeartHandshake } from 'lucide-react';
+import { Star, ChevronLeft, MoreHorizontal, Plus, ChevronRight, Trophy, Ban, Globe, Edit, Trash2, CheckCircle2, Clock, AlertCircle, XCircle, Mic, X, Zap, MessageCircle, HeartHandshake, Flame } from 'lucide-react';
 import { useFamily } from '../context/FamilyContext';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,9 +13,12 @@ import { CelebrationAnimation } from '../components/CelebrationAnimation';
 import { NotificationBell } from '../components/NotificationCenter';
 import { getRegisteredTaskIcon } from '../lib/lucideIconRegistry';
 import { TASK_CATEGORIES, type HabitTemplate } from '../lib/templates';
+import { getRewardStarPreset, normalizeTaskRewardStars, normalizeTemplateStars } from '../lib/starEconomy';
 import { AppModal, TemplatePickerShell } from '../components/AppModal';
 import { getHabitSelectableChildIds, resolveHabitTargetChildId } from '../lib/habitTargeting';
 import { getCustomCreationRoute } from '../lib/createFlowRoutes';
+import { OptionHelp } from '../components/OptionHelp';
+import { showToastGlobal } from '../components/Toast';
 
 const HabitIconImage: React.FC<{ src: string; size: number }> = ({ src, size }) => {
   const [hasError, setHasError] = useState(false);
@@ -38,18 +41,18 @@ const HabitIconImage: React.FC<{ src: string; size: number }> = ({ src, size }) 
 
 export function HabitRewards() {
   const { t } = useTranslation();
-  const { tasks, currentUser, members, addTask, deleteTask, approveTask, requestHabitCheckIn, approveHabitCheckIn, submitParentFeedback, respondParentFeedback, stars, setIsUserSelectorOpen, guestMode } = useFamily();
+  const { tasks, currentUser, members, history, addTask, deleteTask, approveTask, requestHabitCheckIn, approveHabitCheckIn, submitParentFeedback, respondParentFeedback, stars, setIsUserSelectorOpen, guestMode } = useFamily();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<'reward' | 'penalty' | 'feedback'>('reward');
   const [selectedHabit, setSelectedHabit] = useState<Task | null>(null);
   const [isAddingHabit, setIsAddingHabit] = useState(false);
   const [newHabitTitle, setNewHabitTitle] = useState('');
-  const [newHabitStars, setNewHabitStars] = useState(10);
+  const [newHabitStars, setNewHabitStars] = useState(getRewardStarPreset('study'));
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
   const [selectedChildId, setSelectedChildId] = useState('');
   const [selectedParentId, setSelectedParentId] = useState('');
-  const [feedbackTitle, setFeedbackTitle] = useState('希望你多听我说');
+  const [feedbackTitle, setFeedbackTitle] = useState(t('habits.feedback_card.options.listen', { defaultValue: '希望你多听我说' }));
   const [feedbackDetail, setFeedbackDetail] = useState('');
 
   const [isDetailSettingsOpen, setIsDetailSettingsOpen] = useState(false);
@@ -59,6 +62,12 @@ export function HabitRewards() {
   const [habitTemplateSearch, setHabitTemplateSearch] = useState('');
 
   const tplCategories = TASK_CATEGORIES;
+  const feedbackOptions = [
+    t('habits.feedback_card.options.listen', { defaultValue: '希望你多听我说' }),
+    t('habits.feedback_card.options.promise', { defaultValue: '答应我的事没有兑现' }),
+    t('habits.feedback_card.options.ignored', { defaultValue: '今天我觉得被忽视了' }),
+    t('habits.feedback_card.options.thanks', { defaultValue: '谢谢你陪我完成一件事' }),
+  ];
   const allHabitTemplates = TASK_CATEGORIES.flatMap(category => category.templates);
   const filteredTemplates = habitTemplateSearch.trim()
     ? allHabitTemplates.filter(template => {
@@ -77,7 +86,9 @@ export function HabitRewards() {
       description: tpl.description || '',
       type: tpl.category,
       icon: tpl.icon,
-      rewardStars: activeTab === 'penalty' || tpl.stars < 0 ? -Math.abs(tpl.stars) : Math.abs(tpl.stars),
+      rewardStars: activeTab === 'penalty' || tpl.stars < 0
+        ? -Math.abs(normalizeTemplateStars(tpl.stars, tpl.category))
+        : Math.abs(normalizeTemplateStars(tpl.stars, tpl.category)),
       isHabit: true,
       creatorId: currentUser?.id || '',
       assigneeIds: currentUser?.role === 'parent'
@@ -120,8 +131,63 @@ export function HabitRewards() {
       ? task.assigneeIds.includes(currentUser.id) && task.status !== 'completed'
       : task.creatorId === currentUser?.id
   );
-  const streakDays = Math.max(0, ...habits.map(h => h.currentCount || 0));
-  const nextRewardHabit = rewardHabits.find(h => (h.currentCount || 0) < (h.targetCount || 5)) || rewardHabits[0];
+  const longestGoodStreakHabit = rewardHabits.reduce<Task | null>((best, habit) => {
+    if (!best) return habit;
+    return (habit.currentCount || 0) > (best.currentCount || 0) ? habit : best;
+  }, null);
+  const longestGoodStreak = longestGoodStreakHabit?.currentCount || 0;
+  const streakOwnerId = longestGoodStreakHabit?.assigneeIds?.[0] || childMembers[0]?.id || currentUser?.id || '';
+  const streakOwner = members.find(member => member.id === streakOwnerId);
+  const streakWindowDays = Math.max(1, Math.min(30, longestGoodStreak));
+  const streakWindowStart = Date.now() - streakWindowDays * 24 * 60 * 60 * 1000;
+  const recentPenaltyCount = history.filter(record =>
+    record.type === 'penalty'
+    && (record.userId === streakOwnerId || !streakOwnerId)
+    && new Date(record.timestamp).getTime() >= streakWindowStart
+  ).length;
+  const streakMilestones = [
+    { days: 3, bonus: 3 },
+    { days: 7, bonus: 10 },
+    { days: 14, bonus: 25 },
+    { days: 30, bonus: 60 },
+  ];
+  const achievedMilestone = [...streakMilestones].reverse().find(item => longestGoodStreak >= item.days);
+  const nextMilestone = streakMilestones.find(item => longestGoodStreak < item.days) || streakMilestones[streakMilestones.length - 1];
+  const bonusTaskTitle = achievedMilestone ? t('habits.streak.bonus_title', { defaultValue: '连续好习惯{{days}}天加成', days: achievedMilestone.days }) : '';
+  const hasBonusTask = bonusTaskTitle
+    ? tasks.some(task => task.title === bonusTaskTitle && task.assigneeIds.includes(streakOwnerId))
+    : false;
+  const canCreateStreakBonus = Boolean(achievedMilestone && recentPenaltyCount === 0 && !hasBonusTask && streakOwnerId);
+  const streakBonusText = recentPenaltyCount > 0
+    ? t('habits.streak.paused', { defaultValue: '暂停 · {{count}}次扣分', count: recentPenaltyCount })
+    : achievedMilestone
+      ? t('habits.streak.claimable', { defaultValue: '可领 +{{count}}', count: achievedMilestone.bonus })
+      : t('habits.streak.days_left', { defaultValue: '差 {{count}} 天', count: Math.max(0, nextMilestone.days - longestGoodStreak) });
+  const streakStatusLabel = recentPenaltyCount > 0
+    ? t('habits.streak.paused', { defaultValue: '暂停 · {{count}}次扣分', count: recentPenaltyCount })
+    : canCreateStreakBonus
+      ? t('habits.streak.claimable', { defaultValue: '可领 +{{count}}', count: achievedMilestone?.bonus || 0 })
+      : t('habits.streak.days_left', { defaultValue: '差 {{count}} 天', count: Math.max(0, nextMilestone.days - longestGoodStreak) });
+
+  const handleCreateStreakBonus = async () => {
+    if (!achievedMilestone || !streakOwnerId || !longestGoodStreakHabit) return;
+    const bonusTask: Task = {
+      id: `streak_bonus_${Date.now()}`,
+      title: bonusTaskTitle,
+      description: t('habits.streak.bonus_desc', { defaultValue: '连续完成好习惯「{{name}}」{{days}}天，且期间没有扣分，给予额外加成奖励。', name: longestGoodStreakHabit.title, days: achievedMilestone.days }),
+      type: 'streak_bonus',
+      startTime: new Date().toISOString(),
+      assigneeIds: [streakOwnerId],
+      creatorId: currentUser?.id || streakOwnerId,
+      rewardStars: achievedMilestone.bonus,
+      status: 'reviewing',
+      icon: 'Flame',
+      isHabit: false,
+      createdAt: new Date().toISOString(),
+    };
+    await addTask(bonusTask);
+    showToastGlobal(t('habits.streak.created', { defaultValue: '已生成连续好习惯加成，家长确认后发放' }), 'success');
+  };
 
   useEffect(() => {
     if (selectedParentId || currentUser?.role !== 'child') return;
@@ -216,12 +282,12 @@ export function HabitRewards() {
     const newHabit: Task = {
       id: `h-${Date.now()}`,
       title: newHabitTitle,
-      description: '保持良好的生活习惯，让每一天都充满活力和正能量。',
+      description: t('habits.default_description', { defaultValue: '保持良好的生活习惯，让每一天都充满活力和正能量。' }),
       type: 'daily',
       startTime: new Date().toISOString(),
       assigneeIds: members.filter(m => m.role === 'child').map(m => m.id), // Assign to all children
       creatorId: currentUser?.id || 'm1',
-      rewardStars: newHabitStars,
+      rewardStars: normalizeTaskRewardStars(newHabitStars, { category: '习惯养成' }),
       status: 'pending',
       icon: 'Star', // Default icon
       isHabit: true,
@@ -232,22 +298,20 @@ export function HabitRewards() {
     addTask(newHabit);
     setIsAddingHabit(false);
     setNewHabitTitle('');
-    setNewHabitStars(10);
+    setNewHabitStars(getRewardStarPreset('study'));
   };
 
   const handleSubmitFeedback = async () => {
     await submitParentFeedback(selectedParentId, feedbackTitle, feedbackDetail);
     setFeedbackDetail('');
-    setFeedbackTitle('希望你多听我说');
+    setFeedbackTitle(t('habits.feedback_card.options.listen', { defaultValue: '希望你多听我说' }));
   };
 
   return (
-    <div className="min-h-screen bg-background pb-40 animate-in fade-in duration-500 text-on-surface px-6">
+    <div className="min-h-screen bg-background pb-40 animate-in fade-in duration-500 text-on-surface px-5">
       {/* Header */}
-      <header className="ui-habit-header flex justify-between items-center py-4 sticky top-[var(--app-sticky-top,0px)] bg-background/80 backdrop-blur-xl z-40 -mx-6 px-6">
+      <header className="ui-habit-header flex justify-between items-center py-3 sticky top-[var(--app-sticky-top,0px)] bg-background/80 backdrop-blur-xl z-40 -mx-5 px-5">
         <div className="flex items-center gap-3">
-          <Zap size={22} className="ui-habit-flash text-primary" strokeWidth={3} />
-          <h1 className="text-xl font-black text-on-surface">心愿清单</h1>
           <div
             className="flex items-center gap-2 sm:gap-3 cursor-pointer group"
             onClick={() => setIsUserSelectorOpen(true)}
@@ -282,19 +346,59 @@ export function HabitRewards() {
         onOpenCalendarSync={() => navigate('/calendar-sync')}
       />
 
-      <section className="ui-habit-summary mt-5 rounded-[2rem] bg-surface p-5">
-        <div>
-          <p className="text-xs font-black text-on-surface-variant">当前连续</p>
-          <p className="mt-1 text-4xl font-black leading-none">{streakDays || 0} 天</p>
+      <section className="ui-habit-summary relative mt-3 overflow-hidden rounded-2xl bg-surface px-3 py-3 shadow-sm border border-outline-variant/5">
+        <div className={cn(
+          "pointer-events-none absolute -right-3 -top-4 opacity-[0.08]",
+          recentPenaltyCount > 0 ? "text-red-500" : "text-primary"
+        )}>
+          <Flame size={78} strokeWidth={2.4} />
         </div>
-        <div className="ui-habit-score-pill">
-          <Star size={13} className="fill-current" />
-          <span>{stars.toLocaleString()} 积分</span>
+        <div className="relative z-10">
+          <div className="flex items-center gap-2.5">
+            <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <p className="truncate text-base font-black leading-none text-on-surface">{t('habits.streak.title', { defaultValue: '连续好习惯' })}</p>
+              <OptionHelp title={t('habits.streak.help_title', { defaultValue: '连续加成怎么计算' })}>
+                {streakOwner?.name ? `${streakOwner.name} ` : ''}
+                {t('habits.streak.help_body', { defaultValue: '连续完成奖励型好习惯，并且这段时间没有被扣分，就可以在 3/7/14/30 天节点获得额外星星加成。{{detail}}', detail: streakBonusText })}
+              </OptionHelp>
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <span className="text-base font-black leading-none text-on-surface">{t('habits.streak.days', { defaultValue: '{{count}}天', count: longestGoodStreak })}</span>
+              <span className={cn(
+                "rounded-full px-1.5 py-0.5 text-[9px] font-black",
+                recentPenaltyCount > 0 ? "bg-red-50 text-red-500" : "bg-primary/10 text-primary"
+              )}>
+                {streakStatusLabel}
+              </span>
+            </div>
+          </div>
+            {canCreateStreakBonus ? (
+              <button
+                type="button"
+                onClick={handleCreateStreakBonus}
+                className="shrink-0 rounded-xl bg-primary px-3 py-2 text-[11px] font-black text-white shadow-md shadow-primary/15 active:scale-95"
+              >
+                {t('habits.streak.claim', { defaultValue: '领取' })}
+              </button>
+            ) : (
+              <div className="w-14 shrink-0 text-right">
+                <p className="text-[9px] font-black text-on-surface-variant/45">{t('habits.streak.next', { defaultValue: '下一档' })}</p>
+                <p className="text-sm font-black text-primary">+{nextMilestone.bonus}</p>
+              </div>
+            )}
+          </div>
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-container-low">
+          <div
+            className={cn("h-full rounded-full", recentPenaltyCount > 0 ? "bg-red-400" : "bg-primary")}
+            style={{ width: `${Math.min(100, (longestGoodStreak / nextMilestone.days) * 100)}%` }}
+          />
+        </div>
         </div>
       </section>
 
       {/* Tab Switcher and Add Button */}
-      <div className="py-5 flex items-center justify-center gap-4">
+      <div className="py-4 flex items-center justify-center gap-3">
           <div className="ui-habit-tabs flex items-center bg-surface-container-low p-1 rounded-full border border-outline-variant/10 w-full max-w-[320px]">
             <button
               onClick={() => setActiveTab('reward')}
@@ -303,8 +407,10 @@ export function HabitRewards() {
                 activeTab === 'reward' ? "bg-surface text-on-surface shadow-sm" : "text-on-surface-variant/40"
               )}
             >
-              奖励
-              <span className="ml-1 text-[10px]">{rewardHabits.length}</span>
+              <span className="inline-flex items-center justify-center gap-1">
+                <span>{t('habits.tabs.reward', { defaultValue: '奖励' })}</span>
+                <span className="text-[10px]">{rewardHabits.length}</span>
+              </span>
             </button>
             <button
               onClick={() => setActiveTab('penalty')}
@@ -313,8 +419,10 @@ export function HabitRewards() {
                 activeTab === 'penalty' ? "bg-surface text-red-500 shadow-sm" : "text-on-surface-variant/40"
               )}
             >
-              惩罚
-              <span className="ml-1 text-[10px]">{penaltyHabits.length}</span>
+              <span className="inline-flex items-center justify-center gap-1">
+                <span>{t('habits.tabs.penalty', { defaultValue: '惩罚' })}</span>
+                <span className="text-[10px]">{penaltyHabits.length}</span>
+              </span>
             </button>
             <button
               onClick={() => setActiveTab('feedback')}
@@ -323,8 +431,10 @@ export function HabitRewards() {
                 activeTab === 'feedback' ? "bg-surface text-primary shadow-sm" : "text-on-surface-variant/40"
               )}
             >
-              反馈
-              <span className="ml-1 text-[10px]">{visibleFeedbackTasks.length}</span>
+              <span className="inline-flex items-center justify-center gap-1">
+                <span>{t('habits.tabs.feedback', { defaultValue: '反馈' })}</span>
+                <span className="text-[10px]">{visibleFeedbackTasks.length}</span>
+              </span>
             </button>
           </div>
 
@@ -333,10 +443,10 @@ export function HabitRewards() {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setShowTemplatePicker(true)}
-              aria-label="添加奖惩"
-              className="ui-habit-add-button w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all flex-shrink-0"
+              aria-label={t('habits.add', { defaultValue: '添加奖惩' })}
+              className="ui-habit-add-button w-9 h-9 bg-primary text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all flex-shrink-0"
             >
-              <Plus size={24} strokeWidth={3} className="text-white" />
+              <Plus size={22} strokeWidth={3} className="text-white" />
             </motion.button>
           )}
         </div>
@@ -351,8 +461,8 @@ export function HabitRewards() {
                   <MessageCircle size={22} />
                 </div>
                 <div>
-                  <h3 className="font-black text-on-surface">给爸爸妈妈一张反馈卡</h3>
-                  <p className="text-xs font-bold text-on-surface-variant/60">表达感受，不是扣分，是让家人更懂你。</p>
+                  <h3 className="font-black text-on-surface">{t('habits.feedback_card.title', { defaultValue: '给爸爸妈妈一张反馈卡' })}</h3>
+                  <p className="text-xs font-bold text-on-surface-variant/60">{t('habits.feedback_card.desc', { defaultValue: '表达感受，不是扣分，是让家人更懂你。' })}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 mb-3">
@@ -372,7 +482,7 @@ export function HabitRewards() {
                 ))}
               </div>
               <div className="grid grid-cols-1 gap-2 mb-3">
-                {['希望你多听我说', '答应我的事没有兑现', '今天我觉得被忽视了', '谢谢你陪我完成一件事'].map(item => (
+                {feedbackOptions.map(item => (
                   <button
                     key={item}
                     onClick={() => setFeedbackTitle(item)}
@@ -390,14 +500,14 @@ export function HabitRewards() {
               <textarea
                 value={feedbackDetail}
                 onChange={(event) => setFeedbackDetail(event.target.value)}
-                placeholder="也可以补充一句你真正想说的话"
+                placeholder={t('habits.feedback_card.placeholder', { defaultValue: '也可以补充一句你真正想说的话' })}
                 className="w-full min-h-[5rem] rounded-2xl bg-surface-container-low border border-outline-variant/10 p-3 text-sm font-bold outline-none"
               />
               <button
                 onClick={handleSubmitFeedback}
                 className="mt-3 w-full rounded-2xl bg-primary text-white py-4 font-black active:scale-95 transition-transform"
               >
-                发送给家长
+                {t('habits.feedback_card.send', { defaultValue: '发送给家长' })}
               </button>
             </div>
           )}
@@ -414,7 +524,15 @@ export function HabitRewards() {
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-black text-on-surface">{task.title.replace('亲子反馈：', '')}</p>
                       <p className="mt-1 text-xs font-bold text-on-surface-variant/60 whitespace-pre-line">{task.description.replace('亲子反馈卡\n', '')}</p>
-                      <p className="mt-2 text-[10px] font-black text-on-surface-variant/40">{child ? `${child.name} 的反馈` : '家庭反馈'} · {task.status === 'completed' ? '已回应' : '待回应'}</p>
+                      <p className="mt-2 text-[10px] font-black text-on-surface-variant/40">
+                        {child
+                          ? t('habits.feedback_card.child_feedback', { defaultValue: '{{name}} 的反馈', name: child.name })
+                          : t('habits.feedback_card.family_feedback', { defaultValue: '家庭反馈' })}
+                        {' · '}
+                        {task.status === 'completed'
+                          ? t('habits.feedback_card.responded', { defaultValue: '已回应' })
+                          : t('habits.feedback_card.waiting', { defaultValue: '待回应' })}
+                      </p>
                     </div>
                   </div>
                   {currentUser?.role === 'parent' && task.status !== 'completed' && (
@@ -423,13 +541,13 @@ export function HabitRewards() {
                         onClick={() => respondParentFeedback(task.id, 'acknowledge')}
                         className="rounded-2xl bg-surface-container-low py-3 text-sm font-black text-on-surface"
                       >
-                        已认真看见
+                        {t('habits.feedback_card.acknowledge', { defaultValue: '已认真看见' })}
                       </button>
                       <button
                         onClick={() => respondParentFeedback(task.id, 'promise')}
                         className="rounded-2xl bg-primary py-3 text-sm font-black text-white"
                       >
-                        生成承诺任务
+                        {t('habits.feedback_card.create_promise', { defaultValue: '生成承诺任务' })}
                       </button>
                     </div>
                   )}
@@ -438,13 +556,17 @@ export function HabitRewards() {
             }) : (
               <div className="flex flex-col items-center justify-center py-16 text-on-surface-variant font-bold text-center">
                 <MessageCircle size={56} className="mb-4 opacity-20" />
-                <p className="text-on-surface/40">{currentUser?.role === 'parent' ? '还没有待回应的亲子反馈' : '还没有发出反馈卡'}</p>
+                <p className="text-on-surface/40">
+                  {currentUser?.role === 'parent'
+                    ? t('habits.feedback_card.empty_parent', { defaultValue: '还没有待回应的亲子反馈' })
+                    : t('habits.feedback_card.empty_child', { defaultValue: '还没有发出反馈卡' })}
+                </p>
               </div>
             )}
           </div>
         </section>
       ) : (
-      <div className="ui-habit-grid px-2 grid grid-cols-2 gap-3 mt-1 pb-4">
+      <div className="ui-habit-grid px-1 grid grid-cols-2 gap-2.5 mt-0 pb-4">
         {filteredHabits.length > 0 ? (
           <>
             {filteredHabits.map((habit, idx) => (
@@ -455,31 +577,24 @@ export function HabitRewards() {
                 transition={{ duration: 0.3, delay: idx * 0.03 }}
                 onClick={() => setSelectedHabit(habit)}
                 className={cn(
-                  "ui-habit-card rounded-2xl p-3 shadow-sm active:scale-[0.97] transition-all cursor-pointer relative overflow-hidden",
+                  "ui-habit-watermark-card min-h-[5.85rem] rounded-2xl px-3 py-2.5 active:scale-[0.97] transition-all cursor-pointer relative overflow-hidden bg-green-50/90 border-2 border-green-200 shadow-sm",
                   habit.rewardStars >= 0
-                    ? "ui-habit-card-reward bg-green-50 dark:bg-green-500/10 border-2 border-green-200 dark:border-green-500/20"
-                    : "ui-habit-card-penalty bg-red-50 dark:bg-red-500/10 border-2 border-red-200 dark:border-red-500/20"
+                    ? "ui-habit-card-reward text-green-700 dark:bg-green-500/10 dark:border-green-500/20"
+                    : "ui-habit-card-penalty bg-red-50/90 border-red-200 text-red-600 dark:bg-red-500/10 dark:border-red-500/20"
                 )}
               >
-                {/* 大号图标背景装饰 - 使用React组件，无需外部请求 */}
                 <div className={cn(
-                  "absolute -right-2 -top-2 opacity-[0.12] pointer-events-none scale-150",
-                  habit.rewardStars >= 0 ? "text-green-600" : "text-red-500"
+                  "pointer-events-none absolute -right-2 top-1/2 -translate-y-1/2 opacity-[0.075]",
+                  habit.rewardStars >= 0 ? "text-green-700" : "text-red-600"
                 )}>
-                  {getTaskIcon(habit.icon, 64)}
+                  {getTaskIcon(habit.icon, 78)}
                 </div>
-
-                {/* 信息区域 */}
-                <div className="relative z-10 flex min-h-[8.5rem] flex-col">
-                  <div className="ui-habit-icon-box mb-4 flex h-12 w-12 items-center justify-center rounded-xl">
-                    {getTaskIcon(habit.icon, 24)}
+                <div className="relative z-10 flex h-full min-w-0 flex-col items-start justify-between">
+                  <div className="min-w-0 pr-8">
+                    <h4 className="line-clamp-2 text-[0.95rem] font-black leading-[1.18] text-on-surface">{habit.title}</h4>
                   </div>
-                  <span className="ui-habit-type-badge">
-                    {habit.rewardStars >= 0 ? '奖励' : '惩罚'}
-                  </span>
-                  <h4 className="text-xl font-black text-on-surface mb-1.5 leading-tight">{habit.title}</h4>
-                  <div className="flex items-center gap-1.5">
-                    <Star size={14} className={habit.rewardStars >= 0 ? "text-reward-display fill-current" : "text-red-400 fill-current"} />
+                  <div className="mt-2 flex items-center gap-1">
+                    <Star size={13} className={habit.rewardStars >= 0 ? "text-reward-display fill-current" : "text-red-400 fill-current"} />
                     <span className={cn(
                       "text-base font-black",
                       habit.rewardStars >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500"
@@ -487,51 +602,18 @@ export function HabitRewards() {
                       {habit.rewardStars >= 0 ? '+' : ''}{habit.rewardStars}
                     </span>
                   </div>
-                  <div className="ui-habit-dot-row mt-auto">
-                    {Array.from({ length: 5 }).map((_, dotIdx) => (
-                      <span
-                        key={dotIdx}
-                        className={dotIdx < Math.min(5, habit.currentCount || 0) ? 'is-filled' : ''}
-                      />
-                    ))}
-                  </div>
                 </div>
               </motion.div>
             ))}
 
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-on-surface-variant font-bold text-center">
+          <div className="col-span-2 flex flex-col items-center justify-center py-20 text-on-surface-variant font-bold text-center">
             <Trophy size={64} className="mb-4 opacity-10" />
-            <p className="text-on-surface/40">还没有{activeTab === 'reward' ? '积极习惯' : '消极习惯'}记录哦 🌱</p>
+            <p className="text-on-surface/40">{t('habits.empty', { defaultValue: '还没有{{type}}记录哦 🌱', type: activeTab === 'reward' ? t('habits.positive', { defaultValue: '积极习惯' }) : t('habits.negative', { defaultValue: '消极习惯' }) })}</p>
           </div>
         )}
       </div>
-      )}
-
-      {activeTab !== 'feedback' && nextRewardHabit && (
-        <section className="ui-habit-next-reward mt-6 rounded-[2rem] bg-primary p-5">
-          <div className="flex items-center gap-4">
-            <div className="ui-habit-next-icon flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface">
-              {getTaskIcon(nextRewardHabit.icon, 42)}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-black">下一个奖励</p>
-              <h3 className="mt-1 truncate text-2xl font-black">{nextRewardHabit.title}</h3>
-              <div className="mt-2 flex items-center gap-2">
-                <div className="ui-habit-next-progress">
-                  <span style={{ width: `${Math.min(100, ((nextRewardHabit.currentCount || 0) / (nextRewardHabit.targetCount || 5)) * 100)}%` }} />
-                </div>
-                <span className="text-xs font-black">
-                  {Math.round(Math.min(100, ((nextRewardHabit.currentCount || 0) / (nextRewardHabit.targetCount || 5)) * 100))}%
-                </span>
-              </div>
-            </div>
-          </div>
-          <button type="button" onClick={() => setSelectedHabit(nextRewardHabit)}>
-            满 {nextRewardHabit.targetCount || 5} 次领取
-          </button>
-        </section>
       )}
 
       {/* Habit Detail Modal */}
@@ -550,16 +632,16 @@ export function HabitRewards() {
                 <button
                   onClick={() => setSelectedHabit(null)}
                   className="ui-detail-sheet-close w-10 h-10 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container/50 transition-colors"
-                  aria-label="关闭"
+                  aria-label={t('common.close', { defaultValue: '关闭' })}
                 >
                   <Plus size={24} className="rotate-45" />
                 </button>
-                <h2 className="flex-1 text-center text-lg font-bold text-on-surface">奖惩详情</h2>
+                <h2 className="flex-1 text-center text-lg font-bold text-on-surface">{t('habits.detail_title', { defaultValue: '奖惩详情' })}</h2>
                 <div className="relative">
                   <button
                     onClick={() => setIsDetailSettingsOpen(!isDetailSettingsOpen)}
                     className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors"
-                    aria-label="更多操作"
+                    aria-label={t('common.more_actions', { defaultValue: '更多操作' })}
                   >
                     <MoreHorizontal size={20} />
                   </button>
@@ -587,7 +669,7 @@ export function HabitRewards() {
                             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                               <Edit size={16} />
                             </div>
-                            编辑任务
+                            {t('common.edit_task', { defaultValue: '编辑任务' })}
                           </button>
                           <button
                             onClick={() => {
@@ -599,7 +681,7 @@ export function HabitRewards() {
                             <div className="w-8 h-8 rounded-full bg-danger-container flex items-center justify-center text-danger">
                               <Trash2 size={16} />
                             </div>
-                            删除任务
+                            {t('common.delete_task', { defaultValue: '删除任务' })}
                           </button>
                         </motion.div>
                       </>
@@ -628,21 +710,21 @@ export function HabitRewards() {
                       <div className="w-16 h-16 bg-danger-container text-danger rounded-2xl flex items-center justify-center mx-auto mb-6">
                         <Trash2 size={32} />
                       </div>
-                      <h3 className="text-xl font-black text-on-surface mb-2">确定删除吗？</h3>
-                      <p className="text-on-surface-variant/60 text-sm font-bold mb-8">删除后历史记录将无法找回哦 🌱</p>
+                      <h3 className="text-xl font-black text-on-surface mb-2">{t('common.confirm_delete_title', { defaultValue: '确定删除吗？' })}</h3>
+                      <p className="text-on-surface-variant/60 text-sm font-bold mb-8">{t('common.confirm_delete_desc', { defaultValue: '删除后历史记录将无法找回。' })}</p>
 
                       <div className="flex flex-col gap-3">
                         <button
                           onClick={handleDeleteHabit}
                           className="w-full py-4 bg-danger text-white font-black rounded-2xl shadow-lg shadow-danger/20 active:scale-95 transition-all text-center"
                         >
-                          确定删除
+                          {t('common.confirm_delete', { defaultValue: '确定删除' })}
                         </button>
                         <button
                           onClick={() => setIsDeleteConfirmOpen(false)}
                           className="w-full py-4 bg-surface-container-low text-on-surface-variant/60 font-black rounded-2xl active:scale-95 transition-all text-center"
                         >
-                          我再想想
+                          {t('common.cancel_delete', { defaultValue: '我再想想' })}
                         </button>
                       </div>
                     </motion.div>
@@ -678,13 +760,13 @@ export function HabitRewards() {
 
                           <h2 className="text-2xl font-black text-on-surface mb-2">{habit.title}</h2>
                           <p className="text-on-surface-variant/60 font-bold mb-8 px-4 leading-relaxed text-sm">
-                            {habit.description || '保持良好的生活习惯，让每一天都充满活力和正能量。'}
+                            {habit.description || t('habits.default_description', { defaultValue: '保持良好的生活习惯，让每一天都充满活力和正能量。' })}
                           </p>
 
                           <div className="grid grid-cols-2 gap-4 w-full mb-10">
                             <div className="bg-surface-container-low rounded-3xl p-4 border border-outline-variant/10 shadow-sm">
                               <p className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest mb-1">
-                                {habit.rewardStars >= 0 ? '完成奖励' : '惩罚扣除'}
+                                {habit.rewardStars >= 0 ? t('habits.detail.reward_label', { defaultValue: '完成奖励' }) : t('habits.detail.penalty_label', { defaultValue: '惩罚扣除' })}
                               </p>
                               <div className={cn(
                                 "flex items-center justify-center gap-2 font-black text-2xl",
@@ -695,7 +777,7 @@ export function HabitRewards() {
                               </div>
                             </div>
                             <div className="bg-surface-container-low rounded-3xl p-4 border border-outline-variant/10 shadow-sm">
-                              <p className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest mb-1">当前次数</p>
+                              <p className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest mb-1">{t('habits.detail.current_count', { defaultValue: '当前次数' })}</p>
                               <div className="text-on-surface font-black text-2xl">
                                 {habit.currentCount || 0}
                               </div>
@@ -704,7 +786,7 @@ export function HabitRewards() {
 
                           {currentUser?.role === 'parent' && childMembers.length > 0 && (
                             <div className="w-full mb-5 text-left">
-                              <p className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest mb-2">指定孩子</p>
+                              <p className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest mb-2">{t('habits.detail.target_child', { defaultValue: '指定孩子' })}</p>
                               <div className="grid grid-cols-2 gap-2">
                                 {childMembers
                                   .filter(child => getHabitSelectableChildIds(habit, childMembers).includes(child.id))
@@ -720,7 +802,7 @@ export function HabitRewards() {
                                       )}
                                     >
                                       {child.name}
-                                      <span className="block text-[10px] opacity-70">{child.stars} 积分</span>
+                                      <span className="block text-[10px] opacity-70">{child.stars} {t('common.points', { defaultValue: '积分' })}</span>
                                     </button>
                                   ))}
                               </div>
@@ -729,19 +811,19 @@ export function HabitRewards() {
 
                           {pendingReviews.length > 0 && (
                             <div className="w-full mb-5 rounded-2xl bg-warning-container/50 px-4 py-3 text-left">
-                              <p className="text-xs font-black text-warning mb-2">待家长审核</p>
+                              <p className="text-xs font-black text-warning mb-2">{t('habits.detail.pending_review', { defaultValue: '待家长审核' })}</p>
                               <div className="space-y-2">
                                 {pendingReviews.map(task => {
                                   const child = members.find(member => task.assigneeIds.includes(member.id));
                                   return (
                                     <div key={task.id} className="flex items-center justify-between gap-2 text-sm">
-                                      <span className="font-bold text-on-surface">{child?.name || '孩子'} 已提交</span>
+                                      <span className="font-bold text-on-surface">{t('habits.detail.child_submitted', { defaultValue: '{{name}} 已提交', name: child?.name || t('common.child', { defaultValue: '孩子' }) })}</span>
                                       {currentUser?.role === 'parent' && (
                                         <button
                                           onClick={() => approveTask(task.id)}
                                           className="rounded-full bg-primary px-3 py-1 text-xs font-black text-white"
                                         >
-                                          通过
+                                          {t('common.approve', { defaultValue: '通过' })}
                                         </button>
                                       )}
                                     </div>
@@ -756,7 +838,7 @@ export function HabitRewards() {
                               onClick={() => setSelectedHabit(null)}
                               className="flex-1 py-4 px-6 rounded-[1.5rem] bg-surface-container font-black text-on-surface-variant active:scale-95 transition-transform whitespace-nowrap"
                             >
-                              返回
+                              {t('habits.back', { defaultValue: '返回' })}
                             </button>
                             <button
                               onClick={() => {
@@ -770,10 +852,12 @@ export function HabitRewards() {
                             >
                               <Plus size={20} strokeWidth={3} />
                               {currentUser?.role === 'parent'
-                                ? `${targetChild ? `给${targetChild.name}` : '指定孩子'}${habit.rewardStars < 0 ? '扣分' : '打卡'}`
+                                ? (targetChild
+                                  ? t('habits.parent_action_for_child', { defaultValue: '给{{name}}{{action}}', name: targetChild.name, action: habit.rewardStars < 0 ? t('habits.deduct', { defaultValue: '扣分' }) : t('habits.check_in', { defaultValue: '打卡' }) })
+                                  : t('habits.select_child_action', { defaultValue: '指定孩子{{action}}', action: habit.rewardStars < 0 ? t('habits.deduct', { defaultValue: '扣分' }) : t('habits.check_in', { defaultValue: '打卡' }) }))
                                 : currentUserPending
-                                  ? '等待家长审核'
-                                  : `${habit.rewardStars < 0 ? '提交扣分' : t('habits.check_in', '打卡')}`}
+                                  ? t('habits.waiting_parent_review', { defaultValue: '等待家长审核' })
+                                  : (habit.rewardStars < 0 ? t('habits.submit_deduct', { defaultValue: '提交扣分' }) : t('habits.check_in', { defaultValue: '打卡' }))}
                             </button>
                           </div>
                         </motion.div>
@@ -800,46 +884,56 @@ export function HabitRewards() {
           <AppModal
             open={isAddingHabit}
             onClose={() => setIsAddingHabit(false)}
-            title="添加好习惯"
+            title={t('habits.add_modal.title', { defaultValue: '添加好习惯' })}
             surface="sheet"
             zIndexClass="z-[120]"
-            bodyClassName="px-6 py-5"
+            bodyClassName="px-5 py-4"
             footer={
               <div className="flex gap-3">
                 <button
                   onClick={() => setIsAddingHabit(false)}
-                  className="flex-1 py-4 px-5 rounded-2xl bg-surface-container font-black text-on-surface-variant"
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-surface-container font-black text-on-surface-variant"
                 >
-                  取消
+                  {t('habits.add_modal.cancel', { defaultValue: '取消' })}
                 </button>
                 <button
                   onClick={handleAddHabit}
-                  className="flex-[2] py-4 px-5 rounded-2xl bg-primary text-on-primary font-black shadow-lg"
+                  className="flex-[2] py-2.5 px-4 rounded-xl bg-primary text-on-primary font-black shadow-md shadow-primary/15"
                 >
-                  确认添加
+                  {t('habits.add_modal.confirm', { defaultValue: '确认添加' })}
                 </button>
               </div>
             }
           >
-              <div className="space-y-4">
-                <div className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/5">
-                  <p className="text-[10px] font-black text-on-surface-variant/40 uppercase mb-2">习惯名称</p>
+              <div className="space-y-3">
+                <div className="bg-surface-container-low p-3 rounded-2xl border border-outline-variant/5">
+                  <div className="mb-2 flex items-center gap-2">
+                    <p className="text-[10px] font-black uppercase text-on-surface-variant/40">{t('habits.add_modal.name_label', { defaultValue: '习惯名称' })}</p>
+                    <OptionHelp title={t('habits.add_modal.name_help_title', { defaultValue: '习惯名称怎么写' })}>
+                      {t('habits.add_modal.name_help_body', { defaultValue: '写成孩子每天或每周能直接执行的动作，不要写成抽象目标。比如“每天跳绳 10 分钟”比“增强体质”更容易打卡。' })}
+                    </OptionHelp>
+                  </div>
                   <input
                     type="text"
-                    placeholder="例如：每天刷牙"
-                    className="w-full bg-transparent border-none outline-none font-bold text-on-surface text-lg placeholder:opacity-20"
+                    placeholder={t('habits.add_modal.name_placeholder', { defaultValue: '例如：每天刷牙' })}
+                    className="w-full bg-transparent border-none outline-none font-bold text-on-surface text-base placeholder:opacity-20"
                     value={newHabitTitle}
                     onChange={(e) => setNewHabitTitle(e.target.value)}
                   />
                 </div>
 
-                <div className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/5">
-                  <p className="text-[10px] font-black text-on-surface-variant/40 uppercase mb-2">单次奖励 (星星)</p>
+                <div className="bg-surface-container-low p-3 rounded-2xl border border-outline-variant/5">
+                  <div className="mb-2 flex items-center gap-2">
+                    <p className="text-[10px] font-black uppercase text-on-surface-variant/40">{t('habits.add_modal.stars_label', { defaultValue: '单次奖励 (星星)' })}</p>
+                    <OptionHelp title={t('habits.add_modal.stars_help_title', { defaultValue: '习惯奖励怎么定' })}>
+                      {t('habits.add_modal.stars_help_body', { defaultValue: '高频习惯不要给太多星星。生活小习惯建议 1-2 星，学习或运动坚持建议 3-5 星，特别难坚持的阶段性挑战再给更高奖励。' })}
+                    </OptionHelp>
+                  </div>
                   <div className="flex items-center gap-4">
                     <Star size={20} className="text-reward-display fill-current" />
                     <input
                       type="number"
-                      className="w-full bg-transparent border-none outline-none font-bold text-on-surface text-xl"
+                      className="w-full bg-transparent border-none outline-none font-bold text-on-surface text-lg"
                       value={newHabitStars}
                       onChange={(e) => setNewHabitStars(parseInt(e.target.value) || 0)}
                     />
@@ -854,7 +948,7 @@ export function HabitRewards() {
       <AnimatePresence>
         {showTemplatePicker && (
           <TemplatePickerShell
-            title="选择模板"
+            title={t('habits.template.title', { defaultValue: '选择模板' })}
             onClose={() => setShowTemplatePicker(false)}
             search={
               <div className="flex items-center gap-3">
@@ -862,17 +956,17 @@ export function HabitRewards() {
                   <span className="absolute left-4 top-1/2 -translate-y-1/5 text-base">🔍</span>
                   <input
                     type="text"
-                    placeholder="搜索模板"
+                    placeholder={t('habits.template.search', { defaultValue: '搜索模板' })}
                     value={habitTemplateSearch}
                     onChange={(event) => setHabitTemplateSearch(event.target.value)}
-                    className="w-full bg-surface-container-low border-none rounded-2xl pl-11 pr-4 py-3.5 shadow-sm font-bold text-sm placeholder:text-on-surface-variant/30"
+                    className="w-full bg-surface-container-low border-none rounded-xl pl-10 pr-3 py-2.5 shadow-sm font-bold text-sm placeholder:text-on-surface-variant/30"
                   />
                 </div>
                 <button
                   onClick={() => { setShowTemplatePicker(false); navigate(getCustomCreationRoute('habit'), { state: { fromMode: 'habit' } }); }}
-                  className="px-4 py-3.5 bg-primary text-white rounded-2xl shadow-sm font-bold text-sm active:scale-95 transition-all shrink-0"
+                  className="px-3 py-2.5 bg-primary text-white rounded-xl shadow-sm font-bold text-sm active:scale-95 transition-all shrink-0"
                 >
-                  自定义添加
+                  {t('habits.template.custom', { defaultValue: '自定义添加' })}
                 </button>
               </div>
             }
@@ -886,7 +980,7 @@ export function HabitRewards() {
                       setHabitTemplateSearch('');
                     }}
                     className={cn(
-                      "px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all shrink-0",
+                      "px-4 py-2 rounded-full text-xs font-black whitespace-nowrap transition-all shrink-0",
                       activeTplCategory === cat.id
                         ? "bg-primary text-white"
                         : "bg-surface-container-low text-on-surface-variant"
@@ -898,7 +992,7 @@ export function HabitRewards() {
               </div>
             }
           >
-              <div className="grid grid-cols-4 gap-x-4 gap-y-5">
+              <div className="grid grid-cols-4 gap-x-3 gap-y-4">
                 {filteredTemplates.map((tpl, idx) => (
                   <motion.button
                     key={tpl.id}
@@ -907,13 +1001,13 @@ export function HabitRewards() {
                     transition={{ delay: Math.min(idx, 8) * 0.025 }}
                     whileTap={{ scale: 0.92 }}
                     onClick={() => handleSelectTemplate(tpl)}
-                    className="flex flex-col items-center gap-1 p-1 rounded-2xl active:bg-surface-container transition-colors"
+                    className="flex flex-col items-center gap-1 p-1 rounded-xl active:bg-surface-container transition-colors"
                   >
                     {/* 本地 kawaii 风格 PNG 图标 */}
                     <img
                       src={tpl.icon}
                       alt=""
-                      className="w-[56px] h-[56px] object-contain rounded-xl"
+                      className="w-12 h-12 object-contain rounded-xl"
                     />
                     <span className="text-xs font-bold text-on-surface text-center leading-tight">{tpl.title}</span>
                     <div className="flex items-center gap-0.5">
@@ -938,7 +1032,9 @@ export function HabitRewards() {
         onComplete={handleCelebrationComplete}
         type={selectedHabit && selectedHabit.rewardStars >= 0 ? 'habit' : 'penalty'}
         title={selectedHabit && selectedHabit.rewardStars >= 0 ? t('habits.check_in_success', '打卡成功！') : t('habits.deduct_warning', '扣除警告！')}
-        subtitle={selectedHabit && selectedHabit.rewardStars >= 0 ? '太棒了，继续保持 🌱' : '下次一定不要再犯了哦 ⚠️'}
+        subtitle={selectedHabit && selectedHabit.rewardStars >= 0
+          ? t('habits.bonus_success_subtitle', { defaultValue: '太棒了，继续保持 🌱' })
+          : t('habits.penalty_success_subtitle', { defaultValue: '下次一定不要再犯了哦 ⚠️' })}
         stars={selectedHabit ? Math.abs(selectedHabit.rewardStars) : 0}
       />
     </div>

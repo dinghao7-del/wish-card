@@ -14,13 +14,16 @@ type Step = 'intro' | 'login' | 'register';
 
 const STORAGE_KEY = 'guest_user';
 const SUPABASE_AUTH_STORAGE_KEY = 'sb-qdiuufuoleharmjfarzr-auth-token';
-const THEME_SKIN_STORAGE_KEY = 'wishcard-theme-skin';
+
+const WELCOME_COMIC_ILLUSTRATIONS = [
+  '/static/skins/forest-comic/welcome/welcome-green-01.png',
+  '/static/skins/forest-comic/welcome/welcome-green-02.png',
+  '/static/skins/forest-comic/welcome/welcome-green-03.png',
+  '/static/skins/forest-comic/welcome/welcome-green-04.png',
+];
 
 function pickWelcomeComic() {
-  const storedSkin = Taro.getStorageSync(THEME_SKIN_STORAGE_KEY);
-  return storedSkin === 'arcade-comic'
-    ? '/static/skins/arcade-comic/welcome-comic.svg'
-    : '/static/skins/forest-comic/welcome-comic.svg';
+  return WELCOME_COMIC_ILLUSTRATIONS[Math.floor(Math.random() * WELCOME_COMIC_ILLUSTRATIONS.length)];
 }
 
 export default function Login() {

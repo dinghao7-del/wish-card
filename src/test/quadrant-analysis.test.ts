@@ -115,6 +115,20 @@ describe('AI 四象限周期筛选', () => {
       params: { scene: 'holiday', name: '暑假计划' },
       needsConfirmation: false,
     });
+
+    const summerTrip = await recognizeIntent('帮我安排一个暑期行程', context);
+    expect(summerTrip).toMatchObject({
+      intent: 'create_plan',
+      params: { scene: 'holiday', name: '暑期行程' },
+      needsConfirmation: false,
+    });
+
+    const winterTrip = await recognizeIntent('帮我设计一个寒假行程', context);
+    expect(winterTrip).toMatchObject({
+      intent: 'create_plan',
+      params: { scene: 'holiday', name: '寒假行程' },
+      needsConfirmation: false,
+    });
   });
 
   it('家庭管家建议有离线可用的本地兜底', async () => {

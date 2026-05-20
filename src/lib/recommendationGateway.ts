@@ -63,15 +63,15 @@ export interface RecommendationGatewayResult {
 }
 
 const CATEGORY_DEFAULT_DESTINATION: Record<RecommendationCategory, string> = {
-  education: '/schedule-recommend',
-  travel: '/school-calendar',
-  healthcare: '/school-calendar',
+  education: '/plans/smart-recommend',
+  travel: '/plans/smart-recommend',
+  healthcare: '/plans/smart-recommend',
 };
 
 const CATEGORY_ACTION_LABEL: Record<RecommendationCategory, string> = {
   education: '查看学习与活动建议',
   travel: '查看假期安排建议',
-  healthcare: '查看就医日程建议',
+  healthcare: '查看健康日程建议',
 };
 
 export function buildRecommendationGateway(

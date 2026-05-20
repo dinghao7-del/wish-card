@@ -4,6 +4,11 @@ import Taro from '@tarojs/taro';
 import Icon from '@/components/Icon';
 import { MINI_UI_COLORS } from '@/utils/uiTokens';
 import { getThemeClass } from '@/lib/themeSkins';
+import {
+  buildScheduleOptimizationSkill,
+  sanitizeChildProfileForScheduleStage,
+  type ChildProfile,
+} from '@/lib/scheduleRecommendAI';
 import './index.scss';
 
 /**
@@ -19,33 +24,11 @@ const GRADE_OPTIONS = [
   '高一', '高二', '高三',
 ];
 
-const SUBJECT_OPTIONS = [
-  '语文', '数学', '英语', '物理', '化学', '生物',
-  '历史', '地理', '政治', '科学', '编程', '美术', '音乐',
-];
-
-const INTEREST_MALE = [
-  '篮球', '足球', '游泳', '武术/跆拳道', '编程', '围棋/象棋',
-  '乐高/机器人', '架子鼓', '街舞', '画画', '轮滑', '科学实验',
-];
-
-const INTEREST_FEMALE = [
-  '中国舞/芭蕾', '钢琴', '画画', '游泳', '英语', '演讲口才',
-  '书法', '羽毛球', '声乐', '陶艺/手工', '小提琴', '围棋',
-];
-
 const PERSONALITY = [
   '外向活泼', '内向文静', '好动坐不住', '专注力好',
   '胆小谨慎', '勇于尝试', '敏感细腻', '大大咧咧',
   '喜欢社交', '喜欢独处', '争强好胜', '随和佛系',
   '动手能力强', '语言表达好', '逻辑思维强', '想象力丰富',
-];
-
-const EXPECTATIONS = [
-  '快乐成长为主', '升学导向（注重成绩）',
-  '培养特长/才艺', '增强体能/健康',
-  '提升社交与自信', '培养独立自主能力',
-  '打好学科基础', '发掘/培养兴趣',
 ];
 
 const CITIES = ['北京', '上海', '广州', '深圳', '杭州', '成都', '武汉',
@@ -71,6 +54,32 @@ interface ChildProfileData {
   notes: string;
 }
 
+const toSchoolType = (value: string): ChildProfile['schoolType'] => (
+  value === '公立' || value === '私立' || value === '国际' ? value : ''
+);
+
+const toChildProfile = (source: ChildProfileData): ChildProfile => ({
+  gender: source.gender,
+  age: source.age,
+  grade: source.grade,
+  city: source.city,
+  schoolType: toSchoolType(source.schoolType),
+  strongSubjects: source.strongSubjects,
+  weakSubjects: source.weakSubjects,
+  existingInterests: source.interests,
+  existingSchedules: [],
+  personality: source.personalities,
+  personalityOther: '',
+  homeworkDuration: source.homeworkHours,
+  freeTimePerDay: source.freeTime,
+  parentExpectation: source.expectations,
+  expectationOther: '',
+  budget: source.budget,
+  screenTime: source.screenTime ? `${source.screenTime}小时/天` : '',
+  healthNotes: '',
+  otherNotes: source.notes,
+});
+
 export default function ScheduleRecommend() {
   const [step, setStep] = useState<StepNum>(0);
 
@@ -87,14 +96,34 @@ export default function ScheduleRecommend() {
   const [feedbackText, setFeedbackText] = useState('');
   const [activeTab, setActiveTab] = useState<'weekday' | 'weekend' | 'activities' | 'strategy'>('weekday');
   const [isGenerating, setIsGenerating] = useState(false);
+  const scheduleSkill = buildScheduleOptimizationSkill(toChildProfile(form));
+  const interestOptions = form.gender === 'boy'
+    ? scheduleSkill.interestOptions.boy
+    : form.gender === 'girl'
+      ? scheduleSkill.interestOptions.girl
+      : scheduleSkill.interestOptions.all;
+
+  const updateFormForStage = (next: ChildProfileData) => {
+    const safe = sanitizeChildProfileForScheduleStage(toChildProfile(next));
+    setForm({
+      ...next,
+      strongSubjects: safe.strongSubjects,
+      weakSubjects: safe.weakSubjects,
+    });
+  };
 
   /** ChipSelect 切换 */
   const toggleChip = (field: keyof ChildProfileData, val: string, multi = true) => {
     const current = form[field] as string[];
+    const nextValue = multi
+      ? current.includes(val) ? current.filter(v => v !== val) : [...current, val]
+      : [val];
+    const next = { ...form, [field]: nextValue } as ChildProfileData;
     if (multi) {
-      setForm({ ...form, [field]: current.includes(val) ? current.filter(v => v !== val) : [...current, val] });
+      if (field === 'strongSubjects' || field === 'weakSubjects') updateFormForStage(next);
+      else setForm(next);
     } else {
-      setForm({ ...form, [field]: [val] });
+      setForm(next);
     }
   };
 
@@ -179,7 +208,7 @@ export default function ScheduleRecommend() {
           <View className="sr-chips">{GRADE_OPTIONS.map(g => (
             <View
               key={g} className={`sr-chip ${form.grade === g ? 'active' : ''}`}
-              onClick={() => setForm({ ...form, grade: g })}
+              onClick={() => updateFormForStage({ ...form, grade: g })}
             ><Text className={`sr-chip-text ${form.grade === g ? 'active' : ''}`}>{g}</Text></View>
           ))}</View>
 
@@ -189,7 +218,7 @@ export default function ScheduleRecommend() {
               <Text className="sr-field-label">年龄</Text>
               <Input className="sr-input" type="number" placeholder="如: 8"
                 value={form.age ? String(form.age) : ''}
-                onInput={(e: any) => setForm({ ...form, age: parseInt(e.detail.value) || null })} />
+                onInput={(e: any) => updateFormForStage({ ...form, age: parseInt(e.detail.value) || null })} />
             </View>
             <View className="sr-input-group" style={{ flex: 1.5 }}>
               <Text className="sr-field-label">所在城市</Text>
@@ -215,18 +244,18 @@ export default function ScheduleRecommend() {
       {/* ===== Step 1: 学业与时间 ===== */}
       {step === 1 && (
         <ScrollView scrollY className="sr-step-view">
-          <View className="sr-header"><Text className="sr-title">学业与时间</Text></View>
+          <View className="sr-header"><Text className="sr-title">{scheduleSkill.academicStepTitle}</Text></View>
 
-          <Text className="sr-field-label">强项科目（可多选）</Text>
-          <View className="sr-chips">{SUBJECT_OPTIONS.map(s => (
+          <Text className="sr-field-label">{scheduleSkill.strengthLabel}（可多选）</Text>
+          <View className="sr-chips">{scheduleSkill.subjectOptions.map(s => (
             <View key={s} className={`sr-chip ${form.strongSubjects.includes(s) ? 'active' : ''}`}
               onClick={() => toggleChip('strongSubjects', s)}>
               <Text className={`sr-chip-text ${form.strongSubjects.includes(s) ? 'active' : ''}`}>{s}</Text>
             </View>
           ))}</View>
 
-          <Text className="sr-field-label">薄弱科目（可多选）</Text>
-          <View className="sr-chips">{SUBJECT_OPTIONS.map(s => (
+          <Text className="sr-field-label">{scheduleSkill.challengeLabel}（可多选）</Text>
+          <View className="sr-chips">{scheduleSkill.subjectOptions.map(s => (
             <View key={s} className={`sr-chip ${form.weakSubjects.includes(s) ? 'active' : ''}`}
               onClick={() => toggleChip('weakSubjects', s)}>
               <Text className={`sr-chip-text ${form.weakSubjects.includes(s) ? 'active' : ''}`}>{s}</Text>
@@ -235,14 +264,14 @@ export default function ScheduleRecommend() {
 
           <View className="sr-row-2">
             <View className="sr-input-group" style={{ flex: 1 }}>
-              <Text className="sr-field-label">日均作业时长</Text>
-              <Input className="sr-input" type="digit" placeholder="小时"
+              <Text className="sr-field-label">{scheduleSkill.homeworkLabel}</Text>
+              <Input className="sr-input" type="digit" placeholder={scheduleSkill.homeworkPlaceholder}
                 value={form.homeworkHours ? String(form.homeworkHours) : ''}
                 onInput={(e: any) => setForm({ ...form, homeworkHours: parseFloat(e.detail.value) || null })} />
             </View>
             <View className="sr-input-group" style={{ flex: 1 }}>
-              <Text className="sr-field-label">可自由支配时间</Text>
-              <Input className="sr-input" type="digit" placeholder="小时/天"
+              <Text className="sr-field-label">{scheduleSkill.freeTimeLabel}</Text>
+              <Input className="sr-input" type="digit" placeholder={scheduleSkill.freeTimePlaceholder}
                 value={form.freeTime ? String(form.freeTime) : ''}
                 onInput={(e: any) => setForm({ ...form, freeTime: parseFloat(e.detail.value) || null })} />
             </View>
@@ -262,7 +291,7 @@ export default function ScheduleRecommend() {
 
           <Text className="sr-field-label">已参加的兴趣班（可多选）</Text>
           <View className="sr-chips">
-            {(form.gender === 'girl' ? INTEREST_FEMALE : INTEREST_MALE).map(int => (
+            {interestOptions.map(int => (
               <View key={int} className={`sr-chip ${form.interests.includes(int) ? 'active' : ''}`}
                 onClick={() => toggleChip('interests', int)}>
                 <Text className={`sr-chip-text ${form.interests.includes(int) ? 'active' : ''}`}>{int}</Text>
@@ -300,7 +329,7 @@ export default function ScheduleRecommend() {
           ))}</View>
 
           <Text className="sr-field-label">家长期望（可多选）</Text>
-          <View className="sr-chips">{EXPECTATIONS.map(e => (
+          <View className="sr-chips">{scheduleSkill.parentExpectationOptions.map(e => (
             <View key={e} className={`sr-chip ${form.expectations.includes(e) ? 'active' : ''}`}
               onClick={() => toggleChip('expectations', e)}>
               <Text className={`sr-chip-text ${form.expectations.includes(e) ? 'active' : ''}`}>{e}</Text>
@@ -457,69 +486,123 @@ export default function ScheduleRecommend() {
 
 // ===== 模拟数据生成器（替代真实 AI API）======
 function generateMockResult(form: ChildProfileData): any {
+  const profile = toChildProfile(form);
+  const skill = buildScheduleOptimizationSkill(profile);
+  const isPreschool = skill.stage.key === 'preschool';
   const grade = form.grade || '小学';
   const name = form.gender === 'girl' ? '她' : '他';
+  const firstInterest = form.interests[0] || (isPreschool ? '亲子户外游戏' : '自由阅读');
+  const firstFocus = form.strongSubjects[0] || skill.subjectOptions[0];
+  const secondFocus = form.weakSubjects[0] || skill.subjectOptions[1] || firstFocus;
 
   return {
-    summary: `基于${name}${grade}${form.age || ''}岁的特点，建议采用「学习-休息-兴趣」交替模式。每天保证9-10小时睡眠，学习时间分段进行，每40分钟休息10分钟。周末增加户外活动时间。`,
-    weekday: [
-      { time: '06:30-07:00', title: '起床洗漱', desc: '', color: MINI_UI_COLORS.scheduleNeutral, special: true },
-      { time: '07:00-07:30', title: '早餐', desc: '营养均衡', color: MINI_UI_COLORS.scheduleOrange, special: true },
-      { time: '07:30-08:00', title: '晨读/英语', desc: '记忆黄金期', color: MINI_UI_COLORS.primary },
-      { time: '08:00-11:30', title: '在校学习', desc: '认真听课', color: MINI_UI_COLORS.scheduleBlue, special: true },
-      { time: '11:30-12:30', title: '午餐+休息', desc: '', color: MINI_UI_COLORS.scheduleOrange, special: true },
-      { time: '12:30-13:30', title: '午休', desc: '30-45分钟午睡', color: MINI_UI_COLORS.schedulePurple, special: true },
-      { time: '13:30-15:00', title: '作业时间①', desc: '先做弱项科目', color: MINI_UI_COLORS.primary },
-      { time: '15:00-15:20', title: '休息/水果', desc: '远眺放松眼睛', color: MINI_UI_COLORS.scheduleGreen },
-      { time: '15:20-16:30', title: '作业时间②', desc: '强项巩固', color: MINI_UI_COLORS.primary },
-      { time: '16:30-17:30', title: '户外活动', desc: '跳绳/跑步/球类', color: MINI_UI_COLORS.scheduleSport },
-      { time: '17:30-18:00', title: '晚餐', desc: '', color: MINI_UI_COLORS.scheduleOrange, special: true },
-      { time: '18:00-19:00', title: '兴趣班/阅读', desc: form.interests[0] || '自由阅读', color: MINI_UI_COLORS.scheduleViolet },
-      { time: '19:00-19:20', title: '休息', desc: '', color: MINI_UI_COLORS.scheduleGreen },
-      { time: '19:20-20:00', title: '复习预习', desc: '当日总结', color: MINI_UI_COLORS.primary },
-      { time: '20:00-20:30', title: '洗漱/亲子时光', desc: '', color: MINI_UI_COLORS.scheduleCyan, special: true },
-      { time: '20:30-', title: '就寝', desc: '保证充足睡眠', color: MINI_UI_COLORS.scheduleIndigo, special: true },
-    ],
-    weekend: [
-      { time: '08:00-08:30', title: '起床早餐', desc: '可以比平时晚起', color: MINI_UI_COLORS.scheduleNeutral, special: true },
-      { time: '08:30-09:30', title: '晨间活动', desc: '户外运动/散步', color: MINI_UI_COLORS.scheduleSport },
-      { time: '09:30-11:00', title: '学习时段①', desc: '弱科攻坚', color: MINI_UI_COLORS.primary },
-      { time: '11:00-11:20', title: '休息', desc: '', color: MINI_UI_COLORS.scheduleGreen },
-      { time: '11:20-12:00', title: '学习时段②', desc: '', color: MINI_UI_COLORS.primary },
-      { time: '12:00-13:30', title: '午餐+午休', desc: '', color: MINI_UI_COLORS.scheduleOrange, special: true },
-      { time: '13:30-15:30', title: '兴趣班/特长训练', desc: form.interests[0] || '自由安排', color: MINI_UI_COLORS.scheduleViolet },
-      { time: '15:30-16:00', title: '下午茶休息', desc: '', color: MINI_UI_COLORS.scheduleOrange },
-      { time: '16:00-17:30', title: '自由活动/社交', desc: '和朋友玩耍', color: MINI_UI_COLORS.scheduleSky },
-      { time: '17:30-18:30', title: '晚餐', desc: '', color: MINI_UI_COLORS.scheduleOrange, special: true },
-      { time: '18:30-19:30', title: '家庭时间/电影/桌游', desc: '', color: MINI_UI_COLORS.schedulePink },
-      { time: '19:30-20:00', title: '下周准备', desc: '整理书包/检查作业', color: MINI_UI_COLORS.primary },
-      { time: '20:00-20:30', title: '洗漱', desc: '', color: MINI_UI_COLORS.scheduleCyan, special: true },
-      { time: '20:30-', title: '就寝', desc: '', color: MINI_UI_COLORS.scheduleIndigo, special: true },
-    ],
-    activities: [
-      { name: form.interests[0] || '户外运动', duration: '45min', category: '运动健康', priority: 1, reason: '增强体质，释放精力' },
-      { name: form.interests[1] || '阅读绘本', duration: '30min', category: '认知发展', priority: 2, reason: '培养阅读习惯和想象力' },
-      { name: form.strongSubjects[0] || '数学思维', duration: '25min', category: '学科拓展', priority: 2, reason: '巩固强项，建立自信' },
-      { name: '家务劳动', duration: '15min', category: '生活技能', priority: 3, reason: '培养责任感和独立性' },
-      { name: '亲子游戏', duration: '20min', category: '家庭互动', priority: 3, reason: '增进亲子关系' },
-      { name: '自由探索', duration: '30min', category: '创造力', priority: 3, reason: '激发好奇心和创造力' },
-    ],
-    strategies: [
-      `${form.weakSubjects[0] || '薄弱科目'}建议使用费曼学习法：让孩子讲给你听`,
-      '学习环境要安静整洁，减少视觉干扰',
-      '每完成一个任务给予正向鼓励（不一定是物质奖励）',
-      '屏幕时间控制在每天1小时内，且避免睡前1小时使用',
-      '周末至少安排2小时户外活动',
-      `月预算${form.budget || '合理'}元建议优先投入${form.interests[0] || '运动类'}兴趣培养`,
-      '保持规律作息，固定时间做固定的事有助于养成习惯',
-      `${name}性格${form.personalities[0] || '活泼'}，适合用游戏化方式激励学习`,
-    ],
-    parentTips: [
-      '不要拿别人家的孩子比较，关注孩子的进步',
-      '规律作息比临时突击更有效',
-      '兴趣是最好的老师，保护孩子的好奇心',
-      '高质量的陪伴胜过昂贵的培训班',
-      '允许适当的"无聊"时间，这能激发创造力',
-    ],
+    summary: isPreschool
+      ? `基于${name}${grade}${form.age || ''}岁的阶段特点，这份方案不按学科补习来设计，而是围绕${skill.stage.coreFocus.join('、')}来安排。每天优先保障${skill.stage.sleepTarget}睡眠、户外活动和稳定睡前流程。`
+      : `基于${name}${grade}${form.age || ''}岁的特点，建议采用「学习-休息-兴趣」交替模式。每天保证${skill.stage.sleepTarget}睡眠，学习时间分段进行，周末增加户外活动时间。`,
+    weekday: isPreschool
+      ? [
+        { time: '07:00-07:30', title: '起床洗漱', desc: '自己穿衣、洗脸刷牙，练习生活自理', color: MINI_UI_COLORS.scheduleNeutral, special: true },
+        { time: '07:30-08:00', title: '早餐和出门准备', desc: '给孩子一个可预期的出门节奏', color: MINI_UI_COLORS.scheduleOrange, special: true },
+        { time: '08:00-16:00', title: '幼儿园一日活动', desc: '以游戏、社交、户外和生活规则为主', color: MINI_UI_COLORS.scheduleBlue, special: true },
+        { time: '16:30-17:30', title: '户外自由玩', desc: '跑跳攀爬、球类或亲子散步，释放精力', color: MINI_UI_COLORS.scheduleSport },
+        { time: '17:30-18:30', title: '晚餐和家务小帮手', desc: '参与摆餐具、收玩具，培养责任感', color: MINI_UI_COLORS.scheduleOrange },
+        { time: '18:30-19:00', title: firstInterest, desc: '保持轻松体验，不用用结果考核孩子', color: MINI_UI_COLORS.scheduleViolet },
+        { time: '19:00-19:30', title: '亲子绘本和表达', desc: `围绕${firstFocus}做讲述、复述或角色扮演`, color: MINI_UI_COLORS.primary },
+        { time: '19:30-20:10', title: '洗漱和安静游戏', desc: '减少屏幕刺激，给睡眠降速', color: MINI_UI_COLORS.scheduleCyan, special: true },
+        { time: '20:10-20:30', title: '睡前故事', desc: '用固定仪式稳定安全感', color: MINI_UI_COLORS.schedulePurple },
+        { time: '20:30-', title: '入睡', desc: `目标睡眠${skill.stage.sleepTarget}`, color: MINI_UI_COLORS.scheduleIndigo, special: true },
+      ]
+      : [
+        { time: '06:30-07:00', title: '起床洗漱', desc: '', color: MINI_UI_COLORS.scheduleNeutral, special: true },
+        { time: '07:00-07:30', title: '早餐', desc: '营养均衡', color: MINI_UI_COLORS.scheduleOrange, special: true },
+        { time: '07:30-08:00', title: '晨读/英语', desc: '记忆黄金期', color: MINI_UI_COLORS.primary },
+        { time: '08:00-11:30', title: '在校学习', desc: '认真听课', color: MINI_UI_COLORS.scheduleBlue, special: true },
+        { time: '11:30-12:30', title: '午餐+休息', desc: '', color: MINI_UI_COLORS.scheduleOrange, special: true },
+        { time: '12:30-13:30', title: '午休', desc: '30-45分钟午睡', color: MINI_UI_COLORS.schedulePurple, special: true },
+        { time: '13:30-15:00', title: '作业时间①', desc: `先处理${secondFocus}`, color: MINI_UI_COLORS.primary },
+        { time: '15:00-15:20', title: '休息/水果', desc: '远眺放松眼睛', color: MINI_UI_COLORS.scheduleGreen },
+        { time: '15:20-16:30', title: '作业时间②', desc: `${firstFocus}巩固`, color: MINI_UI_COLORS.primary },
+        { time: '16:30-17:30', title: '户外活动', desc: '跳绳/跑步/球类', color: MINI_UI_COLORS.scheduleSport },
+        { time: '17:30-18:00', title: '晚餐', desc: '', color: MINI_UI_COLORS.scheduleOrange, special: true },
+        { time: '18:00-19:00', title: '兴趣班/阅读', desc: firstInterest, color: MINI_UI_COLORS.scheduleViolet },
+        { time: '19:00-19:20', title: '休息', desc: '', color: MINI_UI_COLORS.scheduleGreen },
+        { time: '19:20-20:00', title: '复习预习', desc: '当日总结', color: MINI_UI_COLORS.primary },
+        { time: '20:00-20:30', title: '洗漱/亲子时光', desc: '', color: MINI_UI_COLORS.scheduleCyan, special: true },
+        { time: '20:30-', title: '就寝', desc: '保证充足睡眠', color: MINI_UI_COLORS.scheduleIndigo, special: true },
+      ],
+    weekend: isPreschool
+      ? [
+        { time: '08:00-08:30', title: '自然醒和早餐', desc: '周末也尽量不大幅打乱作息', color: MINI_UI_COLORS.scheduleNeutral, special: true },
+        { time: '09:00-10:30', title: '户外探索', desc: '公园、自然观察、骑行或亲子运动', color: MINI_UI_COLORS.scheduleSport },
+        { time: '10:30-11:00', title: '绘本/手工', desc: '用故事和动手活动延展表达', color: MINI_UI_COLORS.primary },
+        { time: '12:00-14:00', title: '午餐和午休', desc: '保护午休节奏', color: MINI_UI_COLORS.scheduleOrange, special: true },
+        { time: '15:00-16:30', title: '兴趣体验', desc: firstInterest, color: MINI_UI_COLORS.scheduleViolet },
+        { time: '17:00-18:30', title: '自由玩和家庭时间', desc: '让孩子有自己安排游戏的空间', color: MINI_UI_COLORS.scheduleSky },
+        { time: '19:30-20:30', title: '洗漱和睡前故事', desc: '减少屏幕刺激', color: MINI_UI_COLORS.scheduleCyan, special: true },
+      ]
+      : [
+        { time: '08:00-08:30', title: '起床早餐', desc: '可以比平时晚起', color: MINI_UI_COLORS.scheduleNeutral, special: true },
+        { time: '08:30-09:30', title: '晨间活动', desc: '户外运动/散步', color: MINI_UI_COLORS.scheduleSport },
+        { time: '09:30-11:00', title: '学习时段①', desc: `${secondFocus}攻坚`, color: MINI_UI_COLORS.primary },
+        { time: '11:00-11:20', title: '休息', desc: '', color: MINI_UI_COLORS.scheduleGreen },
+        { time: '11:20-12:00', title: '学习时段②', desc: '', color: MINI_UI_COLORS.primary },
+        { time: '12:00-13:30', title: '午餐+午休', desc: '', color: MINI_UI_COLORS.scheduleOrange, special: true },
+        { time: '13:30-15:30', title: '兴趣班/特长训练', desc: firstInterest, color: MINI_UI_COLORS.scheduleViolet },
+        { time: '15:30-16:00', title: '下午茶休息', desc: '', color: MINI_UI_COLORS.scheduleOrange },
+        { time: '16:00-17:30', title: '自由活动/社交', desc: '和朋友玩耍', color: MINI_UI_COLORS.scheduleSky },
+        { time: '17:30-18:30', title: '晚餐', desc: '', color: MINI_UI_COLORS.scheduleOrange, special: true },
+        { time: '18:30-19:30', title: '家庭时间/电影/桌游', desc: '', color: MINI_UI_COLORS.schedulePink },
+        { time: '19:30-20:00', title: '下周准备', desc: '整理书包/检查作业', color: MINI_UI_COLORS.primary },
+        { time: '20:00-20:30', title: '洗漱', desc: '', color: MINI_UI_COLORS.scheduleCyan, special: true },
+        { time: '20:30-', title: '就寝', desc: '', color: MINI_UI_COLORS.scheduleIndigo, special: true },
+      ],
+    activities: isPreschool
+      ? [
+        { name: firstInterest, duration: '45min', category: '运动健康', priority: 1, reason: '用游戏和真实体验建立兴趣，不做结果考核' },
+        { name: '亲子绘本', duration: '20min', category: '语言表达', priority: 1, reason: '帮助孩子表达感受、复述故事和积累词汇' },
+        { name: '生活自理小任务', duration: '10min', category: '生活技能', priority: 2, reason: '把穿衣、收纳、摆餐具变成可完成的小挑战' },
+        { name: '自然观察', duration: '30min', category: '自然探索', priority: 2, reason: '保护好奇心和观察力' },
+        { name: '创意美术/手工', duration: '25min', category: '艺术感受', priority: 3, reason: '发展精细动作和表达欲' },
+      ]
+      : [
+        { name: form.interests[0] || '户外运动', duration: '45min', category: '运动健康', priority: 1, reason: '增强体质，释放精力' },
+        { name: form.interests[1] || '阅读绘本', duration: '30min', category: '认知发展', priority: 2, reason: '培养阅读习惯和想象力' },
+        { name: firstFocus, duration: '25min', category: '学科拓展', priority: 2, reason: '巩固优势，建立自信' },
+        { name: '家务劳动', duration: '15min', category: '生活技能', priority: 3, reason: '培养责任感和独立性' },
+        { name: '亲子游戏', duration: '20min', category: '家庭互动', priority: 3, reason: '增进亲子关系' },
+        { name: '自由探索', duration: '30min', category: '创造力', priority: 3, reason: '激发好奇心和创造力' },
+      ],
+    strategies: isPreschool
+      ? [
+        '不要用强弱科目评价幼儿园孩子，先看睡眠、户外、表达、社交和生活自理。',
+        `${secondFocus}可以通过游戏、绘本、家务和户外观察慢慢练，不需要刷题。`,
+        '每天保留自由玩时间，孩子自己安排游戏也是能力发展的一部分。',
+        '屏幕时间尽量放在白天短时使用，睡前一小时不要使用电子设备。',
+        `如果要推荐产品，优先匹配${skill.commercialRecommendationAngles.slice(0, 3).join('、')}方向。`,
+      ]
+      : [
+        `${secondFocus}建议使用费曼学习法：让孩子讲给你听`,
+        '学习环境要安静整洁，减少视觉干扰',
+        '每完成一个任务给予正向鼓励（不一定是物质奖励）',
+        '屏幕时间控制在每天1小时内，且避免睡前1小时使用',
+        '周末至少安排2小时户外活动',
+        `月预算${form.budget || '合理'}元建议优先投入${form.interests[0] || '运动类'}兴趣培养`,
+        '保持规律作息，固定时间做固定的事有助于养成习惯',
+        `${name}性格${form.personalities[0] || '活泼'}，适合用游戏化方式激励学习`,
+      ],
+    parentTips: isPreschool
+      ? [
+        '幼儿园阶段不是提前学小学，而是把睡眠、运动、表达、社交和自理打稳。',
+        '高质量陪伴可以很短，但要稳定、可预期、能被孩子感受到。',
+        '兴趣体验先看孩子是否愿意持续参与，不要过早用成果和考级压住兴趣。',
+        '如果孩子抗拒，先调整节奏和环境，再讨论内容本身。',
+      ]
+      : [
+        '不要拿别人家的孩子比较，关注孩子的进步',
+        '规律作息比临时突击更有效',
+        '兴趣是最好的老师，保护孩子的好奇心',
+        '高质量的陪伴胜过昂贵的培训班',
+        '允许适当的"无聊"时间，这能激发创造力',
+      ],
   };
 }

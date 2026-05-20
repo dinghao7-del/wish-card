@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import type { Achievement } from '../gamification/AchievementSystem';
 
 interface AchievementPopupProps {
@@ -50,6 +51,8 @@ export function AchievementPopup({
     duration = 3000,
     onDismiss,
 }: AchievementPopupProps) {
+    const { t, i18n } = useTranslation();
+    const isZh = (i18n.language || '').toLowerCase().startsWith('zh');
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
@@ -138,7 +141,7 @@ export function AchievementPopup({
                             {achievement.reward !== undefined && (
                                 <div className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 rounded-full text-yellow-700 dark:text-yellow-300 text-sm font-medium">
                                     <span>⭐</span>
-                                    <span>+{achievement.reward} 奖励</span>
+                                    <span>{t('achievement.reward', { defaultValue: isZh ? '+{{count}} 奖励' : '+{{count}} reward', count: achievement.reward })}</span>
                                 </div>
                             )}
 
@@ -147,7 +150,7 @@ export function AchievementPopup({
                                 onClick={onDismiss}
                                 className="mt-4 text-sm text-gray-400 hover:text-gray-600 transition-colors"
                             >
-                                点击任意处关闭
+                                {t('common.tap_anywhere_to_close', { defaultValue: isZh ? '点击任意处关闭' : 'Tap anywhere to close' })}
                             </button>
                         </div>
                     </motion.div>

@@ -4,6 +4,11 @@ apply plugin: 'kotlin-android'
 android {
     namespace "com.forestfamily.app"
     compileSdk rootProject.ext.compileSdkVersion
+    def keystoreProperties = new Properties()
+    def keystorePropertiesFile = rootProject.file('keystore.properties')
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    }
     
     // 启用 BuildConfig 生成（AGP 8.0+ 默认禁用）
     buildFeatures {
@@ -25,10 +30,10 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file('../wish-card-release-key.keystore')
-            storePassword 'wishcard123'
-            keyAlias 'wish-card-key'
-            keyPassword 'wishcard123'
+            storeFile keystoreProperties['storeFile'] ? rootProject.file(keystoreProperties['storeFile']) : file('../wish-card-release-key.keystore')
+            storePassword keystoreProperties['storePassword'] ?: ''
+            keyAlias keystoreProperties['keyAlias'] ?: 'wish-card-key'
+            keyPassword keystoreProperties['keyPassword'] ?: ''
         }
     }
 

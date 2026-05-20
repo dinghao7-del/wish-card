@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Plus, Minus, Camera, ChevronRight, LayoutGrid, Ban } from 'lucide-react';
+import { Star, Plus, Minus, Camera, ChevronRight, LayoutGrid, Ban, Sparkles } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useFamily } from '../context/FamilyContext';
 import { showToastGlobal } from '../components/Toast';
@@ -10,6 +10,8 @@ import { REWARD_CATEGORIES, type RewardTemplate } from '../lib/templates';
 import { useTranslation } from 'react-i18next';
 import { TopAppBar } from '../components/navigation/TopAppBar';
 import { AppModal, TemplatePickerShell } from '../components/AppModal';
+import { suggestRewardCost } from '../lib/starEconomy';
+import { OptionHelp } from '../components/OptionHelp';
 
 export function EditReward() {
   const navigate = useNavigate();
@@ -26,29 +28,65 @@ export function EditReward() {
     name: '',
     description: '',
     cost: 300,
-    unit: '次',
+    unit: t('edit_reward.default_unit', { defaultValue: '次' }),
     stock: 1,
     hasLimit: true,
     limitPeriod: 'day' as 'day' | 'week' | 'month',
     limitCount: 1,
     image: '/reward-icons/common/A_cute_flat_design_kawaii_styl_2026-04-27T19-41-21.png',
-    category: '常用',
+    category: t('edit_reward.default_category', { defaultValue: '常用' }),
     icon: 'Gift'
   });
 
   // 使用完整心愿库模板数据（6大分类，49个条目）
-  const [libraryCategory, setLibraryCategory] = useState<string>('常用');
+  const [libraryCategory, setLibraryCategory] = useState<string>(t('edit_reward.default_category', { defaultValue: '常用' }));
 
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [isPeriodSelectorOpen, setIsPeriodSelectorOpen] = useState(false);
   const [isUnitSelectorOpen, setIsUnitSelectorOpen] = useState(false);
 
-  const units = ['次', '件', '份', '个', '天'];
+  const _rawUnits: any = (t as any)('edit_reward.units', { returnObjects: true, defaultValue: ['次', '件', '份', '个', '天'] });
+  const units: string[] = Array.isArray(_rawUnits) ? _rawUnits : ['次', '件', '份', '个', '天'];
   const periods = [
-    { id: 'day', label: '天' },
-    { id: 'week', label: '周' },
-    { id: 'month', label: '月' }
+    { id: 'day', label: t('edit_reward.period_day', { defaultValue: '天' }) },
+    { id: 'week', label: t('edit_reward.period_week', { defaultValue: '周' }) },
+    { id: 'month', label: t('edit_reward.period_month', { defaultValue: '月' }) }
   ];
+  const getUnitDisplayName = (unit: string | undefined) => {
+    const zhUnits = ['次', '件', '份', '个', '天'];
+    const index = unit ? zhUnits.indexOf(unit) : -1;
+    return index >= 0 ? (units[index] || unit) : (unit || units[0] || t('edit_reward.default_unit', { defaultValue: '次' }));
+  };
+  const getCategoryDisplayName = (category: string | undefined) => {
+    const normalized = category || t('edit_reward.default_category', { defaultValue: '常用' });
+    const categoryKeyMap: Record<string, string> = {
+      '常用': 'common',
+      '体验': 'experience',
+      '奖品': 'prize',
+      '特权': 'privilege',
+      '成长': 'growth',
+      '活动': 'activity',
+      '星愿副本': 'quest',
+      'Common': 'common',
+      'Experience': 'experience',
+      'Prize': 'prize',
+      'Privilege': 'privilege',
+      'Growth': 'growth',
+      'Activity': 'activity',
+      'Wish Quests': 'quest',
+    };
+    const key = categoryKeyMap[normalized];
+    return key ? t(`edit_reward.categories.${key}`, { defaultValue: normalized }) : normalized;
+  };
+  const costSuggestion = suggestRewardCost({
+    name: formData.name,
+    description: formData.description,
+    category: formData.category,
+    currentBalance: rewards.reduce((sum, reward) => sum + reward.cost, 0),
+  });
+  const costTierLabel = t(`edit_reward.cost_tiers.${costSuggestion.tier}`, { defaultValue: costSuggestion.label });
+  const costReason = t(`edit_reward.cost_reasons.${costSuggestion.tier}`, { defaultValue: costSuggestion.reason });
+  const isCostInSuggestedRange = formData.cost >= costSuggestion.minCost && formData.cost <= costSuggestion.maxCost;
 
   useEffect(() => {
     if (isEdit && rewardToEdit) {
@@ -72,7 +110,7 @@ export function EditReward() {
           name: String(template.name || ''),
           description: String(template.description || ''),
           cost: Number(template.cost || 300),
-          category: String(template.category || '常用'),
+          category: String(template.category || t('edit_reward.default_category', { defaultValue: '常用' })),
           image: String(template.image || prev.image),
           icon: String(template.icon || prev.icon),
         }));
@@ -132,7 +170,7 @@ export function EditReward() {
       }
       navigate('/rewards');
     } catch (error: any) {
-      showToastGlobal(error.message || '保存失败，请重试', 'error');
+      showToastGlobal(error.message || t('edit_reward.save_failed', { defaultValue: '保存失败，请重试' }), 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -182,14 +220,14 @@ export function EditReward() {
               <Camera size={14} />
             </div>
           </div>
-          
-<button 
-  type="button"
-  onClick={() => setIsLibraryOpen(true)}
-  className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-primary-surface/10 text-primary-text font-black text-sm active:scale-95 transition-all"
->
-  {t('edit_reward.template_import', '模板导入')} <ChevronRight size={16} strokeWidth={3} className="text-primary-text/40" />
-</button>
+
+          <button
+            type="button"
+            onClick={() => setIsLibraryOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-surface/10 text-primary-text font-black text-sm active:scale-95 transition-all"
+          >
+            {t('edit_reward.template_import', '模板导入')} <ChevronRight size={16} strokeWidth={3} className="text-primary-text/40" />
+          </button>
         </div>
 
 {/* Section 1: Basic Info */}
@@ -208,9 +246,9 @@ export function EditReward() {
             <button
               type="button"
               onClick={() => setIsUnitSelectorOpen(true)}
-              className="flex-1 bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm active:scale-95 transition-transform"
+              className="flex-1 bg-white rounded-xl px-3 py-2.5 flex items-center justify-between shadow-sm active:scale-95 transition-transform"
             >
-              <span className="font-black text-on-surface text-sm">{formData.unit}</span>
+              <span className="font-black text-on-surface text-sm">{getUnitDisplayName(formData.unit)}</span>
               <ChevronRight size={14} className="rotate-90 opacity-40" />
             </button>
           </div>
@@ -238,6 +276,9 @@ export function EditReward() {
   <Star size={20} className="text-secondary fill-current" />
 </div>
               <span>{t('edit_reward.unit_price', '单价')}</span>
+              <OptionHelp title={t('edit_reward.unit_price_help_title', { defaultValue: '单价怎么定' })}>
+                {t('edit_reward.unit_price_help_body', { defaultValue: '单价就是孩子兑换这个心愿需要花多少星星。小特权可以低一点，比如 20-80 星；周末体验可以高一点，比如 100-260 星；旅行、营地这类大心愿建议设置成长期目标。' })}
+              </OptionHelp>
             </div>
             <div className="flex items-center gap-4 bg-surface-container-low rounded-2xl p-1 shadow-inner-sm">
               <button 
@@ -247,13 +288,61 @@ export function EditReward() {
               >
                 <Minus size={18} className="text-on-surface-variant" />
               </button>
-              <span className="font-black text-xl min-w-[3.5rem] text-center">{formData.cost}</span>
+              <input
+                type="number"
+                min={0}
+                value={formData.cost}
+                onChange={(event) => setFormData(prev => ({ ...prev, cost: Math.max(0, parseInt(event.target.value) || 0) }))}
+                className="h-10 w-16 rounded-xl border-none bg-transparent p-0 text-center text-xl font-black text-on-surface focus:ring-2 focus:ring-primary/20"
+                aria-label={t('edit_reward.unit_price_aria', { defaultValue: '心愿单价' })}
+              />
               <button 
                 type="button"
                 onClick={() => adjustValue('cost', 10)}
                 className="w-10 h-10 flex items-center justify-center rounded-xl bg-white shadow-sm active:scale-90 transition-transform"
               >
                 <Plus size={18} className="text-on-surface-variant" />
+              </button>
+            </div>
+          </div>
+
+          <div className={cn(
+            "rounded-2xl border p-4 shadow-sm",
+            isCostInSuggestedRange
+              ? "border-primary/10 bg-primary/5"
+              : "border-amber-200 bg-amber-50/80"
+          )}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className={cn(
+                  "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+                  isCostInSuggestedRange ? "bg-primary/10 text-primary" : "bg-amber-100 text-amber-700"
+                )}>
+                  <Sparkles size={18} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-black text-on-surface">
+                    {t('edit_reward.suggested_cost', { defaultValue: '建议设置 {{count}} 星', count: costSuggestion.suggestedCost })}
+                    <span className="ml-2 rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-black text-primary">
+                      {costTierLabel}
+                    </span>
+                  </p>
+                  <p className="mt-1 text-xs font-bold leading-relaxed text-on-surface-variant">
+                    {t('edit_reward.reasonable_range', { defaultValue: '合理区间 {{min}}-{{max}} 星。{{reason}}', min: costSuggestion.minCost, max: costSuggestion.maxCost, reason: costReason })}
+                  </p>
+                  {!isCostInSuggestedRange && (
+                    <p className="mt-1 text-xs font-black text-amber-700">
+                      {t('edit_reward.out_of_range', { defaultValue: '当前价格不在建议区间，可能会让心愿太容易或太难兑换。' })}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, cost: costSuggestion.suggestedCost }))}
+                className="shrink-0 rounded-full bg-white px-3 py-2 text-xs font-black text-primary shadow-sm active:scale-95"
+              >
+                {t('edit_reward.apply', { defaultValue: '采用' })}
               </button>
             </div>
           </div>
@@ -265,6 +354,9 @@ export function EditReward() {
   <LayoutGrid size={20} className="text-primary-text" />
 </div>
               <span>{t('edit_reward.quantity', '总数')}</span>
+              <OptionHelp title={t('edit_reward.quantity_help_title', { defaultValue: '总数是什么意思' })}>
+                {t('edit_reward.quantity_help_body', { defaultValue: '总数表示这个心愿最多可以被兑换几次。比如“冰淇淋”可以放 3 次，“周末电影夜”通常放 1 次，避免孩子重复兑换同一个家庭承诺。' })}
+              </OptionHelp>
             </div>
             <div className="flex items-center gap-4 bg-surface-container-low rounded-2xl p-1 shadow-inner-sm">
               <button 
@@ -274,7 +366,14 @@ export function EditReward() {
               >
                 <Minus size={18} className="text-on-surface-variant" />
               </button>
-              <span className="font-black text-xl min-w-[3.5rem] text-center">{formData.stock}</span>
+              <input
+                type="number"
+                min={0}
+                value={formData.stock}
+                onChange={(event) => setFormData(prev => ({ ...prev, stock: Math.max(0, parseInt(event.target.value) || 0) }))}
+                className="h-10 w-16 rounded-xl border-none bg-transparent p-0 text-center text-xl font-black text-on-surface focus:ring-2 focus:ring-primary/20"
+                aria-label={t('edit_reward.quantity_aria', { defaultValue: '心愿总数' })}
+              />
               <button 
                 type="button"
                 onClick={() => adjustValue('stock', 1)}
@@ -287,31 +386,32 @@ export function EditReward() {
         </div>
 
         {/* Section 3: Limits */}
-        <div className="ui-create-card bg-surface-container rounded-[2rem] p-4 pb-6 border border-white/50">
-          <div className="bg-white rounded-2xl p-4 mb-4 flex items-center justify-between shadow-sm">
+        <div className="ui-create-card bg-surface-container rounded-[1.5rem] p-3 border border-white/50">
+          <div className="bg-white rounded-2xl p-3 mb-3 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3 font-black text-on-surface">
 <div className="w-10 h-10 bg-tertiary-container rounded-xl flex items-center justify-center shadow-sm border border-outline-variant/10">
   <Ban size={20} className="text-tertiary" />
 </div>
               <span>{t('edit_reward.redeem_limit', '兑换限制')}</span>
+              <OptionHelp title={t('edit_reward.redeem_limit_help_title', { defaultValue: '兑换限制是什么意思' })}>
+                {t('edit_reward.redeem_limit_help_body', { defaultValue: '用来限制同一个心愿在一段时间内最多兑换几次。比如“看电视”可以设置每周 2 次；“家庭电影夜”可以设置每月 1 次。大心愿通常建议保留限制。' })}
+              </OptionHelp>
             </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={formData.hasLimit}
-                onClick={() => setFormData({ ...formData, hasLimit: !formData.hasLimit })}
-                className={cn(
-                  "relative h-8 w-14 rounded-full p-1 transition-colors shadow-inner",
-                  formData.hasLimit ? "bg-primary" : "bg-surface-container-high"
-                )}
-              >
-                <span
-                  className={cn(
-                    "block h-6 w-6 rounded-full bg-white shadow-sm transition-transform",
-                    formData.hasLimit && "translate-x-6"
-                  )}
-                />
-              </button>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-label={t('edit_reward.limit_toggle', '兑换限制')}
+                    aria-checked={formData.hasLimit}
+                    onClick={() => setFormData({ ...formData, hasLimit: !formData.hasLimit })}
+                    className={cn(
+                      "ui-standard-switch relative inline-flex h-6 min-h-6 w-11 min-w-11 shrink-0 items-center overflow-hidden rounded-full p-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/25",
+                      formData.hasLimit ? "bg-primary" : "bg-surface-container-highest"
+                    )}
+                  >
+                    <span
+                      className="ui-standard-switch-thumb pointer-events-none h-5 w-5 rounded-full bg-white shadow-sm"
+                    />
+                  </button>
           </div>
 
           <AnimatePresence>
@@ -340,7 +440,14 @@ export function EditReward() {
                     >
                       <Minus size={18} />
                     </button>
-                    <span className="font-black text-xl min-w-[2rem] text-center">{formData.limitCount}</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={formData.limitCount}
+                      onChange={(event) => setFormData(prev => ({ ...prev, limitCount: Math.max(0, parseInt(event.target.value) || 0) }))}
+                      className="h-10 w-14 rounded-xl border-none bg-transparent p-0 text-center text-xl font-black text-on-surface focus:ring-2 focus:ring-primary/20"
+                      aria-label={t('edit_reward.limit_count_aria', { defaultValue: '周期限制次数' })}
+                    />
                     <button 
                       type="button"
                       onClick={() => adjustValue('limitCount', 1)}
@@ -356,20 +463,28 @@ export function EditReward() {
 
           <div className="mt-3 pt-3 border-t border-dashed border-outline-variant/40 text-center">
             <p className="text-on-surface-variant/40 text-[11px] font-black">
-              {formData.name || t('edit_reward.add_title', '心愿')} · {formData.cost}星 / {formData.unit} · {formData.hasLimit ? t('edit_reward.limit_per_period', '每{{period}}限兑{{count}}次', { period: periods.find(p => p.id === formData.limitPeriod)?.label, count: formData.limitCount }) : t('edit_reward.unlimited', '不限次')}
+              {t('edit_reward.summary', {
+                defaultValue: '{{name}} · {{cost}}星 / {{unit}} · {{limit}}',
+                name: formData.name || t('edit_reward.add_title', { defaultValue: '心愿' }),
+                cost: formData.cost,
+                unit: getUnitDisplayName(formData.unit),
+                limit: formData.hasLimit
+                  ? t('edit_reward.limit_per_period', { defaultValue: '每{{period}}限兑{{count}}次', period: periods.find(p => p.id === formData.limitPeriod)?.label, count: formData.limitCount })
+                  : t('edit_reward.unlimited', { defaultValue: '不限次' }),
+              })}
             </p>
           </div>
         </div>
 
         {/* Submit Button Section */}
-        <div className="pt-4 pb-32">
+        <div className="pt-2 pb-28">
 <button 
   type="submit"
   disabled={isSubmitting}
-  className="ui-create-submit w-full py-3.5 rounded-[1.5rem] bg-primary-surface text-primary-text font-black text-lg shadow-xl shadow-primary-surface/20 border-b-4 border-primary-surface/80 active:border-b-0 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+  className="ui-create-submit w-full py-2.5 rounded-2xl bg-primary-surface text-primary-text font-black text-base shadow-md shadow-primary-surface/15 border-b-2 border-primary-surface/80 active:border-b-0 active:translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 >
   {!isSubmitting && !isEdit && <Plus size={20} strokeWidth={3} className="inline-block mr-2 align-[-3px]" />}
-  {isSubmitting ? t('edit_reward.submitting', '提交中...') : t('edit_reward.submit', '完成并提交心愿 🌿')}
+  {isSubmitting ? t('edit_reward.submitting', '提交中...') : t('edit_reward.submit', '提交')}
 </button>
           <p className="text-center text-on-surface-variant/20 text-[10px] font-bold mt-4">
             {t('edit_reward.submit_hint', '保存后您的家庭成员就可以看到这个心愿啦')}
@@ -394,8 +509,8 @@ export function EditReward() {
                     key={u}
                     onClick={() => { setFormData({...formData, unit: u}); setIsUnitSelectorOpen(false); }}
 className={cn(
-  "py-4 rounded-2xl font-black text-lg transition-all border-2",
-  formData.unit === u ? "bg-primary-surface border-primary-surface/80 text-primary-text" : "bg-surface-container-low border-transparent text-on-surface-variant/40"
+  "py-2.5 rounded-xl font-black text-base transition-all border",
+  getUnitDisplayName(formData.unit) === u ? "bg-primary-surface border-primary-surface/80 text-primary-text" : "bg-surface-container-low border-transparent text-on-surface-variant/40"
 )}
                   >
                     {u}
@@ -420,7 +535,7 @@ className={cn(
                     key={p.id}
                     onClick={() => { setFormData({...formData, limitPeriod: p.id as any}); setIsPeriodSelectorOpen(false); }}
 className={cn(
-  "w-full py-5 rounded-2xl font-black text-xl flex items-center justify-center gap-3 transition-all border-2",
+  "w-full py-3 rounded-xl font-black text-base flex items-center justify-center gap-3 transition-all border",
   formData.limitPeriod === p.id ? "bg-primary-surface border-primary-surface/80 text-primary-text" : "bg-surface-container-low border-transparent text-on-surface-variant/40"
 )}
                   >
@@ -452,7 +567,7 @@ className={cn(
                         : "bg-white border-white text-on-surface-variant/40"
                     )}
                   >
-                    {cat.label}
+                    {getCategoryDisplayName(cat.id)}
                   </button>
                 ))}
               </div>

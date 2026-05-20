@@ -22,6 +22,8 @@ import {
   refineScheduleRecommendation,
   getDefaultChildProfile,
   getAgeFromGrade,
+  buildScheduleOptimizationSkill,
+  sanitizeChildProfileForScheduleStage,
   type ChildProfile,
   type ScheduleRecommendation,
 } from '@/lib/scheduleRecommendAI';
@@ -56,37 +58,11 @@ const GRADE_OPTIONS = [
   '高一', '高二', '高三',
 ];
 
-const SUBJECT_OPTIONS = [
-  '语文', '数学', '英语', '物理', '化学', '生物',
-  '历史', '地理', '政治', '科学', '编程', '美术', '音乐',
-];
-
-const INTEREST_MALE = [
-  '篮球', '足球', '游泳', '武术/跆拳道', '编程', '围棋/象棋',
-  '乐高/机器人', '架子鼓', '街舞', '画画', '轮滑', '科学实验',
-  '演讲口才', '英语', '书法', '乒乓球', '羽毛球', '网球',
-  '天文', '航模', '吉他',
-];
-
-const INTEREST_FEMALE = [
-  '中国舞/芭蕾', '钢琴', '画画', '游泳', '英语', '演讲口才',
-  '书法', '羽毛球', '声乐', '陶艺/手工', '小提琴', '围棋',
-  '编程', '中国舞/拉丁', '溜冰/轮滑', '乒乓球', '科学实验',
-  '花样滑冰', '古筝', '瑜伽',
-];
-
 const PERSONALITY_OPTIONS = [
   '外向活泼', '内向文静', '好动坐不住', '专注力好',
   '胆小谨慎', '勇于尝试', '敏感细腻', '大大咧咧',
   '喜欢社交', '喜欢独处', '争强好胜', '随和佛系',
   '动手能力强', '语言表达好', '逻辑思维强', '想象力丰富',
-];
-
-const EXPECTATION_OPTIONS = [
-  '快乐成长为主', '升学导向（注重成绩）',
-  '培养特长/才艺', '增强体能/健康',
-  '提升社交与自信', '培养独立自主能力',
-  '打好学科基础', '发掘/培养兴趣',
 ];
 
 const CITY_OPTIONS = [
@@ -125,7 +101,7 @@ const buildSavedSchedulePlan = (
   result: ScheduleRecommendation,
 ): SavedSchedulePlan => {
   const planId = `ai-plan-${Date.now()}`;
-  const planName = `${profile.grade || '孩子'}智能日程方案`;
+  const planName = `${profile.grade || '孩子'}智能日程优化方案`;
   const slots = (result.weekdaySchedule || []).map(slot => {
     const time = parseSlotTime(slot.time);
     return {
@@ -144,7 +120,7 @@ const buildSavedSchedulePlan = (
   return {
     id: planId,
     name: planName,
-    type: '智能日程推荐',
+    type: '智能日程优化',
     source: 'ai-schedule-recommend',
     profile,
     result,
@@ -240,13 +216,17 @@ export default function ScheduleRecommendPage() {
   const [feedbackInput, setFeedbackInput] = useState('');
   const [isRefining, setIsRefining] = useState(false);
   const [activeTab, setActiveTab] = useState<'weekday' | 'weekend' | 'activities' | 'advice'>('weekday');
+  const scheduleSkill = buildScheduleOptimizationSkill(profile);
 
-  // 根据性别获取兴趣选项（对齐Web第203-207行）
   const interestOptions = profile.gender === 'boy'
-    ? INTEREST_MALE
+    ? scheduleSkill.interestOptions.boy
     : profile.gender === 'girl'
-      ? INTEREST_FEMALE
-      : [...new Set([...INTEREST_MALE, ...INTEREST_FEMALE])];
+      ? scheduleSkill.interestOptions.girl
+      : scheduleSkill.interestOptions.all;
+
+  const updateProfileForStage = (next: ChildProfile) => {
+    setProfile(sanitizeChildProfileForScheduleStage(next));
+  };
 
   const hasGender = profile.gender !== '';
 
@@ -323,7 +303,7 @@ export default function ScheduleRecommendPage() {
   // ===== 步骤定义（对齐Web第190-197行，6个步骤含icon）=====
   const steps = [
     { title: '基本信息', icon: 'user', desc: '孩子的年龄、年级和基本情况' },
-    { title: '学业与时间', icon: 'bookOpen', desc: '学业情况、作业时长和空闲时间' },
+    { title: scheduleSkill.academicStepTitle, icon: 'bookOpen', desc: scheduleSkill.academicStepDescription },
     { title: '兴趣与特长', icon: 'heart', desc: '已有的兴趣班和特长爱好' },
     { title: '性格与期望', icon: 'target', desc: '性格特点、家长期望和预算' },
     { title: 'AI 生成中...', icon: 'sparkles', desc: '正在生成个性化推荐方案' },
@@ -366,7 +346,7 @@ export default function ScheduleRecommendPage() {
           selected={profile.grade ? [profile.grade] : []}
           onChange={v => {
             const grade = v[0] || '';
-            setProfile({
+            updateProfileForStage({
               ...profile,
               grade,
               age: grade ? getAgeFromGrade(grade) : profile.age,
@@ -384,7 +364,7 @@ export default function ScheduleRecommendPage() {
           <Input
             type="number"
             value={String(profile.age ?? '')}
-            onInput={(e: any) => setProfile({ ...profile, age: e.detail.value ? Number(e.detail.value) : null })}
+            onInput={(e: any) => updateProfileForStage({ ...profile, age: e.detail.value ? Number(e.detail.value) : null })}
             placeholder="输入年龄"
             className="sr-input"
           />
@@ -425,46 +405,44 @@ export default function ScheduleRecommendPage() {
     </View>
   );
 
-  // ==================== Step 1: 学业与时间（对齐Web第391-447行）====================
+  // ==================== Step 1: 阶段化学习/发展与时间 ====================
 
   const renderAcademicInfo = () => (
     <View className="sr-step-section">
 
-      {/* 强项科目 — 对齐Web第394-405行 */}
       <View className="sr-field">
         <Text className="sr-label sr-label-icon">
-          <Icon name="star" size={16} color="#F59E0B" /> 强项科目
+          <Icon name="star" size={16} color="#F59E0B" /> {scheduleSkill.strengthLabel}
         </Text>
         <ChipSelect
-          options={SUBJECT_OPTIONS}
+          options={scheduleSkill.subjectOptions}
           selected={profile.strongSubjects}
-          onChange={v => setProfile({ ...profile, strongSubjects: v })}
-          placeholder="选择孩子的强项科目（可选）"
+          onChange={v => updateProfileForStage({ ...profile, strongSubjects: v })}
+          placeholder={`选择${scheduleSkill.strengthLabel}（可选）`}
         />
       </View>
 
-      {/* 薄弱科目 — 对齐Web第408-418行 */}
       <View className="sr-field">
         <Text className="sr-label sr-label-icon">
-          <Icon name="alertCircle" size={16} color="#EF4444" /> 需要提升的科目
+          <Icon name="alertCircle" size={16} color="#EF4444" /> {scheduleSkill.challengeLabel}
         </Text>
         <ChipSelect
-          options={SUBJECT_OPTIONS}
+          options={scheduleSkill.subjectOptions}
           selected={profile.weakSubjects}
-          onChange={v => setProfile({ ...profile, weakSubjects: v })}
-          placeholder="选择需要加强的科目（可选）"
+          onChange={v => updateProfileForStage({ ...profile, weakSubjects: v })}
+          placeholder={`选择${scheduleSkill.challengeLabel}（可选）`}
         />
       </View>
 
       {/* 作业时长 — 对齐Web第421-431行 */}
       <View className="sr-field">
-        <Text className="sr-label">每天完成学校作业大约需要多久？</Text>
+        <Text className="sr-label">{scheduleSkill.homeworkLabel}</Text>
         <View className="sr-input-wrap">
           <Input
             type="number"
             value={String(profile.homeworkDuration ?? '')}
             onInput={(e: any) => setProfile({ ...profile, homeworkDuration: e.detail.value ? Number(e.detail.value) : null })}
-            placeholder="例如：60"
+            placeholder={scheduleSkill.homeworkPlaceholder}
             className="sr-input"
           />
           <Text className="sr-input-suffix">分钟</Text>
@@ -473,13 +451,13 @@ export default function ScheduleRecommendPage() {
 
       {/* 可自由支配时间 — 对齐Web第435-445行 */}
       <View className="sr-field">
-        <Text className="sr-label">放学后每天大约有多少可自由支配的时间？</Text>
+        <Text className="sr-label">{scheduleSkill.freeTimeLabel}</Text>
         <View className="sr-input-wrap">
           <Input
             type="number"
             value={String(profile.freeTimePerDay ?? '')}
             onInput={(e: any) => setProfile({ ...profile, freeTimePerDay: e.detail.value ? Number(e.detail.value) : null })}
-            placeholder="例如：2"
+            placeholder={scheduleSkill.freeTimePlaceholder}
             className="sr-input"
           />
           <Text className="sr-input-suffix">小时</Text>
@@ -498,11 +476,7 @@ export default function ScheduleRecommendPage() {
       <View className="sr-tip-card">
         <Icon name="lightbulb" size={16} color="#006e1c" />
         <Text className="sr-tip-text">
-          {profile.gender === 'girl'
-            ? '以下是其他家长常为女孩选择的兴趣方向，供参考'
-            : profile.gender === 'boy'
-              ? '以下是其他家长常为男孩选择的兴趣方向，供参考'
-              : '以下是一些常见的兴趣方向，供参考'}
+          {`以下是更适合${scheduleSkill.stage.shortLabel}孩子的方向，性别只作弱参考，最终以孩子真实兴趣为准`}
         </Text>
       </View>
 
@@ -578,7 +552,7 @@ export default function ScheduleRecommendPage() {
           <Icon name="target" size={16} color="#006e1c" /> 您对孩子的期望方向
         </Text>
         <ChipSelect
-          options={EXPECTATION_OPTIONS}
+          options={scheduleSkill.parentExpectationOptions}
           selected={profile.parentExpectation}
           onChange={v => setProfile({ ...profile, parentExpectation: v })}
           placeholder="选择您最看重的方向（可多选）"
@@ -920,7 +894,7 @@ export default function ScheduleRecommendPage() {
             <Icon name="arrowLeft" size={22} color="#333" />
           </View>
           <View className="sr-header-center">
-            <Text className="sr-header-title">{step <= 4 ? '智能日程推荐' : '推荐方案'}</Text>
+            <Text className="sr-header-title">{step <= 4 ? '智能日程优化' : '优化方案'}</Text>
             <Text className="sr-header-desc">{steps[Math.min(step, steps.length - 1)]?.desc}</Text>
           </View>
           {/* 步骤点指示器 — 对齐Web第989-998行 */}
@@ -986,7 +960,7 @@ export default function ScheduleRecommendPage() {
             }}
           >
             <Text className="sr-next-text">
-              {step === 0 ? '下一步：学业与时间'
+              {step === 0 ? `下一步：${scheduleSkill.academicStepTitle}`
                 : step === 1 ? '下一步：兴趣与特长'
                   : step === 2 ? '下一步：性格与期望'
                     : '开始生成智能方案'}

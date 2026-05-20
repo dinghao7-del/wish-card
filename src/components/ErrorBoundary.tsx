@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import i18n from '../i18n';
 
 interface Props {
   children: ReactNode;
@@ -10,6 +11,10 @@ interface State {
   hasError: boolean;
   error: Error | null;
   errorInfo: ErrorInfo | null;
+}
+
+function errorText(key: string, fallback: string): string {
+  return i18n.t(key, { defaultValue: fallback });
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -49,15 +54,15 @@ export class ErrorBoundary extends Component<Props, State> {
               <AlertTriangle size={40} className="text-red-500" />
             </div>
             <div className="space-y-2">
-              <h2 className="text-xl font-bold text-on-surface">页面出了点问题</h2>
+              <h2 className="text-xl font-bold text-on-surface">{errorText('error_boundary.title', '页面出了点问题')}</h2>
               <p className="text-sm text-on-surface-variant">
-                抱歉，遇到了一个意外错误。请尝试刷新页面或返回首页。
+                {errorText('error_boundary.message', '抱歉，遇到了一个意外错误。请尝试刷新页面或返回首页。')}
               </p>
             </div>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="text-left bg-red-50 dark:bg-red-500/5 rounded-xl p-4 text-xs text-red-700 dark:text-red-300 overflow-auto max-h-40">
-                <summary className="cursor-pointer font-bold mb-2">错误详情</summary>
+                <summary className="cursor-pointer font-bold mb-2">{errorText('error_boundary.details', '错误详情')}</summary>
                 <pre className="whitespace-pre-wrap">{this.state.error.toString()}</pre>
                 {this.state.errorInfo && (
                   <pre className="mt-2 whitespace-pre-wrap opacity-70">
@@ -73,14 +78,14 @@ export class ErrorBoundary extends Component<Props, State> {
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-surface-container text-on-surface font-medium hover:bg-surface-container-high transition-colors"
               >
                 <Home size={18} />
-                返回首页
+                {errorText('error_boundary.go_home', '返回首页')}
               </button>
               <button
                 onClick={this.handleReload}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-on-primary font-medium hover:bg-primary/90 transition-colors"
               >
                 <RefreshCw size={18} />
-                刷新页面
+                {errorText('error_boundary.reload', '刷新页面')}
               </button>
             </div>
           </div>

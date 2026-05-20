@@ -7,16 +7,32 @@ import { cn } from '../lib/utils';
 import { ALL_REWARD_TEMPLATES, REWARD_CATEGORIES, type RewardTemplate } from '../lib/templates';
 import { getCustomCreationRoute } from '../lib/createFlowRoutes';
 
+const EN_REWARD_TEMPLATES: RewardTemplate[] = [
+  { id: 'en-r01', name: 'Watch TV', description: 'Choose a favorite show within the family time limit.', cost: 30, category: 'Daily', icon: '/reward-icons/common/A_cute_flat_design_kawaii_styl_2026-04-27T19-41-31.png' },
+  { id: 'en-r02', name: 'Ice Cream', description: 'Enjoy one ice cream after a small goal is reached.', cost: 40, category: 'Daily', icon: '/reward-icons/prize/Cute_flat_kawaii_snacks_food_i_2026-04-27T19-44-18.png' },
+  { id: 'en-r03', name: 'Play Games', description: 'Play video games for the agreed time.', cost: 50, category: 'Privilege', icon: '/reward-icons/prize/Cute_flat_kawaii_video_game_co_2026-04-27T19-44-07.png' },
+  { id: 'en-r04', name: 'Family Movie Night', description: 'Pick a movie and enjoy it with the family.', cost: 200, category: 'Experience', icon: '/reward-icons/experience/A_cute_flat_design_kawaii_styl_2026-04-27T19-42-17.png' },
+  { id: 'en-r05', name: 'Pocket Money Jar', description: 'Add a small amount to the child’s wish fund.', cost: 100, category: 'Growth', icon: '/reward-icons/common/A_cute_flat_design_kawaii_styl_2026-04-27T19-41-28.png' },
+  { id: 'en-r06', name: 'New Book', description: 'Choose a book the child is excited to read.', cost: 120, category: 'Growth', icon: '/reward-icons/prize/Cute_flat_kawaii_stack_of_book_2026-04-27T19-44-48.png' },
+  { id: 'en-r07', name: 'Bike Outing', description: 'Plan a short family bike ride.', cost: 160, category: 'Activity', icon: '/reward-icons/activity/Cute_flat_kawaii_cycling_bike_2026-04-27T19-47-50.png' },
+  { id: 'en-r08', name: 'Museum Half-Day', description: 'Turn a half day into a curious family trip.', cost: 220, category: 'Experience', icon: '/reward-icons/activity/Cute_flat_kawaii_Beijing_For_2026-04-27T19-48-54.png' },
+];
+
 export function RewardTemplates() {
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>(t('reward_templates.all', '全部'));
 
-  const categories = [t('reward_templates.all', '全部'), ...REWARD_CATEGORIES.map(category => category.label)];
-  const filteredTemplates = ALL_REWARD_TEMPLATES.filter(template => {
+  const isEnglish = i18n.language?.startsWith('en');
+  const displayTemplates = isEnglish ? EN_REWARD_TEMPLATES : ALL_REWARD_TEMPLATES;
+  const categories = [
+    t('reward_templates.all', '全部'),
+    ...(isEnglish ? Array.from(new Set(EN_REWARD_TEMPLATES.map(template => template.category))) : REWARD_CATEGORIES.map(category => category.label)),
+  ];
+  const filteredTemplates = displayTemplates.filter(template => {
     const keyword = searchQuery.trim();
     const matchesSearch = !keyword
       || `${template.name} ${template.description} ${template.category} ${(template.tags || []).join(' ')}`
@@ -47,7 +63,7 @@ export function RewardTemplates() {
 
   return (
     <div className="ui-template-page min-h-screen bg-surface pb-24">
-      <header className="ui-create-header sticky top-0 z-50 bg-surface/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
+      <header className="ui-create-header sticky top-0 z-50 bg-surface/80 backdrop-blur-xl px-4 py-3 flex items-center justify-between">
         <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container/50 text-on-surface-variant transition-colors">
           <ArrowLeft size={20} />
         </button>
@@ -55,7 +71,7 @@ export function RewardTemplates() {
         <div className="w-10" />
       </header>
 
-      <div className="px-6 space-y-6">
+      <div className="px-4 space-y-4">
         <div className="flex items-center gap-3 mt-2">
           <div className="relative flex-1">
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40" />
@@ -64,12 +80,12 @@ export function RewardTemplates() {
               placeholder={t('reward_templates.search_placeholder', '搜索心愿')}
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              className="w-full bg-white border-none rounded-2xl pl-11 pr-4 py-3.5 shadow-sm focus:ring-2 focus:ring-primary/20 transition-all font-bold text-sm"
+              className="w-full bg-white border-none rounded-xl pl-10 pr-3 py-2.5 shadow-sm focus:ring-2 focus:ring-primary/20 transition-all font-bold text-sm"
             />
           </div>
           <button
             onClick={() => navigate(customRoute)}
-            className="ui-create-add-button px-4 py-3.5 bg-white rounded-2xl shadow-sm border border-outline-variant/10 flex items-center gap-2 active:scale-95 transition-all shrink-0"
+            className="ui-create-add-button px-3 py-2.5 bg-white rounded-xl shadow-sm border border-outline-variant/10 flex items-center gap-1.5 active:scale-95 transition-all shrink-0"
           >
             <Plus size={18} className="text-primary" />
             <span className="text-sm font-black text-on-surface">{t('reward_templates.add_custom', '自定义添加')}</span>
@@ -82,7 +98,7 @@ export function RewardTemplates() {
               key={category}
               onClick={() => setActiveCategory(category)}
               className={cn(
-                "px-[18px] py-[9px] rounded-full text-xs font-black whitespace-nowrap transition-all border-[1.5px] snap-start shrink-0",
+                "px-4 py-2 rounded-full text-xs font-black whitespace-nowrap transition-all border snap-start shrink-0",
                 activeCategory === category
                   ? "bg-primary border-primary text-white shadow-md shadow-primary/20"
                   : "bg-white border-outline-variant/15 text-on-surface-variant/50 hover:border-outline-variant/30"
@@ -93,7 +109,7 @@ export function RewardTemplates() {
           ))}
         </div>
 
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           <AnimatePresence mode="popLayout">
             {filteredTemplates.map((template, index) => (
               <motion.button
@@ -103,10 +119,10 @@ export function RewardTemplates() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(index, 8) * 0.025 }}
                 onClick={() => handleSelect(template)}
-                className="ui-template-card bg-white rounded-[1.5rem] p-4 shadow-sm border border-outline-variant/10 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all text-left"
+                className="ui-template-card bg-white rounded-2xl p-3 shadow-sm border border-outline-variant/10 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-all text-left"
               >
-                <div className="w-12 h-12 rounded-2xl bg-surface-container-low flex items-center justify-center shrink-0 overflow-hidden">
-                  <img src={template.icon} alt="" className="h-10 w-10 object-contain" loading="lazy" />
+                <div className="w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center shrink-0 overflow-hidden">
+                  <img src={template.icon} alt="" className="h-9 w-9 object-contain" loading="lazy" />
                 </div>
 
                 <div className="flex-1 min-w-0">

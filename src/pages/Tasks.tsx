@@ -35,6 +35,7 @@ import { CalendarView, getSelectedDateLabel } from '../components/calendar/Calen
 import { VoiceAssistant } from '../components/VoiceAssistant';
 import { NotificationBell } from '../components/NotificationCenter';
 import { isRewardFulfillmentTask } from '../domain/rewardFulfillment';
+import { WatchReviewEvidenceCard } from '../components/watch/WatchReviewEvidenceCard';
 
 const getTaskIcon = (iconName: string, size = 24) => {
   switch (iconName) {
@@ -47,7 +48,7 @@ const getTaskIcon = (iconName: string, size = 24) => {
 };
 
 export function Tasks() {
-  const { tasks, members, completeTask, approveTask, currentUser, setIsUserSelectorOpen, deleteTask, stars, guestMode } = useFamily();
+  const { tasks, members, completeTask, approveTask, updateTask, currentUser, setIsUserSelectorOpen, deleteTask, stars, guestMode } = useFamily();
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
@@ -106,6 +107,11 @@ export function Tasks() {
     setSelectedTask(null);
   };
 
+  const handleRequestMore = (task: TaskType) => {
+    updateTask({ ...task, status: 'pending' });
+    setSelectedTask(null);
+  };
+
   return (
     <div className="px-5 pb-20 animate-in fade-in slide-in-from-right-4 duration-500">
       <header className="flex justify-between items-center py-3 sticky top-[var(--app-sticky-top,0px)] bg-background/80 backdrop-blur-xl z-40 -mx-5 px-5">
@@ -125,9 +131,10 @@ export function Tasks() {
           </button>
         </div>
 
-        <div className="flex items-center justify-center gap-0.5 bg-surface-container rounded-full p-[3px] h-[34px] shadow-inner overflow-hidden">
+        <div className="ui-task-view-toggle flex items-center justify-center gap-0.5 bg-surface-container rounded-full p-[3px] h-[34px] shadow-inner overflow-hidden">
           <button
             onClick={() => setViewMode('list')}
+            aria-label={t('tasks.view.list', { defaultValue: '列表视图' })}
             className={cn(
               "w-7 h-7 rounded-full border-0 cursor-pointer flex items-center justify-center transition-all",
               viewMode === 'list' ? "bg-surface text-primary shadow-sm" : "bg-transparent text-on-surface-variant/50"
@@ -137,6 +144,7 @@ export function Tasks() {
           </button>
           <button
             onClick={() => setViewMode('calendar')}
+            aria-label={t('tasks.view.calendar', { defaultValue: '日历视图' })}
             className={cn(
               "w-7 h-7 rounded-full border-0 cursor-pointer flex items-center justify-center transition-all",
               viewMode === 'calendar' ? "bg-surface text-primary shadow-sm" : "bg-transparent text-on-surface-variant/50"
@@ -178,7 +186,7 @@ export function Tasks() {
           {/* 选中日期显示 */}
           <div className="space-y-4">
             <h3 className="text-xl font-bold px-2">
-              {getSelectedDateLabel(selectedDate)}
+              {getSelectedDateLabel(selectedDate, i18n.language)}
             </h3>
             <div className="space-y-3">
                   {filteredTasks.length > 0 ? (
@@ -229,7 +237,7 @@ export function Tasks() {
                   filter === 'promise' ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-surface text-on-surface-variant shadow-sm"
                 )}
               >
-                兑现
+                {t('tasks.filter.promise', { defaultValue: '兑现' })}
               </button>
               <button
                 onClick={() => setFilter('completed')}
@@ -250,10 +258,10 @@ export function Tasks() {
                         <div>
                           <h2 className="text-lg font-black flex items-center gap-2 text-on-primary-container">
                             <Star size={18} className="text-reward-display fill-current" />
-                            父母兑现待办
+                            {t('tasks.promise.title', { defaultValue: '父母兑现待办' })}
                           </h2>
                           <p className="text-xs font-bold text-on-surface-variant leading-relaxed mt-1">
-                            这里是孩子用星星兑换后的家庭约定，完成它会让孩子看到努力真的有回应。
+                            {t('tasks.promise.desc', { defaultValue: '这里是孩子用星星兑换后的家庭约定，完成它会让孩子看到努力真的有回应。' })}
                           </p>
                         </div>
                         <button
@@ -261,7 +269,7 @@ export function Tasks() {
                           onClick={() => navigate('/quadrant?range=week')}
                           className="rounded-full px-3 py-1.5 text-[11px] font-black bg-primary text-white shrink-0 active:scale-95"
                         >
-                          本周安排
+                          {t('tasks.promise.week_plan', { defaultValue: '本周安排' })}
                         </button>
                       </div>
                     </div>
@@ -289,7 +297,7 @@ export function Tasks() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => navigate('/tasks/templates')}
-                          aria-label="添加任务"
+                          aria-label={t('tasks.action.add', { defaultValue: '添加任务' })}
                           className="ui-task-add-button w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all ml-auto"
                         >
                           <Plus size={18} strokeWidth={3} className="text-white" />
@@ -340,7 +348,7 @@ export function Tasks() {
                 {filter === 'promise' && promiseTasks.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 text-on-surface-variant/40">
                     <Star size={40} className="mb-2 opacity-20" />
-                    <p className="text-sm italic">暂无需要父母兑现的心愿</p>
+                    <p className="text-sm italic">{t('tasks.promise.empty', { defaultValue: '暂无需要父母兑现的心愿' })}</p>
                   </div>
                 )}
 
@@ -563,6 +571,15 @@ export function Tasks() {
                    </div>
                    <Star size={120} className="absolute right-[-20px] bottom-[-20px] text-white opacity-20 rotate-12" />
                 </div>
+
+                {selectedTask.status === 'reviewing' && (
+                  <WatchReviewEvidenceCard
+                    task={selectedTask}
+                    members={members}
+                    onApprove={() => handleApprove(selectedTask.id)}
+                    onRequestMore={() => handleRequestMore(selectedTask)}
+                  />
+                )}
 
                 {/* Participants Section */}
                 <div className="w-full space-y-4 mb-10">

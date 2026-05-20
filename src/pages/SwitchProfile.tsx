@@ -7,9 +7,11 @@ import { cn } from '../lib/utils';
 import { Member } from '../types';
 import { TextAvatar } from '../components/TextAvatar';
 import { hasSwitchCredential, verifyMemberPinOrPassword } from '../lib/memberCredentials';
+import { useTranslation } from 'react-i18next';
 
 export function SwitchProfile() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { members, currentUser, setCurrentUser } = useFamily();
   const [selectedUser, setSelectedUser] = useState<Member | null>(null);
   const [pin, setPin] = useState('');
@@ -67,14 +69,14 @@ export function SwitchProfile() {
         <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
           <ArrowLeft size={24} />
         </button>
-        <h1 className="font-black text-lg tracking-tight">切换用户</h1>
+        <h1 className="font-black text-lg tracking-tight">{t('switch_profile.title')}</h1>
         <div className="w-10" />
       </header>
 
       <div className="w-full max-w-md pt-20 flex flex-col gap-10">
         <div className="text-center">
-          <h2 className="text-4xl font-black tracking-tight text-primary">你好 👋</h2>
-          <p className="text-on-surface-variant font-bold mt-2">今天是谁在探索森林花园？</p>
+          <h2 className="text-4xl font-black tracking-tight text-primary">{t('switch_profile.greeting')}</h2>
+          <p className="text-on-surface-variant font-bold mt-2">{t('switch_profile.subtitle')}</p>
         </div>
 
         {/* Members Grid */}
@@ -110,7 +112,7 @@ export function SwitchProfile() {
                 <span className="text-lg font-black block">{member.name}</span>
                 <div className="flex items-center justify-center gap-1 text-on-surface-variant/40 mt-1">
                   <Star size={10} className="fill-current" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">{member.stars} 星星</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest">{member.stars} {t('common.stars_suffix')}</span>
                 </div>
               </div>
             </motion.button>
@@ -124,7 +126,7 @@ export function SwitchProfile() {
               <UserPlus size={28} />
             </div>
             <span className="text-sm font-black text-on-surface-variant flex items-center gap-2">
-              添加成员
+              {t('switch_profile.add_member')}
             </span>
           </button>
         </div>
@@ -158,9 +160,9 @@ export function SwitchProfile() {
                 <div className="mb-4 shadow-lg">
                   <TextAvatar src={selectedUser.avatar} name={selectedUser.name} size={80} className="border-4 border-primary/20" />
                 </div>
-                <h3 className="text-xl font-black">输入 {selectedUser.name} 的密码</h3>
+                <h3 className="text-xl font-black">{t('switch_profile.password_title', { name: selectedUser.name })}</h3>
                 <p className="text-xs text-on-surface-variant font-bold mt-1">
-                  {selectedUser.role === 'parent' ? '🔒 这是个森林守护者账号' : '🔓 快来解锁你的探险之路'}
+                  {selectedUser.role === 'parent' ? t('switch_profile.parent_hint') : t('switch_profile.child_hint')}
                 </p>
               </div>
 
@@ -211,7 +213,7 @@ export function SwitchProfile() {
               </div>
               
               {error && (
-                <p className="text-danger text-[10px] font-black text-center mt-6 animate-bounce">密码错误，请森林探险家再试一次 🍃</p>
+                <p className="text-danger text-[10px] font-black text-center mt-6 animate-bounce">{t('switch_profile.password_error')}</p>
               )}
             </motion.div>
           </motion.div>

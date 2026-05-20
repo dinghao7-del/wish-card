@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
   format,
   startOfMonth,
@@ -15,6 +16,10 @@ import {
 } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { cn } from '../../lib/utils';
+
+function isChineseLocale(language?: string) {
+  return (language || '').toLowerCase().startsWith('zh');
+}
 
 export interface CalendarTask {
   id: string;
@@ -54,11 +59,24 @@ export function CalendarView({
   tasks = [],
   onDateSelect,
   initialDate,
-  dayLabels = ['日', '一', '二', '三', '四', '五', '六'],
+  dayLabels,
   className,
 }: CalendarViewProps) {
+  const { t, i18n } = useTranslation();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(initialDate || new Date());
+  const resolvedDayLabels = dayLabels || [
+    t('common.days.sun', { defaultValue: 'Sun' }),
+    t('common.days.mon', { defaultValue: 'Mon' }),
+    t('common.days.tue', { defaultValue: 'Tue' }),
+    t('common.days.wed', { defaultValue: 'Wed' }),
+    t('common.days.thu', { defaultValue: 'Thu' }),
+    t('common.days.fri', { defaultValue: 'Fri' }),
+    t('common.days.sat', { defaultValue: 'Sat' }),
+  ];
+  const monthTitle = isChineseLocale(i18n.language)
+    ? format(currentMonth, 'yyyy年M月', { locale: zhCN })
+    : format(currentMonth, 'MMM yyyy');
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(monthStart);
@@ -80,18 +98,18 @@ export function CalendarView({
           onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
           className="p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors"
           type="button"
-          aria-label="上个月"
+          aria-label={t('calendar.previous_month', { defaultValue: 'Previous month' })}
         >
           <ChevronLeft size={24} />
         </button>
         <h2 className="text-2xl font-bold tracking-tight">
-          {format(currentMonth, 'yyyy年M月', { locale: zhCN })}
+          {monthTitle}
         </h2>
         <button
           onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
           className="p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors"
           type="button"
-          aria-label="下个月"
+          aria-label={t('calendar.next_month', { defaultValue: 'Next month' })}
         >
           <ChevronRight size={24} />
         </button>
@@ -101,7 +119,7 @@ export function CalendarView({
       <div className="bg-surface rounded-[2rem] p-4 shadow-sm border border-outline-variant/10">
         {/* 星期标题行 */}
         <div className="grid grid-cols-7 text-center mb-4 text-on-surface-variant/40 font-bold text-[10px] uppercase tracking-widest">
-          {dayLabels.map(d => (
+          {resolvedDayLabels.map(d => (
             <span key={d}>{d}</span>
           ))}
         </div>
@@ -146,6 +164,8 @@ export function CalendarView({
 /**
  * 获取当前 CalendarView 选中的日期格式化文本
  */
-export function getSelectedDateLabel(date: Date): string {
-  return format(date, 'M月d日 EEEE', { locale: zhCN });
+export function getSelectedDateLabel(date: Date, language?: string): string {
+  return isChineseLocale(language)
+    ? format(date, 'M月d日 EEEE', { locale: zhCN })
+    : format(date, 'MMM d, EEEE');
 }

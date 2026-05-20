@@ -1,6 +1,7 @@
 import type { Member, Reward } from '../types';
+import { STAR_ECONOMY } from './starEconomy';
 
-export const HIGH_VALUE_REWARD_COST = 100;
+export const HIGH_VALUE_REWARD_COST = STAR_ECONOMY.highValueRewardCost;
 
 export function getParentVerificationValue(parent: Member | null): string | null {
   if (!parent || parent.role !== 'parent') return null;

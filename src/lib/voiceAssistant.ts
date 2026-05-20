@@ -347,8 +347,11 @@ Parameter extraction rules:
 - Task/wish name→ID: match based on task/wish list
 - Number extraction: star count, duration, etc.
 - Time extraction: "tomorrow"→calculate date, "3pm"→time
-- For create_plan, extract params.scene as weekday/holiday/exchange/custom and params.name when the user asks to create or make a plan. Default scene to custom.
-- For holiday_play_preference, use it when the user describes holiday play/travel preference such as small/medium/big play, pure fun, science-oriented play, interest development, caregiver time, budget, or effort level. Extract holidayPlayScale, holidayPlayMode, caregiverLoad, budgetLevel, effortLevel.
+- For create_plan, extract params.scene as weekday/holiday/exchange/custom when the user asks to create, design, arrange, or plan a family schedule/trip/routine. Do not ask the user to name the plan. Use a natural default name from the request, such as "寒假行程" or "暑假行程". Do not ask for family members when members are already listed in context.
+- For holiday plan follow-up, use plain parent language. Avoid professional terms like "小规模/中等规模/大规模" unless the user already says them. Prefer examples: "附近半天轻松玩", "周边住一晚或两晚", "远一点玩一周", "纯放松", "带一点科学馆/博物馆探索", "顺便培养兴趣".
+- When guiding a holiday plan, you may lightly ask whether the user wants recommendations, for example: "需要我顺便推荐几种适合你家的行程吗？如果暂时没有精选资源，我也可以先帮你搜全网灵感。" Keep it optional and do not block the plan creation flow.
+- If create_plan is missing information, ask at most 2-3 short questions. Do not list 5+ questions. Good example: "我先按寒假行程来做，不用单独起名字，家庭成员我会用当前档案。还想确认：大概玩多久？更想附近轻松玩、周边住一晚，还是远一点玩几天？预算不用精确，可以说少花钱、正常、宽松。"
+- For holiday_play_preference, use it when the user describes holiday play/travel preference such as nearby/short trip/long trip, pure fun, science exploration, interest development, caregiver time, budget, or effort level. Extract holidayPlayScale, holidayPlayMode, caregiverLoad, budgetLevel, effortLevel.
 - For schedule_arrangement, use it when the user asks to add weekly classes, change class time, pause, postpone, or shift extracurricular schedules because of travel, school changes, holidays, or temporary events. Extract params.operation as add_recurring_class or shift_schedule. For add_recurring_class, extract activityName, weekday, startTime, endTime. For shift_schedule, extract scope, shiftWeeks, reason.
 - For public_calendar_query, use it when the user asks whether holidays, makeup workdays, school calendar, disasters, public events, opening school, vacation, or traffic/public changes will affect the family schedule. Extract params.range as week/month/year and params.direction as current/next.
 - For quadrant_analysis, extract params.dateRange as today/week/month when the user says today, this week, or this month. Default to today.
@@ -372,17 +375,18 @@ When intent is 'chat', provide a helpful response in the user's language in the 
       params: {},
       confidence: 0,
       needsConfirmation: false,
-      confirmationMessage: 'AI助手暂时没有连上，我先保留您的输入。您可以稍后再试。',
+      confirmationMessage: '云端 AI 暂时没有完成识别，我先保留这句话。你可以继续补充，或换一种说法。',
     };
   }
 
   if (result.missingInfo) {
+    const simpleMissingInfo = buildSimpleMissingInfoPrompt(userInput, result, context);
     return {
       intent: 'unknown',
       params: {},
       confidence: 0.5,
       needsConfirmation: false,
-      confirmationMessage: `还差一点信息：${result.missingInfo}。您可以补充一下吗？`,
+      confirmationMessage: simpleMissingInfo || `还差一点信息：${result.missingInfo}。您可以补充一下吗？`,
     };
   }
 
@@ -402,6 +406,30 @@ When intent is 'chat', provide a helpful response in the user's language in the 
     needsConfirmation: result.needsConfirmation || false,
     confirmationMessage: result.confirmationMessage,
   };
+}
+
+function buildSimpleMissingInfoPrompt(input: string, result: any, context: AppContext): string | null {
+  const text = input.toLowerCase();
+  const looksLikeHolidayPlan = result?.intent === 'create_plan'
+    || /(寒假|暑假|暑期|假期|旅行|出行|行程|亲子游|度假|holiday|vacation|trip)/.test(text);
+  const asksPlan = /(计划|安排|方案|行程|设计|规划|做一个|制定|生成)/.test(text);
+
+  if (!looksLikeHolidayPlan || !asksPlan) return null;
+
+  const memberHint = context.members.length > 0
+    ? '家庭成员我会直接用当前档案，不用你重新说。'
+    : '如果家里孩子信息还没建档，之后我会用很少的问题补齐。';
+
+  return [
+    '我先按假期行程来做，不用单独起名字。',
+    memberHint,
+    '还想确认两三件最关键的事：',
+    '1. 大概想玩多久？比如半天、1天、2-3天，还是一周左右。',
+    '2. 更想怎么玩？比如附近轻松玩、周边住一晚、远一点旅行、纯放松，或者带一点科学馆/博物馆探索。',
+    '3. 预算不用精确，可以说“少花钱”“正常安排”“宽松一点”。',
+    '如果你愿意，我也可以顺便推荐几种适合你家的行程；暂时没有精选资源时，也可以先帮你搜全网灵感。',
+    '你可以直接说：寒假想在附近玩两天，别太累，预算正常，孩子喜欢科学馆。',
+  ].join('\n');
 }
 
 function recognizeLocalButlerIntent(input: string): VoiceCommand | null {
@@ -519,7 +547,7 @@ export type PlanSceneParam = 'weekday' | 'holiday' | 'exchange' | 'custom';
 
 export function parsePlanSceneFromText(input: string): PlanSceneParam {
   const text = input.toLowerCase();
-  if (/(暑假|寒假|假期|节假日|holiday|vacation|summer|winter)/.test(text)) return 'holiday';
+  if (/(暑假|暑期|寒假|假期|节假日|holiday|vacation|summer|winter)/.test(text)) return 'holiday';
   if (/(留学|交换|海外|时差|exchange|abroad|overseas)/.test(text)) return 'exchange';
   if (/(平日|工作日|上学日|日常作息|weekday|school day)/.test(text)) return 'weekday';
   return 'custom';
@@ -527,15 +555,15 @@ export function parsePlanSceneFromText(input: string): PlanSceneParam {
 
 export function extractPlanNameFromText(input: string): string {
   const text = input.trim();
-  const match = text.match(/(?:帮我|给.*?孩子|给孩子|制定|创建|做|生成|安排)?(.{2,24}?(?:计划|安排|方案))/);
+  const match = text.match(/(?:帮我|给.*?孩子|给孩子|制定|创建|做|生成|安排|规划|设计)?(.{2,24}?(?:计划|安排|方案|行程))/);
   return match?.[1]
-    ?.replace(/^(帮我|给.*?孩子|给孩子|制定|创建|做|生成|安排|一个|一份|一下)+/, '')
+    ?.replace(/^(帮我|给.*?孩子|给孩子|制定|创建|做|生成|安排|规划|设计|一个|一份|一下)+/, '')
     .trim() || '';
 }
 
 function recognizeLocalPlanIntent(input: string): VoiceCommand | null {
   const text = input.toLowerCase();
-  const asksCreatePlan = /(创建|制定|做一个|做一份|生成|帮我做|帮我制定|规划).{0,12}(计划|安排|方案)|(?:计划|安排|方案).{0,8}(创建|制定|生成)/.test(text);
+  const asksCreatePlan = /(创建|制定|做一个|做一份|生成|帮我做|帮我制定|帮我安排|安排|规划|设计).{0,16}(计划|安排|方案|行程)|(?:计划|安排|方案|行程).{0,8}(创建|制定|生成|安排|规划|设计)/.test(text);
   if (!asksCreatePlan) return null;
 
   const scene = parsePlanSceneFromText(input);
@@ -938,47 +966,140 @@ export async function getSmartSuggestions(context: AppContext): Promise<string[]
 
 // ==================== 语音合成（TTS）====================
 
+function pickPreferredSpeechVoice(lang: string): SpeechSynthesisVoice | null {
+  if (!('speechSynthesis' in window)) return null;
+
+  const voices = window.speechSynthesis.getVoices();
+  const language = lang.toLowerCase();
+  const zhVoices = voices.filter(voice => voice.lang.toLowerCase().startsWith(language.slice(0, 2)));
+  const preferredNamePattern = /(xiaoxiao|xiaoyi|yunjian|yunxi|ting-ting|tingting|mei-jia|meijia|sin-ji|google\s*(普通话|國語|中文|chinese)|microsoft.*(chinese|mandarin|xiaoxiao|yunxi)|siri)/i;
+
+  return zhVoices.find(voice => preferredNamePattern.test(voice.name))
+    || voices.find(voice => voice.lang.toLowerCase() === language)
+    || zhVoices[0]
+    || null;
+}
+
 export function speak(text: string, lang = 'zh-CN'): void {
   if (!('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = lang;
-  utterance.rate = 1.1;
-  utterance.pitch = 1.1;
-  window.speechSynthesis.speak(utterance);
+  const synth = window.speechSynthesis;
+  const speakNow = () => {
+    synth.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voice = pickPreferredSpeechVoice(lang);
+    utterance.lang = voice?.lang || lang;
+    if (voice) utterance.voice = voice;
+    utterance.rate = lang.toLowerCase().startsWith('zh') ? 0.92 : 0.96;
+    utterance.pitch = lang.toLowerCase().startsWith('zh') ? 1.02 : 1;
+    utterance.volume = 1;
+    synth.speak(utterance);
+  };
+
+  if (synth.getVoices().length === 0) {
+    const previousHandler = synth.onvoiceschanged;
+    let spoken = false;
+    const speakOnce = () => {
+      if (spoken) return;
+      spoken = true;
+      synth.onvoiceschanged = previousHandler;
+      speakNow();
+    };
+    synth.onvoiceschanged = speakOnce;
+    window.setTimeout(speakOnce, 250);
+    return;
+  }
+
+  speakNow();
 }
 
 // ==================== 语音识别（STT）====================
+
+export type SpeechRecognitionFailureReason =
+  | 'unsupported'
+  | 'permission-denied'
+  | 'no-speech'
+  | 'network'
+  | 'busy'
+  | 'unknown';
+
+export class SpeechRecognitionFailure extends Error {
+  reason: SpeechRecognitionFailureReason;
+
+  constructor(reason: SpeechRecognitionFailureReason, message: string) {
+    super(message);
+    this.name = 'SpeechRecognitionFailure';
+    this.reason = reason;
+  }
+}
+
+function getSpeechRecognitionFailure(eventError: string): SpeechRecognitionFailure {
+  if (eventError === 'not-allowed' || eventError === 'service-not-allowed') {
+    return new SpeechRecognitionFailure(
+      'permission-denied',
+      '没有拿到麦克风权限，可以在浏览器地址栏开启麦克风，或先用文字补充。'
+    );
+  }
+
+  if (eventError === 'no-speech') {
+    return new SpeechRecognitionFailure('no-speech', '这次没有听清，可以再说一遍，或直接用文字补充。');
+  }
+
+  if (eventError === 'audio-capture') {
+    return new SpeechRecognitionFailure('permission-denied', '没有检测到可用麦克风，可以检查设备权限后再试。');
+  }
+
+  if (eventError === 'network') {
+    return new SpeechRecognitionFailure('network', '语音识别暂时连接不上，可以先用文字补充。');
+  }
+
+  if (eventError === 'aborted') {
+    return new SpeechRecognitionFailure('busy', '语音输入已暂停，可以稍后再试。');
+  }
+
+  return new SpeechRecognitionFailure('unknown', '语音识别暂时不可用，可以先用文字补充。');
+}
 
 export function startListening(lang = 'zh-CN'): Promise<string> {
   return new Promise((resolve, reject) => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      reject(new Error('当前浏览器不支持语音识别，请使用Chrome浏览器'));
+      reject(new SpeechRecognitionFailure('unsupported', '当前浏览器暂不支持语音输入，可以先用文字补充。'));
       return;
     }
 
     const recognition = new SpeechRecognition();
+    let settled = false;
     recognition.lang = lang;
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
     recognition.onresult = (event: any) => {
+      if (settled) return;
+      settled = true;
       const transcript = event.results[0][0].transcript;
       resolve(transcript);
     };
 
     recognition.onerror = (event: any) => {
-      reject(new Error(`语音识别错误: ${event.error}`));
+      if (settled) return;
+      settled = true;
+      reject(getSpeechRecognitionFailure(event.error));
     };
 
     recognition.onend = () => {
-      // 如果没有结果就结束，返回空字符串
+      if (settled) return;
+      settled = true;
       resolve('');
     };
 
-    recognition.start();
+    try {
+      recognition.start();
+    } catch {
+      if (settled) return;
+      settled = true;
+      reject(new SpeechRecognitionFailure('busy', '语音输入还没准备好，可以稍后再试，或先用文字补充。'));
+    }
   });
 }
 

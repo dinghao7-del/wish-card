@@ -28,15 +28,23 @@ import {
 } from '../lib/communityTemplateLibrary';
 import type { PlanningScenario } from '../domain/familyPlanning';
 import type { RecommendationCategory } from '../lib/recommendationConsent';
+import { useTranslation } from 'react-i18next';
 
-function formatTime(value: string): string {
+function isEnglishLanguage(language?: string): boolean {
+  return (language || '').toLowerCase().startsWith('en');
+}
+
+function formatTime(value: string, language = 'zh-CN'): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString(isEnglishLanguage(language) ? 'en-US' : 'zh-CN', { month: 'short', day: 'numeric' });
 }
 
 export function CommunityTemplates() {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const english = isEnglishLanguage(i18n.language);
+  const ct = (zh: string, en: string) => ((i18n.language || '').toLowerCase().startsWith('zh') ? zh : en);
   const { currentUser, familyId, guestMode, syncStatus } = useFamily();
   const [drafts, setDrafts] = useState<StoredSharedScheduleTemplateDraft[]>([]);
   const [cloudTemplates, setCloudTemplates] = useState<StoredSharedScheduleTemplateDraft[]>([]);
@@ -120,15 +128,15 @@ export function CommunityTemplates() {
 
   const handleSyncReadyDrafts = async () => {
     if (guestMode) {
-      showToastGlobal('游客模式下模板只保存在本机，不会同步到云端', 'info');
+      showToastGlobal(t('community_templates.guest_sync_toast', { defaultValue: ct('游客模式下模板只保存在本机，不会同步到云端', 'Guest templates are saved locally only and will not sync to cloud.') }), 'info');
       return;
     }
     if (!syncStatus.isOnline) {
-      showToastGlobal('当前离线，模板已保存在本机，联网后再同步', 'warning');
+      showToastGlobal(t('community_templates.offline_sync_toast', { defaultValue: ct('当前离线，模板已保存在本机，联网后再同步', 'You are offline. Templates are saved locally and can sync when online.') }), 'warning');
       return;
     }
     if (syncPreview.rowCount === 0) {
-      showToastGlobal('暂无满足发布条件的模板', 'info');
+      showToastGlobal(t('community_templates.no_ready_templates_toast', { defaultValue: ct('暂无满足发布条件的模板', 'No templates are ready to publish yet.') }), 'info');
       return;
     }
 
@@ -138,12 +146,13 @@ export function CommunityTemplates() {
         familyId,
         authorMemberId: currentUser?.id,
       });
-      const message = `已提交 ${result.syncedRows} 份模板，${result.blockedRows} 份仍需完善`;
+      const message = t('community_templates.submit_result_toast', { defaultValue: ct('已提交 {{synced}} 份模板，{{blocked}} 份仍需完善', '{{synced}} templates submitted, {{blocked}} still need work'), synced: result.syncedRows, blocked: result.blockedRows });
       setSyncMessage(message);
       showToastGlobal(message, 'success');
     } catch {
-      setSyncMessage('本机模板已保留，云端提交稍后重试');
-      showToastGlobal('云端提交失败，本机数据不受影响', 'warning');
+      const message = t('community_templates.cloud_submit_retry', { defaultValue: ct('本机模板已保留，云端提交稍后重试', 'Local templates are kept. Retry cloud submission later.') });
+      setSyncMessage(message);
+      showToastGlobal(t('community_templates.cloud_submit_failed', { defaultValue: ct('云端提交失败，本机数据不受影响', 'Cloud submission failed. Local data is safe.') }), 'warning');
     } finally {
       setSyncing(false);
     }
@@ -179,15 +188,166 @@ export function CommunityTemplates() {
     try {
       const next = await toggleCommunityTemplateFavorite(item.id);
       setLibraryState(next);
-      showToastGlobal(next.favoriteTemplateIds.includes(item.id) ? '已收藏模板' : '已取消收藏', 'success');
+      showToastGlobal(next.favoriteTemplateIds.includes(item.id)
+        ? t('community_templates.favorite_saved', { defaultValue: ct('已收藏模板', 'Template saved') })
+        : t('community_templates.favorite_removed', { defaultValue: ct('已取消收藏', 'Template removed from favorites') }), 'success');
     } catch {
-      showToastGlobal('收藏失败，请稍后重试', 'warning');
+      showToastGlobal(t('community_templates.favorite_failed', { defaultValue: ct('收藏失败，请稍后重试', 'Could not update favorite. Please try again later.') }), 'warning');
     }
   };
 
+  if (english) {
+    return (
+      <div className="ui-template-page min-h-screen bg-surface-container-low pb-28">
+        <TopAppBar title="Community Templates" onBack={() => { navigate('/plans'); }} />
+
+        <div className="p-4 space-y-4">
+          <div className="ui-template-card bg-surface rounded-2xl p-5 shadow-sm border border-outline-variant/10">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <Users size={20} />
+              </div>
+              <div>
+                <h2 className="text-base font-black text-on-surface">Family Schedule Library</h2>
+                <p className="text-xs font-bold text-on-surface-variant/60 mt-1 leading-relaxed">
+                  Local and approved shared templates will appear here. Personal details stay separated from reusable patterns.
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              <div className="rounded-2xl bg-surface-container-low p-3">
+                <span className="text-[10px] font-black text-on-surface-variant/40 block">Ready to publish</span>
+                <span className="text-xl font-black text-on-surface">{readyDrafts.length}</span>
+              </div>
+              <div className="rounded-2xl bg-surface-container-low p-3">
+                <span className="text-[10px] font-black text-on-surface-variant/40 block">Needs review</span>
+                <span className="text-xl font-black text-on-surface">{editingDrafts.length}</span>
+              </div>
+              <div className="rounded-2xl bg-surface-container-low p-3">
+                <span className="text-[10px] font-black text-on-surface-variant/40 block">Cloud picks</span>
+                <span className="text-xl font-black text-on-surface">{cloudTemplates.length}</span>
+              </div>
+              <div className="rounded-2xl bg-surface-container-low p-3">
+                <span className="text-[10px] font-black text-on-surface-variant/40 block">Saved</span>
+                <span className="text-xl font-black text-on-surface">{librarySummary.favoriteCount}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-surface rounded-2xl p-5 shadow-sm border border-outline-variant/10">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <WandSparkles size={19} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-black text-on-surface">Family Pattern Suggestions</h3>
+                <p className="text-xs font-bold text-on-surface-variant/55 mt-1 leading-relaxed">
+                  Reuse a few templates and the system will learn which family scenarios are most useful.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-surface rounded-2xl p-5 shadow-sm border border-outline-variant/10">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <Cloud size={19} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-black text-on-surface">Cloud Publishing</h3>
+                <p className="text-xs font-bold text-on-surface-variant/55 mt-1 leading-relaxed">
+                  Only authorized, anonymized, quality-checked templates are submitted for review.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleSyncReadyDrafts}
+              disabled={syncing || syncPreview.rowCount === 0}
+              className="mt-4 w-full py-3 rounded-2xl bg-primary text-white text-sm font-black active:scale-[0.98] transition-all disabled:opacity-45"
+            >
+              {syncing ? 'Submitting...' : guestMode ? 'Saved locally in guest mode' : 'Submit ready templates'}
+            </button>
+          </div>
+
+          <div className="bg-surface rounded-2xl p-4 shadow-sm border border-outline-variant/10 space-y-3">
+            <div className="flex items-center gap-2 rounded-2xl bg-surface-container-low px-3 py-2.5">
+              <Search size={16} className="text-on-surface-variant/40 shrink-0" />
+              <input
+                value={keyword}
+                onChange={(event) => setKeyword(event.target.value)}
+                placeholder="Search vacation, reading, sports, stage..."
+                className="min-w-0 flex-1 bg-transparent text-sm font-bold text-on-surface outline-none placeholder:text-on-surface-variant/35"
+              />
+            </div>
+            <p className="text-[10px] font-bold text-on-surface-variant/40">
+              Showing {visibleDrafts.length} / {allTemplates.length} templates{cloudLoading ? ', reading cloud picks' : ''}
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : allTemplates.length === 0 ? (
+            <div className="text-center py-12">
+              <ShieldCheck size={48} className="mx-auto text-outline-variant/30 mb-3" />
+              <p className="text-sm font-bold text-on-surface-variant/50">No shared templates yet</p>
+              <p className="text-xs font-bold text-on-surface-variant/35 mt-1">Start from anonymized sharing in a plan detail page.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {visibleDrafts.map(item => {
+                const isCloud = cloudIds.has(item.id);
+                const isFavorite = favoriteIds.has(item.id);
+                return (
+                  <div key={item.id} className="w-full bg-surface rounded-2xl p-4 shadow-sm border border-outline-variant/10 text-left">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-black">
+                            {isCloud ? 'Cloud pick' : item.status === 'ready_to_publish' ? 'Ready' : 'Draft'}
+                          </span>
+                          <span className="text-[10px] font-black text-on-surface-variant/40 flex items-center gap-1">
+                            <Clock size={11} /> {formatTime(item.updatedAt, i18n.language)}
+                          </span>
+                        </div>
+                        <h3 className="font-black text-sm text-on-surface truncate">{item.draft.title}</h3>
+                        <p className="text-xs font-bold text-on-surface-variant/50 mt-1 line-clamp-1">
+                          {item.asset?.reuseHint || 'Reusable schedule template'}
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-2 text-primary shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleFavorite(item)}
+                          className={isFavorite
+                            ? 'w-8 h-8 rounded-full bg-danger-container text-danger flex items-center justify-center active:scale-95 transition-transform'
+                            : 'w-8 h-8 rounded-full bg-surface-container-low text-on-surface-variant/45 flex items-center justify-center active:scale-95 transition-transform'}
+                        >
+                          <Heart size={15} className={isFavorite ? 'fill-current' : ''} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => isCloud ? handleUseTemplate(item) : navigate(`/community/share-review/${item.id}`)}
+                          className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center active:scale-95 transition-transform"
+                        >
+                          {isCloud ? <WandSparkles size={15} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="ui-template-page min-h-screen bg-surface-container-low pb-28">
-      <TopAppBar title="社区模板" onBack={() => { navigate('/plans'); }} />
+      <TopAppBar title={t('community_templates.title', { defaultValue: ct('社区模板', 'Community Templates') })} onBack={() => { navigate('/plans'); }} />
 
       <div className="p-4 space-y-4">
         <div className="ui-template-card bg-surface rounded-2xl p-5 shadow-sm border border-outline-variant/10">
@@ -196,55 +356,55 @@ export function CommunityTemplates() {
               <Users size={20} />
             </div>
             <div>
-              <h2 className="text-base font-black text-on-surface">家庭日程经验库</h2>
+              <h2 className="text-base font-black text-on-surface">{t('community_templates.library_title', { defaultValue: ct('家庭日程经验库', 'Family Schedule Library') })}</h2>
               <p className="text-xs font-bold text-on-surface-variant/60 mt-1 leading-relaxed">
-                这里先收纳本机确认过的分享模板，后续会接入云端发布、审核和搜索。
+                {t('community_templates.library_desc', { defaultValue: ct('这里先收纳本机确认过的分享模板，后续会接入云端发布、审核和搜索。', 'Confirmed local share templates are stored here first. Cloud publishing, review, and search can be connected later.') })}
               </p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 mt-4">
             <div className="rounded-2xl bg-surface-container-low p-3">
-              <span className="text-[10px] font-black text-on-surface-variant/40 block">可发布</span>
+              <span className="text-[10px] font-black text-on-surface-variant/40 block">{t('community_templates.ready_to_publish', { defaultValue: ct('可发布', 'Ready') })}</span>
               <span className="text-xl font-black text-on-surface">{readyDrafts.length}</span>
             </div>
             <div className="rounded-2xl bg-surface-container-low p-3">
-              <span className="text-[10px] font-black text-on-surface-variant/40 block">待确认</span>
+              <span className="text-[10px] font-black text-on-surface-variant/40 block">{t('community_templates.pending_confirm', { defaultValue: ct('待确认', 'Pending') })}</span>
               <span className="text-xl font-black text-on-surface">{editingDrafts.length}</span>
             </div>
             <div className="rounded-2xl bg-surface-container-low p-3 col-span-2">
               <span className="text-[10px] font-black text-on-surface-variant/40 flex items-center gap-1">
-                <BarChart3 size={11} /> 可沉淀画像信号
+                <BarChart3 size={11} /> {t('community_templates.profile_signals', { defaultValue: ct('可沉淀画像信号', 'Reusable profile signals') })}
               </span>
               <span className="text-xl font-black text-on-surface">{signalCount}</span>
               <p className="text-[10px] font-bold text-on-surface-variant/45 mt-0.5">
-                只保留粗粒度场景、阶段和类别，用于未来社区搜索与授权推荐。
+                {t('community_templates.profile_signals_desc', { defaultValue: ct('只保留粗粒度场景、阶段和类别，用于未来社区搜索与授权推荐。', 'Only broad scenarios, stages, and categories are kept for future community search and authorized recommendations.') })}
               </p>
             </div>
             <div className="rounded-2xl bg-surface-container-low p-3 col-span-2">
-              <span className="text-[10px] font-black text-on-surface-variant/40 block">云端精选</span>
+              <span className="text-[10px] font-black text-on-surface-variant/40 block">{t('community_templates.cloud_picks', { defaultValue: ct('云端精选', 'Cloud picks') })}</span>
               <span className="text-xl font-black text-on-surface">{cloudTemplates.length}</span>
               <p className="text-[10px] font-bold text-on-surface-variant/45 mt-0.5">
                 {guestMode
-                  ? '游客模式下会使用本机缓存。'
+                  ? t('community_templates.guest_cache', { defaultValue: ct('游客模式下会使用本机缓存。', 'Guest mode uses local cache.') })
                   : syncStatus.isOnline
-                    ? '已合并审核通过的社区模板。'
+                    ? t('community_templates.cloud_merged', { defaultValue: ct('已合并审核通过的社区模板。', 'Approved community templates have been merged.') })
                     : cloudTemplates.length > 0
-                      ? '当前离线，正在使用上次缓存的云端精选。'
-                      : '当前离线，仅显示本机模板。'}
+                      ? t('community_templates.offline_cloud_cache', { defaultValue: ct('当前离线，正在使用上次缓存的云端精选。', 'Offline now. Showing the last cached cloud picks.') })
+                      : t('community_templates.offline_local_only', { defaultValue: ct('当前离线，仅显示本机模板。', 'Offline now. Showing local templates only.') })}
               </p>
               {cloudCacheTime && cloudTemplates.length > 0 && (
                 <p className="text-[10px] font-bold text-on-surface-variant/35 mt-1">
-                  缓存时间：{formatTime(cloudCacheTime)}
+                  {t('community_templates.cache_time', { defaultValue: ct('缓存时间：', 'Cached at: ') })}{formatTime(cloudCacheTime)}
                 </p>
               )}
             </div>
             <div className="rounded-2xl bg-surface-container-low p-3 col-span-2">
               <span className="text-[10px] font-black text-on-surface-variant/40 flex items-center gap-1">
-                <Heart size={11} /> 我的经验库
+                <Heart size={11} /> {t('community_templates.my_library', { defaultValue: ct('我的经验库', 'My library') })}
               </span>
               <span className="text-xl font-black text-on-surface">{librarySummary.favoriteCount}</span>
               <p className="text-[10px] font-bold text-on-surface-variant/45 mt-0.5">
-                已复用 {librarySummary.recentUseCount} 份模板{librarySummary.lastUsedAt ? `，最近 ${formatTime(librarySummary.lastUsedAt)}` : ''}。
+                {t('community_templates.reuse_summary', { defaultValue: ct('已复用 {{count}} 份模板{{recent}}。', '{{count}} templates reused{{recent}}.'), count: librarySummary.recentUseCount, recent: librarySummary.lastUsedAt ? ct(`，最近 ${formatTime(librarySummary.lastUsedAt)}`, `, last ${formatTime(librarySummary.lastUsedAt)}`) : '' })}
               </p>
             </div>
           </div>
@@ -256,7 +416,7 @@ export function CommunityTemplates() {
               <WandSparkles size={19} />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-black text-on-surface">家庭经验推荐</h3>
+              <h3 className="text-sm font-black text-on-surface">{t('community_templates.recommendation_title', { defaultValue: ct('家庭经验推荐', 'Family Experience Suggestions') })}</h3>
               <p className="text-xs font-bold text-on-surface-variant/55 mt-1 leading-relaxed">
                 {libraryInsight.guidance}
               </p>
@@ -282,7 +442,7 @@ export function CommunityTemplates() {
                 >
                   <p className="text-xs font-black text-on-surface truncate">{item.draft.title}</p>
                   <p className="text-[10px] font-bold text-on-surface-variant/50 mt-1 line-clamp-1">
-                    {item.asset?.reuseHint || '适合相似家庭复用'}
+                    {item.asset?.reuseHint || t('community_templates.reuse_hint_fallback', { defaultValue: ct('适合相似家庭复用', 'Useful for similar families') })}
                   </p>
                 </button>
               ))}
@@ -296,19 +456,19 @@ export function CommunityTemplates() {
               <Cloud size={19} />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-black text-on-surface">云端发布准备</h3>
+              <h3 className="text-sm font-black text-on-surface">{t('community_templates.cloud_publish_title', { defaultValue: ct('云端发布准备', 'Cloud Publishing Prep') })}</h3>
               <p className="text-xs font-bold text-on-surface-variant/55 mt-1 leading-relaxed">
-                只会提交已授权、已脱敏、没有质量阻断的模板。提交后进入审核，不会直接公开。
+                {t('community_templates.cloud_publish_desc', { defaultValue: ct('只会提交已授权、已脱敏、没有质量阻断的模板。提交后进入审核，不会直接公开。', 'Only authorized, anonymized templates without quality blockers are submitted. They enter review and are not published directly.') })}
               </p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 mt-4">
             <div className="rounded-2xl bg-surface-container-low p-3">
-              <span className="text-[10px] font-black text-on-surface-variant/40 block">可提交审核</span>
+              <span className="text-[10px] font-black text-on-surface-variant/40 block">{t('community_templates.ready_for_review', { defaultValue: ct('可提交审核', 'Ready for review') })}</span>
               <span className="text-xl font-black text-on-surface">{syncPreview.rowCount}</span>
             </div>
             <div className="rounded-2xl bg-surface-container-low p-3">
-              <span className="text-[10px] font-black text-on-surface-variant/40 block">需完善</span>
+              <span className="text-[10px] font-black text-on-surface-variant/40 block">{t('community_templates.needs_work', { defaultValue: ct('需完善', 'Needs work') })}</span>
               <span className="text-xl font-black text-on-surface">{syncPreview.blockedCount}</span>
             </div>
           </div>
@@ -330,7 +490,11 @@ export function CommunityTemplates() {
             disabled={syncing || syncPreview.rowCount === 0}
             className="mt-4 w-full py-3 rounded-2xl bg-primary text-white text-sm font-black active:scale-[0.98] transition-all disabled:opacity-45"
           >
-            {syncing ? '提交中...' : guestMode ? '游客模式仅本机保存' : '提交可发布模板'}
+            {syncing
+              ? t('common.submitting', { defaultValue: ct('提交中...', 'Submitting...') })
+              : guestMode
+                ? t('community_templates.guest_local_only', { defaultValue: ct('游客模式仅本机保存', 'Guest mode saves locally only') })
+                : t('community_templates.submit_ready_templates', { defaultValue: ct('提交可发布模板', 'Submit ready templates') })}
           </button>
         </div>
 
@@ -340,29 +504,29 @@ export function CommunityTemplates() {
             <input
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
-              placeholder="搜索暑假、阅读、运动、学段..."
+              placeholder={t('community_templates.search_placeholder', { defaultValue: ct('搜索暑假、阅读、运动、学段...', 'Search summer break, reading, sports, grade...') })}
               className="min-w-0 flex-1 bg-transparent text-sm font-bold text-on-surface outline-none placeholder:text-on-surface-variant/35"
             />
           </div>
           <div className="flex items-center gap-2 overflow-x-auto pb-1">
             <span className="shrink-0 text-[10px] font-black text-on-surface-variant/35 flex items-center gap-1">
-              <SlidersHorizontal size={12} /> 筛选
+              <SlidersHorizontal size={12} /> {t('common.filter', { defaultValue: ct('筛选', 'Filter') })}
             </span>
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as CommunityShareTemplateQuery['status'])}
               className="shrink-0 rounded-xl bg-surface-container-low px-2.5 py-1.5 text-[11px] font-black text-on-surface outline-none"
             >
-              <option value="all">全部状态</option>
-              <option value="ready_to_publish">可发布</option>
-              <option value="draft">待确认</option>
+              <option value="all">{t('community_templates.all_statuses', { defaultValue: ct('全部状态', 'All statuses') })}</option>
+              <option value="ready_to_publish">{t('community_templates.ready_to_publish', { defaultValue: ct('可发布', 'Ready') })}</option>
+              <option value="draft">{t('community_templates.pending_confirm', { defaultValue: ct('待确认', 'Pending') })}</option>
             </select>
             <select
               value={scenarioFilter}
               onChange={(event) => setScenarioFilter(event.target.value as PlanningScenario | 'all')}
               className="shrink-0 rounded-xl bg-surface-container-low px-2.5 py-1.5 text-[11px] font-black text-on-surface outline-none"
             >
-              <option value="all">全部场景</option>
+              <option value="all">{t('community_templates.all_scenarios', { defaultValue: ct('全部场景', 'All scenarios') })}</option>
               {scenarioOptions.map(scenario => (
                 <option key={scenario} value={scenario}>{scenario}</option>
               ))}
@@ -372,23 +536,23 @@ export function CommunityTemplates() {
               onChange={(event) => setRecommendationFilter(event.target.value as RecommendationCategory | 'all')}
               className="shrink-0 rounded-xl bg-surface-container-low px-2.5 py-1.5 text-[11px] font-black text-on-surface outline-none"
             >
-              <option value="all">全部信号</option>
-              <option value="education">教育</option>
-              <option value="travel">旅行</option>
-              <option value="healthcare">健康</option>
+              <option value="all">{t('community_templates.all_signals', { defaultValue: ct('全部信号', 'All signals') })}</option>
+              <option value="education">{t('recommendation.education', { defaultValue: ct('教育', 'Education') })}</option>
+              <option value="travel">{t('recommendation.travel', { defaultValue: ct('旅行', 'Travel') })}</option>
+              <option value="healthcare">{t('recommendation.healthcare', { defaultValue: ct('健康', 'Health') })}</option>
             </select>
             <select
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value as CommunityShareTemplateQuery['sortBy'])}
               className="shrink-0 rounded-xl bg-surface-container-low px-2.5 py-1.5 text-[11px] font-black text-on-surface outline-none"
             >
-              <option value="quality_desc">质量优先</option>
-              <option value="updated_desc">最近更新</option>
-              <option value="slot_count_desc">时段最多</option>
+              <option value="quality_desc">{t('community_templates.sort_quality', { defaultValue: ct('质量优先', 'Best quality') })}</option>
+              <option value="updated_desc">{t('community_templates.sort_recent', { defaultValue: ct('最近更新', 'Recently updated') })}</option>
+              <option value="slot_count_desc">{t('community_templates.sort_slots', { defaultValue: ct('时段最多', 'Most slots') })}</option>
             </select>
           </div>
           <p className="text-[10px] font-bold text-on-surface-variant/40">
-            当前显示 {visibleDrafts.length} / {allTemplates.length} 份模板{cloudLoading ? '，正在读取云端精选' : ''}
+            {t('community_templates.showing_count', { defaultValue: ct('当前显示 {{shown}} / {{total}} 份模板{{loading}}', 'Showing {{shown}} / {{total}} templates{{loading}}'), shown: visibleDrafts.length, total: allTemplates.length, loading: cloudLoading ? ct('，正在读取云端精选', ', loading cloud picks') : '' })}
           </p>
         </div>
 
@@ -399,14 +563,14 @@ export function CommunityTemplates() {
         ) : allTemplates.length === 0 ? (
           <div className="text-center py-12">
             <ShieldCheck size={48} className="mx-auto text-outline-variant/30 mb-3" />
-            <p className="text-sm font-bold text-on-surface-variant/50">还没有分享模板</p>
-            <p className="text-xs font-bold text-on-surface-variant/35 mt-1">可以从计划详情里的“脱敏分享”开始</p>
+            <p className="text-sm font-bold text-on-surface-variant/50">{t('community_templates.empty_title', { defaultValue: ct('还没有分享模板', 'No shared templates yet') })}</p>
+            <p className="text-xs font-bold text-on-surface-variant/35 mt-1">{t('community_templates.empty_desc', { defaultValue: ct('可以从计划详情里的“脱敏分享”开始', 'Start from “anonymized sharing” in a plan detail page.') })}</p>
           </div>
         ) : visibleDrafts.length === 0 ? (
           <div className="text-center py-12">
             <Search size={48} className="mx-auto text-outline-variant/30 mb-3" />
-            <p className="text-sm font-bold text-on-surface-variant/50">没有匹配的模板</p>
-            <p className="text-xs font-bold text-on-surface-variant/35 mt-1">可以换个关键词或放宽筛选条件</p>
+            <p className="text-sm font-bold text-on-surface-variant/50">{t('community_templates.no_match_title', { defaultValue: ct('没有匹配的模板', 'No matching templates') })}</p>
+            <p className="text-xs font-bold text-on-surface-variant/35 mt-1">{t('community_templates.no_match_desc', { defaultValue: ct('可以换个关键词或放宽筛选条件', 'Try another keyword or loosen the filters.') })}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -427,7 +591,11 @@ export function CommunityTemplates() {
                         ? 'px-2 py-0.5 rounded-full bg-primary-container/20 text-primary text-[10px] font-black'
                         : 'px-2 py-0.5 rounded-full bg-warning-container/50 text-warning text-[10px] font-black'}
                       >
-                        {isCloud ? '云端精选' : item.status === 'ready_to_publish' ? '可发布' : '待确认'}
+                        {isCloud
+                          ? t('community_templates.cloud_picks', { defaultValue: ct('云端精选', 'Cloud picks') })
+                          : item.status === 'ready_to_publish'
+                            ? t('community_templates.ready_to_publish', { defaultValue: ct('可发布', 'Ready') })
+                            : t('community_templates.pending_confirm', { defaultValue: ct('待确认', 'Pending') })}
                       </span>
                       <span className="text-[10px] font-black text-on-surface-variant/40 flex items-center gap-1">
                         <Clock size={11} /> {formatTime(item.updatedAt)}
@@ -435,7 +603,7 @@ export function CommunityTemplates() {
                     </div>
                     <h3 className="font-black text-sm text-on-surface truncate">{item.draft.title}</h3>
                     <p className="text-xs font-bold text-on-surface-variant/50 mt-1 line-clamp-1">
-                      {item.asset?.reuseHint || [item.draft.ageRange, item.draft.gradeBand, item.draft.cityLevel].filter(Boolean).join(' · ') || '未填写匹配标签'}
+                      {item.asset?.reuseHint || [item.draft.ageRange, item.draft.gradeBand, item.draft.cityLevel].filter(Boolean).join(' · ') || t('community_templates.no_match_tags', { defaultValue: ct('未填写匹配标签', 'No match tags yet') })}
                     </p>
                     <div className="mt-2 flex items-center gap-2">
                       <span className={item.asset?.qualityLevel === 'excellent'
@@ -444,11 +612,15 @@ export function CommunityTemplates() {
                           ? 'rounded-full bg-primary-container/20 px-2 py-0.5 text-[9px] font-black text-primary'
                           : 'rounded-full bg-warning-container/50 px-2 py-0.5 text-[9px] font-black text-warning'}
                       >
-                        模板质量 {item.asset?.qualityScore ?? 0}
+                        {t('community_templates.quality_score', { defaultValue: ct('模板质量 {{score}}', 'Quality {{score}}'), score: item.asset?.qualityScore ?? 0 })}
                       </span>
                       {(item.asset?.profileSignal?.commercialSignals || []).slice(0, 2).map(signal => (
                         <span key={signal.category} className="rounded-full bg-surface-container-low px-2 py-0.5 text-[9px] font-black text-on-surface-variant/50">
-                          {signal.category === 'education' ? '教育' : signal.category === 'travel' ? '旅行' : '健康'}
+                          {signal.category === 'education'
+                            ? t('recommendation.education', { defaultValue: ct('教育', 'Education') })
+                            : signal.category === 'travel'
+                              ? t('recommendation.travel', { defaultValue: ct('旅行', 'Travel') })
+                              : t('recommendation.healthcare', { defaultValue: ct('健康', 'Health') })}
                         </span>
                       ))}
                     </div>

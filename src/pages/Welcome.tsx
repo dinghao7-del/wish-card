@@ -10,25 +10,24 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import * as api from '../lib/api';
-import { getActiveThemeSkin } from '../lib/themeSkins';
 
 type Step = 'intro' | 'register' | 'login' | 'otp' | 'verify';
 
-function pickWelcomeIllustration(defaultIllustration: string) {
-  if (defaultIllustration.includes('/skins/forest-comic/')) {
-    return '/skins/forest-comic/welcome-comic.svg';
-  }
-  if (defaultIllustration.includes('/skins/arcade-comic/')) {
-    return '/skins/arcade-comic/welcome-comic.svg';
-  }
-  return defaultIllustration;
+const WELCOME_COMIC_ILLUSTRATIONS = [
+  '/skins/forest-comic/welcome/welcome-green-01.png',
+  '/skins/forest-comic/welcome/welcome-green-02.png',
+  '/skins/forest-comic/welcome/welcome-green-03.png',
+  '/skins/forest-comic/welcome/welcome-green-04.png',
+];
+
+function pickWelcomeIllustration() {
+  return WELCOME_COMIC_ILLUSTRATIONS[Math.floor(Math.random() * WELCOME_COMIC_ILLUSTRATIONS.length)];
 }
 
 export function Welcome() {
   const { currentUser, setCurrentUser, loadGuestDemoData, setFamilyId } = useFamily();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const themeSkin = getActiveThemeSkin();
 
   // currentUser 变化后自动跳转首页
   useEffect(() => {
@@ -45,7 +44,7 @@ export function Welcome() {
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [logoFailed, setLogoFailed] = useState(false);
-  const [welcomeIllustration] = useState(() => pickWelcomeIllustration(themeSkin.assets.welcomeIllustration));
+  const [welcomeIllustration] = useState(() => pickWelcomeIllustration());
 
   // 注册状态
   const [regNickname, setRegNickname] = useState('');
@@ -455,7 +454,7 @@ export function Welcome() {
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="ui-welcome-art w-48 h-48 min-[380px]:w-56 min-[380px]:h-56 sm:w-64 sm:h-64 mx-auto mb-2 sm:mb-3 relative flex items-center justify-center"
+              className="ui-welcome-art w-52 h-64 min-[380px]:w-60 min-[380px]:h-72 sm:w-72 sm:h-80 mx-auto mb-2 sm:mb-3 relative flex items-center justify-center"
             >
               {logoFailed ? (
                 <div className="w-full h-full relative z-10 rounded-[1.75rem] sm:rounded-[2.25rem] bg-white/80 shadow-inner border border-primary/10 flex items-center justify-center">

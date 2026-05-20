@@ -34,7 +34,7 @@ describe('theme skins', () => {
 
     expect(skin.id).toBe('forest-comic');
     expect(skin.status).toBe('active');
-    expect(skin.assets.welcomeIllustration).toBe('/skins/forest-comic/welcome-comic.svg');
+    expect(skin.assets.welcomeIllustration).toBe('/skins/forest-comic/welcome/welcome-green-01.png');
     expect(THEME_SKINS['forest-comic'].tokens.color.primary).toBe(UI_TOKENS.color.light.primary);
     expect(THEME_SKINS['forest-comic'].tokens.color.rewardDisplay).toBe(UI_TOKENS.color.semantic.rewardDisplay);
     expect(THEME_SKINS['forest-comic'].template.id).toBe('forest-comic-base');
@@ -64,7 +64,7 @@ describe('theme skins', () => {
 
     expect(skin.status).toBe('active');
     expect(skin.name).toBe('电玩漫画风');
-    expect(skin.assets.welcomeIllustration).toBe('/skins/arcade-comic/welcome-comic-01.png');
+    expect(skin.assets.welcomeIllustration).toBe('/skins/forest-comic/welcome/welcome-green-01.png');
     expect(skin.tokens.color.primary).toBe(UI_TOKENS.color.arcadeComic.primary);
     expect(skin.tokens.color.outlineVariant).toBe(UI_TOKENS.color.arcadeComic.outlineVariant);
     expect(skin.tokens.darkColor?.background).toBe(UI_TOKENS.color.arcadeComicDark.background);

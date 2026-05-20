@@ -1,5 +1,6 @@
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
 
 export interface TopAppBarProps {
@@ -39,6 +40,7 @@ export function TopAppBar({
   className,
 }: TopAppBarProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleBack = () => {
     if (onBack) {
@@ -66,7 +68,7 @@ export function TopAppBar({
           <button
             onClick={handleBack}
             className="ui-icon-button"
-            aria-label="返回"
+            aria-label={t('common.back', { defaultValue: '返回' })}
             type="button"
           >
             <ArrowLeft size={22} />

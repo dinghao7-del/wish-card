@@ -68,7 +68,7 @@ export function PopularTemplates({ isOpen, onClose, type, onSelect }: PopularTem
     }
   };
 
-  const typeLabel = type === 'reward' ? t('rewards.title', '心愿') : type === 'habit' ? t('habit.title', '习惯') : t('tasks.title', '任务');
+  const typeLabel = type === 'reward' ? t('popular_templates.type_reward') : type === 'habit' ? t('popular_templates.type_habit') : t('popular_templates.type_task');
 
   return (
     <AnimatePresence>
@@ -92,7 +92,7 @@ export function PopularTemplates({ isOpen, onClose, type, onSelect }: PopularTem
             <div className="flex items-center justify-between px-5 py-4 border-b border-outline-variant/20">
               <div className="flex items-center gap-2">
                 <Flame size={20} className="text-orange-500" />
-                <h3 className="font-bold text-on-surface text-lg">{typeLabel}模板库</h3>
+                <h3 className="font-bold text-on-surface text-lg">{t('popular_templates.title', { type: typeLabel })}</h3>
               </div>
               <button onClick={onClose} className="p-1 hover:bg-surface-container rounded-full">
                 <X size={20} className="text-on-surface-variant" />
@@ -108,7 +108,7 @@ export function PopularTemplates({ isOpen, onClose, type, onSelect }: PopularTem
                 }`}
               >
                 <span className="flex items-center gap-1">
-                  <Flame size={14} /> 热门推荐
+                  <Flame size={14} /> {t('popular_templates.hot')}
                 </span>
               </button>
               <button
@@ -118,7 +118,7 @@ export function PopularTemplates({ isOpen, onClose, type, onSelect }: PopularTem
                 }`}
               >
                 <span className="flex items-center gap-1">
-                  <TrendingUp size={14} /> 社区热门
+                  <TrendingUp size={14} /> {t('popular_templates.community_hot')}
                 </span>
               </button>
             </div>
@@ -132,7 +132,7 @@ export function PopularTemplates({ isOpen, onClose, type, onSelect }: PopularTem
               ) : templates.length === 0 ? (
                 <div className="text-center py-10 text-on-surface-variant">
                   <Sparkles size={32} className="mx-auto opacity-30 mb-2" />
-                  <p className="text-sm">暂无{activeTab === 'community' ? '社区' : ''}模板</p>
+                  <p className="text-sm">{activeTab === 'community' ? t('popular_templates.empty_community') : t('popular_templates.empty')}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2.5">
@@ -155,7 +155,7 @@ export function PopularTemplates({ isOpen, onClose, type, onSelect }: PopularTem
                       </div>
                       {tmpl.source === 'community' && tmpl.usage_count && (
                         <span className="text-[9px] text-on-surface-variant/60 flex items-center gap-0.5">
-                          <TrendingUp size={8} /> {tmpl.usage_count}家庭
+                          <TrendingUp size={8} /> {t('popular_templates.family_count', { count: tmpl.usage_count })}
                         </span>
                       )}
                     </motion.button>

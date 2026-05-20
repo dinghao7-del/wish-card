@@ -6,10 +6,12 @@ import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { TopAppBar } from '../components/navigation/TopAppBar';
 import { getRegisteredTaskIcon } from '../lib/lucideIconRegistry';
+import { useTranslation } from 'react-i18next';
 
 export function History() {
   const navigate = useNavigate();
   const { history, currentUser } = useFamily();
+  const { t, i18n } = useTranslation();
 
   React.useEffect(() => {
     if (!currentUser) {
@@ -27,20 +29,20 @@ export function History() {
 
   const formatDate = (isoString: string) => {
     const date = new Date(isoString);
-    return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleDateString(i18n.language || undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
   return (
     <div className="min-h-screen bg-surface pb-20 animate-in fade-in duration-500">
-      <TopAppBar title="星星足迹" backTo="/profile" />
+      <TopAppBar title={t('history_page.title', { defaultValue: '星星足迹' })} backTo="/profile" />
 
       <div className="px-4 py-4">
         <div className="bg-primary-container rounded-[2.5rem] py-6 px-8 mb-6 flex flex-col items-center justify-center text-primary-text shadow-sm relative overflow-hidden border border-primary-surface/30">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/20 rounded-full blur-3xl" />
+          <div className="absolute -top-4 -right-4 w-32 h-32 bg-white/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-white/20 rounded-full blur-3xl" />
           
           <Star size={40} className="mb-2 text-reward-display fill-current animate-pulse" />
-          <span className="text-xs font-black uppercase tracking-widest opacity-75 mb-0.5 text-secondary-container">当前余额</span>
+          <span className="text-xs font-black uppercase tracking-widest opacity-75 mb-0.5 text-secondary-container">{t('history_page.current_balance', { defaultValue: '当前余额' })}</span>
           <h2 className="text-[4rem] font-black tabular-nums text-white">{currentUser?.stars || 0}</h2>
         </div>
 
@@ -48,7 +50,7 @@ export function History() {
           <div className="flex items-center justify-between px-2">
             <h3 className="font-black text-on-surface flex items-center gap-2">
               <Clock size={18} />
-              最近变更
+              {t('history_page.recent_changes', { defaultValue: '最近变更' })}
             </h3>
           </div>
 
@@ -84,7 +86,7 @@ export function History() {
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-on-surface-variant/20 italic">
                <Trophy size={64} className="mb-4 opacity-10" />
-               <p>还没有星星记录哦，快去完成任务吧 🍃</p>
+               <p>{t('history_page.empty', { defaultValue: '还没有星星记录哦，快去完成任务吧 🍃' })}</p>
             </div>
           )}
         </div>

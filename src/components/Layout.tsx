@@ -8,9 +8,11 @@ import { UserSelector } from './UserSelector';
 import { NotificationBell } from './NotificationCenter';
 import { CheckCircle2, CloudOff, RefreshCw, Sparkles, WifiOff, X } from 'lucide-react';
 import { buildSyncBannerPresentation } from '../lib/syncStatusPresentation';
+import { useTranslation } from 'react-i18next';
 
 export function Layout() {
   const location = useLocation();
+  const { t } = useTranslation();
   const { currentUser, isUserSelectorOpen, setIsUserSelectorOpen, guestMode, logout, syncStatus, syncNow } = useFamily();
   const [showGuestBanner, setShowGuestBanner] = useState(true);
 
@@ -29,7 +31,8 @@ export function Layout() {
     location.pathname.startsWith('/tasks/new') ||
     location.pathname.startsWith('/tasks/edit/') ||
     location.pathname.startsWith('/rewards/new') ||
-    location.pathname.startsWith('/rewards/edit/');
+    location.pathname.startsWith('/rewards/edit/') ||
+    location.pathname === '/onboarding';
 
   const syncBannerPresentation = buildSyncBannerPresentation({
     currentUser,
@@ -89,15 +92,15 @@ export function Layout() {
           <div className="flex min-w-0 items-center gap-2">
             <Sparkles size={13} className="text-secondary shrink-0" />
             <span className="text-safe text-[10px] font-black leading-snug text-tertiary">
-              体验模式 · 数据仅存于本地，注册后可永久保存
+              {t('layout.guest_banner', { defaultValue: '体验模式 · 数据仅存于本地，注册后可永久保存' })}
             </span>
           </div>
           <div className="flex items-center gap-1">
             <button 
               onClick={async () => { await logout(); }}
-              className="text-[10px] font-black text-primary bg-white/60 px-2 py-0.5 rounded-full hover:bg-white transition-colors"
+              className="ui-guest-register-button text-[10px] font-black text-primary bg-white/60 px-2 py-0.5 rounded-full hover:bg-white transition-colors"
             >
-              注册
+              {t('layout.register', { defaultValue: '注册' })}
             </button>
             <button 
               onClick={() => setShowGuestBanner(false)}

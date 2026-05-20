@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bell, CheckCircle2, AlertCircle, Gift, Star, Clock, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 // ==================== 通知类型 ====================
 
@@ -117,14 +118,15 @@ function getNotifIcon(type: NotificationType) {
 // ==================== 通知中心面板 ====================
 
 export function NotificationPanel() {
+  const { t } = useTranslation();
   const { notifications, unreadCount, markAsRead, markAllAsRead, removeNotification, clearAll, isOpen, setIsOpen } = useNotifications();
 
   const formatTime = (ts: string) => {
     const diff = Date.now() - new Date(ts).getTime();
-    if (diff < 60000) return '刚刚';
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
-    return `${Math.floor(diff / 86400000)}天前`;
+    if (diff < 60000) return t('notification_center.just_now');
+    if (diff < 3600000) return t('notification_center.minutes_ago', { count: Math.floor(diff / 60000) });
+    if (diff < 86400000) return t('notification_center.hours_ago', { count: Math.floor(diff / 3600000) });
+    return t('notification_center.days_ago', { count: Math.floor(diff / 86400000) });
   };
 
   return (
@@ -149,7 +151,7 @@ export function NotificationPanel() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant/20">
               <div className="flex items-center gap-2">
                 <Bell size={20} className="text-primary" />
-                <h2 className="font-bold text-on-surface">通知中心</h2>
+                <h2 className="font-bold text-on-surface">{t('notification_center.title')}</h2>
                 {unreadCount > 0 && (
                   <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
                     {unreadCount}
@@ -159,12 +161,12 @@ export function NotificationPanel() {
               <div className="flex items-center gap-2">
                 {unreadCount > 0 && (
                   <button onClick={markAllAsRead} className="text-xs text-primary font-medium">
-                    全部已读
+                    {t('notification_center.mark_all_read')}
                   </button>
                 )}
                 {notifications.length > 0 && (
                   <button onClick={clearAll} className="text-xs text-on-surface-variant">
-                    清空
+                    {t('notification_center.clear')}
                   </button>
                 )}
                 <button onClick={() => setIsOpen(false)} className="p-1">
@@ -178,7 +180,7 @@ export function NotificationPanel() {
               {notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-on-surface-variant">
                   <Bell size={48} className="opacity-20 mb-3" />
-                  <p className="text-sm">暂无通知</p>
+                  <p className="text-sm">{t('notification_center.empty')}</p>
                 </div>
               ) : (
                 <div className="divide-y divide-outline-variant/10">

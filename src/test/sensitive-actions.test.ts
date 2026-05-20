@@ -14,9 +14,9 @@ describe('sensitive action rules', () => {
     })).toBe('1234');
   });
 
-  it('marks rewards from 100 stars as high value', () => {
-    expect(isHighValueReward({ cost: 99 })).toBe(false);
-    expect(isHighValueReward({ cost: 100 })).toBe(true);
+  it('marks monthly-or-larger wishes as high value', () => {
+    expect(isHighValueReward({ cost: 299 })).toBe(false);
+    expect(isHighValueReward({ cost: 300 })).toBe(true);
   });
 
   it('detects PIN or password changes on members', () => {

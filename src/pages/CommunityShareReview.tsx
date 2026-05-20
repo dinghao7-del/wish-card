@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BarChart3, CheckCircle2, Clipboard, Eye, ShieldCheck, WandSparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { TopAppBar } from '../components/navigation/TopAppBar';
 import { showToastGlobal } from '../components/Toast';
 import {
@@ -14,6 +15,9 @@ import {
 export function CommunityShareReview() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { t, i18n } = useTranslation();
+  const isZh = (i18n.language || '').toLowerCase().startsWith('zh');
+  const tt = (zh: string, en: string) => (isZh ? zh : en);
   const [storedDraft, setStoredDraft] = useState<StoredSharedScheduleTemplateDraft | null>(null);
   const [draft, setDraft] = useState<SharedScheduleTemplateDraft | null>(null);
   const [privacyReviewed, setPrivacyReviewed] = useState(false);
@@ -39,13 +43,13 @@ export function CommunityShareReview() {
 
   const redactionLabels = useMemo(() => {
     const labels: Record<string, string> = {
-      member_name: '家庭成员姓名',
-      phone: '手机号',
-      specific_place: '具体地点',
-      custom_sensitive_term: '自定义敏感词',
+      member_name: tt('家庭成员姓名', 'Family member names'),
+      phone: tt('手机号', 'Phone numbers'),
+      specific_place: tt('具体地点', 'Specific places'),
+      custom_sensitive_term: tt('自定义敏感词', 'Custom sensitive terms'),
     };
     return draft?.redactions.map(item => labels[item] || item) || [];
-  }, [draft]);
+  }, [draft, isZh]);
 
   const handleSlotChange = (index: number, field: 'title' | 'description', value: string) => {
     setDraft(prev => {
@@ -60,7 +64,7 @@ export function CommunityShareReview() {
   const handleSaveReadyDraft = async () => {
     if (!id || !draft) return;
     if (!privacyReviewed || !communityUseAgreed) {
-      showToastGlobal('请先确认分享授权', 'warning');
+      showToastGlobal(tt('请先确认分享授权', 'Please confirm the sharing permissions first.'), 'warning');
       return;
     }
 
@@ -75,7 +79,7 @@ export function CommunityShareReview() {
       const updated = await updateCommunityShareDraft(id, draft, 'ready_to_publish', consent);
       if (updated) {
         setStoredDraft(updated);
-        showToastGlobal('分享草稿已确认', 'success');
+        showToastGlobal(tt('分享草稿已确认', 'Share draft confirmed.'), 'success');
       }
     } finally {
       setSaving(false);
@@ -86,9 +90,9 @@ export function CommunityShareReview() {
     if (!draft) return;
     try {
       await navigator.clipboard.writeText(JSON.stringify(draft, null, 2));
-      showToastGlobal('已复制分享草稿', 'success');
+      showToastGlobal(tt('已复制分享草稿', 'Share draft copied.'), 'success');
     } catch {
-      showToastGlobal('复制失败，请稍后重试', 'error');
+      showToastGlobal(tt('复制失败，请稍后重试', 'Copy failed. Please try again later.'), 'error');
     }
   };
 
@@ -109,9 +113,9 @@ export function CommunityShareReview() {
   if (!draft || !storedDraft) {
     return (
       <div className="min-h-screen bg-surface-container-low">
-        <TopAppBar title="分享确认" onBack={() => { navigate(-1); }} />
+        <TopAppBar title={tt('分享确认', 'Share Review')} onBack={() => { navigate(-1); }} />
         <div className="p-5 text-center">
-          <p className="text-sm font-bold text-on-surface-variant/60">没有找到这份分享草稿</p>
+          <p className="text-sm font-bold text-on-surface-variant/60">{tt('没有找到这份分享草稿', 'This share draft was not found.')}</p>
         </div>
       </div>
     );
@@ -119,7 +123,7 @@ export function CommunityShareReview() {
 
   return (
     <div className="min-h-screen bg-surface-container-low pb-28">
-      <TopAppBar title="分享确认" onBack={() => { navigate(-1); }} />
+      <TopAppBar title={tt('分享确认', 'Share Review')} onBack={() => { navigate(-1); }} />
 
       <div className="p-4 space-y-4">
         <div className="bg-surface rounded-2xl p-5 shadow-sm border border-outline-variant/10">
@@ -128,24 +132,24 @@ export function CommunityShareReview() {
               <ShieldCheck size={20} />
             </div>
             <div className="min-w-0">
-              <h2 className="text-base font-black text-on-surface">发布前隐私检查</h2>
+              <h2 className="text-base font-black text-on-surface">{tt('发布前隐私检查', 'Privacy Check Before Publishing')}</h2>
               <p className="text-xs font-bold text-on-surface-variant/60 mt-1 leading-relaxed">
-                这份内容只保留日程结构和粗粒度标签，发布前仍建议你再看一遍文字。
+                {tt('这份内容只保留日程结构和粗粒度标签，发布前仍建议你再看一遍文字。', 'This keeps only the schedule structure and broad tags. Please review the text once more before publishing.')}
               </p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2 mt-4">
             <div className="rounded-2xl bg-surface-container-low p-3">
-              <span className="text-[10px] font-black text-on-surface-variant/40 block">年龄</span>
-              <span className="text-xs font-black text-on-surface">{draft.ageRange || '未填写'}</span>
+              <span className="text-[10px] font-black text-on-surface-variant/40 block">{tt('年龄', 'Age')}</span>
+              <span className="text-xs font-black text-on-surface">{draft.ageRange || tt('未填写', 'Not set')}</span>
             </div>
             <div className="rounded-2xl bg-surface-container-low p-3">
-              <span className="text-[10px] font-black text-on-surface-variant/40 block">阶段</span>
-              <span className="text-xs font-black text-on-surface">{draft.gradeBand || '未填写'}</span>
+              <span className="text-[10px] font-black text-on-surface-variant/40 block">{tt('阶段', 'Stage')}</span>
+              <span className="text-xs font-black text-on-surface">{draft.gradeBand || tt('未填写', 'Not set')}</span>
             </div>
             <div className="rounded-2xl bg-surface-container-low p-3">
-              <span className="text-[10px] font-black text-on-surface-variant/40 block">城市</span>
-              <span className="text-xs font-black text-on-surface">{draft.cityLevel || '未填写'}</span>
+              <span className="text-[10px] font-black text-on-surface-variant/40 block">{tt('城市', 'City')}</span>
+              <span className="text-xs font-black text-on-surface">{draft.cityLevel || tt('未填写', 'Not set')}</span>
             </div>
           </div>
         </div>
@@ -153,9 +157,9 @@ export function CommunityShareReview() {
         <div className="bg-surface rounded-2xl p-5 shadow-sm border border-outline-variant/10">
           <div className="flex items-center gap-2 mb-3">
             <Eye size={16} className="text-primary" />
-            <h3 className="text-sm font-black text-on-surface">可分享内容</h3>
+            <h3 className="text-sm font-black text-on-surface">{tt('可分享内容', 'Shareable Content')}</h3>
           </div>
-          <label className="text-[10px] font-black text-on-surface-variant/40 block mb-1">标题</label>
+          <label className="text-[10px] font-black text-on-surface-variant/40 block mb-1">{tt('标题', 'Title')}</label>
           <input
             value={draft.title}
             onChange={(event) => setDraft(prev => prev ? { ...prev, title: event.target.value } : prev)}
@@ -186,40 +190,40 @@ export function CommunityShareReview() {
         </div>
 
         <div className="bg-surface rounded-2xl p-5 shadow-sm border border-outline-variant/10">
-          <h3 className="text-sm font-black text-on-surface mb-3">已处理的信息</h3>
+          <h3 className="text-sm font-black text-on-surface mb-3">{tt('已处理的信息', 'Processed Information')}</h3>
           <div className="flex flex-wrap gap-2">
             {redactionLabels.length > 0 ? redactionLabels.map(label => (
               <span key={label} className="px-3 py-1.5 rounded-full bg-primary-container/20 text-primary text-[11px] font-black">
                 {label}
               </span>
             )) : (
-              <span className="text-xs font-bold text-on-surface-variant/50">未发现明显敏感字段</span>
+              <span className="text-xs font-bold text-on-surface-variant/50">{tt('未发现明显敏感字段', 'No obvious sensitive fields found.')}</span>
             )}
           </div>
         </div>
 
         <div className="bg-surface rounded-2xl p-5 shadow-sm border border-outline-variant/10">
-          <h3 className="text-sm font-black text-on-surface mb-3">模板资产标签</h3>
+          <h3 className="text-sm font-black text-on-surface mb-3">{tt('模板资产标签', 'Template Asset Tags')}</h3>
           <div className="grid grid-cols-3 gap-2 mb-3">
             <div className="rounded-2xl bg-surface-container-low p-3">
-              <span className="text-[10px] font-black text-on-surface-variant/40 block">时段</span>
+              <span className="text-[10px] font-black text-on-surface-variant/40 block">{tt('时段', 'Slots')}</span>
               <span className="text-sm font-black text-on-surface">{storedDraft.asset?.slotCount ?? draft.content.slots.length}</span>
             </div>
             <div className="rounded-2xl bg-surface-container-low p-3">
-              <span className="text-[10px] font-black text-on-surface-variant/40 block">类别</span>
+              <span className="text-[10px] font-black text-on-surface-variant/40 block">{tt('类别', 'Categories')}</span>
               <span className="text-sm font-black text-on-surface">{storedDraft.asset?.categoryMix?.length || 0}</span>
             </div>
             <div className="rounded-2xl bg-surface-container-low p-3">
-              <span className="text-[10px] font-black text-on-surface-variant/40 block">风险</span>
+              <span className="text-[10px] font-black text-on-surface-variant/40 block">{tt('风险', 'Risk')}</span>
               <span className="text-sm font-black text-on-surface">
-                {storedDraft.asset?.privacyRiskLevel === 'high' ? '偏高' : storedDraft.asset?.privacyRiskLevel === 'medium' ? '中等' : '较低'}
+                {storedDraft.asset?.privacyRiskLevel === 'high' ? tt('偏高', 'High') : storedDraft.asset?.privacyRiskLevel === 'medium' ? tt('中等', 'Medium') : tt('较低', 'Low')}
               </span>
             </div>
           </div>
           <div className="rounded-2xl bg-surface-container-low p-3 mb-3">
             <div className="flex items-center justify-between gap-3">
               <span className="text-[10px] font-black text-on-surface-variant/40 flex items-center gap-1">
-                <BarChart3 size={12} /> 模板质量
+                <BarChart3 size={12} /> {tt('模板质量', 'Template Quality')}
               </span>
               <span className="text-sm font-black text-on-surface">{storedDraft.asset?.qualityScore ?? 0}</span>
             </div>
@@ -252,22 +256,22 @@ export function CommunityShareReview() {
             ))}
           </div>
           <p className="text-xs font-bold leading-relaxed text-on-surface-variant/60">
-            {storedDraft.asset?.reuseHint || '复用前建议按自家作息和父母陪伴时间微调。'}
+            {storedDraft.asset?.reuseHint || tt('复用前建议按自家作息和父母陪伴时间微调。', 'Before reusing, adjust it to your family schedule and parent availability.')}
           </p>
         </div>
 
         <div className="bg-surface rounded-2xl p-5 shadow-sm border border-outline-variant/10">
-          <h3 className="text-sm font-black text-on-surface mb-3">可沉淀的家庭画像</h3>
+          <h3 className="text-sm font-black text-on-surface mb-3">{tt('可沉淀的家庭画像', 'Family Signals That Can Be Learned')}</h3>
           <div className="grid grid-cols-2 gap-2 mb-3">
             <div className="rounded-2xl bg-surface-container-low p-3">
-              <span className="text-[10px] font-black text-on-surface-variant/40 block">覆盖度</span>
+              <span className="text-[10px] font-black text-on-surface-variant/40 block">{tt('覆盖度', 'Coverage')}</span>
               <span className="text-xs font-black text-on-surface">
-                {storedDraft.asset?.profileSignal.timeCoverage === 'full_day' ? '全天' : storedDraft.asset?.profileSignal.timeCoverage === 'partial_day' ? '半天/多段' : '轻量'}
+                {storedDraft.asset?.profileSignal.timeCoverage === 'full_day' ? tt('全天', 'Full day') : storedDraft.asset?.profileSignal.timeCoverage === 'partial_day' ? tt('半天/多段', 'Half day / multiple slots') : tt('轻量', 'Light')}
               </span>
             </div>
             <div className="rounded-2xl bg-surface-container-low p-3">
-              <span className="text-[10px] font-black text-on-surface-variant/40 block">需要家长陪伴</span>
-              <span className="text-xs font-black text-on-surface">{storedDraft.asset?.profileSignal.caregiverRequiredSlots || 0} 段</span>
+              <span className="text-[10px] font-black text-on-surface-variant/40 block">{tt('需要家长陪伴', 'Needs Parent Time')}</span>
+              <span className="text-xs font-black text-on-surface">{storedDraft.asset?.profileSignal.caregiverRequiredSlots || 0} {tt('段', 'slots')}</span>
             </div>
           </div>
           <div className="space-y-2">
@@ -276,10 +280,10 @@ export function CommunityShareReview() {
                 <div key={signal.category} className="rounded-2xl bg-surface-container-low p-3">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-black text-on-surface">
-                      {signal.category === 'education' ? '教育资源' : signal.category === 'travel' ? '假期旅行' : '健康就医'}
+                      {signal.category === 'education' ? tt('教育资源', 'Education Resources') : signal.category === 'travel' ? tt('假期旅行', 'Holiday Travel') : tt('健康就医', 'Healthcare')}
                     </span>
                     <span className="text-[10px] font-black text-primary">
-                      {signal.strength === 'strong' ? '强相关' : signal.strength === 'medium' ? '中相关' : '弱相关'}
+                      {signal.strength === 'strong' ? tt('强相关', 'Strong') : signal.strength === 'medium' ? tt('中相关', 'Medium') : tt('弱相关', 'Weak')}
                     </span>
                   </div>
                   <p className="text-[10px] font-bold text-on-surface-variant/50 mt-1 leading-relaxed">{signal.reason}</p>
@@ -287,14 +291,14 @@ export function CommunityShareReview() {
               ))
             ) : (
               <p className="text-xs font-bold text-on-surface-variant/50">
-                这份模板暂时只适合作为社区参考，不会形成明显的推荐信号。
+                {tt('这份模板暂时只适合作为社区参考，不会形成明显的推荐信号。', 'For now, this template is only useful as a community reference and does not create strong recommendation signals.')}
               </p>
             )}
           </div>
         </div>
 
         <div className="bg-surface rounded-2xl p-5 shadow-sm border border-outline-variant/10">
-          <h3 className="text-sm font-black text-on-surface mb-3">分享授权</h3>
+          <h3 className="text-sm font-black text-on-surface mb-3">{tt('分享授权', 'Sharing Permission')}</h3>
           <div className="space-y-3">
             <label className="flex items-start gap-3 rounded-2xl bg-surface-container-low p-3 active:scale-[0.99] transition-transform">
               <input
@@ -304,7 +308,7 @@ export function CommunityShareReview() {
                 className="mt-0.5 h-4 w-4 accent-primary shrink-0"
               />
               <span className="text-xs font-bold leading-relaxed text-on-surface-variant">
-                我已检查标题和日程内容，确认没有包含孩子姓名、联系方式、住址、学校班级等隐私信息。
+                {tt('我已检查标题和日程内容，确认没有包含孩子姓名、联系方式、住址、学校班级等隐私信息。', 'I have reviewed the title and schedule content and confirmed it does not include children’s names, contact info, addresses, school classes, or similar private details.')}
               </span>
             </label>
             <label className="flex items-start gap-3 rounded-2xl bg-surface-container-low p-3 active:scale-[0.99] transition-transform">
@@ -315,7 +319,7 @@ export function CommunityShareReview() {
                 className="mt-0.5 h-4 w-4 accent-primary shrink-0"
               />
               <span className="text-xs font-bold leading-relaxed text-on-surface-variant">
-                我同意将这份脱敏日程作为社区模板，供其他家庭浏览、收藏和参考。
+                {tt('我同意将这份脱敏日程作为社区模板，供其他家庭浏览、收藏和参考。', 'I agree to share this anonymized schedule as a community template for other families to browse, save, and reference.')}
               </span>
             </label>
           </div>
@@ -327,20 +331,20 @@ export function CommunityShareReview() {
           onClick={handleCopy}
           className="flex-1 py-3 rounded-2xl bg-surface-container-low text-primary font-black text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
         >
-          <Clipboard size={16} /> 复制草稿
+          <Clipboard size={16} /> {tt('复制草稿', 'Copy Draft')}
         </button>
         <button
           onClick={handleReuseAsPlan}
           className="flex-1 py-3 rounded-2xl bg-primary/10 text-primary font-black text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
         >
-          <WandSparkles size={16} /> 复用为计划
+          <WandSparkles size={16} /> {tt('复用为计划', 'Reuse as Plan')}
         </button>
         <button
           onClick={handleSaveReadyDraft}
           disabled={saving || !privacyReviewed || !communityUseAgreed}
           className="flex-1 py-3 rounded-2xl bg-primary text-white font-black text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all disabled:opacity-50"
         >
-          <CheckCircle2 size={16} /> {storedDraft.status === 'ready_to_publish' ? '已确认' : '确认可分享'}
+          <CheckCircle2 size={16} /> {storedDraft.status === 'ready_to_publish' ? tt('已确认', 'Confirmed') : tt('确认可分享', 'Confirm Sharing')}
         </button>
       </div>
     </div>
