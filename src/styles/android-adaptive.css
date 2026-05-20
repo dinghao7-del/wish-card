@@ -189,15 +189,53 @@
 .android-native .ui-detail-overlay,
 .android-native .ui-voice-assistant-overlay,
 .android-native .ui-app-modal {
-  padding-top: var(--android-safe-top);
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  padding: 0 !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  overflow: hidden !important;
 }
 
 .android-native .ui-detail-sheet,
 .android-native .ui-voice-assistant-panel,
 .android-native .ui-app-modal-panel[data-bottom-sheet="true"] {
-  max-height: calc(100svh - var(--android-safe-top) - 8px) !important;
+  position: relative !important;
+  inset: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  width: min(100vw, 32rem) !important;
+  max-width: 32rem !important;
+  height: calc(100dvh - var(--android-safe-top) - 8px) !important;
+  max-height: calc(100dvh - var(--android-safe-top) - 8px) !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  transform: translateZ(0);
+  contain: layout paint;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
+}
+
+@supports not (height: 100dvh) {
+  .android-native .ui-detail-overlay,
+  .android-native .ui-voice-assistant-overlay,
+  .android-native .ui-app-modal {
+    height: 100svh !important;
+    min-height: 100svh !important;
+  }
+
+  .android-native .ui-detail-sheet,
+  .android-native .ui-voice-assistant-panel,
+  .android-native .ui-app-modal-panel[data-bottom-sheet="true"] {
+    height: calc(100svh - var(--android-safe-top) - 8px) !important;
+    max-height: calc(100svh - var(--android-safe-top) - 8px) !important;
+  }
 }
 
 .android-native .ui-detail-sheet-header {
@@ -205,11 +243,19 @@
   padding-bottom: 0.6rem;
 }
 
-.android-native .ui-detail-scroll {
-  padding-bottom: calc(5.5rem + var(--android-safe-bottom)) !important;
+.android-native .ui-detail-scroll,
+.android-native .ui-app-modal-body {
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  padding-bottom: calc(1rem + var(--android-safe-bottom)) !important;
 }
 
-.android-native .ui-detail-action-bar {
+.android-native .ui-detail-action-bar,
+.android-native .ui-app-modal-footer {
+  position: relative !important;
+  bottom: auto !important;
+  flex: 0 0 auto !important;
   padding: 0.75rem 1rem calc(0.75rem + var(--android-safe-bottom)) !important;
 }
 
@@ -256,7 +302,8 @@
 }
 
 .android-native .ui-voice-assistant-panel {
-  height: min(78svh, 620px) !important;
+  height: calc(100dvh - var(--android-safe-top) - 8px) !important;
+  max-height: calc(100dvh - var(--android-safe-top) - 8px) !important;
 }
 /* 兼容回退：圆角顶部（底部弹窗通用特征） */
 .android-native .rounded-t-3xl,

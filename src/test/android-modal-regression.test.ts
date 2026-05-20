@@ -20,8 +20,19 @@ describe('Android modal and sheet regressions', () => {
     expect(css).toContain('.android-native .ui-detail-sheet');
     expect(css).toContain('.android-native .ui-voice-assistant-panel');
     expect(css).toContain('.android-native .ui-app-modal-panel[data-bottom-sheet="true"]');
-    expect(css).toContain('max-height: calc(100svh - var(--android-safe-top) - 8px) !important;');
-    expect(css).toContain('padding-bottom: calc(5.5rem + var(--android-safe-bottom)) !important;');
+    expect(css).toContain('height: 100dvh !important;');
+    expect(css).toContain('padding: 0 !important;');
+    expect(css).toContain('height: calc(100dvh - var(--android-safe-top) - 8px) !important;');
+    expect(css).toContain('position: relative !important;');
+    expect(css).toContain('min-height: 0 !important;');
+    expect(css).toContain('flex: 0 0 auto !important;');
+  });
+
+  it('does not nest a fixed detail sheet inside a fixed Android overlay', () => {
+    const rewardPage = readProjectFile('src/pages/Rewards.tsx');
+
+    expect(rewardPage).toContain('ui-detail-sheet relative');
+    expect(rewardPage).not.toContain('ui-detail-sheet fixed bottom-0 left-0 right-0');
   });
 
   it('marks all shared detail and assistant surfaces as Android bottom sheets', () => {

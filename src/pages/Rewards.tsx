@@ -399,7 +399,7 @@ export function Rewards() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="ui-detail-sheet fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-background rounded-t-[2rem] shadow-2xl max-h-[88svh] overflow-hidden flex flex-col"
+              className="ui-detail-sheet relative w-full max-w-lg mx-auto bg-background rounded-t-[2rem] shadow-2xl max-h-[88svh] overflow-hidden flex flex-col"
               data-bottom-sheet="true"
               style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
               onClick={(e) => e.stopPropagation()}
