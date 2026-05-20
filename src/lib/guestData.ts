@@ -23,6 +23,7 @@ export const GUEST_MEMBERS: Member[] = [
     avatar: '/avatars/parent/Cute_cartoon_avatar_of_a_young_2026-04-27T18-33-05.png',
     stars: 320,
     role: 'parent',
+    pin: '1234',
   },
   {
     id: 'guest-dad',
@@ -30,6 +31,7 @@ export const GUEST_MEMBERS: Member[] = [
     avatar: '/avatars/parent/Cute_cartoon_avatar_of_an_Asia_2026-04-27T18-33-03.png',
     stars: 180,
     role: 'parent',
+    pin: '1234',
   },
   {
     id: 'guest-son',
@@ -37,6 +39,7 @@ export const GUEST_MEMBERS: Member[] = [
     avatar: '/avatars/boy/Cute_cartoon_avatar_of_an_Asia_2026-04-27T18-28-10.png',
     stars: 186,
     role: 'child',
+    pin: '1234',
   },
   {
     id: 'guest-daughter',
@@ -44,6 +47,7 @@ export const GUEST_MEMBERS: Member[] = [
     avatar: '/avatars/girl/Cute_cartoon_avatar_of_an_Asia_2026-04-27T18-30-54.png',
     stars: 254,
     role: 'child',
+    pin: '1234',
   },
 ];
 

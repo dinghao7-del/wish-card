@@ -386,7 +386,7 @@ export function Tasks() {
       <AnimatePresence>
         {selectedTask && (
           <div
-            className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 backdrop-blur-sm"
+            className="ui-detail-overlay fixed inset-0 z-[100] flex items-end justify-center bg-black/40 backdrop-blur-sm"
             onClick={() => setSelectedTask(null)}
           >
           <motion.div
@@ -395,6 +395,7 @@ export function Tasks() {
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
             className="ui-detail-sheet relative w-full max-w-lg max-h-[88svh] bg-background flex flex-col overflow-hidden rounded-t-[2rem] shadow-2xl"
+            data-bottom-sheet="true"
             onClick={(event) => event.stopPropagation()}
           >
             <header className="ui-detail-sheet-header flex items-center px-6 py-4 bg-background/80 backdrop-blur-xl shrink-0 z-20 border-b border-outline-variant/10">
@@ -504,7 +505,7 @@ export function Tasks() {
                 )}
               </header>
 
-              <div className="flex-1 overflow-y-auto scrollbar-hide px-6 pb-40">
+              <div className="ui-detail-scroll flex-1 overflow-y-auto scrollbar-hide px-6 pb-40">
                 <div className="flex flex-col items-center">
                 {/* Large Icon Container */}
                 <div className="mt-8 mb-8 relative">
@@ -629,7 +630,7 @@ export function Tasks() {
             </div>
 
             {/* Action FAB Area */}
-	            <div className="shrink-0 p-6 bg-background border-t border-outline-variant/10 shadow-xl shadow-on-surface/5 z-30 select-none">
+	            <div className="ui-detail-action-bar shrink-0 p-6 bg-background border-t border-outline-variant/10 shadow-xl shadow-on-surface/5 z-30 select-none">
                {(selectedTask.status === 'pending' || selectedTask.status === 'in_progress') && (
                  <button
                    onClick={(e) => {

@@ -393,13 +393,14 @@ export function Rewards() {
       {/* Reward Detail Modal */}
       <AnimatePresence>
         {selectedReward && (
-          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setSelectedReward(null)}>
+          <div className="ui-detail-overlay fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setSelectedReward(null)}>
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="ui-detail-sheet fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-background rounded-t-[2rem] shadow-2xl max-h-[88svh] overflow-hidden flex flex-col"
+              data-bottom-sheet="true"
               style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -416,7 +417,7 @@ export function Rewards() {
               </header>
 
               {/* 可滚动内容区 */}
-              <div className="flex-1 p-5 overflow-y-auto touch-pan-y" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+              <div className="ui-detail-scroll flex-1 p-5 overflow-y-auto touch-pan-y" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
                 {/* 图片 */}
                 {(selectedReward.image || selectedReward.icon) && (
                   <div className="w-full rounded-2xl overflow-hidden mb-4 shadow-md border-2 border-surface dark:border-surface">
@@ -485,7 +486,7 @@ export function Rewards() {
               </div>
 
               {/* 固定底部按钮区域 */}
-              <div className="p-4 bg-background border-t border-outline-variant/10 shrink-0 pb-[max(2rem,env(safe-area-inset-bottom,0px))]">
+              <div className="ui-detail-action-bar p-4 bg-background border-t border-outline-variant/10 shrink-0 pb-[max(2rem,env(safe-area-inset-bottom,0px))]">
                 <button
                   disabled={!canApproveReward(selectedReward) && !canRedeemReward(selectedReward)}
                   onClick={() => {

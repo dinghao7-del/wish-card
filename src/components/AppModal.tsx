@@ -65,6 +65,7 @@ export function AppModal({
         animate={isFullscreen ? { opacity: 1 } : isCenter ? { opacity: 1, scale: 1, y: 0 } : { y: 0 }}
         exit={isFullscreen ? { opacity: 0 } : isCenter ? { opacity: 0, scale: 0.94, y: 12 } : { y: '100%' }}
         transition={surface === 'sheet' ? { type: 'spring', damping: 28, stiffness: 320 } : { duration: 0.18 }}
+        data-bottom-sheet={surface === 'sheet' ? 'true' : undefined}
         className={cn(
           'ui-app-modal-panel relative z-10 flex w-full flex-col bg-surface text-on-surface shadow-2xl',
           isFullscreen && 'h-[100svh] max-h-[100svh] pt-safe',

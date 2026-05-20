@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 export function SwitchProfile() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { members, currentUser, setCurrentUser } = useFamily();
+  const { members, currentUser, setCurrentUser, guestMode } = useFamily();
   const [selectedUser, setSelectedUser] = useState<Member | null>(null);
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
@@ -50,15 +50,23 @@ export function SwitchProfile() {
   };
 
   const handleProfileClick = (member: Member) => {
-    const hasPin = hasSwitchCredential(member);
-    
-    if (!hasPin) {
-      setCurrentUser(member, 'none');
+    if (member.id === currentUser?.id) {
       navigate('/');
       return;
     }
-    
-    setSelectedUser(member);
+
+    const memberForVerification = hasSwitchCredential(member)
+      ? member
+      : (guestMode || member.id.startsWith('guest-'))
+        ? { ...member, pin: '1234' }
+        : null;
+
+    if (!memberForVerification) {
+      setError(true);
+      return;
+    }
+
+    setSelectedUser(memberForVerification);
     setPin('');
     setError(false);
   };
@@ -162,7 +170,11 @@ export function SwitchProfile() {
                 </div>
                 <h3 className="text-xl font-black">{t('switch_profile.password_title', { name: selectedUser.name })}</h3>
                 <p className="text-xs text-on-surface-variant font-bold mt-1">
-                  {selectedUser.role === 'parent' ? t('switch_profile.parent_hint') : t('switch_profile.child_hint')}
+                  {(guestMode || selectedUser.id.startsWith('guest-'))
+                    ? t('switch_profile.guest_pin_hint', { defaultValue: '体验模式 PIN：1234' })
+                    : selectedUser.role === 'parent'
+                      ? t('switch_profile.parent_hint')
+                      : t('switch_profile.child_hint')}
                 </p>
               </div>
 

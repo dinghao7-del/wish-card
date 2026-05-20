@@ -30,6 +30,17 @@
 /* Android 上字体偏小修正（部分 Android 设备默认字体较小） */
 .android-native {
   font-size: 100%;
+  --android-safe-top: max(24px, env(safe-area-inset-top, 0px));
+  --android-safe-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+}
+
+/* Android WebView 常见透明状态栏会让 fixed 元素贴到系统栏下面 */
+.android-native .ui-guest-banner {
+  top: var(--android-safe-top);
+}
+
+.android-native .ui-app-content {
+  padding-top: calc(var(--app-sticky-top, 0px) + var(--android-safe-top));
 }
 
 /* ==================== 滚动优化 ==================== */
@@ -172,7 +183,80 @@
 /* 修复：Tailwind JIT 转义类名选择器在部分构建下无效，改用通用圆角底部弹窗匹配 */
 .android-native [data-bottom-sheet="true"],
 .android-native .bottom-sheet {
-  padding-bottom: env(safe-area-inset-bottom, 16px);
+  padding-bottom: var(--android-safe-bottom);
+}
+
+.android-native .ui-detail-overlay,
+.android-native .ui-voice-assistant-overlay,
+.android-native .ui-app-modal {
+  padding-top: var(--android-safe-top);
+}
+
+.android-native .ui-detail-sheet,
+.android-native .ui-voice-assistant-panel,
+.android-native .ui-app-modal-panel[data-bottom-sheet="true"] {
+  max-height: calc(100svh - var(--android-safe-top) - 8px) !important;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.android-native .ui-detail-sheet-header {
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+}
+
+.android-native .ui-detail-scroll {
+  padding-bottom: calc(5.5rem + var(--android-safe-bottom)) !important;
+}
+
+.android-native .ui-detail-action-bar {
+  padding: 0.75rem 1rem calc(0.75rem + var(--android-safe-bottom)) !important;
+}
+
+.android-native .ui-detail-action-bar button,
+.android-native .ui-detail-action-bar > div {
+  min-height: 48px;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-radius: 1.25rem;
+}
+
+.android-native .ui-detail-sheet .w-28.h-28 {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 1.5rem;
+}
+
+.android-native .ui-detail-sheet .w-24.h-24 {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 1.35rem;
+}
+
+.android-native .ui-detail-sheet h2.text-3xl {
+  font-size: 1.55rem;
+  line-height: 1.18;
+  text-align: center;
+}
+
+.android-native .ui-detail-sheet .mb-10 {
+  margin-bottom: 1rem;
+}
+
+.android-native .ui-detail-sheet .mb-12 {
+  margin-bottom: 1.25rem;
+}
+
+.android-native .ui-detail-sheet .mt-8 {
+  margin-top: 1rem;
+}
+
+.android-native .ui-detail-sheet .mb-8 {
+  margin-bottom: 1rem;
+}
+
+.android-native .ui-voice-assistant-panel {
+  height: min(78svh, 620px) !important;
 }
 /* 兼容回退：圆角顶部（底部弹窗通用特征） */
 .android-native .rounded-t-3xl,

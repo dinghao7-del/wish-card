@@ -936,12 +936,13 @@ export function VoiceAssistant({ isOpen, onClose, onOpenQuadrant, onOpenCalendar
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[160] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm">
+        <div className="ui-voice-assistant-overlay fixed inset-0 z-[160] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
-            className="w-full max-w-lg bg-surface flex flex-col rounded-t-[2.5rem] sm:rounded-[2.5rem] h-[85svh] max-h-[calc(100svh-1rem)] sm:h-[650px] shadow-2xl overflow-hidden border border-outline-variant/10"
+            className="ui-voice-assistant-panel w-full max-w-lg bg-surface flex flex-col rounded-t-[2.5rem] sm:rounded-[2.5rem] h-[85svh] max-h-[calc(100svh-1rem)] sm:h-[650px] shadow-2xl overflow-hidden border border-outline-variant/10"
+            data-bottom-sheet="true"
           >
             {/* Header */}
             <div className="p-4 border-b border-outline-variant/10 flex items-start justify-between bg-surface-container shrink-0">

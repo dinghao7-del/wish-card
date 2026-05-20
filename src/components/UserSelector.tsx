@@ -16,7 +16,7 @@ interface UserSelectorProps {
 
 export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
   const { t } = useTranslation();
-  const { members, currentUser, setCurrentUser } = useFamily();
+  const { members, currentUser, setCurrentUser, guestMode } = useFamily();
   const [selectedUser, setSelectedUser] = useState<Member | null>(null);
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
@@ -63,15 +63,18 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
         return;
     }
 
-    const hasPin = hasSwitchCredential(member);
-                        
-    if (!hasPin) {
-      setCurrentUser(member, 'none');
-      onClose();
+    const memberForVerification = hasSwitchCredential(member)
+      ? member
+      : (guestMode || member.id.startsWith('guest-'))
+        ? { ...member, pin: '1234' }
+        : null;
+
+    if (!memberForVerification) {
+      setError(true);
       return;
     }
 
-    setSelectedUser(member);
+    setSelectedUser(memberForVerification);
     setPin('');
     setError(false);
   };
@@ -182,7 +185,11 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
                     </div>
                     <h3 className="text-xl font-black">{t('switch_profile.password_title', { name: selectedUser.name })}</h3>
                     <p className="text-xs text-on-surface-variant font-bold mt-1 text-center">
-                      {selectedUser.role === 'parent' ? t('switch_profile.parent_hint') : t('switch_profile.child_hint')}
+                      {(guestMode || selectedUser.id.startsWith('guest-'))
+                        ? t('switch_profile.guest_pin_hint', { defaultValue: '体验模式 PIN：1234' })
+                        : selectedUser.role === 'parent'
+                          ? t('switch_profile.parent_hint')
+                          : t('switch_profile.child_hint')}
                     </p>
                   </div>
 
