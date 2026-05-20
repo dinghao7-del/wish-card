@@ -8,6 +8,8 @@ const webDir = path.join(projectRoot, 'dist');
 const miniprogramPackagePath = path.join(projectRoot, 'miniprogram/package.json');
 const miniprogramAppMetaPath = path.join(projectRoot, 'miniprogram/src/lib/appMeta.ts');
 const miniprogramDistPath = path.join(projectRoot, 'miniprogram/dist/app.js');
+const miniprogramProjectConfigPath = path.join(projectRoot, 'miniprogram/project.config.json');
+const miniprogramDistProjectConfigPath = path.join(projectRoot, 'miniprogram/dist/project.config.json');
 const androidGradlePath = path.join(projectRoot, 'android/app/build.gradle');
 const androidGradleKtsPath = path.join(projectRoot, 'android/app/build.gradle.kts');
 const iosInfoPlistPath = path.join(projectRoot, 'ios/App/App/Info.plist');
@@ -76,6 +78,8 @@ function verifyPlatform(platform) {
 
 function verifyVersions() {
   const expectedVersion = JSON.parse(readText(miniprogramPackagePath)).version;
+  const miniprogramProjectConfig = JSON.parse(readText(miniprogramProjectConfigPath));
+  const miniprogramDistProjectConfig = JSON.parse(readText(miniprogramDistProjectConfigPath));
   const expectedBuild = String(Number(expectedVersion.split('.').at(-1) || '0'));
   const appMeta = readText(miniprogramAppMetaPath);
   const androidGradle = readText(androidGradlePath);
@@ -84,6 +88,16 @@ function verifyVersions() {
   const iosProject = readText(iosProjectPath);
 
   const checks = [
+    {
+      label: 'mini program root project miniprogramRoot',
+      value: miniprogramProjectConfig.miniprogramRoot || 'missing',
+      expected: 'dist/',
+    },
+    {
+      label: 'mini program dist project miniprogramRoot',
+      value: miniprogramDistProjectConfig.miniprogramRoot || 'missing',
+      expected: './',
+    },
     {
       label: 'mini program app meta',
       value: matchRequired(appMeta, /APP_VERSION\s*=\s*'v([^']+)'/, 'mini program APP_VERSION'),

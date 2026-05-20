@@ -43,6 +43,7 @@
     "disableSWC": true
   },
   "compileType": "miniprogram",
+  "miniprogramRoot": "dist/",
   "libVersion": "3.3.4",
   "appid": "wxd7b02a2e1b4451bf",
   "projectname": "wish-card",

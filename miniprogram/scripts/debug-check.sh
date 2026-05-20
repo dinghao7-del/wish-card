@@ -14,6 +14,7 @@ MINI_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 DIST_DIR="$MINI_DIR/dist"
 ERRORS=0
 WARNINGS=0
+TS_ERRORS=0
 
 # 颜色输出
 RED='\033[0;31m'
@@ -22,8 +23,8 @@ GREEN='\033[0;32m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-log_error()   { echo -e "${RED}❌ ERROR: $1${NC}"; ((ERRORS++)); }
-log_warn()    { echo -e "${YELLOW}⚠️  WARN:  $1${NC}"; ((WARNINGS++)); }
+log_error()   { echo -e "${RED}❌ ERROR: $1${NC}"; ((ERRORS+=1)); }
+log_warn()    { echo -e "${YELLOW}⚠️  WARN:  $1${NC}"; ((WARNINGS+=1)); }
 log_ok()      { echo -e "${GREEN}✅ OK:    $1${NC}"; }
 log_info()    { echo -e "${CYAN}ℹ️  INFO:  $1${NC}"; }
 
@@ -66,10 +67,10 @@ echo ""
 
 # ---- Check 2: 页面文件完整性 ----
 echo "--- [Check 2] 页面文件完整性 ---"
-for page in home tasks check-in rewards profile; do
-  PDIR="$DIST_DIR/pages/$page"
+for page in pages/home pages/tasks pkg/check-in pages/rewards pages/profile; do
+  PDIR="$DIST_DIR/$page"
   if [ ! -d "$PDIR" ]; then
-    log_error "pages/$page/ 目录缺失"
+    log_error "$page/ 目录缺失"
     continue
   fi
   MISSING=""
@@ -78,13 +79,13 @@ for page in home tasks check-in rewards profile; do
   done
   # wxss 是可选的（Taro 页面可能使用全局样式）
   if [ -n "$MISSING" ]; then
-    log_error "pages/$page/ 缺少: $MISSING"
+    log_error "$page/ 缺少: $MISSING"
   else
     JS_SIZE=$(wc -c < "$PDIR/index.js")
     if [ "$JS_SIZE" -lt 100 ]; then
-      log_warn "pages/$page/index.js 异常小 (${JS_SIZE}B) — 可能是空壳"
+      log_warn "$page/index.js 异常小 (${JS_SIZE}B) — 可能是空壳"
     else
-      log_ok "pages/$page (js=${JS_SIZE}B)"
+      log_ok "$page (js=${JS_SIZE}B)"
     fi
   fi
 done
