@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   displayCredentialPlaceholder,
+  getMemberForSwitchVerification,
   hashMemberCredential,
   hasSwitchCredential,
   isLocalCredentialHash,
@@ -45,5 +46,33 @@ describe('member credential helpers', () => {
     const hash = hashMemberCredential('member-1', 'pin', '2468');
     expect(hashMemberCredential('member-1', 'pin', hash)).toBe(hash);
     expect(displayCredentialPlaceholder(hash)).toBe('••••');
+  });
+
+  it('requires guest profile switching to verify the fallback PIN even when old local data has no PIN', () => {
+    const oldGuestMember = {
+      id: 'guest-son',
+      name: '小明',
+      avatar: '',
+      stars: 0,
+      role: 'child' as const,
+    };
+
+    const memberForSwitch = getMemberForSwitchVerification(oldGuestMember, { guestMode: true });
+
+    expect(memberForSwitch).toMatchObject({ id: 'guest-son', pin: '1234' });
+    expect(verifyMemberPinOrPassword(memberForSwitch!, '1234')).toBe('pin');
+    expect(verifyMemberPinOrPassword(memberForSwitch!, '0000')).toBeNull();
+  });
+
+  it('does not allow real family profile switching without an explicit PIN or password', () => {
+    const realMemberWithoutCredential = {
+      id: 'child-1',
+      name: '孩子',
+      avatar: '',
+      stars: 0,
+      role: 'child' as const,
+    };
+
+    expect(getMemberForSwitchVerification(realMemberWithoutCredential, { guestMode: false })).toBeNull();
   });
 });

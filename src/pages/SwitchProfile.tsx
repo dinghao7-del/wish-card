@@ -6,7 +6,7 @@ import { ArrowLeft, Settings, Star, UserPlus, Shield, X, Delete, Eraser } from '
 import { cn } from '../lib/utils';
 import { Member } from '../types';
 import { TextAvatar } from '../components/TextAvatar';
-import { hasSwitchCredential, verifyMemberPinOrPassword } from '../lib/memberCredentials';
+import { getMemberForSwitchVerification, verifyMemberPinOrPassword } from '../lib/memberCredentials';
 import { useTranslation } from 'react-i18next';
 
 export function SwitchProfile() {
@@ -55,11 +55,7 @@ export function SwitchProfile() {
       return;
     }
 
-    const memberForVerification = hasSwitchCredential(member)
-      ? member
-      : (guestMode || member.id.startsWith('guest-'))
-        ? { ...member, pin: '1234' }
-        : null;
+    const memberForVerification = getMemberForSwitchVerification(member, { guestMode });
 
     if (!memberForVerification) {
       setError(true);

@@ -67,6 +67,21 @@ export function hasSwitchCredential(member: Pick<Member, 'pin' | 'password'>): b
   return hasStoredCredential(member.pin) || hasStoredCredential(member.password);
 }
 
+export function getMemberForSwitchVerification<T extends Member>(
+  member: T,
+  options: { guestMode?: boolean; guestFallbackPin?: string } = {},
+): T | null {
+  if (hasSwitchCredential(member)) return member;
+
+  const shouldUseGuestFallback = options.guestMode || member.id.startsWith('guest-');
+  if (!shouldUseGuestFallback) return null;
+
+  return {
+    ...member,
+    pin: options.guestFallbackPin || '1234',
+  };
+}
+
 export function prepareMemberCredentialsForStorage<T extends Member>(member: T): T {
   return {
     ...member,

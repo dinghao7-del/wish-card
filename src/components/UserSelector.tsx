@@ -6,7 +6,7 @@ import { cn } from '../lib/utils';
 import { Member } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { TextAvatar } from './TextAvatar';
-import { hasSwitchCredential, verifyMemberPinOrPassword } from '../lib/memberCredentials';
+import { getMemberForSwitchVerification, verifyMemberPinOrPassword } from '../lib/memberCredentials';
 import { useTranslation } from 'react-i18next';
 
 interface UserSelectorProps {
@@ -63,11 +63,7 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
         return;
     }
 
-    const memberForVerification = hasSwitchCredential(member)
-      ? member
-      : (guestMode || member.id.startsWith('guest-'))
-        ? { ...member, pin: '1234' }
-        : null;
+    const memberForVerification = getMemberForSwitchVerification(member, { guestMode });
 
     if (!memberForVerification) {
       setError(true);
