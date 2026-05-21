@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFamily } from '../context/FamilyContext';
 import { useTranslation } from 'react-i18next';
-import { UserPlus, Camera, Lock, Eye, EyeOff, X, Check, User, Shield, Star } from 'lucide-react';
+import { UserPlus, Camera, Lock, Eye, EyeOff, X, Check, User, Shield, Star, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Member } from '../types';
 import { cn } from '../lib/utils';
@@ -32,6 +32,7 @@ export function AddMember() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
 
   const handleAvatarSelect = (avatarUrl: string) => {
@@ -39,26 +40,47 @@ export function AddMember() {
     setIsAvatarSelectorOpen(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleRoleChange = (role: 'parent' | 'child') => {
+    setFormData(prev => ({
+      ...prev,
+      role,
+      avatar: prev.role === role ? prev.avatar : getDefaultAvatar(role),
+      stars: role === 'child' ? (prev.stars || 0) : 0,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     if (!formData.name) return;
+    if (isSubmitting) return;
+
+    if (formData.role === 'child' && !formData.pin?.trim()) {
+      setError(t('add_member.error_pin_required', { defaultValue: '请给孩子设置 4 位切换 PIN，之后切换到孩子身份时需要验证' }));
+      return;
+    }
 
     if (formData.role === 'parent' && !formData.password?.trim()) {
       setError(t('welcome.register.error_password_required', { defaultValue: 'error password required' }) || t('add_member.error_password_required', { defaultValue: 'error password required' }));
       return;
     }
-    
-    addMember({
-      ...formData,
-      id: `m-${Date.now()}`,
-      stars: formData.stars || 0,
-      password: formData.password || '',
-      pin: formData.pin || ''
-    } as Member);
-    
-    navigate('/profile');
+
+    setIsSubmitting(true);
+    try {
+      await addMember({
+        ...formData,
+        id: `m-${Date.now()}`,
+        stars: formData.stars || 0,
+        password: formData.password || '',
+        pin: formData.pin || ''
+      } as Member);
+      navigate('/profile');
+    } catch (err: any) {
+      setError(err.message || t('add_member.error_create_failed', { defaultValue: '添加成员失败，请稍后再试' }));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -110,7 +132,7 @@ export function AddMember() {
             <div className="grid grid-cols-2 gap-3">
               <button 
                 type="button"
-                onClick={() => setFormData({ ...formData, role: 'child' })}
+                onClick={() => handleRoleChange('child')}
                 className={cn(
                   "flex items-center justify-center gap-2 py-4 rounded-[1.5rem] font-black text-sm transition-all border-2",
                   formData.role === 'child' 
@@ -123,7 +145,7 @@ export function AddMember() {
               </button>
               <button 
                 type="button"
-                onClick={() => setFormData({ ...formData, role: 'parent' })}
+                onClick={() => handleRoleChange('parent')}
                 className={cn(
                   "flex items-center justify-center gap-2 py-4 rounded-[1.5rem] font-black text-sm transition-all border-2",
                   formData.role === 'parent' 
@@ -157,7 +179,10 @@ export function AddMember() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">{t('add_member.pin', { defaultValue: 'pin' })}</label>
+            <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">
+              {t('add_member.pin', { defaultValue: 'pin' })}
+              {formData.role === 'child' && <span className="ml-1 text-red-500 text-[10px]">{t('add_member.password_required', { defaultValue: 'password required' })}</span>}
+            </label>
             <input 
               type="password" 
               maxLength={4}
@@ -211,10 +236,11 @@ export function AddMember() {
 
         <button 
           type="submit"
-          className="w-full bg-primary text-white font-black py-5 rounded-[2rem] flex items-center justify-center gap-3 shadow-xl shadow-primary/20 active:scale-95 transition-transform"
+          disabled={isSubmitting}
+          className="w-full bg-primary text-white font-black py-5 rounded-[2rem] flex items-center justify-center gap-3 shadow-xl shadow-primary/20 active:scale-95 transition-transform disabled:opacity-60"
         >
-          <UserPlus size={24} />
-          <span>{t('add_member.submit', { defaultValue: '提交' })}</span>
+          {isSubmitting ? <Loader2 size={24} className="animate-spin" /> : <UserPlus size={24} />}
+          <span>{isSubmitting ? t('common.saving', { defaultValue: '保存中' }) : t('add_member.submit', { defaultValue: '提交' })}</span>
         </button>
       </form>
 

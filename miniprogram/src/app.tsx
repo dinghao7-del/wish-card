@@ -6,7 +6,6 @@ import { useLaunch } from '@tarojs/taro';
 import Taro from '@tarojs/taro';
 import { Provider } from 'react-redux';
 import { configureStore } from './store';
-import { supabase } from './utils/supabase';
 import { isGuestMode } from './lib/guestData';
 import { hasLocalUser } from './utils/localUser';
 import PrivacyDialog from './components/privacy-dialog';
@@ -53,24 +52,10 @@ function App({ children }) {
           return;
         }
 
-        // 2. 检查 Supabase session
-        let user: any = null;
-        try {
-          const { data: { session } } = await supabase.client.auth.getSession();
-          user = session?.user || null;
-        } catch {}
-
-        if (user) {
-          console.log('[App] 已登录用户:', user.id);
-          return; // 已登录，留在当前页面
-        }
-
-        // 3. 未登录且非游客 → 跳转登录页
-        console.log('[App] 未登录，跳转登录页');
-        // 延迟一帧确保 tabBar 初始化完成
-        setTimeout(() => {
-          Taro.reLaunch({ url: '/pages/login/index' });
-        }, 100);
+        // 2. 远程账号不在启动阶段做网络校验。
+        // 微信开发者工具偶发 WebSocket/runtime timeout，启动页必须先可用，
+        // 真实账号数据由各业务页按需读取并处理失败态。
+        console.log('[App] 检测到远程登录凭证，保持当前页面');
       } catch (e) {
         console.error('[App] 路由守卫错误:', e);
       }

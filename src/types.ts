@@ -43,6 +43,10 @@ export interface Member {
   role: 'parent' | 'child';
   pin?: string; // Optional PIN for profile switching
   password?: string; // Formal password for admin login
+  gender?: 'boy' | 'girl' | '';
+  age?: number | null;
+  grade?: string;
+  birthDate?: string;
 }
 
 export interface Reward {

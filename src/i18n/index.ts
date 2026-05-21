@@ -66,6 +66,9 @@ const resources = {
         'password_title': '输入 {{name}} 的密码',
         'parent_hint': '🔒 这是个森林守护者账号',
         'child_hint': '🔓 快来解锁你的探险之路',
+        'missing_credential_title': '还没有设置切换密码',
+        'missing_credential_desc': '为了避免孩子和家长身份被随意切换，请先给这个成员设置 4 位 PIN 或密码。',
+        'set_credential': '去设置',
         'password_error': '密码错误，请再试一次 🍃'
       },
       'nav': {
@@ -1036,12 +1039,13 @@ const resources = {
         'role_parent': '家长',
         'initial_stars': '初始星星',
         'pin': '切换密码 (4位数字)',
-        'pin_placeholder': '选填：用于快速切换',
+        'pin_placeholder': '4位数字，切换孩子身份时验证',
         'password': '登录密码',
         'password_required': '(必填)',
         'password_placeholder_parent': '必填管理员密码',
         'password_placeholder_child': '选填：登录密码',
         'error_password_required': '管理员必须设置登录密码 🔐',
+        'error_pin_required': '请给孩子设置 4 位切换 PIN，之后切换到孩子身份时需要验证',
         'submit': '完成添加'
       },
       'import': {
@@ -1178,6 +1182,9 @@ const resources = {
         'password_title': 'Enter {{name}}’s password',
         'parent_hint': '🔒 This is a guardian account',
         'child_hint': '🔓 Unlock your adventure path',
+        'missing_credential_title': 'No switch password yet',
+        'missing_credential_desc': 'Set a 4-digit PIN or password first so family roles cannot be switched casually.',
+        'set_credential': 'Set it up',
         'password_error': 'Wrong password. Please try again 🍃'
       },
       'nav': {
@@ -2149,12 +2156,13 @@ const resources = {
         'role_parent': 'Parent',
         'initial_stars': 'Initial Stars',
         'pin': 'Quick Pin (4 digits)',
-        'pin_placeholder': 'Optional: for quick switch',
+        'pin_placeholder': '4 digits, required for child switching',
         'password': 'Login Password',
         'password_required': '(Required)',
         'password_placeholder_parent': 'Admin password required',
         'password_placeholder_child': 'Optional password',
         'error_password_required': 'Admins must set a login password 🔐',
+        'error_pin_required': 'Please set a 4-digit switch PIN for this child.',
         'submit': 'Complete'
       },
       'import': {

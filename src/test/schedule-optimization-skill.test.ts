@@ -4,6 +4,13 @@ import {
   sanitizeScheduleRecommendationForStage,
   type ScheduleRecommendation,
 } from '../lib/scheduleRecommendAI';
+import {
+  buildProfileFromChildMember,
+  canProceedFromBasicProfile,
+  getScheduleTargetChildIds,
+  inferGenderFromMember,
+} from '../lib/scheduleRecommendProfile';
+import type { Member } from '../types';
 
 describe('智能日程优化阶段技能', () => {
   it('幼儿园中班画像不进入学科强化模型', () => {
@@ -40,6 +47,72 @@ describe('智能日程优化阶段技能', () => {
     expect(skill.aiRules.join('\n')).toContain('禁止把幼儿园孩子包装成学科补习模型');
     expect(skill.sourceNotes.join('\n')).toContain('知乎/小红书');
     expect(skill.commercialRecommendationAngles).toEqual(expect.arrayContaining(['体能/感统', '绘本阅读', '亲子活动']));
+  });
+
+  it('已有孩子档案优先决定优化对象，不再强制询问性别', () => {
+    const son: Member = {
+      id: 'guest-son',
+      name: '小明',
+      avatar: '/avatars/boy/Cute_cartoon_avatar_of_an_Asia_2026-04-27T18-28-10.png',
+      stars: 186,
+      role: 'child',
+    };
+    const daughter: Member = {
+      id: 'guest-daughter',
+      name: '小红',
+      avatar: '/avatars/girl/Cute_cartoon_avatar_of_an_Asia_2026-04-27T18-30-54.png',
+      stars: 254,
+      role: 'child',
+    };
+    const parent: Member = {
+      id: 'guest-mom',
+      name: '妈妈',
+      avatar: '',
+      stars: 320,
+      role: 'parent',
+    };
+
+    expect(inferGenderFromMember(son)).toBe('boy');
+    expect(inferGenderFromMember(daughter)).toBe('girl');
+    expect(canProceedFromBasicProfile({ age: null, grade: '' }, son.id)).toBe(true);
+    expect(getScheduleTargetChildIds([parent, son, daughter], son.id)).toEqual([son.id]);
+  });
+
+  it('从选中的孩子生成画像时会带入阶段信息，避免幼儿园套用高年级模板', () => {
+    const child: Member = {
+      id: 'child-1',
+      name: '二宝',
+      avatar: '/avatars/boy/Cute_cartoon_avatar_of_an_Asia_2026-04-27T18-28-10.png',
+      stars: 0,
+      role: 'child',
+      age: 4,
+    };
+    const profile = buildProfileFromChildMember(child, {
+      gender: '',
+      age: null,
+      grade: '',
+      city: '',
+      schoolType: '',
+      strongSubjects: [],
+      weakSubjects: [],
+      existingInterests: [],
+      existingSchedules: [],
+      personality: [],
+      personalityOther: '',
+      homeworkDuration: null,
+      freeTimePerDay: null,
+      parentExpectation: [],
+      expectationOther: '',
+      budget: null,
+      screenTime: '',
+      healthNotes: '',
+      otherNotes: '',
+    });
+
+    expect(profile.gender).toBe('boy');
+    expect(profile.age).toBe(4);
+    expect(profile.grade).toBe('幼儿园中班');
+    expect(buildScheduleOptimizationSkill(profile).stage.key).toBe('preschool');
   });
 
   it('小学低年级只问基础学习能力，不提前引入初高中学科', () => {

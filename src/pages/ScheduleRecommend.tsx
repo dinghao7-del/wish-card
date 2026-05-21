@@ -40,6 +40,13 @@ import { showToastGlobal } from '../components/Toast';
 import { saveGuestPlan } from '../lib/guestPlans';
 import { buildPlanExecutionTaskBundle, buildUiTaskFromDraft } from '../lib/planExecutionTasks';
 import { localeCountText, localeText } from '../lib/localeText';
+import {
+  buildProfileFromChildMember,
+  canProceedFromBasicProfile,
+  formatChildScheduleSubject,
+  getScheduleTargetChildIds,
+} from '../lib/scheduleRecommendProfile';
+import { TextAvatar } from '../components/TextAvatar';
 
 // ==================== 常量 ====================
 
@@ -392,6 +399,9 @@ export function ScheduleRecommend() {
   const [isRefining, setIsRefining] = useState(false);
   const [isSavingPlan, setIsSavingPlan] = useState(false);
   const [activeTab, setActiveTab] = useState<'weekday' | 'weekend' | 'activities' | 'advice'>('weekday');
+  const childMembers = members.filter(member => member.role === 'child');
+  const [selectedChildId, setSelectedChildId] = useState<string>('');
+  const selectedChild = childMembers.find(member => member.id === selectedChildId);
   const scheduleSkill = buildScheduleOptimizationSkill(profile);
 
   // 滚动引用
@@ -408,6 +418,13 @@ export function ScheduleRecommend() {
     loadConsent();
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    if (selectedChildId || childMembers.length === 0) return;
+    const firstChild = childMembers[0];
+    setSelectedChildId(firstChild.id);
+    updateProfileForStage(buildProfileFromChildMember(firstChild, getDefaultChildProfile()));
+  }, [childMembers, selectedChildId]);
 
   useEffect(() => {
     if (activeTab !== 'activities' || !recommendation?.recommendedActivities.length) return;
@@ -463,15 +480,19 @@ export function ScheduleRecommend() {
     { title: localeText(i18n.language, { 'zh-CN': '推荐方案', 'en-US': 'Plan', 'ja-JP': 'プラン', 'ko-KR': '추천안', 'es-ES': 'Plan', 'fr-FR': 'Plan' }), icon: Star, desc: localeText(i18n.language, { 'zh-CN': '您的个性化日程推荐', 'en-US': 'Your personalized schedule', 'ja-JP': '個別の日程提案', 'ko-KR': '맞춤 일정 추천', 'es-ES': 'Tu agenda personalizada', 'fr-FR': 'Votre planning personnalisé' }) },
   ];
 
-  // 是否已填写性别
-  const hasGender = profile.gender !== '';
-
-  // 根据性别获取兴趣推荐选项
+  // 根据孩子画像获取兴趣推荐选项；没有性别信息时使用通用年龄段方向，不强迫家长补性别。
   const interestOptions = profile.gender === 'boy'
     ? scheduleSkill.interestOptions.boy
     : profile.gender === 'girl'
       ? scheduleSkill.interestOptions.girl
       : scheduleSkill.interestOptions.all;
+
+  const handleSelectChild = (childId: string) => {
+    const child = childMembers.find(member => member.id === childId);
+    if (!child) return;
+    setSelectedChildId(child.id);
+    updateProfileForStage(buildProfileFromChildMember(child, getDefaultChildProfile()));
+  };
 
   const updateProfileForStage = (next: ChildProfile) => {
     setProfile(sanitizeChildProfileForScheduleStage(next));
@@ -534,11 +555,12 @@ export function ScheduleRecommend() {
       setIsSavingPlan(true);
       const schedule = scheduleRecommendationToDailyScheduleTemplate(recommendation, 'weekday');
       const planId = `guest-ai-${Date.now()}`;
-      const planName = `${profile.grade || profile.age || '孩子'}智能日程优化方案`;
+      const planName = `${selectedChild?.name || profile.grade || profile.age || '孩子'}智能日程优化方案`;
       const planType = 'AI智能日程';
       const metadata = {
         ...schedule,
         grade: profile.grade,
+        selectedChildId: selectedChildId || null,
         aiRecommendation: recommendation,
         aiProfile: profile,
         source: 'ai_schedule_recommend',
@@ -555,7 +577,7 @@ export function ScheduleRecommend() {
           sortOrder: Date.now(),
           actorMemberId: currentUser.id,
         });
-        const childIds = members.filter(member => member.role === 'child').map(member => member.id);
+        const childIds = getScheduleTargetChildIds(members, selectedChildId);
         const taskBundle = buildPlanExecutionTaskBundle({
           planId,
           planName,
@@ -588,11 +610,12 @@ export function ScheduleRecommend() {
     try {
       const schedule = scheduleRecommendationToDailyScheduleTemplate(recommendation, 'weekday');
       const plan = await getDataLayer().addPlan({
-        name: `${profile.grade || profile.age || '孩子'}智能日程优化方案`,
+        name: `${selectedChild?.name || profile.grade || profile.age || '孩子'}智能日程优化方案`,
         type: profile.grade ? `${profile.grade} AI方案` : 'AI智能日程',
         metadata: {
           ...schedule,
           grade: profile.grade,
+          selectedChildId: selectedChildId || null,
           aiRecommendation: recommendation,
           aiProfile: profile,
           source: 'ai_schedule_recommend',
@@ -616,7 +639,7 @@ export function ScheduleRecommend() {
 
   const canProceed = (): boolean => {
     switch (step) {
-      case 0: return hasGender && (profile.age !== null || profile.grade !== '');
+      case 0: return canProceedFromBasicProfile(profile, selectedChildId);
       case 1: return true; // 可选填
       case 2: return true;
       case 3: return true;
@@ -642,38 +665,105 @@ export function ScheduleRecommend() {
 
   const renderBasicInfo = () => (
     <div className="space-y-6">
-      {/* 性别选择 */}
       <div>
         <label className="block text-sm font-black text-on-surface mb-3">
-          {localeText(i18n.language, { 'zh-CN': '孩子的性别', 'en-US': "Child's gender", 'ja-JP': '子どもの性別', 'ko-KR': '아이 성별', 'es-ES': 'Sexo del niño', 'fr-FR': 'Sexe de l’enfant' })} <span className="text-danger">*</span>
+          {localeText(i18n.language, { 'zh-CN': '这次要优化哪个孩子？', 'en-US': 'Which child should we optimize for?', 'ja-JP': 'どの子の日程を整えますか？', 'ko-KR': '어느 아이의 일정을 최적화할까요?', 'es-ES': '¿Para qué niño optimizamos?', 'fr-FR': 'Pour quel enfant optimiser ?' })}
         </label>
-        <div className="flex gap-4">
-          <button
-            onClick={() => setProfile({ ...profile, gender: 'girl', existingInterests: [] })}
-            className={cn(
-              "flex-1 py-5 rounded-2xl border-2 text-center transition-all",
-              profile.gender === 'girl'
-                ? "bg-primary/5 border-primary shadow-sm"
-                : "bg-surface dark:bg-surface-container-high border-outline-variant/10 hover:border-primary/30"
-            )}
-          >
-            <span className="text-3xl block mb-1">👧</span>
-            <span className="text-sm font-black block">{localeText(i18n.language, { 'zh-CN': '女孩', 'en-US': 'Girl', 'ja-JP': '女の子', 'ko-KR': '여아', 'es-ES': 'Niña', 'fr-FR': 'Fille' })}</span>
-          </button>
-          <button
-            onClick={() => setProfile({ ...profile, gender: 'boy', existingInterests: [] })}
-            className={cn(
-              "flex-1 py-5 rounded-2xl border-2 text-center transition-all",
-              profile.gender === 'boy'
-                ? "bg-primary/5 border-primary shadow-sm"
-                : "bg-surface dark:bg-surface-container-high border-outline-variant/10 hover:border-primary/30"
-            )}
-          >
-            <span className="text-3xl block mb-1">👦</span>
-            <span className="text-sm font-black block">{localeText(i18n.language, { 'zh-CN': '男孩', 'en-US': 'Boy', 'ja-JP': '男の子', 'ko-KR': '남아', 'es-ES': 'Niño', 'fr-FR': 'Garçon' })}</span>
-          </button>
-        </div>
+        {childMembers.length > 0 ? (
+          <div className="grid grid-cols-2 gap-3">
+            {childMembers.map(child => (
+              <button
+                key={child.id}
+                type="button"
+                onClick={() => handleSelectChild(child.id)}
+                className={cn(
+                  "flex items-center gap-3 rounded-2xl border-2 p-3 text-left transition-all",
+                  selectedChildId === child.id
+                    ? "bg-primary/5 border-primary shadow-sm"
+                    : "bg-surface dark:bg-surface-container-high border-outline-variant/10 hover:border-primary/30"
+                )}
+              >
+                <div className="h-12 w-12 shrink-0 rounded-2xl bg-surface-container-low flex items-center justify-center overflow-hidden">
+                  <TextAvatar src={child.avatar} name={child.name} size={44} />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-black text-on-surface">{child.name}</p>
+                  <p className="truncate text-[10px] font-bold text-on-surface-variant/50">
+                    {formatChildScheduleSubject(child, buildProfileFromChildMember(child, getDefaultChildProfile()))}
+                  </p>
+                </div>
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => navigate('/profile/members/add?from=schedule-recommend')}
+              className="rounded-2xl border-2 border-dashed border-primary/25 bg-primary/5 p-3 text-sm font-black text-primary"
+            >
+              {localeText(i18n.language, { 'zh-CN': '+ 新增孩子', 'en-US': '+ Add child', 'ja-JP': '+ 子どもを追加', 'ko-KR': '+ 아이 추가', 'es-ES': '+ Añadir niño', 'fr-FR': '+ Ajouter enfant' })}
+            </button>
+          </div>
+        ) : (
+          <div className="rounded-2xl border-2 border-dashed border-primary/20 bg-primary/5 p-4">
+            <p className="text-sm font-bold text-on-surface-variant/70">
+              {localeText(i18n.language, {
+                'zh-CN': '还没有孩子档案。先添加孩子，之后 AI 会自动读取年龄和阶段，日程建议才不会乱套。',
+                'en-US': 'No child profile yet. Add one first so AI can use the right age and stage.',
+                'ja-JP': '子どものプロフィールがまだありません。先に追加すると年齢段階に合う提案になります。',
+                'ko-KR': '아이 프로필이 아직 없습니다. 먼저 추가하면 나이와 단계에 맞게 추천합니다.',
+                'es-ES': 'Aún no hay perfil infantil. Añádelo para ajustar edad y etapa.',
+                'fr-FR': 'Aucun profil enfant. Ajoutez-en un pour adapter l’âge et l’étape.',
+              })}
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate('/profile/members/add?from=schedule-recommend')}
+              className="mt-3 rounded-2xl bg-primary px-4 py-2.5 text-sm font-black text-white"
+            >
+              {localeText(i18n.language, { 'zh-CN': '添加孩子档案', 'en-US': 'Add child profile', 'ja-JP': '子どもを追加', 'ko-KR': '아이 프로필 추가', 'es-ES': 'Añadir perfil', 'fr-FR': 'Ajouter le profil' })}
+            </button>
+          </div>
+        )}
+        {selectedChild && (
+          <p className="mt-2 text-[11px] font-bold text-primary/80">
+            {localeText(i18n.language, {
+              'zh-CN': `已选择 ${selectedChild.name}，下面只补充会影响日程的关键信息。`,
+              'en-US': `${selectedChild.name} selected. Only add details that affect the schedule below.`,
+              'ja-JP': `${selectedChild.name}を選択。日程に関わる情報だけ補足します。`,
+              'ko-KR': `${selectedChild.name} 선택됨. 일정에 필요한 정보만 보완합니다.`,
+              'es-ES': `${selectedChild.name} seleccionado. Completa solo datos útiles para la agenda.`,
+              'fr-FR': `${selectedChild.name} sélectionné. Complétez seulement les infos utiles.`,
+            })}
+          </p>
+        )}
       </div>
+
+      {childMembers.length === 0 && (
+        <div>
+          <label className="block text-sm font-black text-on-surface mb-3">
+            {localeText(i18n.language, { 'zh-CN': '临时填写孩子性别（可选）', 'en-US': 'Temporary gender (optional)', 'ja-JP': '性別（任意）', 'ko-KR': '성별(선택)', 'es-ES': 'Sexo temporal (opcional)', 'fr-FR': 'Genre temporaire (facultatif)' })}
+          </label>
+          <div className="flex gap-3">
+            {([
+              ['boy', localeText(i18n.language, { 'zh-CN': '男孩', 'en-US': 'Boy', 'ja-JP': '男の子', 'ko-KR': '남아', 'es-ES': 'Niño', 'fr-FR': 'Garçon' })],
+              ['girl', localeText(i18n.language, { 'zh-CN': '女孩', 'en-US': 'Girl', 'ja-JP': '女の子', 'ko-KR': '여아', 'es-ES': 'Niña', 'fr-FR': 'Fille' })],
+            ] as const).map(([gender, label]) => (
+              <button
+                key={gender}
+                type="button"
+                onClick={() => setProfile({ ...profile, gender, existingInterests: [] })}
+                className={cn(
+                  "flex-1 rounded-2xl border-2 py-3 text-sm font-black transition-all",
+                  profile.gender === gender
+                    ? "bg-primary/5 border-primary text-primary"
+                    : "bg-surface dark:bg-surface-container-high border-outline-variant/10 text-on-surface-variant/60"
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 年级 */}
       <div>
@@ -838,8 +928,8 @@ export function ScheduleRecommend() {
         <p className="text-xs font-bold text-primary flex items-center gap-2">
           <Lightbulb size={14} />
           {localeText(i18n.language, {
-            'zh-CN': `以下是更适合${scheduleSkill.stage.shortLabel}孩子的方向，性别只作弱参考，最终以孩子真实兴趣为准`,
-            'en-US': 'These are age-appropriate directions. Gender is only a light reference; the child’s real interest matters most.',
+            'zh-CN': `以下是更适合${scheduleSkill.stage.shortLabel}孩子的方向，最终以孩子真实兴趣和家里时间为准`,
+            'en-US': 'These are age-appropriate directions. The child’s real interest and family schedule matter most.',
             'ja-JP': '年齢に合う方向です。性別は軽い参考にし、本人の興味を優先します。',
             'ko-KR': '연령에 맞는 방향입니다. 성별은 참고만 하고 아이의 실제 관심을 우선합니다.',
             'es-ES': 'Son opciones adecuadas para la edad. El género solo orienta; manda el interés real del niño.',
@@ -1096,12 +1186,12 @@ export function ScheduleRecommend() {
               </h3>
               <p className="text-[10px] font-bold text-on-surface-variant/40">
                 {localeText(i18n.language, {
-                  'zh-CN': `基于 ${profile.age || '对应年级'} 岁${profile.gender === 'boy' ? '男孩' : '女孩'}${profile.grade ? ` · ${profile.grade}` : ''} 的个性化方案`,
-                  'en-US': `Personalized for ${profile.age || 'this stage'} yrs · ${profile.gender === 'boy' ? 'boy' : 'girl'}${profile.grade ? ` · ${gradeLabel(profile.grade, i18n.language)}` : ''}`,
-                  'ja-JP': `${profile.age || 'この段階'}歳・${profile.gender === 'boy' ? '男の子' : '女の子'}${profile.grade ? `・${gradeLabel(profile.grade, i18n.language)}` : ''}向け`,
-                  'ko-KR': `${profile.age || '해당 단계'}세 · ${profile.gender === 'boy' ? '남아' : '여아'}${profile.grade ? ` · ${gradeLabel(profile.grade, i18n.language)}` : ''} 맞춤`,
-                  'es-ES': `Personalizado para ${profile.age || 'esta etapa'} años · ${profile.gender === 'boy' ? 'niño' : 'niña'}${profile.grade ? ` · ${gradeLabel(profile.grade, i18n.language)}` : ''}`,
-                  'fr-FR': `Personnalisé pour ${profile.age || 'cette étape'} ans · ${profile.gender === 'boy' ? 'garçon' : 'fille'}${profile.grade ? ` · ${gradeLabel(profile.grade, i18n.language)}` : ''}`,
+                  'zh-CN': `基于 ${formatChildScheduleSubject(selectedChild, profile)} 的个性化方案`,
+                  'en-US': `Personalized for ${selectedChild?.name || 'the child'} · ${profile.grade ? gradeLabel(profile.grade, i18n.language) : (profile.age ? `${profile.age} yrs` : 'current stage')}`,
+                  'ja-JP': `${selectedChild?.name || '子ども'}・${profile.grade ? gradeLabel(profile.grade, i18n.language) : (profile.age ? `${profile.age}歳` : '現在の段階')}向け`,
+                  'ko-KR': `${selectedChild?.name || '아이'} · ${profile.grade ? gradeLabel(profile.grade, i18n.language) : (profile.age ? `${profile.age}세` : '현재 단계')} 맞춤`,
+                  'es-ES': `Personalizado para ${selectedChild?.name || 'el niño'} · ${profile.grade ? gradeLabel(profile.grade, i18n.language) : (profile.age ? `${profile.age} años` : 'etapa actual')}`,
+                  'fr-FR': `Personnalisé pour ${selectedChild?.name || 'l’enfant'} · ${profile.grade ? gradeLabel(profile.grade, i18n.language) : (profile.age ? `${profile.age} ans` : 'étape actuelle')}`,
                 })}
               </p>
             </div>

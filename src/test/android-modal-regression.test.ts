@@ -22,7 +22,9 @@ describe('Android modal and sheet regressions', () => {
     expect(css).toContain('.android-native .ui-app-modal-panel[data-bottom-sheet="true"]');
     expect(css).toContain('height: 100dvh !important;');
     expect(css).toContain('padding: 0 !important;');
-    expect(css).toContain('height: calc(100dvh - var(--android-safe-top) - 8px) !important;');
+    expect(css).toContain('--android-modal-gap');
+    expect(css).toContain('height: calc(100dvh - var(--android-safe-top) - var(--android-safe-bottom) - var(--android-modal-gap)) !important;');
+    expect(css).toContain('margin: 0 auto var(--android-safe-bottom) !important;');
     expect(css).toContain('position: relative !important;');
     expect(css).toContain('min-height: 0 !important;');
     expect(css).toContain('flex: 0 0 auto !important;');

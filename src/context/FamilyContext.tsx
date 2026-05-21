@@ -1355,7 +1355,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   const addMember = useCallback(async (member: Member) => {
     if (currentUser && !canManageMembers(currentUser)) {
       deny('只有家长可以添加家庭成员');
-      return;
+      throw new Error('只有家长可以添加家庭成员');
     }
     // 访客模式：纯前端本地添加
     if (guestModeRef.current) {

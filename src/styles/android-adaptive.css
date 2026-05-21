@@ -30,8 +30,9 @@
 /* Android 上字体偏小修正（部分 Android 设备默认字体较小） */
 .android-native {
   font-size: 100%;
-  --android-safe-top: max(24px, env(safe-area-inset-top, 0px));
-  --android-safe-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  --android-safe-top: max(56px, env(safe-area-inset-top, 0px));
+  --android-safe-bottom: max(18px, env(safe-area-inset-bottom, 0px));
+  --android-modal-gap: 8px;
 }
 
 /* Android WebView 常见透明状态栏会让 fixed 元素贴到系统栏下面 */
@@ -183,7 +184,7 @@
 /* 修复：Tailwind JIT 转义类名选择器在部分构建下无效，改用通用圆角底部弹窗匹配 */
 .android-native [data-bottom-sheet="true"],
 .android-native .bottom-sheet {
-  padding-bottom: var(--android-safe-bottom);
+  padding-bottom: var(--android-safe-bottom) !important;
 }
 
 .android-native .ui-detail-overlay,
@@ -210,9 +211,9 @@
   right: auto !important;
   width: min(100vw, 32rem) !important;
   max-width: 32rem !important;
-  height: calc(100dvh - var(--android-safe-top) - 8px) !important;
-  max-height: calc(100dvh - var(--android-safe-top) - 8px) !important;
-  margin: 0 auto !important;
+  height: calc(100dvh - var(--android-safe-top) - var(--android-safe-bottom) - var(--android-modal-gap)) !important;
+  max-height: calc(100dvh - var(--android-safe-top) - var(--android-safe-bottom) - var(--android-modal-gap)) !important;
+  margin: 0 auto var(--android-safe-bottom) !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
@@ -233,8 +234,8 @@
   .android-native .ui-detail-sheet,
   .android-native .ui-voice-assistant-panel,
   .android-native .ui-app-modal-panel[data-bottom-sheet="true"] {
-    height: calc(100svh - var(--android-safe-top) - 8px) !important;
-    max-height: calc(100svh - var(--android-safe-top) - 8px) !important;
+    height: calc(100svh - var(--android-safe-top) - var(--android-safe-bottom) - var(--android-modal-gap)) !important;
+    max-height: calc(100svh - var(--android-safe-top) - var(--android-safe-bottom) - var(--android-modal-gap)) !important;
   }
 }
 
@@ -302,8 +303,8 @@
 }
 
 .android-native .ui-voice-assistant-panel {
-  height: calc(100dvh - var(--android-safe-top) - 8px) !important;
-  max-height: calc(100dvh - var(--android-safe-top) - 8px) !important;
+  height: calc(100dvh - var(--android-safe-top) - var(--android-safe-bottom) - var(--android-modal-gap)) !important;
+  max-height: calc(100dvh - var(--android-safe-top) - var(--android-safe-bottom) - var(--android-modal-gap)) !important;
 }
 /* 兼容回退：圆角顶部（底部弹窗通用特征） */
 .android-native .rounded-t-3xl,

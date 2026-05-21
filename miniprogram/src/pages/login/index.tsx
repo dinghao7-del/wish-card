@@ -78,21 +78,9 @@ export default function Login() {
         Taro.switchTab({ url: '/pages/home/index' });
         return;
       }
-      const authToken = Taro.getStorageSync(SUPABASE_AUTH_STORAGE_KEY);
-      if (!authToken) return;
-
-      // 使用 v2 兼容 API：优先 getSession，回退 getUser
-      let user: any = null;
-      try {
-        const { data: { session } } = await supabase.client.auth.getSession();
-        user = session?.user || null;
-      } catch {
-        const { data: { user: u } } = await supabase.client.auth.getUser();
-        user = u || null;
-      }
-      if (user) {
-        Taro.switchTab({ url: '/pages/home/index' });
-      }
+      // 真实账号 session 不在登录页首屏自动校验。
+      // 这样即使 DevTools 或网络临时不可用，欢迎页和游客入口也能稳定出现。
+      Taro.getStorageSync(SUPABASE_AUTH_STORAGE_KEY);
     } catch {}
   };
 

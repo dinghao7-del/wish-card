@@ -6,7 +6,7 @@ import { ArrowLeft, Settings, Star, UserPlus, Shield, X, Delete, Eraser } from '
 import { cn } from '../lib/utils';
 import { Member } from '../types';
 import { TextAvatar } from '../components/TextAvatar';
-import { getMemberForSwitchVerification, verifyMemberPinOrPassword } from '../lib/memberCredentials';
+import { getMemberForSwitchVerification, hasSwitchCredential, verifyMemberPinOrPassword } from '../lib/memberCredentials';
 import { useTranslation } from 'react-i18next';
 
 export function SwitchProfile() {
@@ -16,6 +16,7 @@ export function SwitchProfile() {
   const [selectedUser, setSelectedUser] = useState<Member | null>(null);
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
+  const selectedUserNeedsCredential = Boolean(selectedUser && !guestMode && !selectedUser.id.startsWith('guest-') && !hasSwitchCredential(selectedUser));
 
   // Clear local state when unmounting
   useEffect(() => {
@@ -57,12 +58,7 @@ export function SwitchProfile() {
 
     const memberForVerification = getMemberForSwitchVerification(member, { guestMode });
 
-    if (!memberForVerification) {
-      setError(true);
-      return;
-    }
-
-    setSelectedUser(memberForVerification);
+    setSelectedUser(memberForVerification || member);
     setPin('');
     setError(false);
   };
@@ -164,9 +160,15 @@ export function SwitchProfile() {
                 <div className="mb-4 shadow-lg">
                   <TextAvatar src={selectedUser.avatar} name={selectedUser.name} size={80} className="border-4 border-primary/20" />
                 </div>
-                <h3 className="text-xl font-black">{t('switch_profile.password_title', { name: selectedUser.name })}</h3>
-                <p className="text-xs text-on-surface-variant font-bold mt-1">
-                  {(guestMode || selectedUser.id.startsWith('guest-'))
+                <h3 className="text-xl font-black">
+                  {selectedUserNeedsCredential
+                    ? t('switch_profile.missing_credential_title', { defaultValue: '还没有设置切换密码' })
+                    : t('switch_profile.password_title', { name: selectedUser.name })}
+                </h3>
+                <p className="text-xs text-on-surface-variant font-bold mt-1 text-center">
+                  {selectedUserNeedsCredential
+                    ? t('switch_profile.missing_credential_desc', { defaultValue: '为了避免孩子和家长身份被随意切换，请先给这个成员设置 4 位 PIN 或密码。' })
+                    : (guestMode || selectedUser.id.startsWith('guest-'))
                     ? t('switch_profile.guest_pin_hint', { defaultValue: '体验模式 PIN：1234' })
                     : selectedUser.role === 'parent'
                       ? t('switch_profile.parent_hint')
@@ -174,54 +176,64 @@ export function SwitchProfile() {
                 </p>
               </div>
 
-              {/* PIN Dots */}
-              <div className="flex justify-center gap-4 mb-10">
-                 {[0, 1, 2, 3].map(i => (
-                    <motion.div 
-                      key={i}
-                      animate={error ? { x: [0, -5, 5, -5, 5, 0] } : {}}
-                      className={cn(
-                        "w-4 h-4 rounded-full border-2 transition-all duration-200",
-                        pin.length > i ? "bg-primary border-primary scale-110" : "bg-transparent border-outline-variant",
-                        error && "border-danger"
-                      )}
-                    />
-                 ))}
-              </div>
+              {selectedUserNeedsCredential ? (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/profile/edit/${selectedUser.id}`)}
+                  className="mx-auto flex min-h-12 w-full max-w-[260px] items-center justify-center rounded-2xl bg-primary px-5 text-sm font-black text-white shadow-lg shadow-primary/20"
+                >
+                  {t('switch_profile.set_credential', { defaultValue: '去设置' })}
+                </button>
+              ) : (
+                <>
+                  <div className="flex justify-center gap-4 mb-10">
+                    {[0, 1, 2, 3].map(i => (
+                      <motion.div
+                        key={i}
+                        animate={error ? { x: [0, -5, 5, -5, 5, 0] } : {}}
+                        className={cn(
+                          "w-4 h-4 rounded-full border-2 transition-all duration-200",
+                          pin.length > i ? "bg-primary border-primary scale-110" : "bg-transparent border-outline-variant",
+                          error && "border-danger"
+                        )}
+                      />
+                    ))}
+                  </div>
 
-              {/* Pad */}
-              <div className="grid grid-cols-3 gap-4">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-                  <button 
-                    key={num}
-                    onClick={() => handlePinInput(num.toString())}
-                    className="aspect-square rounded-[1.5rem] bg-surface-container-low text-xl font-black flex items-center justify-center hover:bg-primary/10 hover:text-primary active:scale-90 transition-all border border-outline-variant/5"
-                  >
-                    {num}
-                  </button>
-                ))}
-                <button 
-                   onClick={() => setPin('')}
-                   className="aspect-square rounded-[1.5rem] bg-surface-container-low flex items-center justify-center text-on-surface-variant/40 hover:text-danger active:scale-90 transition-all border border-outline-variant/5"
-                >
-                  <Eraser size={20} />
-                </button>
-                <button 
-                   onClick={() => handlePinInput('0')}
-                   className="aspect-square rounded-[1.5rem] bg-surface-container-low text-xl font-black flex items-center justify-center hover:bg-primary/10 hover:text-primary active:scale-90 transition-all border border-outline-variant/5"
-                >
-                  0
-                </button>
-                <button 
-                   onClick={() => setPin(prev => prev.slice(0, -1))}
-                   className="aspect-square rounded-[1.5rem] bg-surface-container-low flex items-center justify-center text-on-surface-variant/40 hover:text-warning active:scale-90 transition-all border border-outline-variant/5"
-                >
-                  <Delete size={20} />
-                </button>
-              </div>
-              
-              {error && (
-                <p className="text-danger text-[10px] font-black text-center mt-6 animate-bounce">{t('switch_profile.password_error')}</p>
+                  <div className="grid grid-cols-3 gap-4">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                      <button
+                        key={num}
+                        onClick={() => handlePinInput(num.toString())}
+                        className="aspect-square rounded-[1.5rem] bg-surface-container-low text-xl font-black flex items-center justify-center hover:bg-primary/10 hover:text-primary active:scale-90 transition-all border border-outline-variant/5"
+                      >
+                        {num}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setPin('')}
+                      className="aspect-square rounded-[1.5rem] bg-surface-container-low flex items-center justify-center text-on-surface-variant/40 hover:text-danger active:scale-90 transition-all border border-outline-variant/5"
+                    >
+                      <Eraser size={20} />
+                    </button>
+                    <button
+                      onClick={() => handlePinInput('0')}
+                      className="aspect-square rounded-[1.5rem] bg-surface-container-low text-xl font-black flex items-center justify-center hover:bg-primary/10 hover:text-primary active:scale-90 transition-all border border-outline-variant/5"
+                    >
+                      0
+                    </button>
+                    <button
+                      onClick={() => setPin(prev => prev.slice(0, -1))}
+                      className="aspect-square rounded-[1.5rem] bg-surface-container-low flex items-center justify-center text-on-surface-variant/40 hover:text-warning active:scale-90 transition-all border border-outline-variant/5"
+                    >
+                      <Delete size={20} />
+                    </button>
+                  </div>
+
+                  {error && (
+                    <p className="text-danger text-[10px] font-black text-center mt-6 animate-bounce">{t('switch_profile.password_error')}</p>
+                  )}
+                </>
               )}
             </motion.div>
           </motion.div>

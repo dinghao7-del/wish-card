@@ -6,7 +6,7 @@ import { cn } from '../lib/utils';
 import { Member } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { TextAvatar } from './TextAvatar';
-import { getMemberForSwitchVerification, verifyMemberPinOrPassword } from '../lib/memberCredentials';
+import { getMemberForSwitchVerification, hasSwitchCredential, verifyMemberPinOrPassword } from '../lib/memberCredentials';
 import { useTranslation } from 'react-i18next';
 
 interface UserSelectorProps {
@@ -20,6 +20,7 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
   const [selectedUser, setSelectedUser] = useState<Member | null>(null);
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
+  const selectedUserNeedsCredential = Boolean(selectedUser && !guestMode && !selectedUser.id.startsWith('guest-') && !hasSwitchCredential(selectedUser));
   const navigate = useNavigate();
 
   // Reset internal state when modal closes to prevent UI soft-locks
@@ -64,13 +65,7 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
     }
 
     const memberForVerification = getMemberForSwitchVerification(member, { guestMode });
-
-    if (!memberForVerification) {
-      setError(true);
-      return;
-    }
-
-    setSelectedUser(memberForVerification);
+    setSelectedUser(memberForVerification || member);
     setPin('');
     setError(false);
   };
@@ -179,9 +174,15 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
                     <div className="mb-4 shadow-lg">
                       <TextAvatar src={selectedUser.avatar} name={selectedUser.name} size={80} className="border-4 border-primary/20" />
                     </div>
-                    <h3 className="text-xl font-black">{t('switch_profile.password_title', { name: selectedUser.name })}</h3>
+                    <h3 className="text-xl font-black">
+                      {selectedUserNeedsCredential
+                        ? t('switch_profile.missing_credential_title', { defaultValue: '还没有设置切换密码' })
+                        : t('switch_profile.password_title', { name: selectedUser.name })}
+                    </h3>
                     <p className="text-xs text-on-surface-variant font-bold mt-1 text-center">
-                      {(guestMode || selectedUser.id.startsWith('guest-'))
+                      {selectedUserNeedsCredential
+                        ? t('switch_profile.missing_credential_desc', { defaultValue: '为了避免孩子和家长身份被随意切换，请先给这个成员设置 4 位 PIN 或密码。' })
+                        : (guestMode || selectedUser.id.startsWith('guest-'))
                         ? t('switch_profile.guest_pin_hint', { defaultValue: '体验模式 PIN：1234' })
                         : selectedUser.role === 'parent'
                           ? t('switch_profile.parent_hint')
@@ -189,6 +190,21 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
                     </p>
                   </div>
 
+                  {selectedUserNeedsCredential ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const targetId = selectedUser.id;
+                        setSelectedUser(null);
+                        onClose();
+                        navigate(`/profile/edit/${targetId}`);
+                      }}
+                      className="mx-auto flex min-h-12 w-full max-w-[260px] items-center justify-center rounded-2xl bg-primary px-5 text-sm font-black text-white shadow-lg shadow-primary/20"
+                    >
+                      {t('switch_profile.set_credential', { defaultValue: '去设置' })}
+                    </button>
+                  ) : (
+                    <>
                   <div className="flex justify-center gap-4 mb-8">
                     {[0, 1, 2, 3].map(i => (
                         <motion.div 
@@ -235,6 +251,8 @@ export function UserSelector({ isOpen, onClose }: UserSelectorProps) {
                   
                   {error && (
                     <p className="text-danger text-[10px] font-black text-center mt-4 animate-bounce">{t('switch_profile.password_error')}</p>
+                  )}
+                    </>
                   )}
                 </motion.div>
               )}

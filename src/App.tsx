@@ -245,6 +245,7 @@ export default function App() {
                     <Route path="/rewards/edit/:id" element={<EditReward />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/profile/edit" element={<EditProfile />} />
+                    <Route path="/profile/edit/:id" element={<EditProfile />} />
                     <Route path="/profile/members/edit/:id" element={<EditProfile />} />
                     <Route path="/profile/members/:id" element={<MemberDetail />} />
                     <Route path="/profile/members/add" element={<AddMember />} />
