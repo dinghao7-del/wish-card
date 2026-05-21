@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/utils/supabase';
 import { isGuestMode, getGuestData } from '@/lib/guestData';
 import { resolveAvatarPath } from '@/lib/templates';
+import { APP_VERSION } from '@/lib/appMeta';
 import Icon from '@/components/Icon';
 import VoiceAssistant from '@/components/VoiceAssistant';
 import { NotificationBell } from '@/components/NotificationCenter';
@@ -282,6 +283,22 @@ export default function Home() {
           </View>
 
           <NotificationBell onClick={handleNotificationClick} />
+        </View>
+      </View>
+
+      <View className="mini-release-banner" onClick={handleAiAnalysis}>
+        <View className="mini-release-main">
+          <View className="mini-release-icon">
+            <Icon name="sparkles" size={34} color="#006e1c" />
+          </View>
+          <View className="mini-release-copy">
+            <Text className="mini-release-title">WishCard 家庭管家</Text>
+            <Text className="mini-release-desc">小程序新版 {APP_VERSION} · 复盘、日程建议和四象限已集中</Text>
+          </View>
+        </View>
+        <View className="mini-release-action">
+          <Text>进入</Text>
+          <Icon name="chevronRight" size={24} color="#ffffff" />
         </View>
       </View>
 

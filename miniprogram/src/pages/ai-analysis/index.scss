@@ -52,14 +52,14 @@
 .ai-scroll {
   height: calc(100vh - 112rpx);
   box-sizing: border-box;
-  padding: 24rpx;
+  padding: 18rpx 24rpx 24rpx;
 }
 
 .ai-hero {
   position: relative;
   overflow: hidden;
-  padding: 34rpx 30rpx;
-  border-radius: 28rpx;
+  padding: 26rpx 28rpx;
+  border-radius: 26rpx;
   background: linear-gradient(135deg, #006e1c 0%, #1aa34a 100%);
   box-shadow: 0 16rpx 40rpx rgba(0, 110, 28, 0.18);
 }
@@ -76,19 +76,19 @@
 }
 
 .ai-hero-icon {
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: 28rpx;
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 22rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.18);
-  margin-bottom: 22rpx;
+  margin-bottom: 16rpx;
 }
 
 .ai-hero-title {
   display: block;
-  font-size: 42rpx;
+  font-size: 36rpx;
   line-height: 1.22;
   font-weight: 900;
   color: #ffffff;
@@ -96,17 +96,17 @@
 
 .ai-hero-desc {
   display: block;
-  margin-top: 14rpx;
+  margin-top: 10rpx;
   max-width: 610rpx;
-  font-size: 26rpx;
-  line-height: 1.55;
+  font-size: 24rpx;
+  line-height: 1.45;
   color: rgba(255, 255, 255, 0.88);
 }
 
 .ai-release-badge {
   display: inline-flex;
-  margin-top: 24rpx;
-  padding: 10rpx 18rpx;
+  margin-top: 18rpx;
+  padding: 8rpx 16rpx;
   border-radius: 999rpx;
   background: rgba(255, 255, 255, 0.18);
 
@@ -120,25 +120,29 @@
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14rpx;
-  margin: 24rpx 0;
+  gap: 12rpx;
+  margin: 18rpx 0;
 }
 
 .onboarding-card {
   display: flex;
-  gap: 20rpx;
-  margin-top: 24rpx;
-  padding: 28rpx;
-  border-radius: 28rpx;
+  gap: 18rpx;
+  margin-top: 18rpx;
+  padding: 22rpx;
+  border-radius: 24rpx;
   background: #ffffff;
   border: 2rpx solid rgba(0, 110, 28, 0.12);
   box-shadow: 0 8rpx 24rpx rgba(37, 53, 42, 0.08);
 }
 
+.onboarding-card.is-compact {
+  align-items: center;
+}
+
 .onboarding-icon {
-  width: 88rpx;
-  height: 88rpx;
-  border-radius: 26rpx;
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 22rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -159,7 +163,7 @@
 }
 
 .onboarding-title {
-  font-size: 31rpx;
+  font-size: 29rpx;
   line-height: 1.25;
   font-weight: 900;
   color: #25352a;
@@ -176,9 +180,9 @@
 
 .onboarding-desc {
   display: block;
-  margin-top: 14rpx;
-  font-size: 24rpx;
-  line-height: 1.55;
+  margin-top: 10rpx;
+  font-size: 23rpx;
+  line-height: 1.45;
   color: #5f6e62;
 }
 
@@ -201,18 +205,19 @@
 
 .onboarding-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 12rpx;
-  margin-top: 20rpx;
+  margin-top: 16rpx;
 }
 
 .onboarding-primary,
 .onboarding-secondary {
-  min-height: 76rpx;
-  border-radius: 20rpx;
+  min-height: 66rpx;
+  border-radius: 18rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: 1;
 }
 
 .onboarding-primary {
@@ -237,8 +242,8 @@
 }
 
 .summary-card {
-  min-height: 136rpx;
-  border-radius: 22rpx;
+  min-height: 110rpx;
+  border-radius: 20rpx;
   background: #ffffff;
   display: flex;
   flex-direction: column;
@@ -248,21 +253,21 @@
 }
 
 .summary-value {
-  margin-top: 8rpx;
-  font-size: 30rpx;
+  margin-top: 6rpx;
+  font-size: 28rpx;
   font-weight: 900;
   color: #25352a;
 }
 
 .summary-label {
   margin-top: 2rpx;
-  font-size: 22rpx;
+  font-size: 20rpx;
   color: #6f7d70;
 }
 
 .ai-section {
-  padding: 26rpx 24rpx;
-  border-radius: 28rpx;
+  padding: 22rpx 22rpx;
+  border-radius: 24rpx;
   background: #ffffff;
   box-shadow: 0 4rpx 18rpx rgba(37, 53, 42, 0.06);
 }
@@ -279,7 +284,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 22rpx 0;
+  padding: 18rpx 0;
   border-bottom: 1rpx solid rgba(190, 202, 185, 0.45);
 
   &:last-child {
@@ -295,9 +300,9 @@
 }
 
 .action-icon {
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 22rpx;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 20rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -312,7 +317,7 @@
 
 .action-title {
   display: block;
-  font-size: 29rpx;
+  font-size: 27rpx;
   font-weight: 820;
   color: #25352a;
 }
@@ -320,17 +325,17 @@
 .action-desc {
   display: block;
   margin-top: 6rpx;
-  font-size: 23rpx;
-  line-height: 1.42;
+  font-size: 22rpx;
+  line-height: 1.35;
   color: #6f7d70;
 }
 
 .ai-note {
   display: flex;
   gap: 14rpx;
-  margin: 22rpx 0 80rpx;
-  padding: 22rpx;
-  border-radius: 22rpx;
+  margin: 18rpx 0 72rpx;
+  padding: 18rpx;
+  border-radius: 20rpx;
   background: rgba(0, 110, 28, 0.08);
 
   text {

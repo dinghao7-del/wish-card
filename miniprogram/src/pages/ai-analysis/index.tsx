@@ -7,27 +7,20 @@ import { APP_RELEASE_DATE, APP_VERSION, APP_VERSION_LABEL } from '@/lib/appMeta'
 import { getThemeClass } from '@/lib/themeSkins';
 import './index.scss';
 
-const actions = [
-  {
-    icon: 'sparkles',
-    title: '智能建档',
-    desc: '用最少问题整理家庭画像、课外班、兴趣、作息和照护约束',
-    url: '/pkg/onboarding/index',
-    color: '#006e1c',
-  },
-  {
-    icon: 'calendar',
-    title: '日程优化',
-    desc: '读取建档、任务、课外班、心愿兑现和公共时间情报，自动给出调整建议',
-    url: '/pkg/schedule-recommend/index',
-    color: '#7B1FA2',
-  },
+const coreActions = [
   {
     icon: 'barChart',
     title: '家庭复盘',
     desc: '自动形成周报、月报，展示任务、习惯、星星和愿望进展',
     url: '/pkg/reports/index',
     color: '#1976D2',
+  },
+  {
+    icon: 'calendar',
+    title: '日程优化',
+    desc: '结合建档、任务、课外班、心愿兑现和公共时间，给出本周调整建议',
+    url: '/pkg/schedule-recommend/index',
+    color: '#7B1FA2',
   },
   {
     icon: 'target',
@@ -63,6 +56,19 @@ export default function AiAnalysis() {
     { label: '星星', value: stars || localUser?.stars || 0, icon: 'star' },
   ];
 
+  const actions = hasStartedFamilyProfile
+    ? coreActions
+    : [
+        {
+          icon: 'sparkles',
+          title: '开始家庭建档',
+          desc: '先用最少问题整理家庭画像，再生成任务、习惯、计划和心愿草稿',
+          url: '/pkg/onboarding/index',
+          color: '#006e1c',
+        },
+        ...coreActions,
+      ];
+
   const go = (url: string) => {
     Taro.navigateTo({ url });
   };
@@ -82,38 +88,48 @@ export default function AiAnalysis() {
           <View className="ai-hero-icon">
             <Icon name="sparkles" size={64} color="#ffffff" />
           </View>
-          <Text className="ai-hero-title">智能家庭管家已同步</Text>
-          <Text className="ai-hero-desc">第一次使用先完成引导式建档，把家庭画像、作息和孩子安排一次说清楚。</Text>
+          <Text className="ai-hero-title">{hasStartedFamilyProfile ? '家庭管家中心' : '第一次先建档'}</Text>
+          <Text className="ai-hero-desc">
+            {hasStartedFamilyProfile
+              ? '复盘、日程优化、四象限和家庭灵感集中在这里，平时按需展开。'
+              : '用对话把孩子年龄、上学时间、课外班、日常练习和父母工作约束一次说清楚。'}
+          </Text>
           <View className="ai-release-badge">
             <Text>{APP_VERSION_LABEL} · {APP_RELEASE_DATE}</Text>
           </View>
         </View>
 
-        <View className="onboarding-card">
+        <View className={`onboarding-card ${hasStartedFamilyProfile ? 'is-compact' : ''}`}>
           <View className="onboarding-icon">
             <Icon name="sparkles" size={46} color="#ffffff" />
           </View>
           <View className="onboarding-copy">
             <View className="onboarding-title-row">
-              <Text className="onboarding-title">{hasStartedFamilyProfile ? '继续微调家庭建档' : '新用户第一步：引导式家庭建档'}</Text>
+              <Text className="onboarding-title">{hasStartedFamilyProfile ? '家庭建档存档' : '新用户第一步：引导式家庭建档'}</Text>
               <Text className="onboarding-badge">核心流程</Text>
             </View>
             <Text className="onboarding-desc">
-              AI 会用最少问题带家长梳理孩子年龄、上学时间、课外班频率、日常练习、父母工作约束和奖励偏好，最后直接生成任务、习惯、计划和心愿草稿。
+              {hasStartedFamilyProfile
+                ? `已整理 ${members.length} 位孩子、${normalTasks.length} 项任务、${habits.length} 个习惯。需要补充课外班、作息或奖励偏好时再打开微调。`
+                : 'AI 会用最少问题带家长梳理孩子年龄、上学时间、课外班频率、日常练习、父母工作约束和奖励偏好，最后直接生成任务、习惯、计划和心愿草稿。'}
             </Text>
-            <View className="onboarding-tags">
-              {['家庭成员', '作息约束', '课外班/兴趣', '奖励与心愿'].map(label => (
-                <Text key={label} className="onboarding-tag">{label}</Text>
-              ))}
-            </View>
+            {!hasStartedFamilyProfile && (
+              <View className="onboarding-tags">
+                {['家庭成员', '作息约束', '课外班/兴趣', '奖励与心愿'].map(label => (
+                  <Text key={label} className="onboarding-tag">{label}</Text>
+                ))}
+              </View>
+            )}
             <View className="onboarding-actions">
               <View className="onboarding-primary" onClick={() => go('/pkg/onboarding/index')}>
-                <Text>{hasStartedFamilyProfile ? '打开建档存档继续微调' : '开始第一次建档'}</Text>
+                <Text>{hasStartedFamilyProfile ? '打开建档存档' : '开始第一次建档'}</Text>
                 <Icon name="chevronRight" size={26} color="#ffffff" />
               </View>
-              <View className="onboarding-secondary" onClick={() => go('/pkg/schedule-recommend/index')}>
-                <Text>已有画像，直接优化日程</Text>
-              </View>
+              {!hasStartedFamilyProfile && (
+                <View className="onboarding-secondary" onClick={() => go('/pkg/schedule-recommend/index')}>
+                  <Text>已有画像，直接优化日程</Text>
+                </View>
+              )}
             </View>
           </View>
         </View>
@@ -129,7 +145,7 @@ export default function AiAnalysis() {
         </View>
 
         <View className="ai-section">
-          <Text className="section-title">管家工作流</Text>
+          <Text className="section-title">{hasStartedFamilyProfile ? '常用能力' : '管家工作流'}</Text>
           {actions.map(item => (
             <View key={item.title} className="ai-action-card" onClick={() => go(item.url)}>
               <View className="action-main">
